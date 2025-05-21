@@ -25,7 +25,6 @@ The Navin Frontend provides the following key features:
 | **User Authentication Module** | Handles user login, registration, and session management.                                                |
 | **Shipment Tracking View**     | Displays a list of shipments with their current status and key details.                                  |
 | **Detailed Shipment View**     | Shows a comprehensive overview of a single shipment, including milestones, IoT data, and payment status. |
-| **IoT Data Visualization**     | Renders charts and graphs for sensor data (e.g., temperature, humidity, location).                       |
 | **Notification System**        | Provides real-time alerts for shipment updates, delays, or critical events.                              |
 | **Payment History/Status**     | Displays a record of payments made and their current status.                                             |
 | **Admin/Company Dashboard**    | Specific views and functionalities for logistics companies to manage shipments and users.                |
@@ -44,7 +43,7 @@ The Navin Frontend provides the following key features:
 
 ```
 # Clone the frontend repo (assuming it's a separate repository)
-git clone https://github.com/your-org/navin-frontend.git
+git clone https://github.com/Navin-xmr/navin-frontend.git
 cd navin-frontend
 
 # Install dependencies
