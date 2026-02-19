@@ -1,115 +1,78 @@
+# Navin Frontend
 
-# Navin Dashboard
+**Navin** is a blockchain-powered logistics platform that improves supply chain visibility for enterprises through tokenized shipments, immutable milestone tracking, and automated settlements.
+By creating a zero-trust interface between logistics providers and their clients, Navin ensures both parties access identical real-time data — removing information asymmetry and enabling seamless, dispute-free operations.
 
-Navin is a trustless logistics platform built with transparency in mind. This repository contains the frontend application, which provides real-time dashboards for logistics companies and customers to track package status. It offers a user-friendly interface to interact with the Navin platform, visualize shipment milestones, and monitor IoT data.
+This repository is the **frontend** of the Navin platform — a React application that gives logistics companies and their customers a single, real-time interface to track shipments, verify on-chain milestones, and monitor automated payment settlements.
 
-## 📦 Overview of Frontend Functionalities
+---
 
-The Navin Frontend provides the following key features:
+## What the Frontend Does
 
-- 📊 **Real-time dashboards** for logistics companies and customers to track package status.
-    
-- 👁️ **Visualization of immutable records** of shipment milestones and sensor events (e.g., temperature, delivery) stored on-chain.
-    
-- 📈 **Display of automated workloads and payments** status triggered by verified delivery.
-    
-- 📱 **Responsive interface** designed for optimal viewing and usability on all devices (mobile, tablet, desktop).
-    
+| Feature | Description |
+|---|---|
+| **Real-time Shipment Dashboards** | Companies and customers see live shipment status — no information gap between both parties |
+| **On-chain Milestone Visualization** | Immutable milestone records (picked up, in transit, delivered) surfaced clearly in the UI |
+| **Automated Settlement Tracking** | Payment status updated automatically when verified delivery events occur on-chain |
+| **Company Dashboard** | Logistics companies manage shipments, users, and track performance analytics |
+| **Customer Dashboard** | Customers track their active shipments and delivery history in one place |
+| **Shipment Detail View** | Full breakdown of a single shipment — milestones, IoT sensor data, payment status, and delivery proof |
+| **Notification System** | Real-time alerts for shipment updates, delays, and payment events |
+| **Responsive Interface** | Works across desktop, tablet, and mobile |
 
-### ⚙️ Key Frontend Components
+---
 
-|                                |                                                                                                          |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| **Component**                  | **Description**                                                                                          |
-| **Frontend Dashboard**         | React interface for companies and consumers to track package status in real time.                        |
-| **User Authentication Module** | Handles user login, registration, and session management.                                                |
-| **Shipment Tracking View**     | Displays a list of shipments with their current status and key details.                                  |
-| **Detailed Shipment View**     | Shows a comprehensive overview of a single shipment, including milestones, IoT data, and payment status. |
-| **Notification System**        | Provides real-time alerts for shipment updates, delays, or critical events.                              |
-| **Payment History/Status**     | Displays a record of payments made and their current status.                                             |
-| **Admin/Company Dashboard**    | Specific views and functionalities for logistics companies to manage shipments and users.                |
-| **Customer Dashboard**         | Specific views for customers to track their individual shipments.                                        |
+## Quick Start
 
-## 🛠️ Frontend Setup and Initialization
+### Prerequisites
 
-### ✅ Prerequisites
+- [Node.js](https://nodejs.org/) v18 or later
+- npm (included with Node.js)
 
-- NodeJS (v16+)
-    
-- npm 
-    
+### Installation
 
-### 🔧 Installation
-
-```
-# Clone the frontend repo (assuming it's a separate repository)
-git clone https://github.com/Navin-xmr/navin-frontend.git
+```bash
+# Fork the repository and clone your forK
+git clone https://github.com/yourusername/navin-contracts.git
 cd navin-frontend
 
 # Install dependencies
-npm install # or yarn install
+npm install
 
 # Start the development server
-npm start # or yarn start
+npm run dev
 ```
 
-_Note: If this frontend is part of a monorepo, adjust the `git clone` and `cd` commands accordingly to navigate to the frontend directory after cloning the main repository._
+---
 
-## 🤝 Contributing
+## Contributing
 
-We welcome contributors of all experience levels!
+We welcome contributors of all experience levels.
+Read our [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide on branching, commits, PRs, and our review process.
 
-### 🧰 Getting Started
+Quick overview:
+- Browse open issues on the [Issues page](https://github.com/Navin-xmr/navin-frontend/issues)
+- Comment on an issue and wait to be assigned before starting
+- Create a branch named `issue#<number>`, make your changes, and open a PR
+- All frontend PRs must include a **screenshot** of the UI change
 
-- Look for [good first issues](https://github.com/your-org/project-mercury/issues?q=label%3A%22good+first+issue%22 "null")
-    
-- Fork the repository
-    
-- Create a feature branch
-    
-- Open a pull request
-    
+---
 
-### 🌳 Branching Strategy
+## Community
 
-- `main` → stable release branch
-    
-- `dev` → active development
-    
-- `feature/*` → for individual features or fixes
-    
+Have questions or want to discuss ideas?
 
-### 📂 Code Guidelines
+- [Navin Telegram Group](https://t.me/+3svwFsQME6k1YjI0)
 
-- Keep PRs small and focused
-    
-- Write clear commit messages
-    
-- Update docs when necessary
-    
+---
 
-## ✍️ Commit Convention
+## Related Repositories
 
-We use [Conventional Commits](https://www.conventionalcommits.org/ "null") to standardize commit messages.
+- Smart Contracts: [navin-contracts](https://github.com/Navin-xmr/navin-contracts)
+- Backend API: [navin-backend](https://github.com/Navin-xmr/navin-backend)
 
-- `feat`: new feature
-    
-- `fix`: bug fix
-    
-- `docs`: documentation only
-    
-- `refactor`: code changes without feature/fix
-    
-- `chore`: maintenance tasks
-    
+---
 
-## 📩 Contact Us
+## License
 
-Have questions or feedback?
-
-- 💬 Telegram: [Navin Telegram Group](https://t.me/+_pG9G6Lrqn81MjNk "null")
-    
-
-## 🛡️ License
-
-This project is licensed under the [MIT License](https://chatgpt.com/c/LICENSE "null").
+This project is licensed under the [MIT License](LICENSE).
