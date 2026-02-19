@@ -14,6 +14,9 @@ const Home: React.FC = () => {
           Real-time visibility, secure shipments, and unparalleled efficiency.
         </p>
         <div className="home-actions">
+          <Link to="/customer-dashboard" className="btn-secondary">
+            View Dashboard
+          </Link>
           <Link to="/signup" className="btn-primary">
             Get Started
           </Link>
