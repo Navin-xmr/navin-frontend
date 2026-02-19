@@ -105,6 +105,20 @@
     margin-left: 4px;
 }
 
+.forgot-password {
+    align-self: flex-end;
+    font-size: 0.8rem;
+    color: var(--teal-primary);
+    text-decoration: none;
+    margin-top: -4px;
+    transition: all 0.2s ease;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
 .input-wrapper {
     position: relative;
 }
