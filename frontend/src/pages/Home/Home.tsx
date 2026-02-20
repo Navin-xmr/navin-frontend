@@ -1,22 +1,25 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import './Home.css';
-import Hero from '../../LandingPage/sections/Hero/Hero';
+import React from "react";
+import { Link } from "react-router-dom";
+import Navbar from "@/components/Navbar/Navbar";
+import Hero from "../../LandingPage/sections/Hero/Hero";
+import "./Home.css";
 
 const Home: React.FC = () => {
   return (
     <div className="home-container">
-      <Hero /> 
+      <Navbar />
+      <Hero />
+
       <div className="home-content">
         <h1 className="home-title">
           Transparent <br /> Tracking Solution
         </h1>
         <p className="home-subtitle">
-          Experience the next generation of delivery intelligence. 
-          Real-time visibility, secure shipments, and unparalleled efficiency.
+          Experience the next generation of delivery intelligence. Real-time
+          visibility, secure shipments, and unparalleled efficiency.
         </p>
         <div className="home-actions">
-          <Link to="/customer-dashboard" className="btn-secondary">
+          <Link to="/dashboard" className="btn-secondary">
             View Dashboard
           </Link>
           <Link to="/signup" className="btn-primary">
