@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { WalletConnectButton } from '../../components/auth/WalletConnectButton/WalletConnectButton';
 import './Signup.css';
 
 interface FormErrors {
@@ -22,28 +23,22 @@ const Signup: React.FC = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<'none' | 'weak' | 'fair' | 'strong'>('none');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Calculate password strength
-  useEffect(() => {
-    const pass = formData.password;
-    if (!pass) {
-      setPasswordStrength('none');
-      return;
-    }
-
+  const getPasswordStrength = (pass: string) => {
+    if (!pass) return 'none';
     let strength = 0;
     if (pass.length >= 8) strength++;
     if (/[A-Z]/.test(pass)) strength++;
     if (/[0-9]/.test(pass)) strength++;
     if (/[^A-Za-z0-9]/.test(pass)) strength++;
+    if (strength <= 1) return 'weak';
+    if (strength <= 3) return 'fair';
+    return 'strong';
+  };
 
-    if (strength <= 1) setPasswordStrength('weak');
-    else if (strength <= 3) setPasswordStrength('fair');
-    else setPasswordStrength('strong');
-  }, [formData.password]);
+  const passwordStrength = getPasswordStrength(formData.password);
 
   const validate = () => {
     const newErrors: FormErrors = {};
@@ -125,6 +120,10 @@ const Signup: React.FC = () => {
         <div className="signup-header">
           <h2>Create Account</h2>
           <p>Join Navin and experience transparent tracking</p>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <WalletConnectButton />
         </div>
 
         <form className="signup-form" onSubmit={handleSubmit}>
