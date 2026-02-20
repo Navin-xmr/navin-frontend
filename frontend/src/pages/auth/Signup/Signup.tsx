@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
-import { WalletConnectButton } from '../../../components/auth/WalletConnectButton/WalletConnectButton';
-import './Signup.css';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
+import { WalletConnectButton } from "../../../components/auth/WalletConnectButton/WalletConnectButton";
+import "./Signup.css";
 
 interface FormErrors {
   fullName?: string;
@@ -14,20 +14,26 @@ interface FormErrors {
 
 const Signup: React.FC = () => {
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
     terms: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<
+    "none" | "weak" | "fair" | "strong"
+  >("none");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const getPasswordStrength = (pass: string) => {
-    if (!pass) return 'none';
+  // Calculate password strength
+  const calculatePasswordStrength = (
+    pass: string,
+  ): "none" | "weak" | "fair" | "strong" => {
+    if (!pass) return "none";
     let strength = 0;
     if (pass.length >= 8) strength++;
     if (/[A-Z]/.test(pass)) strength++;
@@ -38,33 +44,31 @@ const Signup: React.FC = () => {
     return 'strong';
   };
 
-  const passwordStrength = getPasswordStrength(formData.password);
-
   const validate = () => {
     const newErrors: FormErrors = {};
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+      newErrors.fullName = "Full name is required";
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = "Invalid email format";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Minimum 8 characters required';
+      newErrors.password = "Minimum 8 characters required";
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     if (!formData.terms) {
-      newErrors.terms = 'You must agree to the terms';
+      newErrors.terms = "You must agree to the terms";
     }
 
     setErrors(newErrors);
@@ -73,14 +77,19 @@ const Signup: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
+
+    // Calculate password strength when password field changes
+    if (name === "password") {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
 
     // Clear error for the field being typed in
     if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
@@ -92,25 +101,33 @@ const Signup: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
-      alert('Account created successfully (simulation)');
+      alert("Account created successfully (simulation)");
     }, 2000);
   };
 
   const getStrengthClass = () => {
     switch (passwordStrength) {
-      case 'weak': return 'weak';
-      case 'fair': return 'fair';
-      case 'strong': return 'strong';
-      default: return '';
+      case "weak":
+        return "weak";
+      case "fair":
+        return "fair";
+      case "strong":
+        return "strong";
+      default:
+        return "";
     }
   };
 
   const getStrengthLabel = () => {
     switch (passwordStrength) {
-      case 'weak': return <span className="text-weak">Weak</span>;
-      case 'fair': return <span className="text-fair">Fair</span>;
-      case 'strong': return <span className="text-strong">Strong</span>;
-      default: return 'None';
+      case "weak":
+        return <span className="text-weak">Weak</span>;
+      case "fair":
+        return <span className="text-fair">Fair</span>;
+      case "strong":
+        return <span className="text-strong">Strong</span>;
+      default:
+        return "None";
     }
   };
 
@@ -138,10 +155,12 @@ const Signup: React.FC = () => {
                 placeholder="John Doe"
                 value={formData.fullName}
                 onChange={handleChange}
-                className={errors.fullName ? 'error' : ''}
+                className={errors.fullName ? "error" : ""}
               />
             </div>
-            {errors.fullName && <span className="error-message">{errors.fullName}</span>}
+            {errors.fullName && (
+              <span className="error-message">{errors.fullName}</span>
+            )}
           </div>
 
           {/* Email */}
@@ -155,10 +174,12 @@ const Signup: React.FC = () => {
                 placeholder="name@company.com"
                 value={formData.email}
                 onChange={handleChange}
-                className={errors.email ? 'error' : ''}
+                className={errors.email ? "error" : ""}
               />
             </div>
-            {errors.email && <span className="error-message">{errors.email}</span>}
+            {errors.email && (
+              <span className="error-message">{errors.email}</span>
+            )}
           </div>
 
           {/* Password */}
@@ -166,19 +187,19 @@ const Signup: React.FC = () => {
             <label htmlFor="password">Password</label>
             <div className="input-wrapper">
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
-                className={errors.password ? 'error' : ''}
+                className={errors.password ? "error" : ""}
               />
               <button
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -186,14 +207,18 @@ const Signup: React.FC = () => {
             {formData.password && (
               <div className="strength-indicator">
                 <div className="strength-bar">
-                  <div className={`strength-progress ${getStrengthClass()}`}></div>
+                  <div
+                    className={`strength-progress ${getStrengthClass()}`}
+                  ></div>
                 </div>
                 <div className="strength-text">
                   Strength: {getStrengthLabel()}
                 </div>
               </div>
             )}
-            {errors.password && <span className="error-message">{errors.password}</span>}
+            {errors.password && (
+              <span className="error-message">{errors.password}</span>
+            )}
           </div>
 
           {/* Confirm Password */}
@@ -201,31 +226,38 @@ const Signup: React.FC = () => {
             <label htmlFor="confirmPassword">Confirm Password</label>
             <div className="input-wrapper">
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"
                 placeholder="••••••••"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={errors.confirmPassword ? 'error' : ''}
+                className={errors.confirmPassword ? "error" : ""}
               />
               <button
                 type="button"
                 className="password-toggle"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+            {errors.confirmPassword && (
+              <span className="error-message">{errors.confirmPassword}</span>
+            )}
           </div>
 
           {/* Terms Checkbox */}
           <div className="form-group">
             <div className="checkbox-group">
               <label className="checkbox-container">
-                I agree to the <a href="#" className="terms-link">Terms and Conditions</a>
+                I agree to the{" "}
+                <a href="#" className="terms-link">
+                  Terms and Conditions
+                </a>
                 <input
                   type="checkbox"
                   name="terms"
@@ -235,7 +267,9 @@ const Signup: React.FC = () => {
                 <span className="checkmark"></span>
               </label>
             </div>
-            {errors.terms && <span className="error-message">{errors.terms}</span>}
+            {errors.terms && (
+              <span className="error-message">{errors.terms}</span>
+            )}
           </div>
 
           {/* Submit Button */}
@@ -246,7 +280,7 @@ const Signup: React.FC = () => {
                 Creating Account...
               </>
             ) : (
-              'Create Account'
+              "Create Account"
             )}
           </button>
         </form>
