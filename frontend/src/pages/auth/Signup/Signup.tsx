@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
-import { WalletConnectButton } from '../../components/auth/WalletConnectButton/WalletConnectButton';
+import { WalletConnectButton } from '../../../components/auth/WalletConnectButton/WalletConnectButton';
 import './Signup.css';
 
 interface FormErrors {
