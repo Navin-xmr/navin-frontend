@@ -1,0 +1,78 @@
+1. Organization Portal (Admin)
+Context: High-security, professional, and direct.
+
+Main Heading: Organization Portal
+
+Sub-heading: Please enter your admin credentials to access the dashboard.
+
+Field Labels:
+
+Email Address (Placeholder: admin@organization.com)
+
+Password (Link: Forgot password?)
+
+Primary Button: Sign In to Dashboard →
+
+Secondary Option (Web3): Admin Access
+
+Web3 Description: Authenticate securely using your organization’s authorized hardware or software wallet.
+
+Wallet Options:
+
+MetaMask: Browser Extension
+
+WalletConnect: Scan QR Code
+
+Hardware Key: Ledger / Trezor
+
+Footer Link: Need access? Contact Super Admin
+
+2. User Portal (Sign In)
+Context: User-friendly, welcoming, and versatile.
+
+Main Heading: Sign In
+
+Sub-heading: Access your dashboard using traditional or Web3 methods.
+
+Toggle Switch: User Portal | Admin Portal
+
+Left Section Header: Welcome Back
+
+Left Section Sub-text: Please enter your details to sign in.
+
+Field Labels:
+
+Email Address (Placeholder: name@example.com)
+
+Password (Link: Forgot Password?)
+
+Checkbox: Keep me logged in
+
+Primary Button: Log In →
+
+Right Section Header: Connect Wallet
+
+Right Section Sub-text: Use your crypto wallet to authenticate securely without a password.
+
+Wallet Options:
+
+Metamask: Browser Extension
+
+Coinbase Wallet: Mobile or Browser
+
+Action: Show QR Code
+
+Legal Disclaimer: By connecting a wallet, you agree to our Terms of Service.
+
+Footer Link: Don’t have an account yet? Sign Up Now
+
+3. Global Elements
+Brand Name: NexusAuth
+
+System Status: System Operational
+
+Help Link: Need help? Contact Support
+
+Copyright: © 2026 Nexus Platform Inc. All rights reserved.
+
+figma link https://www.figma.com/design/F1glyTk2MzqqagwwuLZCJV/Login---Sign-up-Page-with-email-and-Connect-wallet?m=auto&t=HA8Cijngs5PtiXAW-6
