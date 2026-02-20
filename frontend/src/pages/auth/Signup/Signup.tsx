@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { WalletConnectButton } from "../../../components/auth/WalletConnectButton/WalletConnectButton";
 import "./Signup.css";
 
 interface FormErrors {
@@ -33,16 +34,14 @@ const Signup: React.FC = () => {
     pass: string,
   ): "none" | "weak" | "fair" | "strong" => {
     if (!pass) return "none";
-
     let strength = 0;
     if (pass.length >= 8) strength++;
     if (/[A-Z]/.test(pass)) strength++;
     if (/[0-9]/.test(pass)) strength++;
     if (/[^A-Za-z0-9]/.test(pass)) strength++;
-
-    if (strength <= 1) return "weak";
-    if (strength <= 3) return "fair";
-    return "strong";
+    if (strength <= 1) return 'weak';
+    if (strength <= 3) return 'fair';
+    return 'strong';
   };
 
   const validate = () => {
@@ -138,6 +137,10 @@ const Signup: React.FC = () => {
         <div className="signup-header">
           <h2>Create Account</h2>
           <p>Join Navin and experience transparent tracking</p>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+          <WalletConnectButton />
         </div>
 
         <form className="signup-form" onSubmit={handleSubmit}>
