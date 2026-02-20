@@ -3,7 +3,14 @@ import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
 import ForgotPassword from './pages/auth/ForgotPassword/ForgotPassword';
-import CustomerDashboard from './pages/dashboard/CustomerDashboard';
+import Dashboard from './pages/dashboard/Dashboard';
+import Shipments from './pages/Shipments/Shipments';
+import BlockchainLedger from './pages/BlockchainLedger/BlockchainLedger';
+import Settlements from './pages/Settlements/Settlements';
+import Analytics from './pages/Analytics/Analytics';
+import Settings from './pages/Settings/Settings';
+import HelpCenter from './pages/HelpCenter/HelpCenter';
+import DashboardLayout from './components/layout/DashboardLayout';
 import './App.css';
 
 const router = createBrowserRouter([
@@ -24,8 +31,37 @@ const router = createBrowserRouter([
     element: <ForgotPassword />,
   },
   {
-    path: '/customer-dashboard',
-    element: <CustomerDashboard />,
+    element: <DashboardLayout />,
+    children: [
+      {
+        path: '/dashboard',
+        element: <Dashboard />,
+      },
+      {
+        path: '/dashboard/shipments',
+        element: <Shipments />,
+      },
+      {
+        path: '/dashboard/blockchain-ledger',
+        element: <BlockchainLedger />,
+      },
+      {
+        path: '/dashboard/settlements',
+        element: <Settlements />,
+      },
+      {
+        path: '/dashboard/analytics',
+        element: <Analytics />,
+      },
+      {
+        path: '/dashboard/settings',
+        element: <Settings />,
+      },
+      {
+        path: '/dashboard/help-center',
+        element: <HelpCenter />,
+      },
+    ],
   },
 ]);
 
