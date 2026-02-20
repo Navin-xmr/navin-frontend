@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
+import Hero from '../../LandingPage/sections/Hero/Hero';
 
 const Home: React.FC = () => {
   return (
     <div className="home-container">
+      <Hero /> 
       <div className="home-content">
         <h1 className="home-title">
           Transparent <br /> Tracking Solution
