@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics/Analytics';
 import Settings from './pages/Settings/Settings';
 import HelpCenter from './pages/HelpCenter/HelpCenter';
 import DashboardLayout from './components/layout/DashboardLayout';
+import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import './App.css';
 
 const router = createBrowserRouter([
@@ -31,35 +32,40 @@ const router = createBrowserRouter([
     element: <ForgotPassword />,
   },
   {
-    element: <DashboardLayout />,
+    element: <ProtectedRoute />,
     children: [
       {
-        path: '/dashboard',
-        element: <Dashboard />,
-      },
-      {
-        path: '/dashboard/shipments',
-        element: <Shipments />,
-      },
-      {
-        path: '/dashboard/blockchain-ledger',
-        element: <BlockchainLedger />,
-      },
-      {
-        path: '/dashboard/settlements',
-        element: <Settlements />,
-      },
-      {
-        path: '/dashboard/analytics',
-        element: <Analytics />,
-      },
-      {
-        path: '/dashboard/settings',
-        element: <Settings />,
-      },
-      {
-        path: '/dashboard/help-center',
-        element: <HelpCenter />,
+        element: <DashboardLayout />,
+        children: [
+          {
+            path: '/dashboard',
+            element: <Dashboard />,
+          },
+          {
+            path: '/dashboard/shipments',
+            element: <Shipments />,
+          },
+          {
+            path: '/dashboard/blockchain-ledger',
+            element: <BlockchainLedger />,
+          },
+          {
+            path: '/dashboard/settlements',
+            element: <Settlements />,
+          },
+          {
+            path: '/dashboard/analytics',
+            element: <Analytics />,
+          },
+          {
+            path: '/dashboard/settings',
+            element: <Settings />,
+          },
+          {
+            path: '/dashboard/help-center',
+            element: <HelpCenter />,
+          },
+        ],
       },
     ],
   },
