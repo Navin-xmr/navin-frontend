@@ -1,0 +1,27 @@
+Interface Controls
+Primary Action: Mark all as read.
+
+Filter Tabs: All (12), Shipments (5), Settlements (2), System (5).
+
+Search: Search by ID, contract, or keyword.
+
+Recent Alerts
+Shipment Arrival: #NV-9920 arrived at Singapore; on-chain documents verified.
+
+Contract Executed: 500 USDC released to Carrier A after delivery confirmation.
+
+Action Required: Upload 'Bill of Lading' for #NV-8812 to avoid delays.
+
+System Maintenance: Platform unavailable Friday at 23:00 UTC for 30 minutes.
+
+Logistics Update: Vessel 'Ever Green' departed Rotterdam for New York.
+
+Billing: October invoice INV-2024-001 generated and sent to finance.
+
+Contextual Buttons
+Shipment Detail: View Details.
+
+Finance: View Contract.
+
+Compliance: Upload.
+https://www.figma.com/design/QkQC037evEB8rRN7pz0ToS/Navin?m=auto&t=HA8Cijngs5PtiXAW-6
