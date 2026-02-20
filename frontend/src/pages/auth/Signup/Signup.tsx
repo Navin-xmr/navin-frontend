@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import './Signup.css';
@@ -27,12 +27,8 @@ const Signup: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Calculate password strength
-  useEffect(() => {
-    const pass = formData.password;
-    if (!pass) {
-      setPasswordStrength('none');
-      return;
-    }
+  const calculatePasswordStrength = (pass: string): 'none' | 'weak' | 'fair' | 'strong' => {
+    if (!pass) return 'none';
 
     let strength = 0;
     if (pass.length >= 8) strength++;
@@ -40,10 +36,10 @@ const Signup: React.FC = () => {
     if (/[0-9]/.test(pass)) strength++;
     if (/[^A-Za-z0-9]/.test(pass)) strength++;
 
-    if (strength <= 1) setPasswordStrength('weak');
-    else if (strength <= 3) setPasswordStrength('fair');
-    else setPasswordStrength('strong');
-  }, [formData.password]);
+    if (strength <= 1) return 'weak';
+    if (strength <= 3) return 'fair';
+    return 'strong';
+  };
 
   const validate = () => {
     const newErrors: FormErrors = {};
@@ -82,6 +78,11 @@ const Signup: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+
+    // Calculate password strength when password field changes
+    if (name === 'password') {
+      setPasswordStrength(calculatePasswordStrength(value));
+    }
 
     // Clear error for the field being typed in
     if (errors[name as keyof FormErrors]) {
