@@ -3,7 +3,7 @@ import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
 import ForgotPassword from './pages/auth/ForgotPassword/ForgotPassword';
-import Dashboard from './pages/dashboard/Dashboard';
+import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
 import Shipments from './pages/Shipments/Shipments';
 import BlockchainLedger from './pages/BlockchainLedger/BlockchainLedger';
 import Settlements from './pages/Settlements/Settlements';
@@ -39,7 +39,7 @@ const router = createBrowserRouter([
         children: [
           {
             path: '/dashboard',
-            element: <Dashboard />,
+            element: <CompanyDashboard />,
           },
           {
             path: '/dashboard/shipments',
