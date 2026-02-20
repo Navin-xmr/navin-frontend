@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import '../Signup/Signup.css';
 
@@ -9,6 +9,8 @@ interface FormErrors {
 }
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -77,8 +79,10 @@ const Login: React.FC = () => {
     setLoading(true);
     // Simulate API call
     setTimeout(() => {
+      localStorage.setItem('authToken', 'navin-demo-token');
+      const from = location.state?.from?.pathname ?? '/dashboard';
       setLoading(false);
-      alert('Login successful (simulation)');
+      navigate(from, { replace: true });
     }, 2000);
   };
 
