@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LayoutGrid,
   ChevronDown,
@@ -16,6 +17,7 @@ import ShipmentVolumeChart from '../../../components/dashboard/Charts/ShipmentVo
 import '../../dashboard/Dashboard.css';
 
 const CompanyDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const stats = [
     {
       label: 'Total Shipments',
@@ -99,7 +101,7 @@ const CompanyDashboard: React.FC = () => {
         <div className="rail-card">
           <h3>Quick Actions</h3>
           <div className="quick-actions-list">
-            <button className="action-button primary" type="button">
+            <button className="action-button primary" type="button" onClick={() => navigate('/dashboard/shipments/create')}>
               <span className="action-label">Create New Shipment</span>
               <div className="action-icon">
                 <Plus size={20} />
