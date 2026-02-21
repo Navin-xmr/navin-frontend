@@ -1,0 +1,86 @@
+@font-face {
+    font-family: "Bricolage Grotesque";
+    src: url("../../../assets/Bricolage_Grotesque/BricolageGrotesque-VariableFont_opsz\,wdth\,wght.ttf")
+        format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+}
+
+.navin__cyan {
+    color: #62ffff;
+}
+
+.why__section {
+    padding-block: 5rem;
+}
+
+.why__section__header {
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+    font-weight: 400;
+    font-family: "Bricolage Grotesque", sans-serif;
+}
+
+.why__item__container {
+    display: grid;
+    gap: 1.125rem;
+}
+
+.why__section__item {
+    width: 18.625rem;
+    height: 17.4rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: column;
+    padding-inline: 1rem;
+    border-radius: 1.25rem;
+    gap: 1.5rem;
+    box-shadow: inset 0 0 20px 0px #008080;
+    background: rgba(19, 186, 186, 0.1);
+    text-align: left;
+}
+
+.why__icon__container {
+    box-shadow: inset 0 0 12px 0px #008080;
+    border: 1.5px solid rgba(6, 255, 255, 0.4);
+    border-radius: 1rem;
+    background-color: #101010;
+    width: 6.5625rem;
+    padding-inline: 1.5rem;
+    padding-block: 1.875rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.why__item__header {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 600;
+    color: #f8ffff;
+    margin-bottom: 0.75rem;
+}
+
+.why__item__description {
+    color: #e5ffff;
+}
+
+@media (min-width: 768px) {
+    .why__section__header {
+        font-size: 2.25rem;
+    }
+
+    .why__item__container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .why__section__header {
+        font-size: 3.25rem;
+    }
+
+    .why__item__container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
