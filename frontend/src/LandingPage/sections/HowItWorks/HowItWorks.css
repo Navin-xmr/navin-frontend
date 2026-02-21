@@ -1,0 +1,11 @@
+@font-face {
+    font-family: "Bricolage Grotesque";
+    src: url("../../../assets/Bricolage_Grotesque/BricolageGrotesque-VariableFont_opsz\,wdth\,wght.ttf")
+        format("truetype");
+    font-weight: 100 900;
+    font-style: normal;
+}
+
+h2 {
+    font-family: "Bricolage Grotesque", sans-serif;
+}
