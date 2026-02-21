@@ -8,15 +8,12 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
-  Search,
-  Bell,
-  LayoutGrid,
   ShieldCheck,
   Cpu,
-  Menu,
   X,
 } from 'lucide-react';
 import './DashboardLayout.css';
+import TopHeader from './TopHeader/TopHeader';
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -110,42 +107,7 @@ const DashboardLayout: React.FC = () => {
 
       {/* Main Content */}
       <div className="main-wrapper">
-        <header className="top-bar">
-          <div className="top-bar-left">
-            <button className="mobile-toggle" onClick={toggleSidebar}>
-              <Menu size={24} />
-            </button>
-            <div className="search-container desktop-only">
-              <Search size={18} className="text-secondary" />
-              <input type="text" placeholder="Search shipments, wallet addresses, or hashes..." />
-            </div>
-          </div>
-
-          <div className="top-bar-right">
-            <div className="top-bar-actions">
-              <button className="icon-button mobile-only">
-                <Search size={20} />
-              </button>
-              <button className="icon-button">
-                <Bell size={20} />
-              </button>
-              <button className="icon-button desktop-only">
-                <LayoutGrid size={20} />
-              </button>
-            </div>
-            <div className="user-profile">
-              <div className="user-text desktop-only">
-                <span className="user-name">Alex Sterling</span>
-                <span className="user-role">Logistics Manager</span>
-              </div>
-              <img
-                src="https://ui-avatars.com/api/?name=Alex+Sterling&background=e2e8f0&color=475569"
-                alt="Profile"
-                className="user-avatar"
-              />
-            </div>
-          </div>
-        </header>
+        <TopHeader toggleSidebar={toggleSidebar} />
 
         <main className="dashboard-content">
           <Outlet />
