@@ -13,6 +13,7 @@ import {
   ArrowDownRight,
 } from 'lucide-react';
 import RecentShipments from './RecentShipments/RecentShipments';
+import ShipmentVolumeChart from '../../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart';
 import '../../dashboard/Dashboard.css';
 
 const CompanyDashboard: React.FC = () => {
@@ -78,6 +79,10 @@ const CompanyDashboard: React.FC = () => {
               <div className="stat-value">{stat.value}</div>
             </div>
           ))}
+        </div>
+
+        <div className="content-section">
+          <ShipmentVolumeChart />
         </div>
 
         <div className="content-section">
