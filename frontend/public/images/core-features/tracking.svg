@@ -1,0 +1,41 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="trackingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a3d3a;stop-opacity:0.3" />
+      <stop offset="100%" style="stop-color:#00d4c8;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Route path -->
+  <path d="M 50 150 Q 150 80, 250 150 T 350 150" stroke="#00d4c8" stroke-width="3" fill="none" stroke-dasharray="8 4" opacity="0.6"/>
+  
+  <!-- Checkpoint 1 -->
+  <circle cx="50" cy="150" r="12" fill="#00d4c8" opacity="0.8"/>
+  <circle cx="50" cy="150" r="8" fill="#0a3d3a"/>
+  <text x="50" y="185" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Pickup</text>
+  
+  <!-- Checkpoint 2 -->
+  <circle cx="150" cy="80" r="12" fill="#00d4c8" opacity="0.8"/>
+  <circle cx="150" cy="80" r="8" fill="#0a3d3a"/>
+  <text x="150" y="65" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Hub 1</text>
+  
+  <!-- Checkpoint 3 -->
+  <circle cx="250" cy="150" r="12" fill="#00d4c8" opacity="0.8"/>
+  <circle cx="250" cy="150" r="8" fill="#0a3d3a"/>
+  <text x="250" y="185" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Hub 2</text>
+  
+  <!-- Checkpoint 4 (active) -->
+  <circle cx="350" cy="150" r="16" fill="#00d4c8" opacity="0.3"/>
+  <circle cx="350" cy="150" r="12" fill="#00d4c8"/>
+  <circle cx="350" cy="150" r="8" fill="#ffffff"/>
+  <text x="350" y="185" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Delivery</text>
+  
+  <!-- Truck icon -->
+  <g transform="translate(320, 130)">
+    <rect x="0" y="4" width="20" height="14" rx="2" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <path d="M20 8h6l4 5v5h-10V8Z" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <circle cx="6" cy="20" r="2.5" fill="#00d4c8"/>
+    <circle cx="26" cy="20" r="2.5" fill="#00d4c8"/>
+  </g>
+</svg>

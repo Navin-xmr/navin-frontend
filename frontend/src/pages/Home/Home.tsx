@@ -1,14 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar/Navbar";
-import Hero from "../../LandingPage/sections/Hero/Hero";
+import LandingPage from "../../LandingPage/LandingPage";
 import "./Home.css";
 
 const Home: React.FC = () => {
   return (
     <div className="home-container">
       <Navbar />
-      <Hero />
+      <LandingPage />
 
       <div className="home-content">
         <h1 className="home-title">

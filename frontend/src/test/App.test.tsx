@@ -5,6 +5,7 @@ import App from "../App";
 describe("App", () => {
   it("renders without crashing", () => {
     render(<App />);
-    expect(screen.getByText(/Transparent/i)).toBeInTheDocument();
+    const transparentElements = screen.getAllByText(/Transparent/i);
+    expect(transparentElements.length).toBeGreaterThan(0);
   });
 });

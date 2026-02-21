@@ -1,0 +1,48 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Data flow diagram -->
+  <defs>
+    <linearGradient id="blockchainGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00d4c8;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#0a3d3a;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Backend box -->
+  <rect x="30" y="120" width="80" height="60" rx="8" stroke="#00d4c8" stroke-width="2" fill="rgba(10, 61, 58, 0.3)"/>
+  <text x="70" y="155" fill="#00d4c8" font-size="14" text-anchor="middle" font-family="DM Sans">Backend</text>
+  
+  <!-- Arrow 1 -->
+  <path d="M 110 150 L 150 150" stroke="#00d4c8" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="130" y="145" fill="#00d4c8" font-size="11" text-anchor="middle" font-family="DM Sans">Hash</text>
+  
+  <!-- Hash box -->
+  <rect x="150" y="120" width="80" height="60" rx="8" stroke="#00d4c8" stroke-width="2" fill="rgba(10, 61, 58, 0.5)"/>
+  <text x="190" y="145" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">SHA-256</text>
+  <text x="190" y="165" fill="#00d4c8" font-size="9" text-anchor="middle" font-family="monospace">a3f5b...</text>
+  
+  <!-- Arrow 2 -->
+  <path d="M 230 150 L 270 150" stroke="#00d4c8" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="250" y="145" fill="#00d4c8" font-size="11" text-anchor="middle" font-family="DM Sans">Emit</text>
+  
+  <!-- Blockchain box -->
+  <rect x="270" y="100" width="100" height="100" rx="8" stroke="#00d4c8" stroke-width="2" fill="rgba(0, 212, 200, 0.1)"/>
+  <text x="320" y="125" fill="#00d4c8" font-size="14" text-anchor="middle" font-family="DM Sans">Stellar</text>
+  <text x="320" y="145" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Blockchain</text>
+  
+  <!-- Block icons -->
+  <rect x="285" y="160" width="20" height="20" rx="2" stroke="#00d4c8" stroke-width="1.5" fill="none"/>
+  <rect x="310" y="160" width="20" height="20" rx="2" stroke="#00d4c8" stroke-width="1.5" fill="none"/>
+  <rect x="335" y="160" width="20" height="20" rx="2" stroke="#00d4c8" stroke-width="1.5" fill="rgba(0, 212, 200, 0.3)"/>
+  
+  <!-- Verification badge -->
+  <circle cx="320" cy="240" r="25" fill="rgba(0, 212, 200, 0.2)" stroke="#00d4c8" stroke-width="2"/>
+  <path d="M 310 240 L 318 248 L 330 232" stroke="#00d4c8" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <text x="320" y="270" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Verified</text>
+  
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#00d4c8" />
+    </marker>
+  </defs>
+</svg>

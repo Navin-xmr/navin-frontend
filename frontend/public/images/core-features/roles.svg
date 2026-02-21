@@ -1,0 +1,56 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Role-based collaboration diagram -->
+  <defs>
+    <linearGradient id="rolesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d4c8;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#0a3d3a;stop-opacity:0.1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Center contract -->
+  <circle cx="200" cy="150" r="50" stroke="#00d4c8" stroke-width="3" fill="rgba(10, 61, 58, 0.3)"/>
+  <text x="200" y="145" fill="#00d4c8" font-size="14" text-anchor="middle" font-family="DM Sans">Smart</text>
+  <text x="200" y="162" fill="#00d4c8" font-size="14" text-anchor="middle" font-family="DM Sans">Contract</text>
+  
+  <!-- Company (top-left) -->
+  <g transform="translate(60, 40)">
+    <circle cx="0" cy="0" r="35" stroke="#00d4c8" stroke-width="2" fill="rgba(0, 212, 200, 0.15)"/>
+    <circle cx="0" cy="-8" r="10" stroke="#00d4c8" stroke-width="2" fill="none"/>
+    <path d="M -12 8 Q -12 2, 0 2 Q 12 2, 12 8" stroke="#00d4c8" stroke-width="2" fill="none"/>
+    <text x="0" y="50" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Company</text>
+    <text x="0" y="65" fill="rgba(200, 230, 240, 0.6)" font-size="9" text-anchor="middle" font-family="DM Sans">Create</text>
+  </g>
+  <path d="M 90 65 L 160 120" stroke="#00d4c8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+  
+  <!-- Carrier (top-right) -->
+  <g transform="translate(340, 40)">
+    <circle cx="0" cy="0" r="35" stroke="#00d4c8" stroke-width="2" fill="rgba(0, 212, 200, 0.15)"/>
+    <rect x="-10" y="-5" width="20" height="12" rx="2" stroke="#00d4c8" stroke-width="2" fill="none"/>
+    <path d="M10 -1h6l4 5v4h-10V-1Z" stroke="#00d4c8" stroke-width="1.5" fill="none"/>
+    <circle cx="-4" cy="9" r="2" fill="#00d4c8"/>
+    <circle cx="12" cy="9" r="2" fill="#00d4c8"/>
+    <text x="0" y="50" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Carrier</text>
+    <text x="0" y="65" fill="rgba(200, 230, 240, 0.6)" font-size="9" text-anchor="middle" font-family="DM Sans">Update</text>
+  </g>
+  <path d="M 310 65 L 240 120" stroke="#00d4c8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+  
+  <!-- Customer (bottom-left) -->
+  <g transform="translate(60, 260)">
+    <circle cx="0" cy="0" r="35" stroke="#00d4c8" stroke-width="2" fill="rgba(0, 212, 200, 0.15)"/>
+    <circle cx="0" cy="-8" r="10" stroke="#00d4c8" stroke-width="2" fill="none"/>
+    <path d="M -12 8 Q -12 2, 0 2 Q 12 2, 12 8" stroke="#00d4c8" stroke-width="2" fill="none"/>
+    <text x="0" y="50" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Customer</text>
+    <text x="0" y="65" fill="rgba(200, 230, 240, 0.6)" font-size="9" text-anchor="middle" font-family="DM Sans">Confirm</text>
+  </g>
+  <path d="M 90 235 L 160 180" stroke="#00d4c8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+  
+  <!-- Admin (bottom-right) -->
+  <g transform="translate(340, 260)">
+    <circle cx="0" cy="0" r="35" stroke="#00d4c8" stroke-width="2" fill="rgba(0, 212, 200, 0.15)"/>
+    <path d="M -8 -10 L 0 -15 L 8 -10 L 8 0 L -8 0 Z" stroke="#00d4c8" stroke-width="2" fill="none"/>
+    <rect x="-3" y="2" width="6" height="8" stroke="#00d4c8" stroke-width="2" fill="none"/>
+    <text x="0" y="50" fill="#00d4c8" font-size="12" text-anchor="middle" font-family="DM Sans">Admin</text>
+    <text x="0" y="65" fill="rgba(200, 230, 240, 0.6)" font-size="9" text-anchor="middle" font-family="DM Sans">Resolve</text>
+  </g>
+  <path d="M 310 235 L 240 180" stroke="#00d4c8" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.6"/>
+</svg>
