@@ -1,31 +1,27 @@
 import "./WhyNavin.css";
-import Alerts from "../../../assets/Alerts.svg";
-import Deliveries from "../../../assets/Deliveries.svg";
-import Fast from "../../../assets/Fast.svg";
-import Transparency from "../../../assets/Transparency.svg";
 
 function WhyNavin() {
     const whyNavin = [
         {
-            icon: Transparency,
+            icon: "public/images/icons/Transparency.svg",
             iconAlt: "Eye icon",
             header: "Total Transparency",
             description: "See your shipments journey, every step of the way.",
         },
         {
-            icon: Alerts,
+            icon: "public/images/icons/Alerts.svg",
             iconAlt: "Bell icon",
             header: "Real Time Alerts",
             description: "Know instantly if there is a delay or issue.",
         },
         {
-            icon: Deliveries,
+            icon: "public/images/icons/Deliveries.svg",
             iconAlt: "Truck icon",
             header: "Safe Deliveries",
             description: "Tamper proof technology prevents fraud and errors.",
         },
         {
-            icon: Fast,
+            icon: "public/images/icons/Fast.svg",
             iconAlt: "Rocket icon",
             header: "Faster Service",
             description:

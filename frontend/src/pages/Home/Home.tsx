@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar/Navbar";
 import Hero from "../../LandingPage/sections/Hero/Hero";
 import "./Home.css";
-import HowItWorks from "@/LandingPage/sections/HowItWorks/HowItWorks";
-import WhyNavin from "@/LandingPage/sections/WhyNavin/WhyNavin";
 
 const Home: React.FC = () => {
     return (
@@ -33,8 +31,6 @@ const Home: React.FC = () => {
                     </Link>
                 </div>
             </div>
-            <WhyNavin />
-            <HowItWorks />
         </div>
     );
 };
