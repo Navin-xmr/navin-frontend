@@ -1,7 +1,13 @@
 import "./WhyNavin.css";
 
+type WhyNavin = {
+    icon: string;
+    iconAlt: string;
+    header: string;
+    description: string;
+};
 function WhyNavin() {
-    const whyNavin = [
+    const whyNavin: WhyNavin[] = [
         {
             icon: "public/images/icons/Transparency.svg",
             iconAlt: "Eye icon",
