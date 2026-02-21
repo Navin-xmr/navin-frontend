@@ -9,6 +9,7 @@ import BlockchainLedger from './pages/BlockchainLedger/BlockchainLedger';
 import Settlements from './pages/Settlements/Settlements';
 import Analytics from './pages/Analytics/Analytics';
 import Settings from './pages/Settings/Settings';
+import UserManagement from './pages/dashboard/Company/UserManagement/UserManagement';
 import CompanySettings from './pages/dashboard/Company/Settings/CompanySettings';
 import HelpCenter from './pages/HelpCenter/HelpCenter';
 import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
@@ -70,6 +71,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard/settings',
             element: <Settings />,
+          },
+          {
+            path: '/dashboard/team',
+            element: <UserManagement />,
           },
           {
             path: '/dashboard/help-center',
