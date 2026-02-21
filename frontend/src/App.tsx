@@ -9,7 +9,10 @@ import BlockchainLedger from './pages/BlockchainLedger/BlockchainLedger';
 import Settlements from './pages/Settlements/Settlements';
 import Analytics from './pages/Analytics/Analytics';
 import Settings from './pages/Settings/Settings';
+import UserManagement from './pages/dashboard/Company/UserManagement/UserManagement';
+import CompanySettings from './pages/dashboard/Company/Settings/CompanySettings';
 import HelpCenter from './pages/HelpCenter/HelpCenter';
+import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import './App.css';
@@ -46,6 +49,10 @@ const router = createBrowserRouter([
             element: <Shipments />,
           },
           {
+            path: '/dashboard/shipments/create',
+            element: <CreateShipment />,
+          },
+          {
             path: '/dashboard/blockchain-ledger',
             element: <BlockchainLedger />,
           },
@@ -59,7 +66,15 @@ const router = createBrowserRouter([
           },
           {
             path: '/dashboard/settings',
+            element: <CompanySettings />,
+          },
+          {
+            path: '/dashboard/settings',
             element: <Settings />,
+          },
+          {
+            path: '/dashboard/team',
+            element: <UserManagement />,
           },
           {
             path: '/dashboard/help-center',

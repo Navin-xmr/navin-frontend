@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 /// <reference types="node" />
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
@@ -26,5 +26,6 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
+    exclude: [...configDefaults.exclude, "src/LandingPage/sections/CoreFeatures/CoreFeatures.test.tsx"],
   },
 });

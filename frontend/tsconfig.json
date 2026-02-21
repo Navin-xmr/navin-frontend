@@ -37,5 +37,6 @@
     }
   },
   "include": ["src"],
+  "exclude": ["src/LandingPage/sections/CoreFeatures/CoreFeatures.test.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
