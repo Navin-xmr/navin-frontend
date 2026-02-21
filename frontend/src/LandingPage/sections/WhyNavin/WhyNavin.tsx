@@ -35,18 +35,18 @@ function WhyNavin() {
 
     return (
         <section className="why__section">
-            <h2 className="section__header">
+            <h2 className="why__section__header">
                 Why <span className="navin__cyan"> Navin?</span>
             </h2>
-            <div className="item__container">
+            <div className="why__item__container">
                 {whyNavin.map((item) => (
-                    <article className="section__item">
-                        <div className="icon__container">
+                    <article className="why__section__item">
+                        <div className="why__icon__container">
                             <img src={item.icon} alt={item.iconAlt} />
                         </div>
                         <article>
-                            <h3 className="item__header">{item.header}</h3>
-                            <p className="item__description">
+                            <h3 className="why__item__header">{item.header}</h3>
+                            <p className="why__item__description">
                                 {item.description}
                             </p>
                         </article>
