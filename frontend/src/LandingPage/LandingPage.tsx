@@ -9,7 +9,6 @@ const LandingPage: React.FC = () => {
             <Hero />
             <WhyNavin />
             <HowItWorks />
-            {}
         </main>
     );
 };
