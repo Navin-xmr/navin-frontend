@@ -10,6 +10,7 @@ import Settlements from './pages/Settlements/Settlements';
 import Analytics from './pages/Analytics/Analytics';
 import Settings from './pages/Settings/Settings';
 import HelpCenter from './pages/HelpCenter/HelpCenter';
+import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import './App.css';
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard/shipments',
             element: <Shipments />,
+          },
+          {
+            path: '/dashboard/shipments/create',
+            element: <CreateShipment />,
           },
           {
             path: '/dashboard/blockchain-ledger',
