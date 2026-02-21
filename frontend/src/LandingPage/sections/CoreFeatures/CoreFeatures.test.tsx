@@ -1,6 +1,24 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeAll } from 'vitest';
 import CoreFeatures from './CoreFeatures';
+
+beforeAll(() => {
+  const IntersectionObserverMock = class {
+    observe() { }
+    unobserve() { }
+    disconnect() { }
+  };
+  Object.defineProperty(window, 'IntersectionObserver', {
+    writable: true,
+    configurable: true,
+    value: IntersectionObserverMock,
+  });
+  Object.defineProperty(globalThis, 'IntersectionObserver', {
+    writable: true,
+    configurable: true,
+    value: IntersectionObserverMock,
+  });
+});
 
 describe('CoreFeatures', () => {
   it('renders the section title and subtitle', () => {
