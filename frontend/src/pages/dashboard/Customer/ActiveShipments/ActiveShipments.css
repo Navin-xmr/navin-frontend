@@ -1,0 +1,140 @@
+.active-shipments {
+  padding: 2rem;
+}
+
+.active-shipments-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1a1a1a;
+}
+
+.shipment-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.shipment-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.shipment-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.shipment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shipment-id {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1a1a1a;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-in-transit {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-pending-pickup {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-out-for-delivery {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-delayed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.shipment-route {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.route-location {
+  font-weight: 500;
+}
+
+.route-arrow {
+  color: #9ca3af;
+  font-size: 1rem;
+}
+
+.shipment-eta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.eta-label {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.eta-date {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.track-button {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.track-button:hover {
+  background: #1d4ed8;
+}
+
+.track-button:active {
+  background: #1e40af;
+}
+
+@media (max-width: 768px) {
+  .active-shipments {
+    padding: 1rem;
+  }
+
+  .shipment-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .active-shipments-title {
+    font-size: 1.25rem;
+  }
+}
