@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Bell, LayoutGrid, User, Settings as SettingsIcon, LogOut, Search } from 'lucide-react';
 import './TopHeader.css';
+import { useNavigate } from 'react-router-dom';
 
 interface TopHeaderProps {
   toggleSidebar: () => void;
@@ -9,6 +10,7 @@ interface TopHeaderProps {
 const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -22,6 +24,11 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleProfileClick = () => {
+    navigate('/dashboard/profile');
+    setIsDropdownOpen(false);
+  }
 
   return (
     <header className="top-header">
@@ -79,7 +86,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
             <div className="user-dropdown-menu">
               <ul className="dropdown-list">
                 <li>
-                  <button className="dropdown-item">
+                  <button className="dropdown-item" onClick={handleProfileClick}>
                     <User size={16} className="dropdown-icon" />
                     <span>Profile</span>
                   </button>
