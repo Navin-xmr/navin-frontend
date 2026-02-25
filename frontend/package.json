@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "packageManager": "pnpm@10.24.0",
   "dependencies": {
     "@stellar/freighter-api": "^6.0.1",
     "axios": "^1.7.0",

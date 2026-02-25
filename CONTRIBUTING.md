@@ -39,7 +39,14 @@ This repository is the **frontend** of the Navin platform — a React applicatio
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or later
-- npm (included with Node.js)
+- [pnpm](https://pnpm.io/) v10 or later (required package manager)
+
+To install pnpm:
+```bash
+npm install -g pnpm
+# or
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+```
 
 ### Fork & Clone
 
@@ -62,13 +69,13 @@ This repository is the **frontend** of the Navin platform — a React applicatio
 4. **Install dependencies:**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 5. **Start the development server:**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ---
@@ -122,13 +129,13 @@ Before pushing, always run these:
 
 ```bash
 # Check formatting
-npm run lint
+pnpm run lint
 
 # Run any existing tests
-npm run test
+pnpm run test
 
 # Verify the build works
-npm run build
+pnpm run build
 ```
 
 Fix any errors or warnings before pushing.
@@ -165,6 +172,17 @@ git commit -m "fix: resolve mobile layout overflow on dashboard sidebar"
 git commit -m "style: update status badge colors to match design system"
 git commit -m "docs: add JSDoc comments to API service functions"
 ```
+
+---
+
+## Package Manager
+
+This project uses **pnpm** as the package manager. Do not use npm or yarn.
+
+- Always use `pnpm install` to install dependencies
+- Always use `pnpm run <script>` to run scripts
+- The project includes a `pnpm-lock.yaml` file that must be committed
+- Never commit `package-lock.json` or `yarn.lock` files
 
 ---
 
