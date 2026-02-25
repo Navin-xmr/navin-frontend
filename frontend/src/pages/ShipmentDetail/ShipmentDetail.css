@@ -1,0 +1,11 @@
+.shipment-detail-page {
+  padding: 24px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+@media (max-width: 640px) {
+  .shipment-detail-page {
+    padding: 16px;
+  }
+}

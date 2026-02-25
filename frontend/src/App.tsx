@@ -12,6 +12,7 @@ import UserManagement from './pages/dashboard/Company/UserManagement/UserManagem
 import CompanySettings from './pages/dashboard/Company/Settings/CompanySettings';
 import HelpCenter from './pages/HelpCenter/HelpCenter';
 import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
+import ShipmentDetail from './pages/ShipmentDetail/ShipmentDetail';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import CustomerProfile from './pages/dashboard/Customer/Profile/CustomerProfile';
@@ -51,6 +52,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard/shipments/create',
             element: <CreateShipment />,
+          },
+          {
+            path: '/dashboard/shipments/:id',
+            element: <ShipmentDetail />,
           },
           {
             path: '/dashboard/blockchain-ledger',
