@@ -1,0 +1,31 @@
+.shipments-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.shipments-page h1 {
+  margin: 0 0 12px;
+}
+
+.shipments-page p {
+  margin: 0 0 16px;
+  color: #4b5563;
+}
+
+.shipments-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shipments-links a {
+  width: fit-content;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.shipments-links a:hover {
+  text-decoration: underline;
+}
