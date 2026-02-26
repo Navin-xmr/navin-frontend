@@ -1,0 +1,49 @@
+/* Full width banner with gradient background */
+.cta-banner {
+    width: 100%;
+    padding: 4rem 1rem;
+    background: linear-gradient(135deg, #005f73 0%, #0a9396 100%);
+    color: white;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+.cta-banner__content {
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.cta-banner__headline {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.cta-banner__subheadline {
+    font-size: 1.125rem;
+    margin: 0;
+    line-height: 1.5;
+    max-width: 600px;
+}
+
+/* adjust sizes on larger screens */
+@media (min-width: 640px) {
+    .cta-banner__headline {
+        font-size: 2.5rem;
+    }
+    .cta-banner__subheadline {
+        font-size: 1.25rem;
+    }
+}
+
+.cta-banner__button {
+    transition: transform 0.2s ease;
+}
+
+.cta-banner__button:hover {
+    transform: translateY(-2px);
+}
