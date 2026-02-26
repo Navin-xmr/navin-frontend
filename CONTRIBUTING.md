@@ -39,7 +39,14 @@ This repository is the **frontend** of the Navin platform — a React applicatio
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or later
-- npm (included with Node.js)
+- [pnpm](https://pnpm.io/) v10 or later (required package manager)
+
+To install pnpm:
+```bash
+npm install -g pnpm
+# or
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+```
 
 ### Fork & Clone
 
@@ -62,13 +69,14 @@ This repository is the **frontend** of the Navin platform — a React applicatio
 4. **Install dependencies:**
 
    ```bash
-   npm install
+   cd frontend
+   pnpm install
    ```
 
 5. **Start the development server:**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ---
@@ -122,13 +130,13 @@ Before pushing, always run these:
 
 ```bash
 # Check formatting
-npm run lint
+pnpm run lint
 
 # Run any existing tests
-npm run test
+pnpm run test
 
 # Verify the build works
-npm run build
+pnpm run build
 ```
 
 Fix any errors or warnings before pushing.

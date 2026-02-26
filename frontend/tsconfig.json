@@ -15,7 +15,7 @@
     "jsx": "react-jsx",
 
     /* Vitest globals (describe / it / expect) */
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "node"],
 
     /* Strict type checking — required for Soroban SDK interop */
     "strict": true,

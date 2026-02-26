@@ -7,5 +7,104 @@
 @media (max-width: 640px) {
   .shipment-detail-page {
     padding: 16px;
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+
+.shipment-detail-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background: radial-gradient(ellipse at 50% 0%, #0a3d3a 0%, #061e20 35%, #020d10 70%, #000 100%);
+  padding: 4rem 2rem;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.shipment-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HEADER SECTION ── */
+.shipment-detail-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.shipment-detail-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+}
+
+.shipment-detail-title-accent {
+  color: #00d4c8;
+}
+
+.shipment-detail-subtitle {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  font-weight: 300;
+  line-height: 1.7;
+  color: rgba(200, 230, 240, 0.75);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ── CONTENT SECTION ── */
+.shipment-detail-content {
+  background: rgba(8, 40, 50, 0.4);
+  border: 1.5px solid rgba(0, 180, 160, 0.3);
+  border-radius: 24px;
+  padding: 3rem 2rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.milestone-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: #ffffff;
+  margin: 0 0 2.5rem 0;
+  text-align: center;
+}
+
+.milestone-section-title-accent {
+  color: #00d4c8;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .shipment-detail-page {
+    padding: 2rem 1rem;
+  }
+
+  .shipment-detail-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .shipment-detail-content {
+    padding: 2rem 1.25rem;
+    border-radius: 16px;
+  }
+
+  .milestone-section-title {
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .shipment-detail-page {
+    padding: 1.5rem 0.75rem;
+  }
+
+  .shipment-detail-content {
+    padding: 1.5rem 1rem;
   }
 }

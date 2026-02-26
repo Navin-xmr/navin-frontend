@@ -1,10 +1,16 @@
+import React from 'react';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import NotificationDropdown from './NotificationDropdown';
+
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(<MemoryRouter>{component}</MemoryRouter>);
+};
 
 describe('NotificationDropdown', () => {
   it('renders the bell icon with unread badge', () => {
-    render(<NotificationDropdown />);
+    renderWithRouter(<NotificationDropdown />);
     
     const bellButton = screen.getByLabelText('Notifications');
     expect(bellButton).toBeInTheDocument();
@@ -14,7 +20,7 @@ describe('NotificationDropdown', () => {
   });
 
   it('opens dropdown when bell icon is clicked', () => {
-    render(<NotificationDropdown />);
+    renderWithRouter(<NotificationDropdown />);
     
     const bellButton = screen.getByLabelText('Notifications');
     fireEvent.click(bellButton);
@@ -24,7 +30,7 @@ describe('NotificationDropdown', () => {
   });
 
   it('displays 5 notifications in the dropdown', () => {
-    render(<NotificationDropdown />);
+    renderWithRouter(<NotificationDropdown />);
     
     const bellButton = screen.getByLabelText('Notifications');
     fireEvent.click(bellButton);
@@ -35,7 +41,7 @@ describe('NotificationDropdown', () => {
   });
 
   it('closes dropdown when close button is clicked', () => {
-    render(<NotificationDropdown />);
+    renderWithRouter(<NotificationDropdown />);
     
     const bellButton = screen.getByLabelText('Notifications');
     fireEvent.click(bellButton);
@@ -47,7 +53,7 @@ describe('NotificationDropdown', () => {
   });
 
   it('closes dropdown when ESC key is pressed', () => {
-    render(<NotificationDropdown />);
+    renderWithRouter(<NotificationDropdown />);
     
     const bellButton = screen.getByLabelText('Notifications');
     fireEvent.click(bellButton);
