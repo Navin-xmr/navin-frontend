@@ -8,14 +8,21 @@
   .shipment-detail-page {
     padding: 16px;
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap");
 
 .shipment-detail-page {
   position: relative;
   min-height: 100vh;
   width: 100%;
-  background: radial-gradient(ellipse at 50% 0%, #0a3d3a 0%, #061e20 35%, #020d10 70%, #000 100%);
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    #0a3d3a 0%,
+    #061e20 35%,
+    #020d10 70%,
+    #000 100%
+  );
   padding: 4rem 2rem;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
 }
 
 .shipment-detail-container {
@@ -32,7 +39,7 @@
 }
 
 .shipment-detail-title {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: "Bebas Neue", sans-serif;
   font-size: clamp(2.5rem, 7vw, 5rem);
   font-weight: 400;
   letter-spacing: 0.04em;
@@ -59,20 +66,27 @@
   background: rgba(8, 40, 50, 0.4);
   border: 1.5px solid rgba(0, 180, 160, 0.3);
   border-radius: 24px;
-  padding: 3rem 2rem;
+  padding: 2rem;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .milestone-section-title {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: "Bebas Neue", sans-serif;
   font-size: clamp(1.75rem, 4vw, 2.5rem);
   font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.2;
   color: #ffffff;
-  margin: 0 0 2.5rem 0;
+  margin: 2.5rem 0 0 0;
+  padding-bottom: 0;
   text-align: center;
+}
+
+.divider-line {
+  height: 1px;
+  background-color: rgba(0, 212, 200, 0.2);
+  margin: 2rem 0;
 }
 
 .milestone-section-title-accent {

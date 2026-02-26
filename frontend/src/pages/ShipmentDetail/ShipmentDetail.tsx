@@ -78,9 +78,32 @@ import MilestoneTimeline, {
   MilestoneDetail,
 } from "./MilestoneTimeline/MilestoneTimeline";
 import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
+import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import "./ShipmentDetail.css";
 
 const ShipmentDetail: React.FC = () => {
+  // Mock shipment header data
+  const shipmentHeaderData = {
+    shipmentId: "#SHP-992834",
+    status: "in_transit" as const,
+    originAddress: "New York Distribution Center, NY 10001",
+    destinationAddress: "123 Main Street, Boston, MA 02101",
+    expectedDeliveryDate: "Oct 24, 2026 by 5:00 PM EST",
+    userRole: "company" as const,
+  };
+
+  // Handle status update - can be connected to API later
+  const handleUpdateStatus = () => {
+    console.log("Update status clicked");
+    // TODO: Open modal/dialog for status update
+  };
+
+  // Handle track - can navigate to tracking view
+  const handleTrack = () => {
+    console.log("Track clicked");
+    // TODO: Navigate to tracking view or open tracking modal
+  };
+
   // Mock data with 7 milestones including blockchain addresses and expandable details
   const mockMilestones: MilestoneDetail[] = [
     {
@@ -199,6 +222,17 @@ const ShipmentDetail: React.FC = () => {
         </div>
 
         <div className="shipment-detail-content">
+          {/* Shipment Header Section */}
+          <ShipmentDetailHeader
+            {...shipmentHeaderData}
+            onUpdateStatus={handleUpdateStatus}
+            onTrack={handleTrack}
+          />
+
+          {/* Divider */}
+          <div className="divider-line"></div>
+
+          {/* Milestone Timeline Section */}
           <h2 className="milestone-section-title">
             MILESTONE{" "}
             <span className="milestone-section-title-accent">TIMELINE</span>
