@@ -13,9 +13,9 @@ describe('ShipmentMap placeholder', () => {
       />
     );
 
-    expect(screen.getByText(/MAP/i)).toBeInTheDocument();
-    expect(screen.getByText(/ORIGIN/i)).toBeInTheDocument();
-    expect(screen.getByText(/DESTINATION/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /map view/i })).toBeInTheDocument();
+    expect(screen.getByText('ORIGIN:')).toBeInTheDocument();
+    expect(screen.getByText('DESTINATION:')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /View full map/i })).toBeInTheDocument();
   });
 });

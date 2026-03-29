@@ -6,6 +6,8 @@ import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import ShipmentMap from "./ShipmentMap/ShipmentMap";
 import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
 import DeliveryConfirmation from "../../components/shipment/DeliveryConfirmation/DeliveryConfirmation";
+import PaymentStatus, { PaymentData } from "./PaymentStatus/PaymentStatus";
+import SensorDataCards, { SensorData } from "./SensorDataCards/SensorDataCards";
 
 const ShipmentDetail: FC = () => {
   const shipmentHeaderData = {
@@ -22,6 +24,39 @@ const ShipmentDetail: FC = () => {
   };
   const handleTrack = () => {
     console.log("Track clicked");
+  };
+
+  // Mock payment data - set to null to show empty state
+  const mockPaymentData: PaymentData | null = {
+    amount: "1,500.00",
+    tokenSymbol: "XLM",
+    status: "escrowed",
+    payerAddress: "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI",
+    payeeAddress: "GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB",
+    transactionHash: "a]b c9d4e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9",
+  };
+
+  // Mock sensor data - set to null to show empty state
+  const mockSensorData: SensorData | null = {
+    temperature: {
+      value: 22,
+      unit: "°C",
+      lastUpdated: "2026-02-23 09:15 AM EST",
+    },
+    humidity: {
+      value: 45,
+      unit: "%",
+      lastUpdated: "2026-02-23 09:15 AM EST",
+    },
+    gps: {
+      latitude: 42.3601,
+      longitude: -71.0589,
+      lastUpdated: "2026-02-23 09:10 AM EST",
+    },
+    shockTilt: {
+      eventCount: 2,
+      lastUpdated: "2026-02-22 03:45 PM EST",
+    },
   };
 
   const mockMilestones: MilestoneDetail[] = [
@@ -127,13 +162,13 @@ const ShipmentDetail: FC = () => {
 
   return (
     <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
-      <div className="max-w-[1200px] mx-auto relative z-10">
+      <div className="max-w-300 mx-auto relative z-10">
         {/* Page header */}
         <div className="text-center mb-16 md:mb-10">
           <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(2.5rem,7vw,5rem)] font-normal tracking-[0.04em] leading-[1.1] text-white m-0 mb-4">
             SHIPMENT <span className="text-[#00d4c8]">DETAILS</span>
           </h1>
-          <p className="text-[clamp(0.95rem,2vw,1.1rem)] font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-[600px] mx-auto">
+          <p className="text-[clamp(0.95rem,2vw,1.1rem)] font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-150 mx-auto">
             Track your shipment's journey with blockchain-verified milestones
           </p>
         </div>
@@ -160,6 +195,8 @@ const ShipmentDetail: FC = () => {
           <MilestoneTimeline milestones={mockMilestones} />
         </div>
 
+        <SensorDataCards sensorData={mockSensorData} />
+        <PaymentStatus payment={mockPaymentData} />
         <DeliveryProofUpload />
         <DeliveryConfirmation
           shipmentId={shipmentHeaderData.shipmentId}

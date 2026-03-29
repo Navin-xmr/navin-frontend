@@ -36,7 +36,7 @@ describe('DeliveryConfirmation', () => {
   describe('render conditions', () => {
     it('renders when status is delivered', () => {
       render(<DeliveryConfirmation {...defaultProps} />);
-      expect(screen.getByText(/CONFIRM/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /confirm delivery/i })).toBeInTheDocument();
     });
 
     it('renders nothing when status is not delivered', () => {
@@ -125,16 +125,15 @@ describe('DeliveryConfirmation', () => {
   });
 
   describe('submission behavior', () => {
-    beforeEach(async () => {
+    it('submit button is disabled when no rating selected', async () => {
       render(<DeliveryConfirmation {...defaultProps} />);
       await userEvent.click(screen.getByRole('button', { name: /confirm receipt/i }));
-    });
-
-    it('submit button is disabled when no rating selected', () => {
       expect(screen.getByRole('button', { name: /submit confirmation/i })).toBeDisabled();
     });
 
     it('submit button is enabled after rating is selected', async () => {
+      render(<DeliveryConfirmation {...defaultProps} />);
+      await userEvent.click(screen.getByRole('button', { name: /confirm receipt/i }));
       const stars = screen.getAllByRole('radio');
       await userEvent.click(stars[3]);
       expect(screen.getByRole('button', { name: /submit confirmation/i })).not.toBeDisabled();
@@ -144,7 +143,7 @@ describe('DeliveryConfirmation', () => {
       const onConfirm = vi.fn();
       render(<DeliveryConfirmation {...defaultProps} onConfirm={onConfirm} />);
       await userEvent.click(screen.getByRole('button', { name: /confirm receipt/i }));
-      fireEvent.submit(screen.getByRole('form', { hidden: true }) ?? document.querySelector('form')!);
+      await userEvent.click(screen.getByRole('button', { name: /^submit confirmation$/i }));
       expect(onConfirm).not.toHaveBeenCalled();
     });
 
@@ -155,7 +154,7 @@ describe('DeliveryConfirmation', () => {
       const stars = screen.getAllByRole('radio');
       await userEvent.click(stars[4]);
       await userEvent.type(screen.getByLabelText(/feedback/i), 'Great service');
-      await userEvent.click(screen.getByRole('button', { name: /submit confirmation/i }));
+      await userEvent.click(screen.getByRole('button', { name: /^submit confirmation$/i }));
       await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('#SHP-001', 5, 'Great service'));
     });
 
@@ -165,7 +164,7 @@ describe('DeliveryConfirmation', () => {
       await userEvent.click(screen.getByRole('button', { name: /confirm receipt/i }));
       const stars = screen.getAllByRole('radio');
       await userEvent.click(stars[2]);
-      await userEvent.click(screen.getByRole('button', { name: /submit confirmation/i }));
+      await userEvent.click(screen.getByRole('button', { name: /^submit confirmation$/i }));
       await waitFor(() => expect(onConfirm).toHaveBeenCalledWith('#SHP-001', 3, ''));
     });
   });

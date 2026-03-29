@@ -12,6 +12,8 @@ import {
   X,
   CreditCard,
   Bell,
+  User,
+  History,
 } from 'lucide-react';
 import TopHeader from './TopHeader/TopHeader';
 
@@ -23,6 +25,7 @@ const DashboardLayout: React.FC = () => {
   const mainMenu = [
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
     { name: 'Shipments', icon: <Package size={18} />, path: '/dashboard/shipments' },
+    { name: 'Shipment History', icon: <History size={18} />, path: '/dashboard/shipments/history' },
     { name: 'Blockchain Ledger', icon: <Database size={18} />, path: '/dashboard/blockchain-ledger' },
     { name: 'Settlements', icon: <Wallet size={18} />, path: '/dashboard/settlements' },
     { name: 'Payments', icon: <CreditCard size={18} />, path: '/dashboard/payments' },
@@ -31,6 +34,7 @@ const DashboardLayout: React.FC = () => {
   ];
 
   const systemMenu = [
+    { name: 'Profile', icon: <User size={18} />, path: '/dashboard/profile' },
     { name: 'Settings', icon: <Settings size={18} />, path: '/dashboard/settings' },
     { name: 'Help Center', icon: <HelpCircle size={18} />, path: '/dashboard/help-center' },
   ];
@@ -43,7 +47,7 @@ const DashboardLayout: React.FC = () => {
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[90] lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-90 lg:hidden"
           onClick={closeSidebar}
         />
       )}
@@ -51,9 +55,9 @@ const DashboardLayout: React.FC = () => {
       {/* Sidebar */}
       <aside
         className={`
-          w-[260px] bg-[#0b0e14] border-r border-[#1e2433] flex flex-col shrink-0 p-6
+          w-65 bg-[#0b0e14] border-r border-[#1e2433] flex flex-col shrink-0 p-6
           lg:relative lg:translate-x-0
-          fixed top-0 left-0 h-full z-[100] transition-transform duration-300 ease-in-out
+          fixed top-0 left-0 h-full z-100 transition-transform duration-300 ease-in-out
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
@@ -78,7 +82,7 @@ const DashboardLayout: React.FC = () => {
                   key={item.name}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all border-none w-full text-left
                     ${isActive
-                      ? 'bg-[rgba(19,186,186,0.15)] text-white border-l-[3px] border-l-[#62ffff] pl-[9px] [&_svg]:text-[#62ffff]'
+                      ? 'bg-[rgba(19,186,186,0.15)] text-white border-l-[3px] border-l-[#62ffff] pl-2.25 [&_svg]:text-[#62ffff]'
                       : 'bg-transparent text-[#8a8f9d] hover:bg-[rgba(19,186,186,0.1)] hover:text-white'
                     }`}
                   onClick={() => { navigate(item.path); closeSidebar(); }}
@@ -101,7 +105,7 @@ const DashboardLayout: React.FC = () => {
                   key={item.name}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all border-none w-full text-left
                     ${isActive
-                      ? 'bg-[rgba(19,186,186,0.15)] text-white border-l-[3px] border-l-[#62ffff] pl-[9px] [&_svg]:text-[#62ffff]'
+                      ? 'bg-[rgba(19,186,186,0.15)] text-white border-l-[3px] border-l-[#62ffff] pl-2.25 [&_svg]:text-[#62ffff]'
                       : 'bg-transparent text-[#8a8f9d] hover:bg-[rgba(19,186,186,0.1)] hover:text-white'
                     }`}
                   onClick={() => { navigate(item.path); closeSidebar(); }}
@@ -133,7 +137,7 @@ const DashboardLayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-y-auto">
         <TopHeader toggleSidebar={toggleSidebar} />
-        <main className="p-8 lg:p-8 p-4">
+        <main className="p-8 lg:p-8">
           <Outlet />
         </main>
       </div>

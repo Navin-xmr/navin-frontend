@@ -108,7 +108,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed && <span className="nav-label">Help Center</span>}
         </button>
 
-        <button className="avatar-btn" title="Profile">
+        <button
+          className="avatar-btn"
+          title="Profile"
+          onClick={() => {
+            navigate("/dashboard/profile");
+            onClose();
+          }}
+        >
           <img
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=ffcba4"
             alt="User Profile"
