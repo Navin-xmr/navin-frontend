@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 
 const DeliveryProofUpload: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
