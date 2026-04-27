@@ -1,0 +1,242 @@
+.shipment-header {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.shipment-header-content {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Left Section - Shipment ID and Status */
+.shipment-header-left {
+  min-width: 200px;
+}
+
+.shipment-id-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shipment-id {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+/* Center Section - Parties and Dates */
+.shipment-header-center {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0; /* Allow shrinking */
+}
+
+.shipment-parties {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.party-info {
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+}
+
+.party-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px 0;
+}
+
+.party-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.party-address {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.route-arrow {
+  color: var(--accent-blue);
+  flex-shrink: 0;
+}
+
+.shipment-dates {
+  display: flex;
+  gap: 32px;
+}
+
+.date-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.date-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Right Section - Action Buttons */
+.shipment-header-right {
+  min-width: 200px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.action-btn.primary {
+  background-color: var(--accent-blue);
+  color: white;
+}
+
+.action-btn.primary:hover {
+  background-color: #2563eb;
+}
+
+.action-btn.secondary {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.action-btn.secondary:hover {
+  background-color: var(--bg-card-header);
+  color: var(--text-primary);
+  border-color: var(--accent-blue);
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+  .shipment-header-content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .shipment-header-left {
+    min-width: auto;
+  }
+  
+  .shipment-id-section {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .shipment-parties {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+  
+  .route-arrow {
+    align-self: center;
+    transform: rotate(90deg);
+  }
+  
+  .party-info {
+    text-align: center;
+  }
+  
+  .party-name,
+  .party-address {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  
+  .shipment-dates {
+    justify-content: space-between;
+  }
+  
+  .shipment-header-right {
+    min-width: auto;
+  }
+  
+  .action-buttons {
+    flex-direction: row;
+    gap: 12px;
+  }
+  
+  .action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .shipment-header {
+    padding: 16px;
+  }
+  
+  .shipment-id {
+    font-size: 24px;
+  }
+  
+  .shipment-dates {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

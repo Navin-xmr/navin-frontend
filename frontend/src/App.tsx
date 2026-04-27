@@ -5,6 +5,7 @@ import Login from './pages/auth/Login/Login';
 import ForgotPassword from './pages/auth/ForgotPassword/ForgotPassword';
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
 import Shipments from './pages/Shipments/Shipments';
+import ShipmentDetail from './pages/Shipment/ShipmentDetail';
 import BlockchainLedger from './pages/BlockchainLedger/BlockchainLedger';
 import Settlements from './pages/Settlements/Settlements';
 import Analytics from './pages/Analytics/Analytics';
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard/shipments',
             element: <Shipments />,
+          },
+          {
+            path: '/dashboard/shipments/:id',
+            element: <ShipmentDetail />,
           },
           {
             path: '/dashboard/shipments/create',
