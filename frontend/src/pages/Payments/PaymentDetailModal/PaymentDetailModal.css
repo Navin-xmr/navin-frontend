@@ -1,0 +1,246 @@
+/* frontend/src/pages/Payments/PaymentDetailModal/PaymentDetailModal.css */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 13, 16, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  background: rgba(8, 40, 50, 0.95);
+  border: 1.5px solid rgba(98, 255, 255, 0.2);
+  border-radius: 2rem;
+  width: 90%;
+  max-width: 550px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 212, 200, 0.1);
+  animation: slideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.close-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(98, 255, 255, 0.5);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #62ffff;
+}
+
+.modal-header {
+  padding: 2.5rem 2rem 1.5rem;
+  background: linear-gradient(to bottom, rgba(0, 212, 200, 0.05), transparent);
+  border-bottom: 1px solid rgba(98, 255, 255, 0.1);
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge.pending { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.status-badge.escrowed { background: rgba(98, 255, 255, 0.15); color: #62ffff; border: 1px solid rgba(98, 255, 255, 0.3); }
+.status-badge.released { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.status-badge.failed { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+.payment-id {
+  font-size: 0.8rem;
+  color: rgba(98, 255, 255, 0.4);
+  font-family: 'Courier New', monospace;
+}
+
+.payment-amount {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.5rem;
+  margin: 0;
+  color: white;
+  letter-spacing: 0.02em;
+}
+
+.payment-amount .token {
+  color: #00d4c8;
+  font-size: 1.5rem;
+  vertical-align: middle;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.detail-section {
+  display: grid;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(98, 255, 255, 0.4);
+  letter-spacing: 0.1em;
+}
+
+.detail-value {
+  font-size: 0.9rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-value.link {
+  color: #62ffff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.detail-value.link:hover {
+  text-decoration: underline;
+}
+
+.detail-value.mono {
+  font-family: 'Courier New', monospace;
+}
+
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  margin: 0 0 1.25rem;
+  letter-spacing: 0.04em;
+}
+
+.section-title .highlight { color: #00d4c8; }
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0.9rem;
+  height: 100%;
+  width: 2px;
+  background: rgba(98, 255, 255, 0.1);
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1.5rem;
+  position: relative;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+}
+
+.timeline-item.active {
+  opacity: 1;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  background: #082832;
+  border: 2px solid rgba(98, 255, 255, 0.3);
+  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+  margin-top: 5px;
+  transition: all 0.3s;
+}
+
+.active .timeline-dot {
+  background: #00d4c8;
+  border-color: #62ffff;
+  box-shadow: 0 0 10px rgba(98, 255, 255, 0.5);
+}
+
+.timeline-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.step-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+}
+
+.step-time {
+  font-size: 0.75rem;
+  color: rgba(200, 230, 240, 0.6);
+}
+
+.modal-footer {
+  padding: 1.5rem 2rem 2.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.primary-btn, .secondary-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: center;
+  text-decoration: none;
+}
+
+.primary-btn {
+  background: #00d4c8;
+  color: black;
+  border: 1px solid #00d4c8;
+}
+
+.primary-btn:hover { background: #62ffff; border-color: #62ffff; }
+
+.secondary-btn {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(98, 255, 255, 0.2);
+}
+
+.secondary-btn:hover { background: rgba(98, 255, 255, 0.1); border-color: #62ffff; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

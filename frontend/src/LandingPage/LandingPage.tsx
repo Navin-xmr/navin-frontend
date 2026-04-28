@@ -5,14 +5,14 @@ import WhyNavin from "@/LandingPage/sections/WhyNavin/WhyNavin";
 import Features from "@/pages/LandingPage/sections/Features/Features";
 
 const LandingPage: React.FC = () => {
-    return (
-        <main>
-            <Hero />
-            <WhyNavin />
-            <Features />
-            <HowItWorks />
-        </main>
-    );
+  return (
+    <main>
+      <Hero />
+      <WhyNavin />
+      <Features />
+      <HowItWorks />
+    </main>
+  );
 };
 
 export default LandingPage;

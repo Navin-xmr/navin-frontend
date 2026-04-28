@@ -1,0 +1,124 @@
+/* frontend/src/pages/ShipmentDetail/ShipmentMap/ShipmentMap.css */
+.shipment-map-container {
+  margin-bottom: 2.5rem;
+  width: 100%;
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.map-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: white;
+  margin: 0;
+}
+
+.map-title .highlight {
+  color: #00d4c8;
+}
+
+.map-stats {
+  display: flex;
+  gap: 2rem;
+  text-align: right;
+}
+
+.map-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.map-stats .label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(0, 212, 200, 0.6);
+  letter-spacing: 0.1em;
+}
+
+.map-stats .value {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: rgba(200, 230, 240, 0.9);
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-placeholder {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  border: 1.5px solid rgba(0, 212, 200, 0.2);
+  background: rgba(8, 40, 50, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.map-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  filter: saturate(0.8) brightness(0.9);
+}
+
+.map-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(0, 212, 200, 0.05) 0%, transparent 70%);
+}
+
+.view-full-map-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 2.5rem;
+  background: rgba(0, 212, 200, 0.1);
+  color: #62ffff;
+  border: 1.5px solid #00d4c8;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 0 0 15px rgba(0, 212, 200, 0.2);
+}
+
+.view-full-map-btn:hover {
+  background: #00d4c8;
+  color: #000;
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px rgba(0, 212, 200, 0.4);
+}
+
+@media (max-width: 768px) {
+  .map-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .map-stats {
+    text-align: center;
+  }
+  
+  .map-stats .value {
+    max-width: 100%;
+  }
+}

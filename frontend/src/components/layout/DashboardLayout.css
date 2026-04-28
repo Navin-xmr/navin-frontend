@@ -38,7 +38,7 @@
     font-size: 20px;
     font-weight: 700;
     margin-bottom: 48px;
-    color: #3b82f6;
+    color: #62ffff;
 }
 
 .sidebar-section {
@@ -78,17 +78,19 @@
 }
 
 .sidebar-item:hover {
-    background-color: #1a1f2e;
+    background-color: rgba(19, 186, 186, 0.1);
     color: var(--text-primary);
 }
 
 .sidebar-item.active {
-    background-color: #1a1f2e;
+    background-color: rgba(19, 186, 186, 0.15);
     color: var(--text-primary);
+    border-left: 3px solid #62ffff;
+    padding-left: 9px;
 }
 
 .sidebar-item.active svg {
-    color: var(--accent-blue);
+    color: #62ffff;
 }
 
 .sidebar-footer {
@@ -97,8 +99,8 @@
 }
 
 .node-status {
-    background-color: #121620;
-    border: 1px solid var(--border-color);
+    background-color: rgba(19, 186, 186, 0.1);
+    border: 1px solid rgba(98, 255, 255, 0.3);
     border-radius: 12px;
     padding: 12px;
     display: flex;
@@ -109,12 +111,12 @@
 .node-icon {
     width: 36px;
     height: 36px;
-    background-color: #1a1f2e;
+    background-color: rgba(19, 186, 186, 0.2);
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-secondary);
+    color: #62ffff;
 }
 
 .node-info h4 {
@@ -125,7 +127,7 @@
 
 .node-info p {
     font-size: 11px;
-    color: var(--accent-green);
+    color: #62ffff;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -134,9 +136,9 @@
 .status-dot {
     width: 6px;
     height: 6px;
-    background-color: var(--accent-green);
+    background-color: #62ffff;
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent-green);
+    box-shadow: 0 0 8px #62ffff;
 }
 
 /* Main Content Area */
@@ -204,8 +206,8 @@
 }
 
 .icon-button:hover {
-    background-color: #1a1f2e;
-    color: var(--text-primary);
+    background-color: rgba(19, 186, 186, 0.1);
+    color: #62ffff;
 }
 
 .user-profile {
