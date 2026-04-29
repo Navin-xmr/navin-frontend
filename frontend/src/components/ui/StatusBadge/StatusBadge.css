@@ -1,0 +1,29 @@
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-in-transit {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: #60a5fa;
+}
+
+.status-delivered {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+}
+
+.status-pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.status-cancelled {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
