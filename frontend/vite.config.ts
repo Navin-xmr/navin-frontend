@@ -26,6 +26,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    environmentOptions: {
+      jsdom: {
+        url: "http://localhost:3000",
+      },
+    },
+    testTimeout: 10000,
     setupFiles: ["./src/test/setup.ts"],
     exclude: [...configDefaults.exclude, "src/LandingPage/sections/CoreFeatures/CoreFeatures.test.tsx"],
   },

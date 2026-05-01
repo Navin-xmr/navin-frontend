@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { authApi } from "../../../services/api";
 
 interface FormErrors {
     email?: string;
     password?: string;
+    general?: string;
 }
 
 const Login: React.FC = () => {
@@ -51,12 +53,15 @@ const Login: React.FC = () => {
         if (emailError || passwordError) return;
 
         setLoading(true);
-        setTimeout(() => {
-            localStorage.setItem("authToken", "navin-demo-token");
+        try {
+            await authApi.login({ email: formData.email, password: formData.password });
             const from = location.state?.from?.pathname ?? "/dashboard";
-            setLoading(false);
             navigate(from, { replace: true });
-        }, 2000);
+        } catch {
+            setErrors((prev) => ({ ...prev, general: "Invalid email or password. Please try again." }));
+        } finally {
+            setLoading(false);
+        }
     };
 
     const inputBase =
@@ -94,6 +99,11 @@ const Login: React.FC = () => {
                     onSubmit={handleSubmit}
                     noValidate
                 >
+                    {errors.general && (
+                        <div className="bg-[rgba(255,77,77,0.1)] border border-[#FF4D4D] rounded-xl px-4 py-3 text-[#FF4D4D] text-sm text-center" role="alert">
+                            {errors.general}
+                        </div>
+                    )}
                     {/* Email */}
                     <div className="flex flex-col gap-2">
                         <label

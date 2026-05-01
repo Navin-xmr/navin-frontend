@@ -1,66 +1,17 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import ShipmentHeader from './sections/ShipmentHeader/ShipmentHeader';
-import { ShipmentStatus } from '../../components/ui/StatusBadge';
-
-// Mock data for demonstration
-const MOCK_SHIPMENT_DATA = {
-  id: 'SHP-2024-001234',
-  status: 'In Transit' as ShipmentStatus,
-  sender: {
-    name: 'Acme Corporation',
-    address: '123 Business Ave, New York, NY 10001',
-  },
-  receiver: {
-    name: 'Global Logistics Ltd',
-    address: '456 Commerce St, Los Angeles, CA 90210',
-  },
-  createdAt: '2024-04-15T10:30:00Z',
-  expectedDelivery: '2024-04-22T16:00:00Z',
-};
-
-const ShipmentDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  
-  // In a real app, you would fetch shipment data based on the ID
-  const shipmentData = MOCK_SHIPMENT_DATA;
-
-  const handleTrack = () => {
-    console.log('Tracking shipment:', id);
-    // Implement tracking functionality
-  };
-
-  const handleDownloadProof = () => {
-    console.log('Downloading proof for shipment:', id);
-    // Implement download proof functionality
-  };
-
-  const handleShare = () => {
-    console.log('Sharing shipment:', id);
-    // Implement share functionality
-  };
-
-  return (
-    <div className="shipment-detail-page">
-      <ShipmentHeader
-        shipmentId={shipmentData.id}
-        status={shipmentData.status}
-        sender={shipmentData.sender}
-        receiver={shipmentData.receiver}
-        createdAt={shipmentData.createdAt}
-        expectedDelivery={shipmentData.expectedDelivery}
-        onTrack={handleTrack}
-        onDownloadProof={handleDownloadProof}
-        onShare={handleShare}
-      />
-      
-      {/* Additional shipment detail sections would go here */}
-      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-        Additional shipment details and tracking information will be displayed here.
 import MilestoneTimeline from './sections/MilestoneTimeline/MilestoneTimeline';
 import { Milestone } from './sections/MilestoneTimeline/types';
 
+const Package = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m7.5 4.27 9 5.15" /><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" />
+  </svg>
+);
+
 const ShipmentDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+
   const mockMilestones: Milestone[] = [
     {
       id: '1',
@@ -106,7 +57,7 @@ const ShipmentDetail: React.FC = () => {
               In Transit
             </span>
             <h1 className="text-3xl md:text-4xl font-display font-bold">
-              Shipment <span className="text-primary">#NVN-2026-X81</span>
+              Shipment <span className="text-primary">#{id ?? 'NVN-2026-X81'}</span>
             </h1>
           </div>
           <p className="text-text-secondary">
@@ -119,11 +70,9 @@ const ShipmentDetail: React.FC = () => {
             <div className="absolute top-0 right-0 p-8 opacity-5">
               <Package className="w-32 h-32" />
             </div>
-            
             <h2 className="text-2xl font-display font-semibold mb-8 border-b border-border pb-4">
               Tracking <span className="text-primary">Timeline</span>
             </h2>
-            
             <MilestoneTimeline milestones={mockMilestones} />
           </section>
         </main>
@@ -135,13 +84,5 @@ const ShipmentDetail: React.FC = () => {
     </div>
   );
 };
-
-export default ShipmentDetail;
-// Simple Package icon for the background decoration
-const Package = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m7.5 4.27 9 5.15" /><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><path d="m3.3 7 8.7 5 8.7-5" /><path d="M12 22V12" />
-  </svg>
-);
 
 export default ShipmentDetail;

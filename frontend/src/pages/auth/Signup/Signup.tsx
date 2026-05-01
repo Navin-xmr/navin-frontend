@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { WalletConnectButton } from "../../../components/auth/WalletConnectButton/WalletConnectButton";
+import { authApi } from "../../../services/api";
 
 interface FormErrors {
   fullName?: string;
@@ -9,9 +10,11 @@ interface FormErrors {
   password?: string;
   confirmPassword?: string;
   terms?: string;
+  general?: string;
 }
 
 const Signup: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -62,7 +65,18 @@ const Signup: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); alert("Account created successfully (simulation)"); }, 2000);
+    try {
+      await authApi.signup({
+        email: formData.email,
+        password: formData.password,
+        name: formData.fullName,
+      });
+      navigate("/dashboard");
+    } catch {
+      setErrors((prev) => ({ ...prev, general: "Account creation failed. Please try again." }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const strengthBarWidth = { none: "0%", weak: "33.33%", fair: "66.66%", strong: "100%" }[passwordStrength];
@@ -93,6 +107,11 @@ const Signup: React.FC = () => {
         </div>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+          {errors.general && (
+            <div className="bg-[rgba(255,77,77,0.1)] border border-[#FF4D4D] rounded-xl px-4 py-3 text-[#FF4D4D] text-sm text-center" role="alert">
+              {errors.general}
+            </div>
+          )}
           {/* Full Name */}
           <div className="flex flex-col gap-2">
             <label htmlFor="fullName" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">Full Name</label>

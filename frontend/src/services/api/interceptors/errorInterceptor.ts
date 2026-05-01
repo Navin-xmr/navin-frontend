@@ -9,7 +9,7 @@ export const setupErrorInterceptor = (client: AxiosInstance) => {
             switch (status) {
                 case 401:
                     console.error("Unauthorized - logging out");
-                    localStorage.removeItem("access_token");
+                    localStorage.removeItem("authToken");
                     window.location.href = "/login";
                     break;
 

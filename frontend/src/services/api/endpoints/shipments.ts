@@ -1,31 +1,87 @@
 import { apiClient } from "../client";
 
+export type ShipmentStatus = "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED";
+
+export interface ShipmentMilestone {
+    name: string;
+    timestamp: string;
+    description?: string;
+}
+
 export interface Shipment {
-    id: string;
-    status: "pending" | "in_transit" | "delivered";
+    _id: string;
+    trackingNumber: string;
     origin: string;
     destination: string;
+    enterpriseId: string;
+    logisticsId: string;
+    status: ShipmentStatus;
+    milestones: ShipmentMilestone[];
+    offChainMetadata?: Record<string, unknown>;
     createdAt: string;
+    updatedAt: string;
+}
+
+export interface PaginatedShipments {
+    data: Shipment[];
+    page: number;
+    limit: number;
+    total: number;
 }
 
 export interface CreateShipmentRequest {
+    trackingNumber?: string;
     origin: string;
     destination: string;
+    enterpriseId: string;
+    logisticsId: string;
+    milestones?: ShipmentMilestone[];
+    offChainMetadata?: Record<string, unknown>;
+}
+
+export interface GetShipmentsParams {
+    status?: ShipmentStatus;
+    page?: number;
+    limit?: number;
 }
 
 export const shipmentApi = {
-    getAll: async (): Promise<Shipment[]> => {
-        const res = await apiClient.get<Shipment[]>("/shipments");
-        return res.data;
+    getAll: async (params?: GetShipmentsParams): Promise<PaginatedShipments> => {
+        const res = await apiClient.get<{ data: PaginatedShipments }>("/shipments", { params });
+        return res.data.data;
     },
 
     getById: async (id: string): Promise<Shipment> => {
-        const res = await apiClient.get<Shipment>(`/shipments/${id}`);
-        return res.data;
+        const res = await apiClient.get<{ data: Shipment }>(`/shipments/${id}`);
+        return res.data.data;
     },
 
     create: async (data: CreateShipmentRequest): Promise<Shipment> => {
-        const res = await apiClient.post<Shipment>("/shipments", data);
-        return res.data;
+        const res = await apiClient.post<{ data: Shipment }>("/shipments", data);
+        return res.data.data;
+    },
+
+    patchMetadata: async (id: string, offChainMetadata: Record<string, unknown>): Promise<Shipment> => {
+        const res = await apiClient.patch<{ data: Shipment }>(`/shipments/${id}`, { offChainMetadata });
+        return res.data.data;
+    },
+
+    updateStatus: async (id: string, status: ShipmentStatus): Promise<Shipment> => {
+        const res = await apiClient.patch<{ data: Shipment }>(`/shipments/${id}/status`, { status });
+        return res.data.data;
+    },
+
+    uploadProof: async (id: string, file: File, notes?: string): Promise<Shipment> => {
+        const form = new FormData();
+        form.append("file", file);
+        if (notes) form.append("notes", notes);
+        const res = await apiClient.post<{ data: Shipment }>(`/shipments/${id}/proof`, form, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        return res.data.data;
+    },
+
+    delete: async (id: string): Promise<void> => {
+        await apiClient.delete(`/shipments/${id}`);
     },
 };
