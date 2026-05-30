@@ -1,5 +1,5 @@
 import React from 'react';
-import { getStatusVariant } from './statusBadgeVariants';
+import { getStatusDisplayLabel, getStatusBadgeClass } from '../../../utils/shipmentStatus';
 
 export interface StatusBadgeProps {
   status: string;
@@ -7,13 +7,14 @@ export interface StatusBadgeProps {
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => {
-  const { bg, text } = getStatusVariant(status);
+  const label = getStatusDisplayLabel(status);
+  const classes = getStatusBadgeClass(status);
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${bg} ${text} ${className}`}
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${classes} ${className}`}
     >
-      {status}
+      {label}
     </span>
   );
 };
