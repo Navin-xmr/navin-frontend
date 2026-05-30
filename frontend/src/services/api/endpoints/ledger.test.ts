@@ -12,7 +12,7 @@ vi.mock('../client', () => ({
 
 import { apiClient } from '../client';
 
-const mockApiClient = apiClient as { get: ReturnType<typeof vi.fn> };
+const mockApiClient = apiClient as unknown as { get: ReturnType<typeof vi.fn> };
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 

@@ -372,10 +372,7 @@ function CursorPager({ hasPrev, hasNext, onPrev, onNext, pageLabel, loading }: P
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-interface PageState {
-  cursor: string | null;
-  page: number;
-}
+
 
 const BlockchainLedger: React.FC = () => {
   const [blocks, setBlocks] = useState<LedgerBlock[]>([]);

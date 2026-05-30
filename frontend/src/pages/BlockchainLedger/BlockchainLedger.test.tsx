@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import BlockchainLedger from './BlockchainLedger';
@@ -189,7 +189,7 @@ describe('BlockchainLedger page', () => {
       renderPage();
 
       await waitFor(() => {
-        expect(screen.getByTestId ? screen.queryByText('No blocks found') : screen.getByText('No blocks found')).toBeInTheDocument();
+        expect(screen.getByText('No blocks found')).toBeInTheDocument();
       });
     });
 
