@@ -94,9 +94,11 @@ cd navin-frontend/frontend
 # Install dependencies with pnpm
 pnpm install
 
+# Set up environment variables
+cp .env.example .env
+
 # Start the development server
 pnpm run dev
-```
 
 Your app runs at `http://localhost:5173`.
 
