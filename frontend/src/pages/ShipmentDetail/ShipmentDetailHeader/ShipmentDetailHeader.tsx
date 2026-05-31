@@ -1,17 +1,12 @@
 import React from "react";
 import { Package, ArrowRight } from "lucide-react";
-
-export type ShipmentStatus =
-  | "pending"
-  | "in_transit"
-  | "out_for_delivery"
-  | "delivered";
+import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 
 export type UserRole = "company" | "customer";
 
 export interface ShipmentDetailHeaderProps {
   shipmentId: string;
-  status: ShipmentStatus;
+  status: string; // backend enum
   expectedDeliveryDate: string;
   userRole: UserRole;
   originAddress?: string;
@@ -30,19 +25,7 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   onUpdateStatus,
   onTrack,
 }) => {
-  const statusColors: Record<ShipmentStatus, string> = {
-    pending: "bg-yellow-500/20 text-yellow-300 border border-yellow-500/40",
-    in_transit: "bg-blue-500/20 text-blue-300 border border-blue-500/40",
-    out_for_delivery:
-      "bg-purple-500/20 text-purple-300 border border-purple-500/40",
-    delivered: "bg-green-500/20 text-green-300 border border-green-500/40",
-  };
-
-  const formatStatus = (status: ShipmentStatus): string =>
-    status
-      .split("_")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
+  const formatStatus = (status: string): string => getStatusDisplayLabel(status);
 
   return (
     <div className="bg-background-card p-6 md:p-8 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -62,9 +45,9 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
             </h1>
 
             <span
-              className={`inline-flex items-center px-4 gap-1.5 py-2 w-24 h-6 text-center justify-center rounded-full text-sm font-semibold whitespace-nowrap shrink-0 ${statusColors[status]}`}
+              className={`inline-flex items-center px-4 gap-1.5 py-2 w-24 h-6 text-center justify-center rounded-full text-sm font-semibold whitespace-nowrap shrink-0 ${getStatusBadgeClass(status)}`}
             >
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+              <span className={`w-2 h-2 ${getStatusDotClass(status)} rounded-full animate-pulse`}></span>
               {formatStatus(status)}
             </span>
           </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react';
 import { MOCK_SHIPMENTS, type Shipment } from './mockShipments';
+import { getStatusDisplayLabel, getStatusBadgeClass } from '../../../../utils/shipmentStatus';
 
 type SortKey = 'createdAt' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -13,21 +14,16 @@ interface RecentShipmentsProps {
 const PAGE_SIZE = 5;
 
 const statusRank: Record<Shipment['status'], number> = {
-  'Pending Approval': 1,
-  'In Transit': 2,
-  Delivered: 3,
-  Cancelled: 4,
+  CREATED: 1,
+  IN_TRANSIT: 2,
+  DELIVERED: 3,
+  CANCELLED: 4,
 };
 
 const formatCreatedDate = (createdAt: string) =>
   new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(createdAt));
 
-const statusClasses: Record<Shipment['status'], string> = {
-  'Pending Approval': 'bg-[rgba(245,158,11,0.1)] text-[#fbbf24]',
-  'In Transit':       'bg-[rgba(59,130,246,0.1)] text-[#60a5fa]',
-  Delivered:          'bg-[rgba(16,185,129,0.1)] text-[#34d399]',
-  Cancelled:          'bg-[rgba(239,68,68,0.1)] text-[#f87171]',
-};
+// Now resolved via shared mapping
 
 const RecentShipments: React.FC<RecentShipmentsProps> = ({
   shipments = MOCK_SHIPMENTS,
@@ -132,8 +128,8 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
               <td className={tdBase}>{shipment.origin}</td>
               <td className={tdBase}>{shipment.destination}</td>
               <td className={tdBase}>
-                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${statusClasses[shipment.status]}`}>
-                  {shipment.status}
+                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(shipment.status)}`}>
+                  {getStatusDisplayLabel(shipment.status)}
                 </span>
               </td>
               <td className={tdBase}>{formatCreatedDate(shipment.createdAt)}</td>
@@ -165,11 +161,10 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
               <button
                 key={page}
                 type="button"
-                className={`border rounded-lg cursor-pointer text-xs font-semibold min-w-[32px] px-2.5 py-1.5 transition-colors ${
-                  page === activePage
-                    ? 'bg-accent-blue border-accent-blue text-white'
-                    : 'border-border bg-background-elevated text-[#d1d5db] hover:bg-[#1a2030]'
-                }`}
+                className={`border rounded-lg cursor-pointer text-xs font-semibold min-w-[32px] px-2.5 py-1.5 transition-colors ${page === activePage
+                  ? 'bg-accent-blue border-accent-blue text-white'
+                  : 'border-border bg-background-elevated text-[#d1d5db] hover:bg-[#1a2030]'
+                  }`}
                 onClick={() => setCurrentPage(page)}
                 aria-label={`Page ${page}`}
                 aria-current={page === activePage ? 'page' : undefined}
