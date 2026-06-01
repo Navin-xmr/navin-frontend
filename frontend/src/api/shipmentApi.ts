@@ -2,12 +2,19 @@ export type BackendShipmentStatus = 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CA
 
 export type ShipmentStatus = 'Pending Approval' | 'In Transit' | 'Delivered' | 'Cancelled';
 
+export interface DeliveryProof {
+  url: string;
+  recipientSignatureName: string;
+  uploadedAt: string;
+}
+
 export interface Shipment {
   id: string;
   origin: string;
   destination: string;
   status: ShipmentStatus;
   createdAt: string;
+  deliveryProof?: DeliveryProof;
 }
 
 interface BackendShipment {
@@ -16,6 +23,7 @@ interface BackendShipment {
   destination: string;
   status: BackendShipmentStatus;
   createdAt: string;
+  deliveryProof?: DeliveryProof;
 }
 
 export interface PaginationMeta {

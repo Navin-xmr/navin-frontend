@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import ShipmentHeader from './sections/ShipmentHeader/ShipmentHeader';
+import DeliveryProof from './sections/DeliveryProof/DeliveryProof';
 import { ShipmentStatus } from '../../components/ui/StatusBadge';
 
 // Mock data for demonstration
@@ -17,6 +18,11 @@ const MOCK_SHIPMENT_DATA = {
   },
   createdAt: '2024-04-15T10:30:00Z',
   expectedDelivery: '2024-04-22T16:00:00Z',
+  deliveryProof: {
+    url: 'https://example.com/proof/SHP-2024-001234.pdf',
+    recipientSignatureName: 'John Smith',
+    uploadedAt: '2024-04-22T14:35:00Z',
+  },
 };
 
 const ShipmentDetail: React.FC = () => {
@@ -54,6 +60,8 @@ const ShipmentDetail: React.FC = () => {
         onShare={handleShare}
       />
       
+      <DeliveryProof deliveryProof={shipmentData.deliveryProof} />
+
       {/* Additional shipment detail sections would go here */}
       <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
         Additional shipment details and tracking information will be displayed here.
