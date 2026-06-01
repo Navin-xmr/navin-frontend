@@ -1,6 +1,10 @@
 import { AxiosInstance, AxiosError } from "axios";
+import { toast } from "react-hot-toast";
 
-export const setupErrorInterceptor = (client: AxiosInstance) => {
+// This stops the app from showing multiple pop-ups at the same time if multiple requests fail at once
+let isRedirecting = false;
+
+export const setupErrorInterceptor = (client: AxiosInstance, navigateFn: (path: string) => void) => {
     client.interceptors.response.use(
         (response) => response,
         (error: AxiosError) => {
@@ -8,17 +12,31 @@ export const setupErrorInterceptor = (client: AxiosInstance) => {
 
             switch (status) {
                 case 401:
-                    console.error("Unauthorized - logging out");
-                    localStorage.removeItem("authToken");
-                    window.location.href = "/login";
+                    if (!isRedirecting) {
+                        isRedirecting = true;
+                        
+                        // Clean up old login token safely
+                        localStorage.removeItem("authToken");
+                        
+                        // Show the exact toast message requested by the issue
+                        toast.error("Session expired, redirecting to login...");
+                        
+                        // Wait 2 seconds so the user can read it, then change pages cleanly
+                        setTimeout(() => {
+                            navigateFn("/login");
+                            isRedirecting = false;
+                        }, 2000);
+                    }
                     break;
 
                 case 403:
-                    console.error("Forbidden - insufficient permissions");
+                    // Show insufficient permissions toast
+                    toast.error("Insufficient permissions");
                     break;
 
                 case 500:
-                    console.error("Server error - try again later");
+                    // Show server error toast
+                    toast.error("Server error — please try again later");
                     break;
 
                 default:
