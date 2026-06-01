@@ -40,7 +40,10 @@ describe('RecentShipments', () => {
   });
 
   it('shows a loading skeleton while shipments are loading', async () => {
-    getAllMock.mockResolvedValueOnce(mockShipments.slice(0, 5));
+    getAllMock.mockResolvedValueOnce({
+      shipments: mockShipments.slice(0, 5),
+      meta: { page: 1, limit: 5, total: mockShipments.length },
+    });
 
     render(<RecentShipments />);
 
@@ -50,12 +53,15 @@ describe('RecentShipments', () => {
   });
 
   it('fetches from the backend and renders recent shipments', async () => {
-    getAllMock.mockResolvedValueOnce(mockShipments.slice(0, 5));
+    getAllMock.mockResolvedValueOnce({
+      shipments: mockShipments.slice(0, 5),
+      meta: { page: 1, limit: 5, total: mockShipments.length },
+    });
 
     render(<RecentShipments />);
 
     expect(screen.getByLabelText('Recent shipments loading')).toBeInTheDocument();
-    expect(getAllMock).toHaveBeenCalledWith({ limit: 5 });
+    expect(getAllMock).toHaveBeenCalledWith({ page: 1, limit: 5 });
 
     await waitFor(() => {
       expect(screen.getByText('SHP-1001')).toBeInTheDocument();
@@ -63,7 +69,10 @@ describe('RecentShipments', () => {
   });
 
   it('shows an empty state when the backend returns no shipments', async () => {
-    getAllMock.mockResolvedValueOnce([]);
+    getAllMock.mockResolvedValueOnce({
+      shipments: [],
+      meta: { page: 1, limit: 5, total: 0 },
+    });
 
     render(<RecentShipments />);
 
@@ -75,7 +84,10 @@ describe('RecentShipments', () => {
   });
 
   it('sorts by created date when header is clicked', async () => {
-    getAllMock.mockResolvedValueOnce(mockShipments);
+    getAllMock.mockResolvedValueOnce({
+      shipments: mockShipments.slice(0, 5),
+      meta: { page: 1, limit: 5, total: mockShipments.length },
+    });
 
     render(<RecentShipments />);
 
@@ -84,11 +96,14 @@ describe('RecentShipments', () => {
     expect(within(getFirstDataRow()).getByText('SHP-1001')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /sort by created date/i }));
-    expect(within(getFirstDataRow()).getByText('SHP-1015')).toBeInTheDocument();
+    expect(within(getFirstDataRow()).getByText('SHP-1005')).toBeInTheDocument();
   });
 
   it('sorts by status and toggles direction', async () => {
-    getAllMock.mockResolvedValueOnce(mockShipments);
+    getAllMock.mockResolvedValueOnce({
+      shipments: mockShipments.slice(0, 5),
+      meta: { page: 1, limit: 5, total: mockShipments.length },
+    });
 
     render(<RecentShipments />);
 
@@ -102,7 +117,18 @@ describe('RecentShipments', () => {
   });
 
   it('paginates with next and page number controls', async () => {
-    getAllMock.mockResolvedValueOnce(mockShipments);
+    getAllMock.mockResolvedValueOnce({
+      shipments: mockShipments.slice(0, 5),
+      meta: { page: 1, limit: 5, total: mockShipments.length },
+    });
+    getAllMock.mockResolvedValueOnce({
+      shipments: mockShipments.slice(5, 10),
+      meta: { page: 2, limit: 5, total: mockShipments.length },
+    });
+    getAllMock.mockResolvedValueOnce({
+      shipments: mockShipments.slice(10, 15),
+      meta: { page: 3, limit: 5, total: mockShipments.length },
+    });
 
     render(<RecentShipments />);
 
@@ -111,11 +137,13 @@ describe('RecentShipments', () => {
     expect(screen.getByRole('button', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
 
     fireEvent.click(screen.getByRole('button', { name: 'Page 2' }));
-    expect(screen.getByRole('button', { name: 'Page 2' })).toHaveAttribute('aria-current', 'page');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Page 2' })).toHaveAttribute('aria-current', 'page'));
+    expect(getAllMock).toHaveBeenLastCalledWith({ page: 2, limit: 5 });
     expect(screen.getByText('SHP-1006')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /next page/i }));
-    expect(screen.getByRole('button', { name: 'Page 3' })).toHaveAttribute('aria-current', 'page');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Page 3' })).toHaveAttribute('aria-current', 'page'));
+    expect(getAllMock).toHaveBeenLastCalledWith({ page: 3, limit: 5 });
     expect(screen.getByText('SHP-1011')).toBeInTheDocument();
   });
 });

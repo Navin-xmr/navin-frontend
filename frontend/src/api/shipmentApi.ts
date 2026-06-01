@@ -18,6 +18,12 @@ interface BackendShipment {
   createdAt: string;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+}
+
 const STATUS_LABEL_MAP: Record<BackendShipmentStatus, ShipmentStatus> = {
   CREATED: 'Pending Approval',
   IN_TRANSIT: 'In Transit',
@@ -31,8 +37,12 @@ const parseShipment = (shipment: BackendShipment): Shipment => ({
 });
 
 export const shipmentApi = {
-  async getAll(options: { limit?: number } = {}) {
+  async getAll(options: { page?: number; limit?: number } = {}) {
     const query = new URLSearchParams();
+
+    if (typeof options.page === 'number') {
+      query.set('page', String(options.page));
+    }
 
     if (typeof options.limit === 'number') {
       query.set('limit', String(options.limit));
@@ -45,7 +55,34 @@ export const shipmentApi = {
       throw new Error(`Failed to load shipments: ${response.statusText}`);
     }
 
-    const data = (await response.json()) as BackendShipment[];
-    return data.map(parseShipment);
+    const payload = await response.json();
+
+    let payloadData: BackendShipment[] = [];
+    let meta: PaginationMeta = {
+      page: options.page ?? 1,
+      limit: options.limit ?? 0,
+      total: 0,
+    };
+
+    if (Array.isArray(payload)) {
+      payloadData = payload;
+      meta = {
+        page: options.page ?? 1,
+        limit: options.limit ?? payloadData.length,
+        total: payloadData.length,
+      };
+    } else {
+      payloadData = Array.isArray(payload.data) ? payload.data : [];
+      meta = {
+        page: payload.meta?.page ?? options.page ?? 1,
+        limit: payload.meta?.limit ?? options.limit ?? payloadData.length,
+        total: payload.meta?.total ?? payloadData.length,
+      };
+    }
+
+    return {
+      shipments: payloadData.map(parseShipment),
+      meta,
+    };
   },
 };

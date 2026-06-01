@@ -38,6 +38,8 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
   const [isLoading, setIsLoading] = useState(isControlled ? loadingDelayMs > 0 : true);
   const [loadedShipments, setLoadedShipments] = useState<Shipment[]>(shipments ?? []);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE);
+  const [totalItems, setTotalItems] = useState<number>(shipments?.length ?? 0);
   const [sortKey, setSortKey] = useState<SortKey>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -45,6 +47,8 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
     if (isControlled) {
       const timer = window.setTimeout(() => {
         setLoadedShipments(shipments ?? []);
+        setTotalItems(shipments?.length ?? 0);
+        setPageSize(PAGE_SIZE);
         setIsLoading(false);
       }, loadingDelayMs);
 
@@ -54,13 +58,16 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
     let isMounted = true;
 
     shipmentApi
-      .getAll({ limit: 5 })
-      .then(results => {
+      .getAll({ page: currentPage, limit: PAGE_SIZE })
+      .then(({ shipments: results, meta }) => {
         if (!isMounted) {
           return;
         }
 
         setLoadedShipments(results);
+        setPageSize(meta.limit);
+        setTotalItems(meta.total);
+        setCurrentPage(meta.page);
         setIsLoading(false);
       })
       .catch(error => {
@@ -70,13 +77,14 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
 
         console.error('Unable to fetch recent shipments:', error);
         setLoadedShipments([]);
+        setTotalItems(0);
         setIsLoading(false);
       });
 
     return () => {
       isMounted = false;
     };
-  }, [isControlled, shipments, loadingDelayMs]);
+  }, [isControlled, shipments, loadingDelayMs, currentPage]);
 
   const sortedShipments = useMemo(() => {
     const sorted = [...loadedShipments].sort((a, b) => {
@@ -90,13 +98,17 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
     return sortDirection === 'asc' ? sorted : sorted.reverse();
   }, [loadedShipments, sortKey, sortDirection]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedShipments.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const activePage = Math.min(currentPage, totalPages);
 
   const currentRows = useMemo(() => {
-    const start = (activePage - 1) * PAGE_SIZE;
-    return sortedShipments.slice(start, start + PAGE_SIZE);
-  }, [activePage, sortedShipments]);
+    if (isControlled) {
+      const start = (activePage - 1) * PAGE_SIZE;
+      return sortedShipments.slice(start, start + PAGE_SIZE);
+    }
+
+    return sortedShipments;
+  }, [activePage, sortedShipments, isControlled]);
 
   const handleSort = (nextKey: SortKey) => {
     if (sortKey === nextKey) {
