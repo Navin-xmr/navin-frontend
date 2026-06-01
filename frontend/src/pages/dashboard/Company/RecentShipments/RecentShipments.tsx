@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react';
-import { MOCK_SHIPMENTS, type Shipment } from './mockShipments';
+import { shipmentApi, type Shipment } from '../../../../api/shipmentApi';
 import './RecentShipments.css';
 
 type SortKey = 'createdAt' | 'status';
@@ -31,23 +31,52 @@ const statusClassName = (status: Shipment['status']) =>
   `status-${status.toLowerCase().replace(/\s+/g, '-')}`;
 
 const RecentShipments: React.FC<RecentShipmentsProps> = ({
-  shipments = MOCK_SHIPMENTS,
+  shipments,
   loadingDelayMs = 500,
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadedShipments, setLoadedShipments] = useState<Shipment[]>([]);
+  const isControlled = shipments !== undefined;
+  const [isLoading, setIsLoading] = useState(isControlled ? loadingDelayMs > 0 : true);
+  const [loadedShipments, setLoadedShipments] = useState<Shipment[]>(shipments ?? []);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setLoadedShipments(shipments);
-      setIsLoading(false);
-    }, loadingDelayMs);
+    if (isControlled) {
+      const timer = window.setTimeout(() => {
+        setLoadedShipments(shipments ?? []);
+        setIsLoading(false);
+      }, loadingDelayMs);
 
-    return () => window.clearTimeout(timer);
-  }, [shipments, loadingDelayMs]);
+      return () => window.clearTimeout(timer);
+    }
+
+    let isMounted = true;
+
+    shipmentApi
+      .getAll({ limit: 5 })
+      .then(results => {
+        if (!isMounted) {
+          return;
+        }
+
+        setLoadedShipments(results);
+        setIsLoading(false);
+      })
+      .catch(error => {
+        if (!isMounted) {
+          return;
+        }
+
+        console.error('Unable to fetch recent shipments:', error);
+        setLoadedShipments([]);
+        setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isControlled, shipments, loadingDelayMs]);
 
   const sortedShipments = useMemo(() => {
     const sorted = [...loadedShipments].sort((a, b) => {
