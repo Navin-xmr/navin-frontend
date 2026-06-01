@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
+import { analyticsApi } from '../../../services/api';
 
 const getStatusKey = (status: string) => {
   switch (status) {
@@ -38,12 +39,14 @@ const TrendIcon = ({ up }: { up: boolean }) => (
   </svg>
 );
 
-const stats = [
-  { id: "active", label: "Active", value: "128", trend: "12%", trendType: "positive", icon: <Truck size={18} /> },
-  { id: "delivered", label: "Delivered", value: "1,420", trend: "5%", trendType: "positive", icon: <CheckCircle2 size={18} /> },
-  { id: "delayed", label: "Delayed", value: "12", trend: "2%", trendType: "negative", icon: <Clock size={18} /> },
-  { id: "verified", label: "Verified", value: "45", trend: "0%", trendType: "neutral", icon: <ShieldCheck size={18} /> },
-];
+interface StatCard {
+  id: string;
+  label: string;
+  value: string;
+  trend?: string;
+  trendType: "positive" | "negative" | "neutral";
+  icon: React.ReactNode;
+}
 
 const recentShipments = [
   { id: "#NVN-9842", destination: "40.7128° N", status: "IN_TRANSIT", type: "box" },
@@ -55,12 +58,34 @@ const recentShipments = [
 const CompanyDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [stats, setStats] = useState<StatCard[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+        const endDate = new Date().toISOString();
+        const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        
+        const data = await analyticsApi.getPerformance(startDate, endDate);
+        
+        const statusMap = data.shipmentsByStatus.reduce((acc, item) => {
+          acc[item.status] = item.total;
+          return acc;
+        }, {} as Record<string, number>);
+
+        const activeCount = (statusMap['CREATED'] || 0) + (statusMap['IN_TRANSIT'] || 0);
+        const deliveredCount = statusMap['DELIVERED'] || 0;
+        const delayedCount = data.totalDelayedShipments || 0;
+        const verifiedCount = statusMap['DELIVERED'] || 0;
+
+        setStats([
+          { id: "active", label: "Active", value: activeCount.toLocaleString(), trendType: "positive", icon: <Truck size={18} /> },
+          { id: "delivered", label: "Delivered", value: deliveredCount.toLocaleString(), trendType: "positive", icon: <CheckCircle2 size={18} /> },
+          { id: "delayed", label: "Delayed", value: delayedCount.toLocaleString(), trendType: delayedCount > 0 ? "negative" : "neutral", icon: <Clock size={18} /> },
+          { id: "verified", label: "Verified", value: verifiedCount.toLocaleString(), trendType: "neutral", icon: <ShieldCheck size={18} /> },
+        ]);
+        
         setIsLoading(false);
       } catch {
         setHasError(true);
