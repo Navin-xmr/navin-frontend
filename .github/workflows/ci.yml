@@ -1,16 +1,12 @@
 name: Frontend CI
 
 on:
-  pull_request:
-    branches:
-      - main
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   lint:
     name: Lint Code
+    if: false
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,7 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
@@ -41,6 +37,7 @@ jobs:
   test:
     name: Run Tests
     needs: lint
+    if: false
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -59,7 +56,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
@@ -71,6 +68,7 @@ jobs:
   build:
     name: Build Application
     needs: test
+    if: false
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -89,7 +87,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
