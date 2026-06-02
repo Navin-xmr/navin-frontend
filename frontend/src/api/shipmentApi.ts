@@ -7,6 +7,11 @@ export interface Shipment {
   destination: string;
   status: ShipmentStatus;
   createdAt: string;
+  deliveryProof?: {
+    url: string;
+    recipientSignatureName: string;
+    uploadedAt: string;
+  };
 }
 
 export interface PaginationMeta {
@@ -27,6 +32,12 @@ interface BackendShipment {
   destination: string;
   status: string;
   createdAt: string;
+  deliveryProof?: {
+    url?: string;
+    recipientSignatureName?: string;
+    uploadedAt?: string;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 }
 
@@ -57,6 +68,13 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
       (shipment.status as ShipmentStatus) ??
       'Pending Approval',
     createdAt: String(shipment.createdAt),
+    deliveryProof: shipment.deliveryProof?.url
+      ? {
+          url: String(shipment.deliveryProof.url),
+          recipientSignatureName: String(shipment.deliveryProof.recipientSignatureName ?? ''),
+          uploadedAt: String(shipment.deliveryProof.uploadedAt ?? ''),
+        }
+      : undefined,
   };
 };
 
