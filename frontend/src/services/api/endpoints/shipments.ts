@@ -20,6 +20,10 @@ export interface Shipment {
     offChainMetadata?: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
+    /** Stellar NFT token ID set by the backend after tokenization */
+    stellarTokenId?: string;
+    /** Stellar transaction hash for the tokenization transaction */
+    stellarTxHash?: string;
 }
 
 export interface PaginatedShipments {
@@ -75,9 +79,9 @@ export const shipmentApi = {
         const form = new FormData();
         form.append("file", file);
         if (notes) form.append("notes", notes);
-        const res = await apiClient.post<{ data: Shipment }>(`/shipments/${id}/proof`, form, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
+        // Do NOT set Content-Type manually — the browser/axios must set it
+        // automatically so the multipart boundary is included correctly.
+        const res = await apiClient.post<{ data: Shipment }>(`/shipments/${id}/proof`, form);
         return res.data.data;
     },
 
