@@ -1,11 +1,10 @@
-import "./WhyNavin.css";
-
 type WhyNavinItem = {
     icon: string;
     iconAlt: string;
     header: string;
     description: string;
 };
+
 function WhyNavin() {
     const whyNavin: WhyNavinItem[] = [
         {
@@ -30,27 +29,34 @@ function WhyNavin() {
             icon: "public/images/icons/Fast.svg",
             iconAlt: "Rocket icon",
             header: "Faster Service",
-            description:
-                "Automated processes mean quicker, smoother deliveries.",
+            description: "Automated processes mean quicker, smoother deliveries.",
         },
     ];
 
     return (
-        <section className="why__section">
-            <h2 className="why__section__header">
-                Why <span className="navin__cyan"> Navin?</span>
+        <section className="py-20">
+            <h2 className="font-display font-normal text-[1.5rem] md:text-[2.25rem] lg:text-[3.25rem] mb-12">
+                Why <span className="text-[#62ffff]"> Navin?</span>
             </h2>
-            <div className="why__item__container">
+            <div className="grid gap-[1.125rem] md:grid-cols-2 lg:grid-cols-4">
                 {whyNavin.map((item) => (
-                    <article className="why__section__item">
-                        <div className="why__icon__container">
+                    <article
+                        key={item.header}
+                        className="w-full h-[17.4rem] flex flex-col justify-center items-start px-4 rounded-[1.25rem] gap-6 text-left"
+                        style={{
+                            boxShadow: 'inset 0 0 20px 0px #008080',
+                            background: 'rgba(19, 186, 186, 0.1)',
+                        }}
+                    >
+                        <div
+                            className="bg-[#101010] rounded-2xl px-6 py-[1.875rem] flex items-center justify-center border border-[rgba(6,255,255,0.4)]"
+                            style={{ boxShadow: 'inset 0 0 12px 0px #008080', width: '6.5625rem' }}
+                        >
                             <img src={item.icon} alt={item.iconAlt} />
                         </div>
                         <article>
-                            <h3 className="why__item__header">{item.header}</h3>
-                            <p className="why__item__description">
-                                {item.description}
-                            </p>
+                            <h3 className="font-display font-semibold text-[#f8ffff] mb-3">{item.header}</h3>
+                            <p className="text-[#e5ffff]">{item.description}</p>
                         </article>
                     </article>
                 ))}

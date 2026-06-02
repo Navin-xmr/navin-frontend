@@ -1,11 +1,10 @@
 import React from "react";
 import Navbar from "@/components/Navbar/Navbar";
 import LandingPage from "../../LandingPage/LandingPage";
-import "./Home.css";
 
 const Home: React.FC = () => {
     return (
-        <div className="home-container">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-background text-text-primary relative overflow-hidden text-center p-5 m-0">
             <Navbar />
             <LandingPage />
         </div>

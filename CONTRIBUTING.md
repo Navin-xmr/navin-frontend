@@ -39,7 +39,14 @@ This repository is the **frontend** of the Navin platform — a React applicatio
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or later
-- npm (included with Node.js)
+- [pnpm](https://pnpm.io/) v10 or later (required package manager)
+
+To install pnpm:
+```bash
+npm install -g pnpm
+# or
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+```
 
 ### Fork & Clone
 
@@ -62,13 +69,14 @@ This repository is the **frontend** of the Navin platform — a React applicatio
 4. **Install dependencies:**
 
    ```bash
-   npm install
+   cd frontend
+   pnpm install
    ```
 
 5. **Start the development server:**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ---
@@ -122,13 +130,13 @@ Before pushing, always run these:
 
 ```bash
 # Check formatting
-npm run lint
+pnpm run lint
 
 # Run any existing tests
-npm run test
+pnpm run test
 
 # Verify the build works
-npm run build
+pnpm run build
 ```
 
 Fix any errors or warnings before pushing.
@@ -242,7 +250,75 @@ We want contributors focused on building, not cleaning up others' mistakes pleas
 - Write clean, readable code — favor clarity over cleverness
 - Use consistent naming: `PascalCase` for components, `camelCase` for variables and functions
 - Keep components small and focused — one responsibility per component
-- Avoid inline styles; use CSS classes or CSS modules
+- Use Tailwind CSS utility classes for styling (see Tailwind guidelines below)
+
+### Tailwind CSS Guidelines
+
+We use Tailwind CSS for all styling. Follow these best practices:
+
+#### Use Design Tokens
+Always use our custom design tokens from `tailwind.config.js`:
+```jsx
+// Good: Using design tokens
+className="bg-background-card text-primary border-border"
+
+// Bad: Hardcoded colors
+className="bg-[#0F1419] text-[#00D9FF] border-[#1E2433]"
+```
+
+#### Keep Utilities Readable
+If a component has more than 10 utility classes, consider:
+1. Breaking it into smaller components
+2. Creating a reusable component with variants
+3. Grouping related utilities logically
+
+```jsx
+// Good: Grouped logically
+className="
+  flex items-center justify-between gap-4
+  px-6 py-3 rounded-2xl
+  bg-background-card border border-border
+  hover:border-accent-blue transition-all duration-300
+"
+
+// Bad: Random order
+className="px-6 hover:border-accent-blue flex bg-background-card py-3 items-center"
+```
+
+#### Create Reusable Components
+For repeated patterns, create reusable components:
+```jsx
+// Good: Reusable Button component
+<Button variant="primary" size="lg">Click Me</Button>
+
+// Bad: Repeating utilities everywhere
+<button className="px-8 py-3.5 bg-accent-blue text-white rounded-full...">
+```
+
+#### Mobile-First Responsive Design
+Tailwind uses mobile-first breakpoints:
+```jsx
+// Good: Mobile-first
+className="flex-col md:flex-row p-4 md:p-8"
+
+// Bad: Desktop-first
+className="flex-row md:flex-col p-8 md:p-4"
+```
+
+#### When to Use CSS Files
+Only create separate CSS files for:
+- Complex animations with `@keyframes`
+- Third-party library overrides
+- Very complex pseudo-elements that are hard to read inline
+
+For everything else, use Tailwind utilities.
+
+#### Migration Reference
+See `docs/TAILWIND_MIGRATION.md` for:
+- Complete migration patterns
+- Common component examples
+- Troubleshooting guide
+- Design token reference
 
 ### Component Structure
 

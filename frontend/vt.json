@@ -1,0 +1,62 @@
+
+> navin-frontend@0.1.0 test /home/trinnex/Documents/CodeBase/drips/newcatch/navin-frontend/frontend
+> vitest run -- --passWithNoTests --threads=1 --reporter json
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/home/trinnex/Documents/CodeBase/drips/newcatch/navin-frontend/frontend[39m
+
+ [32m✓[39m src/components/notifications/NotificationDropdown/NotificationDropdown.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 367[2mms[22m[39m
+ [32m✓[39m src/components/shipment/TrackingTimeline/TrackingTimeline.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 970[2mms[22m[39m
+     [33m[2m✓[22m[39m renders a vertical timeline with at least 5 milestones [33m 806[2mms[22m[39m
+ [32m✓[39m src/pages/ShipmentDetail/MilestoneTimeline/MilestoneTimeline.test.tsx [2m([22m[2m10 tests[22m[2m)[22m[33m 1312[2mms[22m[39m
+     [33m[2m✓[22m[39m handles empty milestones array [33m 699[2mms[22m[39m
+ [32m✓[39m src/pages/dashboard/Customer/ActiveShipments/ActiveShipments.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 949[2mms[22m[39m
+     [33m[2m✓[22m[39m navigates to shipment detail page when track is clicked [33m 702[2mms[22m[39m
+ [32m✓[39m src/components/shipment/StatusUpdate/StatusUpdate.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 2096[2mms[22m[39m
+     [33m[2m✓[22m[39m shows a dropdown with five milestone options [33m 1052[2mms[22m[39m
+     [33m[2m✓[22m[39m opens confirmation dialog and closes on cancel [33m 322[2mms[22m[39m
+     [33m[2m✓[22m[39m confirms status update and shows success feedback [33m 305[2mms[22m[39m
+     [33m[2m✓[22m[39m shows error feedback when update fails [33m 406[2mms[22m[39m
+ [32m✓[39m src/pages/dashboard/Company/RecentShipments/RecentShipments.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 3721[2mms[22m[39m
+     [33m[2m✓[22m[39m shows an empty state when there are no shipments [33m 553[2mms[22m[39m
+     [33m[2m✓[22m[39m sorts by created date when header is clicked [33m 1117[2mms[22m[39m
+     [33m[2m✓[22m[39m sorts by status and toggles direction [33m 927[2mms[22m[39m
+     [33m[2m✓[22m[39m paginates with next and page number controls [33m 914[2mms[22m[39m
+ [32m✓[39m src/components/auth/ProtectedRoute/ProtectedRoute.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+ [32m✓[39m src/components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 267[2mms[22m[39m
+ [32m✓[39m src/test/App.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 419[2mms[22m[39m
+     [33m[2m✓[22m[39m renders without crashing [33m 411[2mms[22m[39m
+ [32m✓[39m src/components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[32m 156[2mms[22m[39m
+ [31m❯[39m src/components/shipment/DeliveryConfirmation/DeliveryConfirmation.test.tsx [2m([22m[2m25 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[33m 5633[2mms[22m[39m
+[31m       [31m×[31m renders when status is delivered[39m[32m 209[2mms[22m[39m
+       [32m✓[39m renders nothing when status is not delivered[32m 6[2mms[22m[39m
+       [32m✓[39m renders nothing for pending status[32m 5[2mms[22m[39m
+       [32m✓[39m shows shipment ID in prompt[32m 15[2mms[22m[39m
+       [33m[2m✓[22m[39m shows Confirm Receipt button initially [33m 530[2mms[22m[39m
+       [33m[2m✓[22m[39m reveals form when Confirm Receipt is clicked [33m 333[2mms[22m[39m
+       [32m✓[39m does not show form before Confirm Receipt is clicked[32m 7[2mms[22m[39m
+       [32m✓[39m renders 5 star buttons[32m 191[2mms[22m[39m
+       [32m✓[39m marks selected star as checked[32m 268[2mms[22m[39m
+       [32m✓[39m shows label for selected rating[32m 273[2mms[22m[39m
+       [32m✓[39m shows hover preview on mouse enter[32m 245[2mms[22m[39m
+       [32m✓[39m clears hover preview on mouse leave from group[32m 174[2mms[22m[39m
+       [32m✓[39m supports keyboard selection with Enter[32m 201[2mms[22m[39m
+       [32m✓[39m supports keyboard selection with Space[32m 197[2mms[22m[39m
+       [32m✓[39m submit button is disabled when no rating selected[32m 138[2mms[22m[39m
+       [32m✓[39m submit button is enabled after rating is selected[32m 297[2mms[22m[39m
+[31m       [31m×[31m does not submit without a rating[39m[33m 692[2mms[22m[39m
+[31m       [31m×[31m calls onConfirm with correct args on submit[39m[33m 584[2mms[22m[39m
+[31m       [31m×[31m submits with empty feedback when feedback is optional[39m[33m 445[2mms[22m[39m
+       [32m✓[39m shows loading state during submission[32m 181[2mms[22m[39m
+       [32m✓[39m prevents duplicate submissions[32m 150[2mms[22m[39m
+       [32m✓[39m shows thank-you message after successful submission[32m 120[2mms[22m[39m
+       [32m✓[39m displays submitted rating in success state[32m 114[2mms[22m[39m
+       [32m✓[39m shows error message when submission fails[32m 122[2mms[22m[39m
+       [32m✓[39m does not show form after successful submission[32m 126[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m70 passed[39m[22m[90m (74)[39m
+[2m   Start at [22m 17:56:53
+[2m   Duration [22m 9.24s[2m (transform 1.89s, setup 2.06s, import 9.03s, tests 16.01s, environment 20.49s)[22m
+
+ ELIFECYCLE  Test failed. See above for more details.

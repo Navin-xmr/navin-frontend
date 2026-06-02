@@ -2,7 +2,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { MOCK_DELIVERY_DATA, calculateSuccessRate } from './mockDeliveryData';
 import type { DeliveryOutcome } from './mockDeliveryData';
-import './DeliverySuccessChart.css';
 
 interface DeliverySuccessChartProps {
   data?: DeliveryOutcome[];
@@ -15,11 +14,10 @@ interface CustomTooltipProps {
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
-
   return (
-    <div className="delivery-tooltip">
-      <div className="delivery-tooltip-label">{payload[0].name}</div>
-      <div className="delivery-tooltip-value">{payload[0].value} shipments</div>
+    <div className="bg-[#1a1f2e] border border-border rounded-lg px-3.5 py-2.5">
+      <div className="text-text-secondary text-[11px] font-semibold uppercase mb-1">{payload[0].name}</div>
+      <div className="text-white text-sm font-bold">{payload[0].value} shipments</div>
     </div>
   );
 }
@@ -29,15 +27,17 @@ export default function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: Deli
   const total = data.reduce((sum, item) => sum + item.count, 0);
 
   return (
-    <div className="delivery-chart-section">
-      <div className="delivery-chart-header">
-        <h2 className="delivery-chart-title">
-          <TrendingUp size={18} />
+    <div className="p-0">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-border">
+        <h2 className="text-base font-bold flex items-center gap-2.5">
+          <TrendingUp size={18} className="text-accent-green" />
           Delivery Success Rates
         </h2>
       </div>
 
-      <div className="delivery-chart-body">
+      {/* Chart body */}
+      <div className="px-6 pt-8 pb-6 h-[280px] md:h-[240px] md:px-4 md:pt-6 md:pb-4 relative">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -58,25 +58,27 @@ export default function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: Deli
           </PieChart>
         </ResponsiveContainer>
 
-        <div className="delivery-center-label">
-          <div className="success-percentage">{successRate}%</div>
-          <div className="success-label">Success</div>
+        {/* Center label */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+          <div className="text-[32px] md:text-[28px] font-bold text-white leading-none">{successRate}%</div>
+          <div className="text-xs font-semibold text-text-secondary uppercase mt-1">Success</div>
         </div>
       </div>
 
-      <div className="delivery-legend">
+      {/* Legend */}
+      <div className="px-6 pb-6 md:px-4 md:pb-4 flex flex-col gap-3">
         {data.map(item => (
-          <div key={item.status} className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: item.color }} />
-            <div className="legend-details">
-              <span className="legend-status">{item.status}</span>
-              <span className="legend-count">{item.count}</span>
+          <div key={item.status} className="flex items-center gap-3">
+            <div className="w-3 h-3 rounded-[3px] shrink-0" style={{ backgroundColor: item.color }} />
+            <div className="flex justify-between items-center flex-1">
+              <span className="text-[13px] text-text-secondary font-medium">{item.status}</span>
+              <span className="text-sm text-white font-semibold">{item.count}</span>
             </div>
           </div>
         ))}
-        <div className="legend-total">
-          <span className="legend-total-label">Total</span>
-          <span className="legend-total-count">{total}</span>
+        <div className="flex justify-between items-center pt-3 mt-1 border-t border-border">
+          <span className="text-[13px] text-text-secondary font-semibold uppercase">Total</span>
+          <span className="text-base text-white font-bold">{total}</span>
         </div>
       </div>
     </div>

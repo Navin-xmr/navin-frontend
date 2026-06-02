@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Camera, Save, CheckCircle2, Loader2, Link as LinkIcon, Bell, Building2 } from 'lucide-react';
+import { Camera, Save, CheckCircle2, Loader2, Link as LinkIcon, Building2 } from 'lucide-react';
 import { WalletConnectButton } from '../../../../components/auth/WalletConnectButton/WalletConnectButton';
+import NotificationPreferences from '../../../Settings/NotificationPreferences/NotificationPreferences';
 import './CompanySettings.css';
 
 const CompanySettings: React.FC = () => {
@@ -10,12 +11,6 @@ const CompanySettings: React.FC = () => {
     });
 
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
-
-    const [notifications, setNotifications] = useState({
-        email: true,
-        inApp: true,
-        sms: false,
-    });
 
     const [loading, setLoading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
@@ -31,10 +26,6 @@ const CompanySettings: React.FC = () => {
             const url = URL.createObjectURL(file);
             setLogoPreview(url);
         }
-    };
-
-    const toggleNotification = (key: keyof typeof notifications) => {
-        setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
     };
 
     const handleSave = () => {
@@ -113,58 +104,7 @@ const CompanySettings: React.FC = () => {
               </section>
 
               {/* Notification Preferences Section */}
-              <section className="settings-card">
-                  <div className="card-header">
-                      <Bell className="card-icon" size={24} />
-                      <h2>Notification Preferences</h2>
-                  </div>
-                  <div className="card-body">
-                      <div className="toggle-group">
-                          <div className="toggle-info">
-                              <span className="toggle-label">Email Alerts</span>
-                              <span className="toggle-desc">Receive shipment updates via email</span>
-                          </div>
-                          <label className="switch">
-                              <input
-                                  type="checkbox"
-                                  checked={notifications.email}
-                                  onChange={() => toggleNotification('email')}
-                              />
-                              <span className="slider round"></span>
-                          </label>
-                      </div>
-
-                      <div className="toggle-group">
-                          <div className="toggle-info">
-                              <span className="toggle-label">In-App Notifications</span>
-                              <span className="toggle-desc">Show alerts within the dashboard</span>
-                          </div>
-                          <label className="switch">
-                              <input
-                                  type="checkbox"
-                                  checked={notifications.inApp}
-                                  onChange={() => toggleNotification('inApp')}
-                              />
-                              <span className="slider round"></span>
-                          </label>
-                      </div>
-
-                      <div className="toggle-group">
-                          <div className="toggle-info">
-                              <span className="toggle-label">SMS Alerts</span>
-                              <span className="toggle-desc">Receive critical alerts via SMS text</span>
-                          </div>
-                          <label className="switch">
-                              <input
-                                  type="checkbox"
-                                  checked={notifications.sms}
-                                  onChange={() => toggleNotification('sms')}
-                              />
-                              <span className="slider round"></span>
-                          </label>
-                      </div>
-                  </div>
-              </section>
+              <NotificationPreferences />
 
               {/* Connected Wallet Section */}
               <section className="settings-card">

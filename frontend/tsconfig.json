@@ -13,9 +13,12 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
 
     /* Vitest globals (describe / it / expect) */
-    "types": ["vitest/globals"],
+    "types": ["node", "react", "vitest"],
 
     /* Strict type checking — required for Soroban SDK interop */
     "strict": true,
