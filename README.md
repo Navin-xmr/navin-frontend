@@ -17,16 +17,26 @@ This repository is the **React frontend** of the Navin platform — built with *
 |-------|-----------|-----|
 | **UI Framework** | [React 19](https://react.dev/) | Component-based UI — the industry standard |
 | **Language** | **TypeScript** | Type safety for complex Soroban SDK interactions and multi-dashboard data flows |
+| **Styling** | [Tailwind CSS](https://tailwindcss.com/) | Utility-first CSS for consistent, maintainable styling with design tokens |
 | **Build Tool** | [Vite](https://vite.dev/) | Lightning-fast dev server and production bundler |
+| **Package Manager** | [pnpm](https://pnpm.io/) | Fast, disk-efficient package manager with strict dependency management |
 | **Testing** | [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) | Fast unit and component testing |
 | **Routing** | [React Router v7](https://reactrouter.com/) | Client-side navigation |
 | **HTTP Client** | [Axios](https://axios-http.com/) | API communication with the Navin backend |
 | **Blockchain** | [Stellar Soroban](https://soroban.stellar.org/) | Smart contract interaction for payments and milestones |
 
-> **Why TypeScript?**
-> The Soroban Stellar SDK returns complex XDR types and contract client objects.
+> **Why TypeScript + Tailwind + pnpm?**
+> 
+> **TypeScript:** The Soroban Stellar SDK returns complex XDR types and contract client objects.
 > TypeScript catches type mismatches at build time — critical when a wrong parameter type means a failed blockchain transaction.
 > It also makes the codebase self-documenting for open-source contributors picking up issues.
+>
+> **Tailwind CSS:** Utility-first styling eliminates CSS file sprawl and enforces consistent design tokens.
+> With our design system configured in `tailwind.config.js`, every component uses the same colors, spacing, and typography.
+> Smaller bundle sizes through automatic tree-shaking of unused styles.
+>
+> **pnpm:** 2x faster installs than npm, ~70% less disk space, and strict dependency resolution that prevents phantom dependencies.
+> Content-addressable storage means one copy of each package globally, with symlinks to projects.
 
 ---
 
@@ -72,7 +82,7 @@ frontend/
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or later
-- npm (included with Node.js)
+- [pnpm](https://pnpm.io/) v8 or later (install globally: `npm install -g pnpm`)
 
 ### Installation
 
@@ -81,11 +91,14 @@ frontend/
 git clone https://github.com/yourusername/navin-frontend.git
 cd navin-frontend/frontend
 
-# Install dependencies
-npm install
+# Set up your environment variables
+cp .env.example .env
+
+# Install dependencies with pnpm
+pnpm install
 
 # Start the development server
-npm run dev
+pnpm run dev
 ```
 
 Your app runs at `http://localhost:5173`.
@@ -93,12 +106,15 @@ Your app runs at `http://localhost:5173`.
 ### Useful Commands
 
 ```bash
-npm run dev          # Start local dev server (hot reload)
-npm run build        # Type-check + production build
-npm run lint         # Run ESLint
-npm run test         # Run all tests (Vitest)
-npm run test:watch   # Run tests in watch mode
+pnpm run dev          # Start local dev server (hot reload)
+pnpm run build        # Type-check + production build
+pnpm run lint         # Run ESLint
+pnpm run test         # Run all tests (Vitest)
+pnpm run test:watch   # Run tests in watch mode
 ```
+
+> **⚠️ Important:** Always use `pnpm` (not `npm` or `yarn`) to maintain consistency.
+> Using different package managers creates lock file conflicts and dependency mismatches.
 
 ---
 
@@ -111,11 +127,24 @@ Read our [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide on branching, com
 Quick overview:
 - Browse open issues on the [Issues page](https://github.com/Navin-xmr/navin-frontend/issues)
 - Comment on an issue and wait to be assigned before starting
-- Create a branch named `issue#<number>` and implement the feature
+- Create a branch and implement the feature
 - All frontend PRs **must include a screenshot** of the UI change
+- Use **pnpm** for all package management commands (not npm or yarn)
+- Use **Tailwind CSS utility classes** for styling (no vanilla CSS files for new components)
 
 > 💡 All components should be written in **TypeScript (`.tsx`)**.
 > Follow the file structure in each issue — it tells you exactly where to create your files.
+> See [TAILWIND_MIGRATION.md](docs/TAILWIND_MIGRATION.md) for styling guidelines (available after Issue #92 is merged).
+
+### Developer Guides
+
+| Guide | Description |
+|---|---|
+| **[Frontend Component & Styling Conventions](docs/FRONTEND_COMPONENT_CONVENTIONS.md)** | Folder structure, naming rules, Tailwind-first styling, path aliases, and legacy CSS migration policy — **start here** |
+| [Component Conventions](docs/COMPONENT_CONVENTIONS.md) | TypeScript, exports, props interfaces, and dead code rules |
+| [Tailwind Migration Guide](docs/TAILWIND_MIGRATION.md) | Step-by-step CSS → Tailwind conversion reference |
+| [Tailwind Before/After Examples](docs/TAILWIND_BEFORE_AFTER.md) | Side-by-side migration examples |
+| [Tailwind PR Checklist](docs/TAILWIND_PR_CHECKLIST.md) | Checklist for Tailwind migration PRs |
 
 ---
 

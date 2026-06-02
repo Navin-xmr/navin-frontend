@@ -1,7 +1,7 @@
 /* Dashboard Content */
 .dashboard-home {
-  display: grid;
-  grid-template-columns: 1fr 340px;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
 }
 
@@ -10,7 +10,6 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
-  grid-column: 1 / -1;
 }
 
 .header-title h1 {
@@ -28,17 +27,19 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #121620;
-  border: 1px solid var(--border-color);
-  padding: 8px 14px;
-  border-radius: 8px;
+  background-color: transparent;
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
 
+.date-selector svg {
+  color: var(--text-secondary);
+}
+
 /* Stats Cards */
-.stats-grid {
+.stats-grid-full {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
@@ -46,23 +47,14 @@
 }
 
 .stat-card {
-  background-color: var(--bg-card);
+  background-color: transparent;
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
   position: relative;
   overflow: hidden;
-}
-
-.stat-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100px;
-  height: 100px;
-  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 70%);
-  pointer-events: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-header {
@@ -72,15 +64,13 @@
   margin-bottom: 20px;
 }
 
-.stat-icon {
+.stat-icon-wrapper {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background-color: #1a1f2e;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent-blue);
 }
 
 .stat-trend {
@@ -100,7 +90,7 @@
 }
 
 .trend-neutral {
-  color: var(--accent-blue);
+  color: var(--text-secondary);
 }
 
 .stat-label {
@@ -109,16 +99,25 @@
   font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
   font-size: 32px;
   font-weight: 700;
+  line-height: 1;
+}
+
+/* Content Layout Grid */
+.dashboard-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 24px;
 }
 
 /* Shipments Section */
 .content-section {
-  background-color: var(--bg-card);
+  background-color: transparent;
   border: 1px solid var(--border-color);
   border-radius: 16px;
   overflow: hidden;
@@ -140,10 +139,6 @@
   gap: 10px;
 }
 
-.section-title h2 svg {
-  color: var(--accent-blue);
-}
-
 .view-all {
   color: var(--accent-blue);
   font-size: 12px;
@@ -161,14 +156,14 @@
   padding: 16px 24px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #2dd4bf; /* Cyan color matching the photo */
   text-transform: uppercase;
   border-bottom: 1px solid var(--border-color);
 }
 
 .shipments-table td {
   padding: 16px 24px;
-  font-size: 14px;
+  font-size: 13px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -177,7 +172,8 @@
 }
 
 .shipment-id-cell {
-  font-weight: 600;
+  font-weight: 700;
+  color: #fff;
 }
 
 .location-cell {
@@ -187,6 +183,7 @@
 
 .location-label {
   font-size: 12px;
+  color: #e2e8f0;
 }
 
 .location-sublabel {
@@ -195,7 +192,7 @@
 }
 
 .status-badge {
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 99px;
   font-size: 11px;
   font-weight: 600;
@@ -203,42 +200,37 @@
 }
 
 .status-in-transit {
-  background-color: rgba(59, 130, 246, 0.1);
+  background-color: #1e3a5f;
   color: #60a5fa;
 }
 
 .status-delivered {
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: #103b2e;
   color: #34d399;
 }
 
 .status-pending {
-  background-color: rgba(245, 158, 11, 0.1);
+  background-color: #4a2d12;
   color: #fbbf24;
 }
 
 .hash-cell {
   font-family: 'Courier New', Courier, monospace;
   font-size: 12px;
-  color: var(--text-secondary);
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.hash-cell svg {
-  color: var(--accent-green);
 }
 
 .verify-button {
   background-color: transparent;
   border: 1px solid var(--border-color);
   color: var(--accent-blue);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Right Rail */
@@ -249,26 +241,26 @@
 }
 
 .rail-card {
-  background-color: var(--bg-card);
+  background-color: transparent;
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 20px;
+  padding: 24px;
 }
 
 .rail-card h3 {
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 500;
   margin-bottom: 20px;
 }
 
 .quick-actions-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .action-button {
-  background-color: #1a1f2e;
+  background-color: transparent;
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
@@ -277,45 +269,49 @@
   justify-content: space-between;
   cursor: pointer;
   transition: all 0.2s;
+  color: #fff;
 }
 
 .action-button:hover {
-  background-color: #242b3d;
-  border-color: #3b82f6;
-}
-
-.action-button.primary {
-  background-color: var(--accent-blue);
-  border-color: var(--accent-blue);
-  color: white;
-}
-
-.action-button.primary:hover {
-  background-color: #2563eb;
+  background-color: rgba(255,255,255,0.05);
 }
 
 .action-label {
   font-size: 14px;
-  font-weight: 600;
+  line-height: 1.4;
+  text-align: left;
+  font-weight: 400;
 }
 
-.action-icon {
-  width: 28px;
-  height: 28px;
+.action-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid;
 }
 
-.distribution-header {
+.border-cyan { border-color: #00f0ff; }
+.text-cyan { color: #00f0ff; }
+
+.border-white { border-color: #cfcfcf; }
+.text-white { color: #fff; }
+
+.network-card h3 {
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: #9ca3af;
   margin-bottom: 16px;
 }
 
 .map-placeholder {
   width: 100%;
-  aspect-ratio: 16/10;
-  background-color: #0d1118;
-  border-radius: 8px;
+  aspect-ratio: 16/9;
+  background-color: #7b8394;
+  background: transparent;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -324,85 +320,42 @@
   overflow: hidden;
 }
 
-.map-placeholder img {
+.world-map-svg {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.5;
+  height: auto;
+  opacity: 0.8;
+  background-color: #cfcfcf;
+  border-radius: 12px;
 }
 
 .distribution-stats {
   display: flex;
-  justify-content: space-between;
-}
-
-.dist-stat-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.dist-stat-label {
-  font-size: 10px;
+  gap: 12px;
+  font-size: 12px;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-
-.dist-stat-value {
-  font-size: 14px;
-  font-weight: 600;
+  align-items: center;
 }
 
 /* Responsive Dashboard Home */
 @media (max-width: 1280px) {
-  .dashboard-home {
+  .dashboard-content-grid {
     grid-template-columns: 1fr;
-  }
-
-  .right-rail {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 1024px) {
-  .stats-grid {
+  .stats-grid-full {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .dashboard-header {
-    flex-direction: column;
-    gap: 16px;
   }
 }
 
 @media (max-width: 768px) {
-  .right-rail {
+  .stats-grid-full {
     grid-template-columns: 1fr;
   }
-
   .shipments-table {
     display: block;
     overflow-x: auto;
     white-space: nowrap;
-  }
-
-  .stat-value {
-    font-size: 24px;
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .header-title h1 {
-    font-size: 20px;
-  }
-
-  .date-selector {
-    width: 100%;
-    justify-content: center;
   }
 }

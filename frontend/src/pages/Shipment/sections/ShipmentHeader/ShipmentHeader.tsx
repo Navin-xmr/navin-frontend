@@ -1,6 +1,8 @@
 import React from 'react';
 import { Download, Share2, MapPin } from 'lucide-react';
 import { StatusBadge, ShipmentStatus } from '../../../../components/ui/StatusBadge/StatusBadge';
+import StatusBadge from '../../../../components/ui/StatusBadge/StatusBadge';
+import type { ShipmentStatus } from '../../../../services/api/endpoints/shipments';
 import './ShipmentHeader.css';
 
 export interface ShipmentHeaderProps {
@@ -65,6 +67,11 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               <MapPin size={16} />
             </div>
             
+
+            <div className="route-arrow">
+              <MapPin size={16} />
+            </div>
+
             <div className="party-info">
               <h3 className="party-label">To</h3>
               <p className="party-name">{receiver.name}</p>
@@ -72,6 +79,7 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
             </div>
           </div>
           
+
           <div className="shipment-dates">
             <div className="date-info">
               <span className="date-label">Created:</span>
@@ -88,6 +96,7 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
         <section className="shipment-header-right">
           <div className="action-buttons">
             <button 
+            <button
               className="action-btn primary"
               onClick={onTrack}
               aria-label="Track shipment"
@@ -96,6 +105,7 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               Track
             </button>
             <button 
+            <button
               className="action-btn secondary"
               onClick={onDownloadProof}
               aria-label="Download proof of delivery"
@@ -104,6 +114,7 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               Download Proof
             </button>
             <button 
+            <button
               className="action-btn secondary"
               onClick={onShare}
               aria-label="Share shipment details"
