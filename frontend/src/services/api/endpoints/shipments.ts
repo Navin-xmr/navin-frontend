@@ -20,6 +20,10 @@ export interface Shipment {
     offChainMetadata?: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
+    /** Stellar NFT token ID set by the backend after tokenization */
+    stellarTokenId?: string;
+    /** Stellar transaction hash for the tokenization transaction */
+    stellarTxHash?: string;
 }
 
 export interface PaginatedShipments {
