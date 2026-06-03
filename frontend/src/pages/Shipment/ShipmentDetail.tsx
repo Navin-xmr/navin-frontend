@@ -35,6 +35,11 @@ const ShipmentDetail: React.FC = () => {
     // Implement tracking functionality
   };
 
+  const handleDownloadProof = () => {
+    console.log('Downloading proof for shipment:', id);
+    // Implement download proof functionality
+  };
+
   const handleShare = () => {
     console.log('Sharing shipment:', id);
     // Implement share functionality
@@ -129,6 +134,10 @@ const ShipmentDetail: React.FC = () => {
           </div>
         )}
       </section>
+      
+      {/* Additional shipment detail sections would go here */}
+      <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+        Additional shipment details and tracking information will be displayed here.
 import MilestoneTimeline from './sections/MilestoneTimeline/MilestoneTimeline';
 import { Milestone } from './sections/MilestoneTimeline/types';
 

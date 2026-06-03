@@ -1,5 +1,5 @@
 import React from "react";
-import { ExternalLink, Wallet, CreditCard, ArrowRightLeft, Hash } from "lucide-react";
+import { ExternalLink, Wallet, CreditCard, ArrowRightLeft, Hash, Coins } from "lucide-react";
 
 export type PaymentStatusType = "pending" | "escrowed" | "released" | "failed";
 
@@ -10,6 +10,10 @@ export interface PaymentData {
   payerAddress: string;
   payeeAddress: string;
   transactionHash: string;
+  /** Stellar NFT token ID set by the backend after tokenization */
+  stellarTokenId?: string;
+  /** Stellar transaction hash for the tokenization transaction */
+  stellarTxHash?: string;
 }
 
 export interface PaymentStatusProps {
@@ -118,6 +122,43 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({ payment }) => {
                 </a>
               </div>
             </div>
+
+            {/* Stellar Token ID (set after tokenization) */}
+            {payment.stellarTokenId && (
+              <div className="flex items-start gap-4">
+                <div className="bg-[rgba(0,212,200,0.1)] rounded-lg w-10 h-10 flex items-center justify-center shrink-0">
+                  <Coins className="w-5 h-5 text-[#00d4c8]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[rgba(255,255,255,0.5)] text-sm m-0 mb-1">Stellar Token ID</p>
+                  <p className="text-white text-base font-medium m-0 font-mono" title={payment.stellarTokenId}>
+                    {truncateAddress(payment.stellarTokenId)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Stellar Tokenization Tx Hash */}
+            {payment.stellarTxHash && (
+              <div className="flex items-start gap-4">
+                <div className="bg-[rgba(0,212,200,0.1)] rounded-lg w-10 h-10 flex items-center justify-center shrink-0">
+                  <ExternalLink className="w-5 h-5 text-[#00d4c8]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[rgba(255,255,255,0.5)] text-sm m-0 mb-1">Tokenization Tx</p>
+                  <a
+                    href={getStellarExplorerUrl(payment.stellarTxHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-[#00d4c8] text-base font-medium font-mono hover:text-[#1fffff] transition-colors group"
+                    title={payment.stellarTxHash}
+                  >
+                    {truncateAddress(payment.stellarTxHash)}
+                    <ExternalLink className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
