@@ -71,10 +71,10 @@ export const shipmentApi = {
         return res.data.data;
     },
 
-    uploadProof: async (id: string, file: File, notes?: string): Promise<Shipment> => {
+        uploadProof: async (id: string, file: File, recipientSignatureName: string): Promise<Shipment> => {
         const form = new FormData();
         form.append("file", file);
-        if (notes) form.append("notes", notes);
+        form.append("recipientSignatureName", recipientSignatureName);
         const res = await apiClient.post<{ data: Shipment }>(`/shipments/${id}/proof`, form, {
             headers: { "Content-Type": "multipart/form-data" },
         });
