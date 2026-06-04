@@ -33,7 +33,6 @@ const DeliveryProofUpload: React.FC = () => {
       return;
     }
 
-    // ADD THIS: Cleanup the previous URL if it exists
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
@@ -64,7 +63,7 @@ const DeliveryProofUpload: React.FC = () => {
   };
 
   return (
-    <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl px-8 py-12 backdrop-blur-[12px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] mt-8 md:px-5 md:py-8 md:rounded-2xl sm:px-4 sm:py-6">
+    <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl px-8 py-12 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] mt-8 md:px-5 md:py-8 md:rounded-2xl sm:px-4 sm:py-6">
       <h2 className="font-['Bebas_Neue',sans-serif] text-[clamp(1.75rem,4vw,2.5rem)] font-normal tracking-[0.04em] leading-[1.2] text-white text-center mb-8">
         DELIVERY <span className="text-[#00d4c8]">PROOF</span>
       </h2>
@@ -73,31 +72,32 @@ const DeliveryProofUpload: React.FC = () => {
         <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
           {/* Upload area */}
           <div
-            className={`border-2 border-dashed rounded-2xl min-h-[250px] flex items-center justify-center bg-[rgba(0,0,0,0.2)] transition-all duration-300 relative overflow-hidden sm:min-h-[200px] ${
-              previewUrl ? "border-solid cursor-default p-4" : "cursor-pointer"
+            className={`border-2 border-dashed rounded-2xl min-h-62.5 flex items-center justify-center bg-[rgba(0,0,0,0.2)] transition-all duration-300 relative overflow-hidden sm:min-h-50 ${
+              previewUrl ? "border-solid p-4" : "border-[rgba(0,212,200,0.3)]"
             } ${
               isDragging
                 ? "border-[#00d4c8] bg-[rgba(0,212,200,0.05)]"
-                : "border-[rgba(0,212,200,0.3)] hover:border-[#00d4c8] hover:bg-[rgba(0,212,200,0.05)]"
+                : "hover:border-[#00d4c8] hover:bg-[rgba(0,212,200,0.05)]"
             }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onClick={!previewUrl ? triggerFileInput : undefined}
           >
             <input
+              id="delivery-proof-upload"
               type="file"
               ref={fileInputRef}
               onChange={handleFileInputChange}
               accept="image/*"
               className="hidden"
+              aria-label="Upload delivery proof image"
             />
             {previewUrl ? (
               <div className="w-full h-full flex flex-col items-center gap-4">
                 <img
                   src={previewUrl}
                   alt="Delivery Proof Preview"
-                  className="max-w-full max-h-[300px] rounded-lg object-contain"
+                  className="max-w-full max-h-75 rounded-lg object-contain"
                 />
                 <button
                   type="button"
@@ -108,8 +108,13 @@ const DeliveryProofUpload: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col items-center text-center text-[rgba(255,255,255,0.7)]">
-                <div className="text-[#00d4c8] mb-4">
+              <button
+                type="button"
+                onClick={triggerFileInput}
+                className="flex flex-col items-center text-center bg-transparent border-none cursor-pointer p-8 text-[rgba(255,255,255,0.7)]"
+                aria-label="Upload delivery proof image. Click to open file picker or drag and drop."
+              >
+                <div className="text-[#00d4c8] mb-4" aria-hidden="true">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="48"
@@ -132,7 +137,7 @@ const DeliveryProofUpload: React.FC = () => {
                 <p className="text-[0.9rem] m-0 text-[rgba(200,230,240,0.5)]">
                   SVG, PNG, JPG or GIF (max. 10MB)
                 </p>
-              </div>
+              </button>
             )}
           </div>
 
@@ -196,6 +201,7 @@ const DeliveryProofUpload: React.FC = () => {
               strokeLinecap="round"
               strokeLinejoin="round"
               className="shrink-0"
+              aria-hidden="true"
             >
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
@@ -205,12 +211,12 @@ const DeliveryProofUpload: React.FC = () => {
 
           {/* Proof details */}
           <div className="bg-[rgba(0,0,0,0.2)] rounded-2xl overflow-hidden border border-[rgba(255,255,255,0.05)]">
-            <div className="w-full bg-[rgba(0,0,0,0.5)] flex items-center justify-center p-8 min-h-[200px]">
+            <div className="w-full bg-[rgba(0,0,0,0.5)] flex items-center justify-center p-8 min-h-50">
               {previewUrl && (
                 <img
                   src={previewUrl}
                   alt="Submitted Delivery Proof"
-                  className="max-w-full max-h-[400px] rounded-lg object-contain"
+                  className="max-w-full max-h-100 rounded-lg object-contain"
                 />
               )}
             </div>
