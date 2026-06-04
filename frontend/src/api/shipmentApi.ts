@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ShipmentStatus } from '../components/ui/StatusBadge/StatusBadge';
+import type { ShipmentStatus } from '../services/api/endpoints/shipments';
 
 export interface Shipment {
   id: string;
@@ -52,10 +52,10 @@ interface BackendResponse {
 }
 
 const STATUS_MAP: Record<string, ShipmentStatus> = {
-  CREATED: 'Pending Approval',
-  IN_TRANSIT: 'In Transit',
-  DELIVERED: 'Delivered',
-  CANCELLED: 'Cancelled',
+  CREATED: 'CREATED',
+  IN_TRANSIT: 'IN_TRANSIT',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
 };
 
 const normalizeShipment = (shipment: BackendShipment): Shipment => {
@@ -66,7 +66,7 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
     status:
       STATUS_MAP[String(shipment.status).toUpperCase()] ??
       (shipment.status as ShipmentStatus) ??
-      'Pending Approval',
+      'CREATED',
     createdAt: String(shipment.createdAt),
     deliveryProof: shipment.deliveryProof?.url
       ? {
