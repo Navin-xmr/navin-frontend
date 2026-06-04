@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { getStatusDisplayLabel } from '../../../utils/shipmentStatus';
 
 export interface DeliveryConfirmationProps {
   shipmentId: string;
@@ -73,7 +74,7 @@ const DeliveryConfirmation: React.FC<DeliveryConfirmationProps> = ({
 
   const displayRating = hovered || rating;
 
-  if (status !== 'delivered') return null;
+  if (getStatusDisplayLabel(status).toLowerCase() !== 'delivered') return null;
 
   return (
     <div

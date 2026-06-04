@@ -12,7 +12,7 @@ import SensorDataCards, { SensorData } from "./SensorDataCards/SensorDataCards";
 const ShipmentDetail: React.FC = () => {
     const shipmentHeaderData = {
         shipmentId: "#SHP-992834",
-        status: "in_transit" as const,
+        status: "IN_TRANSIT" as const,
         originAddress: "New York Distribution Center, NY 10001",
         destinationAddress: "123 Main Street, Boston, MA 02101",
         expectedDeliveryDate: "Oct 24, 2026 by 5:00 PM EST",

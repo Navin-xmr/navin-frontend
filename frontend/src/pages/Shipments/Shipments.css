@@ -1,0 +1,92 @@
+.shipments-page {
+  width: 100%;
+  padding: 24px;
+}
+
+.shipments-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  color: inherit;
+}
+
+.shipments-table th,
+.shipments-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.shipments-table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 12px;
+}
+
+.shipments-empty,
+.shipments-error,
+.shipments-loading {
+  padding: 32px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.table-pagination {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pagination-nav,
+.pagination-page {
+  border: 1px solid var(--border-color);
+  background: #121620;
+  color: #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pagination-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+}
+
+.pagination-pages {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pagination-page {
+  min-width: 32px;
+  padding: 6px 10px;
+}
+
+.pagination-page.is-active {
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
+  color: white;
+}
+
+.pagination-nav:disabled,
+.pagination-page:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .table-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}

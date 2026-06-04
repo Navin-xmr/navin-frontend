@@ -1,30 +1,24 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { getStatusDisplayLabel, getStatusBadgeClass } from '../../../../utils/shipmentStatus';
 
 interface ActiveShipment {
   id: string;
-  status: "In Transit" | "Pending Pickup" | "Out for Delivery" | "Delayed";
+  status: string; // backend enum (CREATED, IN_TRANSIT, DELIVERED, CANCELLED)
   origin: string;
   destination: string;
   estimatedDelivery: string;
 }
 
 const MOCK_ACTIVE_SHIPMENTS: ActiveShipment[] = [
-  { id: "SHP-2001", status: "In Transit", origin: "Singapore", destination: "Los Angeles", estimatedDelivery: "2026-02-28" },
-  { id: "SHP-2002", status: "Out for Delivery", origin: "Dubai", destination: "London", estimatedDelivery: "2026-02-24" },
-  { id: "SHP-2003", status: "Pending Pickup", origin: "Shanghai", destination: "Rotterdam", estimatedDelivery: "2026-03-05" },
-  { id: "SHP-2004", status: "Delayed", origin: "Mumbai", destination: "New York", estimatedDelivery: "2026-03-02" },
+  { id: 'SHP-2001', status: 'IN_TRANSIT', origin: 'Singapore', destination: 'Los Angeles', estimatedDelivery: '2026-02-28' },
+  { id: 'SHP-2002', status: 'DELIVERED', origin: 'Dubai', destination: 'London', estimatedDelivery: '2026-02-24' },
+  { id: 'SHP-2003', status: 'CREATED', origin: 'Shanghai', destination: 'Rotterdam', estimatedDelivery: '2026-03-05' },
+  { id: 'SHP-2004', status: 'CREATED', origin: 'Mumbai', destination: 'New York', estimatedDelivery: '2026-03-02' },
 ];
 
 const formatDate = (dateString: string) =>
-  new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(dateString));
-
-const statusStyles: Record<ActiveShipment["status"], string> = {
-  "In Transit":       "bg-blue-100 text-blue-800",
-  "Pending Pickup":   "bg-yellow-100 text-yellow-800",
-  "Out for Delivery": "bg-green-100 text-green-800",
-  "Delayed":          "bg-red-100 text-red-800",
-};
+  new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateString));
 
 const ActiveShipments: React.FC = () => {
   const navigate = useNavigate();
@@ -41,8 +35,8 @@ const ActiveShipments: React.FC = () => {
           >
             <div className="flex justify-between items-center">
               <span className="font-semibold text-base text-[#1a1a1a]">{shipment.id}</span>
-              <span className={`px-3 py-1 rounded-xl text-xs font-medium capitalize ${statusStyles[shipment.status]}`}>
-                {shipment.status}
+              <span className={`px-3 py-1 rounded-xl text-xs font-medium ${getStatusBadgeClass(shipment.status)}`}>
+                {getStatusDisplayLabel(shipment.status)}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#4b5563]">

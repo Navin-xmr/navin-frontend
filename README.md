@@ -91,6 +91,9 @@ frontend/
 git clone https://github.com/yourusername/navin-frontend.git
 cd navin-frontend/frontend
 
+# Set up your environment variables
+cp .env.example .env
+
 # Install dependencies with pnpm
 pnpm install
 

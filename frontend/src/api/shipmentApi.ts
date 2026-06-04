@@ -1,0 +1,93 @@
+import axios from 'axios';
+import type { ShipmentStatus } from '../components/ui/StatusBadge/StatusBadge';
+
+export interface Shipment {
+  id: string;
+  origin: string;
+  destination: string;
+  status: ShipmentStatus;
+  createdAt: string;
+}
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  [key: string]: unknown;
+}
+
+export interface ShipmentsResponse {
+  data: Shipment[];
+  meta: PaginationMeta;
+}
+
+interface BackendShipment {
+  id: string;
+  origin: string;
+  destination: string;
+  status: string;
+  createdAt: string;
+  [key: string]: unknown;
+}
+
+interface BackendResponse {
+  data?: BackendShipment[];
+  meta?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    [key: string]: unknown;
+  };
+}
+
+const STATUS_MAP: Record<string, ShipmentStatus> = {
+  CREATED: 'Pending Approval',
+  IN_TRANSIT: 'In Transit',
+  DELIVERED: 'Delivered',
+  CANCELLED: 'Cancelled',
+};
+
+const normalizeShipment = (shipment: BackendShipment): Shipment => {
+  return {
+    id: String(shipment.id),
+    origin: String(shipment.origin),
+    destination: String(shipment.destination),
+    status:
+      STATUS_MAP[String(shipment.status).toUpperCase()] ??
+      (shipment.status as ShipmentStatus) ??
+      'Pending Approval',
+    createdAt: String(shipment.createdAt),
+  };
+};
+
+export const shipmentApi = {
+  async getAll(params: { limit?: number; page?: number } = {}): Promise<ShipmentsResponse> {
+    const queryParams = new URLSearchParams();
+
+    if (typeof params.limit === 'number') {
+      queryParams.set('limit', String(params.limit));
+    }
+
+    if (typeof params.page === 'number') {
+      queryParams.set('page', String(params.page));
+    }
+
+    const response = await axios.get<BackendResponse>('/api/shipments', {
+      params: Object.fromEntries(queryParams.entries()),
+    });
+
+    const payload = response.data ?? {};
+    const items = Array.isArray(payload.data) ? payload.data.map(normalizeShipment) : [];
+    const meta = payload.meta ?? {};
+
+    return {
+      data: items,
+      meta: {
+        page: typeof meta.page === 'number' ? meta.page : params.page ?? 1,
+        limit: typeof meta.limit === 'number' ? meta.limit : params.limit ?? items.length,
+        total: typeof meta.total === 'number' ? meta.total : items.length,
+        ...meta,
+      },
+    };
+  },
+};

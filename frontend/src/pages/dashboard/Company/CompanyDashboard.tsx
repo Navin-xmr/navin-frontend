@@ -5,42 +5,28 @@ import {
   Rocket, Menu, QrCode,
 } from "lucide-react";
 
-const badgeClasses: Record<string, string> = {
-  "delivered":  "bg-[rgba(16,185,129,0.1)]  text-[#10b981] border border-[rgba(16,185,129,0.2)]",
-  "in-transit": "bg-[rgba(59,130,246,0.1)]  text-[#3b82f6] border border-[rgba(59,130,246,0.2)]",
-  "delayed":    "bg-[rgba(245,158,11,0.1)]  text-[#f59e0b] border border-[rgba(245,158,11,0.2)]",
-  "pending":    "bg-[rgba(148,163,184,0.1)] text-[#94a3b8] border border-[rgba(148,163,184,0.2)]",
-};
-
-const dotClasses: Record<string, string> = {
-  "delivered":  "bg-[#10b981]",
-  "in-transit": "bg-[#3b82f6]",
-  "delayed":    "bg-[#f59e0b]",
-  "pending":    "bg-[#64748b]",
-};
-
-const mobileActionClasses: Record<string, string> = {
-  "delivered":  "border-[rgba(16,185,129,0.4)]  text-[#10b981] bg-[rgba(16,185,129,0.1)]",
-  "in-transit": "border-[rgba(59,130,246,0.4)]  text-[#3b82f6] bg-[rgba(59,130,246,0.1)]",
-  "delayed":    "border-[rgba(249,115,22,0.4)]  text-[#f97316] bg-[rgba(249,115,22,0.1)]",
-  "pending":    "border-[rgba(30,41,59,0.8)]    text-[#64748b] bg-[rgba(255,255,255,0.04)]",
-};
+import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 
 const getStatusKey = (status: string) => {
   switch (status) {
-    case "DELIVERED":  return "delivered";
-    case "IN-TRANSIT": return "in-transit";
-    case "DELAYED":    return "delayed";
-    default:           return "pending";
+    case 'DELIVERED':
+      return 'DELIVERED';
+    case 'IN-TRANSIT':
+    case 'IN_TRANSIT':
+      return 'IN_TRANSIT';
+    case 'CANCELLED':
+      return 'CANCELLED';
+    default:
+      return 'CREATED';
   }
 };
 
 const getTransportIcon = (type: string) => {
   switch (type) {
-    case "ship":  return <Ship  size={20} strokeWidth={1.5} />;
+    case "ship": return <Ship size={20} strokeWidth={1.5} />;
     case "plane": return <Plane size={20} strokeWidth={1.5} />;
     case "train": return <Train size={20} strokeWidth={1.5} />;
-    default:      return <Box   size={20} strokeWidth={1.5} />;
+    default: return <Box size={20} strokeWidth={1.5} />;
   }
 };
 
@@ -53,17 +39,17 @@ const TrendIcon = ({ up }: { up: boolean }) => (
 );
 
 const stats = [
-  { id: "active",    label: "Active",    value: "128",   trend: "12%", trendType: "positive", icon: <Truck       size={18} /> },
-  { id: "delivered", label: "Delivered", value: "1,420", trend: "5%",  trendType: "positive", icon: <CheckCircle2 size={18} /> },
-  { id: "delayed",   label: "Delayed",   value: "12",    trend: "2%",  trendType: "negative", icon: <Clock       size={18} /> },
-  { id: "verified",  label: "Verified",  value: "45",    trend: "0%",  trendType: "neutral",  icon: <ShieldCheck size={18} /> },
+  { id: "active", label: "Active", value: "128", trend: "12%", trendType: "positive", icon: <Truck size={18} /> },
+  { id: "delivered", label: "Delivered", value: "1,420", trend: "5%", trendType: "positive", icon: <CheckCircle2 size={18} /> },
+  { id: "delayed", label: "Delayed", value: "12", trend: "2%", trendType: "negative", icon: <Clock size={18} /> },
+  { id: "verified", label: "Verified", value: "45", trend: "0%", trendType: "neutral", icon: <ShieldCheck size={18} /> },
 ];
 
 const recentShipments = [
-  { id: "#NVN-9842", destination: "40.7128° N",    status: "IN-TRANSIT", statusLabel: "In Transit", type: "box"   },
-  { id: "#NVN-8711", destination: "Terminal B",    status: "DELIVERED",  statusLabel: "Delivered",  type: "train" },
-  { id: "#NVN-4420", destination: "Customs Check", status: "DELAYED",    statusLabel: "Delayed",    type: "plane" },
-  { id: "#NVN-2109", destination: "Pacific Route", status: "IN-TRANSIT", statusLabel: "On Vessel",  type: "ship"  },
+  { id: "#NVN-9842", destination: "40.7128° N", status: "IN_TRANSIT", type: "box" },
+  { id: "#NVN-8711", destination: "Terminal B", status: "DELIVERED", type: "train" },
+  { id: "#NVN-4420", destination: "Customs Check", status: "CREATED", type: "plane" },
+  { id: "#NVN-2109", destination: "Pacific Route", status: "IN_TRANSIT", type: "ship" },
 ];
 
 const CompanyDashboard: React.FC = () => {
@@ -138,10 +124,9 @@ const CompanyDashboard: React.FC = () => {
               <div className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}>
                 {stat.value}
               </div>
-              <div className={`text-[13px] font-medium flex items-center gap-1 ${
-                stat.trendType === "positive" ? "text-[#10b981]" :
+              <div className={`text-[13px] font-medium flex items-center gap-1 ${stat.trendType === "positive" ? "text-[#10b981]" :
                 stat.trendType === "negative" ? "text-[#ef4444]" : "text-[#94a3b8]"
-              }`}>
+                }`}>
                 <TrendIcon up={stat.trendType === "positive"} />{stat.trend}
               </div>
             </div>
@@ -200,8 +185,9 @@ const CompanyDashboard: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-sm text-white border-b border-[rgba(30,41,59,0.5)] bg-[#131720] group-hover:bg-[rgba(255,255,255,0.02)]">{s.destination}</td>
                     <td className="px-6 py-4 text-sm border-b border-[rgba(30,41,59,0.5)] bg-[#131720] group-hover:bg-[rgba(255,255,255,0.02)]">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-[0.05em] ${badgeClasses[getStatusKey(s.status)]}`}>
-                        {s.status}
+                      {/** Use canonical label and badge classes */}
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-[0.05em] ${getStatusBadgeClass(getStatusKey(s.status))}`}>
+                        {getStatusDisplayLabel(getStatusKey(s.status))}
                       </span>
                     </td>
                   </tr>
@@ -213,7 +199,7 @@ const CompanyDashboard: React.FC = () => {
             <div className="hidden max-md:flex flex-col">
               {recentShipments.map((s) => {
                 const key = getStatusKey(s.status);
-                const isQr = s.status === "IN-TRANSIT" && s.id === "#NVN-2109";
+                const isQr = key === 'IN_TRANSIT' && s.id === '#NVN-2109';
                 return (
                   <div key={`mob-${s.id}`} className="flex items-center bg-[#131720] rounded-xl mb-2 border border-[rgba(30,41,59,0.5)] px-4 py-3.5 gap-3">
                     <div className="w-10 h-10 min-w-[40px] bg-[rgba(255,255,255,0.04)] rounded-[10px] flex items-center justify-center text-[#94a3b8]">
@@ -222,12 +208,12 @@ const CompanyDashboard: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <span className="block font-bold text-[15px] text-white whitespace-nowrap overflow-hidden text-ellipsis">{s.id}</span>
                       <div className="flex items-center gap-1.5 text-[13px] text-[#94a3b8] mt-0.5">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${dotClasses[key]}`} />
-                        {s.statusLabel} - {s.destination}
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDotClass(key)}`} />
+                        {getStatusDisplayLabel(key)} - {s.destination}
                       </div>
                     </div>
-                    <button className={`min-w-[36px] w-9 h-9 rounded-full border flex items-center justify-center cursor-pointer flex-shrink-0 ${isQr ? "!w-11 !h-11 bg-[#3b82f6] text-white border-[#3b82f6]" : mobileActionClasses[key]}`}>
-                      {s.status === "DELIVERED" ? <ShieldCheck size={18} /> : isQr ? <QrCode size={18} /> : <MoreHorizontal size={18} />}
+                    <button className={`min-w-[36px] w-9 h-9 rounded-full border flex items-center justify-center cursor-pointer flex-shrink-0 ${isQr ? "!w-11 !h-11 bg-[#3b82f6] text-white border-[#3b82f6]" : getStatusBadgeClass(key)}`}>
+                      {key === 'DELIVERED' ? <ShieldCheck size={18} /> : isQr ? <QrCode size={18} /> : <MoreHorizontal size={18} />}
                     </button>
                   </div>
                 );
@@ -255,7 +241,7 @@ const CompanyDashboard: React.FC = () => {
             {[
               { seed: "Felix", bg: "b6e3f4" },
               { seed: "Aneka", bg: "c0aede" },
-              { seed: "Jack",  bg: "ffdfbf" },
+              { seed: "Jack", bg: "ffdfbf" },
             ].map((a, i) => (
               <div key={i} className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 first:ml-0 bg-[#334155] overflow-hidden">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${a.seed}&backgroundColor=${a.bg}`} alt="Driver" className="w-full h-full object-cover" />
