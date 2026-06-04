@@ -1,3 +1,4 @@
+import { safeFormatDate } from '../../../../utils/safeFormat';
 import React from 'react';
 import { Download, Share2, MapPin } from 'lucide-react';
 import { StatusBadge, ShipmentStatus } from '../../../../components/ui/StatusBadge/StatusBadge';
@@ -83,11 +84,11 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
           <div className="shipment-dates">
             <div className="date-info">
               <span className="date-label">Created:</span>
-              <span className="date-value">{formatDate(createdAt)}</span>
+              <span className="date-value">{safeFormatDate(createdAt)}</span>
             </div>
             <div className="date-info">
               <span className="date-label">Expected Delivery:</span>
-              <span className="date-value">{formatDate(expectedDelivery)}</span>
+              <span className="date-value">{safeFormatDate(expectedDelivery)}</span>
             </div>
           </div>
         </section>
@@ -130,3 +131,6 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
 };
 
 export default ShipmentHeader;
+
+
+
