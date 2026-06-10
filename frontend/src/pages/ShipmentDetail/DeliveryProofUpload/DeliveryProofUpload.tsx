@@ -73,7 +73,7 @@ const DeliveryProofUpload: React.FC = () => {
           {/* Upload area */}
           <div
             className={`border-2 border-dashed rounded-2xl min-h-62.5 flex items-center justify-center bg-[rgba(0,0,0,0.2)] transition-all duration-300 relative overflow-hidden sm:min-h-50 ${
-              previewUrl ? "border-solid p-4" : "border-[rgba(0,212,200,0.3)]"
+              previewUrl ? "border-solid cursor-default p-4" : "cursor-pointer"
             } ${
               isDragging
                 ? "border-[#00d4c8] bg-[rgba(0,212,200,0.05)]"
