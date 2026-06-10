@@ -20,28 +20,29 @@ import ShipmentHistory from './pages/dashboard/Customer/ShipmentHistory/Shipment
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
 import './App.css';
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: <Home />,
   },
   {
-    path: "/signup",
+    path: '/signup',
     element: <Signup />,
   },
   {
-    path: "/login",
+    path: '/login',
     element: <Login />,
   },
   {
-    path: "/forgot-password",
+    path: '/forgot-password',
     element: <ForgotPassword />,
   },
   {
-    path: "/pagination-demo",
+    path: '/pagination-demo',
     element: <PaginationDemo />,
   },
   {
@@ -51,11 +52,11 @@ const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           {
-            path: "/dashboard",
+            path: '/dashboard',
             element: <CompanyDashboard />,
           },
           {
-            path: "/dashboard/shipments",
+            path: '/dashboard/shipments',
             element: <Shipments />,
           },
           {
@@ -67,47 +68,43 @@ const router = createBrowserRouter([
             element: <CreateShipment />,
           },
           {
-            path: "/dashboard/shipments/history",
+            path: '/dashboard/shipments/history',
             element: <ShipmentHistory />,
           },
           {
-            path: "/dashboard/shipments/:id",
-            element: <ShipmentDetail />,
-          },
-          {
-            path: "/dashboard/blockchain-ledger",
+            path: '/dashboard/blockchain-ledger',
             element: <BlockchainLedger />,
           },
           {
-            path: "/dashboard/settlements",
+            path: '/dashboard/settlements',
             element: <Settlements />,
           },
           {
-            path: "/dashboard/payments",
+            path: '/dashboard/payments',
             element: <PaymentHistory />,
           },
           {
-            path: "/dashboard/analytics",
+            path: '/dashboard/analytics',
             element: <Analytics />,
           },
           {
-            path: "/dashboard/settings",
+            path: '/dashboard/settings',
             element: <CompanySettings />,
           },
           {
-            path: "/dashboard/team",
+            path: '/dashboard/team',
             element: <UserManagement />,
           },
           {
-            path: "/dashboard/help-center",
+            path: '/dashboard/help-center',
             element: <HelpCenter />,
           },
           {
-            path: "/dashboard/notifications",
+            path: '/dashboard/notifications',
             element: <NotificationsPage />,
           },
           {
-            path: "/dashboard/profile",
+            path: '/dashboard/profile',
             element: <CustomerProfile />,
           },
         ],
@@ -119,6 +116,7 @@ const router = createBrowserRouter([
 function App() {
   return (
     <ErrorBoundary>
+      <OfflineBanner />
       <RouterProvider router={router} />
     </ErrorBoundary>
   );
