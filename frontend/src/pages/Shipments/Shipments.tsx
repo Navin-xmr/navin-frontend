@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
+import { safeFormatDate } from '../../utils/safeFormat';
 import './Shipments.css';
 
 const PAGE_SIZE = 5;
@@ -110,9 +111,7 @@ const Shipments: React.FC = () => {
                   <td>
                     <StatusBadge status={shipment.status} />
                   </td>
-                  <td>{new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(
-                    new Date(shipment.createdAt)
-                  )}</td>
+                  <td>{safeFormatDate(shipment.createdAt)}</td>
                   <td>
                     <button type="button" className="verify-button">
                       View
@@ -153,3 +152,5 @@ const Shipments: React.FC = () => {
 };
 
 export default Shipments;
+
+

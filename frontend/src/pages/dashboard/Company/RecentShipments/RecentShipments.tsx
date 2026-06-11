@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react';
 import { MOCK_SHIPMENTS, type Shipment } from './mockShipments';
 import { getStatusDisplayLabel, getStatusBadgeClass } from '../../../../utils/shipmentStatus';
+import { safeFormatDate, safeDateCompare } from '../../../../utils/safeFormat';
 
 type SortKey = 'createdAt' | 'status';
 type SortDirection = 'asc' | 'desc';
@@ -20,8 +21,7 @@ const statusRank: Record<Shipment['status'], number> = {
   CANCELLED: 4,
 };
 
-const formatCreatedDate = (createdAt: string) =>
-  new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(createdAt));
+// Uses safeFormatDate from utils/safeFormat
 
 // Now resolved via shared mapping
 
@@ -43,7 +43,7 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
   const sortedShipments = useMemo(() => {
     const sorted = [...loadedShipments].sort((a, b) =>
       sortKey === 'createdAt'
-        ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        ? safeDateCompare(a.createdAt, b.createdAt)
         : statusRank[a.status] - statusRank[b.status]
     );
     return sortDirection === 'asc' ? sorted : sorted.reverse();
@@ -132,7 +132,7 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
                   {getStatusDisplayLabel(shipment.status)}
                 </span>
               </td>
-              <td className={tdBase}>{formatCreatedDate(shipment.createdAt)}</td>
+              <td className={tdBase}>{safeFormatDate(shipment.createdAt)}</td>
               <td className={tdBase}>
                 <button type="button" className="bg-accent-blue/10 text-accent-blue border border-accent-blue/20 rounded-md px-3 py-1.5 text-xs font-semibold cursor-pointer hover:bg-accent-blue hover:text-white transition-all">
                   View
@@ -189,3 +189,6 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
 };
 
 export default RecentShipments;
+
+
+

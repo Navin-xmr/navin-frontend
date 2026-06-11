@@ -1,3 +1,4 @@
+import { safeFormatDate, safeDateCompare, safeRating } from '../../../../utils/safeFormat';
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, ArrowUpDown, Search, Star, Eye, Package } from "lucide-react";
@@ -64,7 +65,7 @@ const ShipmentHistory: React.FC = () => {
   // Sort by delivered date
   const sortedShipments = useMemo(() => {
     return [...filteredShipments].sort((a, b) => {
-      const diff = new Date(a.deliveredDate).getTime() - new Date(b.deliveredDate).getTime();
+      const diff = safeDateCompare(a.deliveredDate, b.deliveredDate);
       return sortOrder === "desc" ? -diff : diff;
     });
   }, [filteredShipments, sortOrder]);
@@ -203,10 +204,10 @@ const ShipmentHistory: React.FC = () => {
                     <td className={`${tdClass} text-text-primary`}>{shipment.origin}</td>
                     <td className={`${tdClass} text-text-primary`}>{shipment.destination}</td>
                     <td className={`${tdClass} text-text-secondary`}>
-                      {formatDate(shipment.deliveredDate)}
+                      {safesafeFormatDate(shipment.deliveredDate)}
                     </td>
                     <td className={tdClass}>
-                      <StarRating rating={shipment.rating} />
+                      <StarRating rating={safeRating(shipment.rating)} />
                     </td>
                     <td className={tdClass}>
                       <button
@@ -267,3 +268,6 @@ const ShipmentHistory: React.FC = () => {
 };
 
 export default ShipmentHistory;
+
+
+
