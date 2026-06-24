@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box, Clock, CheckCircle2, Truck, Plus, Printer, UserPlus, MapPin,
-  MoreHorizontal, Ship, Plane, Train, ShieldCheck, AlertTriangle,
-  Rocket, Menu, QrCode,
+  Box, Clock, CheckCircle2, Truck,
+  Ship, Plane, Train, ShieldCheck, AlertTriangle,
+  Rocket, Menu, QrCode, MoreHorizontal,
 } from "lucide-react";
 
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
+import { QuickActionsCard } from './QuickActions';
 
 const getStatusKey = (status: string) => {
   switch (status) {
@@ -112,44 +113,33 @@ const CompanyDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-6 max-md:gap-3">
-        {isLoading
-          ? [1, 2, 3, 4].map((i) => <div key={i} className="h-[120px] rounded-xl animate-shimmer" />)
-          : stats.map((stat) => (
-            <div key={stat.id} className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#334155] max-md:p-4">
-              <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
-                {stat.icon}{stat.label}
+      {/* Stats + Quick Actions: two-column on desktop */}
+      <div className="grid grid-cols-[1fr_300px] gap-6 items-start max-md:grid-cols-1 max-md:gap-3">
+        {/* Stats 2×2 grid */}
+        <div className="grid grid-cols-2 gap-6 max-md:gap-3">
+          {isLoading
+            ? [1, 2, 3, 4].map((i) => <div key={i} className="h-[120px] rounded-xl animate-shimmer" />)
+            : stats.map((stat) => (
+              <div key={stat.id} className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#334155] max-md:p-4">
+                <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
+                  {stat.icon}{stat.label}
+                </div>
+                <div className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}>
+                  {stat.value}
+                </div>
+                <div className={`text-[13px] font-medium flex items-center gap-1 ${stat.trendType === "positive" ? "text-[#10b981]" :
+                  stat.trendType === "negative" ? "text-[#ef4444]" : "text-[#94a3b8]"
+                  }`}>
+                  <TrendIcon up={stat.trendType === "positive"} />{stat.trend}
+                </div>
               </div>
-              <div className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}>
-                {stat.value}
-              </div>
-              <div className={`text-[13px] font-medium flex items-center gap-1 ${stat.trendType === "positive" ? "text-[#10b981]" :
-                stat.trendType === "negative" ? "text-[#ef4444]" : "text-[#94a3b8]"
-                }`}>
-                <TrendIcon up={stat.trendType === "positive"} />{stat.trend}
-              </div>
-            </div>
-          ))
-        }
-      </div>
+            ))
+          }
+        </div>
 
-      {/* Quick Actions — desktop only */}
-      <div className="max-md:hidden">
-        <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-[0.05em] m-0 mb-4">QUICK ACTIONS</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <button className="flex items-center gap-2 px-4 h-[50px] rounded-lg text-sm font-medium cursor-pointer bg-[#4f46e5] text-white border-transparent transition-colors hover:bg-[#4338ca]">
-            <Plus size={18} /> New Shipment
-          </button>
-          {[
-            { icon: <Printer size={18} />, label: "Print Labels" },
-            { icon: <UserPlus size={18} />, label: "Assign Driver" },
-            { icon: <MapPin size={18} />, label: "Track ID" },
-          ].map(({ icon, label }) => (
-            <button key={label} className="flex items-center gap-2 px-4 h-[50px] rounded-lg text-sm font-medium cursor-pointer bg-[#14171e] border border-[#1e293b] text-white transition-colors hover:bg-[#1e2433] hover:border-[#334155]">
-              {icon} {label}
-            </button>
-          ))}
+        {/* Quick Actions — top-right, desktop only */}
+        <div className="max-md:hidden">
+          <QuickActionsCard />
         </div>
       </div>
 
