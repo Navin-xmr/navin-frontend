@@ -94,33 +94,37 @@ const CustomerProfile: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Full Name */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
+              <label htmlFor="fullName" className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
                 <User size={14} />
                 Full Name
               </label>
               <input
+                id="fullName"
                 name="fullName"
                 type="text"
                 value={profile.fullName}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Enter your full name"
+                aria-invalid={!!errors.fullName}
+                aria-describedby={errors.fullName ? "fullName-error" : undefined}
                 className={`w-full bg-[rgba(255,255,255,0.05)] border rounded-xl px-4 py-3.5 text-white text-base transition-all focus:outline-none focus:border-[#00d4c8] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(0,212,200,0.1)] ${
                   errors.fullName ? 'border-[#FF4D4D]' : 'border-[rgba(255,255,255,0.1)]'
                 }`}
               />
               {errors.fullName && (
-                <span className="text-[#FF4D4D] text-sm">{errors.fullName}</span>
+                <span id="fullName-error" className="text-[#FF4D4D] text-sm" role="alert">{errors.fullName}</span>
               )}
             </div>
 
             {/* Email (Read-only) */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
+              <label htmlFor="email" className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
                 <Mail size={14} />
                 Email Address
               </label>
               <input
+                id="email"
                 name="email"
                 type="email"
                 value={profile.email}
@@ -132,45 +136,51 @@ const CustomerProfile: React.FC = () => {
 
             {/* Phone Number */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
+              <label htmlFor="phone" className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
                 <Phone size={14} />
                 Phone Number
               </label>
               <input
+                id="phone"
                 name="phone"
                 type="tel"
                 value={profile.phone}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="+1 234 567 8900"
+                aria-invalid={!!errors.phone}
+                aria-describedby={errors.phone ? "phone-error" : undefined}
                 className={`w-full bg-[rgba(255,255,255,0.05)] border rounded-xl px-4 py-3.5 text-white text-base transition-all focus:outline-none focus:border-[#00d4c8] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(0,212,200,0.1)] ${
                   errors.phone ? 'border-[#FF4D4D]' : 'border-[rgba(255,255,255,0.1)]'
                 }`}
               />
               {errors.phone && (
-                <span className="text-[#FF4D4D] text-sm">{errors.phone}</span>
+                <span id="phone-error" className="text-[#FF4D4D] text-sm" role="alert">{errors.phone}</span>
               )}
             </div>
 
             {/* Delivery Address */}
             <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
+              <label htmlFor="address" className="text-sm font-medium text-[rgba(255,255,255,0.6)] flex items-center gap-2">
                 <MapPin size={14} />
                 Delivery Address
               </label>
               <textarea
+                id="address"
                 name="address"
                 value={profile.address}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder="Enter your delivery address"
                 rows={3}
+                aria-invalid={!!errors.address}
+                aria-describedby={errors.address ? "address-error" : undefined}
                 className={`w-full bg-[rgba(255,255,255,0.05)] border rounded-xl px-4 py-3.5 text-white text-base transition-all resize-none focus:outline-none focus:border-[#00d4c8] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(0,212,200,0.1)] ${
                   errors.address ? 'border-[#FF4D4D]' : 'border-[rgba(255,255,255,0.1)]'
                 }`}
               />
               {errors.address && (
-                <span className="text-[#FF4D4D] text-sm">{errors.address}</span>
+                <span id="address-error" className="text-[#FF4D4D] text-sm" role="alert">{errors.address}</span>
               )}
             </div>
           </div>

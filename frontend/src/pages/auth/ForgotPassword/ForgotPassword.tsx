@@ -91,13 +91,15 @@ const ForgotPassword: React.FC = () => {
               <input
                 type="email" id="email" name="email" placeholder="name@company.com"
                 value={email} onChange={handleChange} onBlur={handleBlur} autoComplete="email"
+                aria-invalid={!!error}
+                aria-describedby={error ? "email-error" : undefined}
                 className={`${inputBase} ${error ? 'border-[#FF4D4D]' : ''}`}
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[rgba(255,255,255,0.6)] flex items-center pointer-events-none">
                 <Mail size={20} />
               </div>
             </div>
-            {error && <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">{error}</span>}
+            {error && <span id="email-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">{error}</span>}
           </div>
 
           <button

@@ -19,7 +19,9 @@ import CustomerProfile from './pages/dashboard/Customer/Profile/CustomerProfile'
 import ShipmentHistory from './pages/dashboard/Customer/ShipmentHistory/ShipmentHistory';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
+import * as Sentry from '@sentry/react';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
 import './App.css';
@@ -115,10 +117,12 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <ErrorBoundary>
-      <OfflineBanner />
-      <RouterProvider router={router} />
-    </ErrorBoundary>
+    <Sentry.ErrorBoundary fallback={ErrorFallback}>
+      <ErrorBoundary>
+        <OfflineBanner />
+        <RouterProvider router={router} />
+      </ErrorBoundary>
+    </Sentry.ErrorBoundary>
   );
 }
 

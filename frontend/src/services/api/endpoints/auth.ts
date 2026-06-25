@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react";
 import { apiClient } from "../client";
 
 export interface SignupRequest {
@@ -27,20 +28,23 @@ export interface AuthResponse {
 export const authApi = {
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/login", data);
-        const { token } = res.data.data;
+        const { token, user } = res.data.data;
         localStorage.setItem("authToken", token);
+        Sentry.setUser({ id: user.id, email: user.email, username: user.role });
         return res.data.data;
     },
 
     signup: async (data: SignupRequest): Promise<AuthResponse> => {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/signup", data);
-        const { token } = res.data.data;
+        const { token, user } = res.data.data;
         localStorage.setItem("authToken", token);
+        Sentry.setUser({ id: user.id, email: user.email, username: user.role });
         return res.data.data;
     },
 
     logout: async (): Promise<void> => {
         await apiClient.post("/auth/logout");
         localStorage.removeItem("authToken");
+        Sentry.setUser(null);
     },
 };
