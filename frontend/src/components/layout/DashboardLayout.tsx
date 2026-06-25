@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import TopHeader from './TopHeader/TopHeader';
 import AnimatedPage from './AnimatedPage';
+import { SessionTimeoutModal } from '../auth/SessionTimeoutModal';
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -145,6 +146,8 @@ const DashboardLayout: React.FC = () => {
           </AnimatedPage>
         </main>
       </div>
+
+      <SessionTimeoutModal />
     </div>
   );
 };

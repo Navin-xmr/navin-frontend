@@ -85,6 +85,7 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
         {userRole === "customer" && (
           <button
             onClick={onTrack}
+            aria-label="Track shipment"
             className="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors duration-200 w-10 md:w-auto"
           >
             Track
