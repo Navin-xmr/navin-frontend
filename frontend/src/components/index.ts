@@ -49,6 +49,6 @@ export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation
 export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/DeliveryConfirmation';
 
 // Onboarding
-export { default as OnboardingTour } from './onboarding';
+export { OnboardingTour } from './onboarding';
 export type { OnboardingTourProps, TourStep } from './onboarding';
 export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
+import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
+import { useToast } from '@context/ToastContext';
+import type { AxiosError } from 'axios';
 import './CreateShipment.css';
 
 interface FormData {
@@ -19,6 +22,7 @@ interface FormErrors {
 
 const CreateShipment: React.FC = () => {
     const navigate = useNavigate();
+    const { addToast } = useToast();
     const [formData, setFormData] = useState<FormData>({
         origin: '',
         destination: '',
@@ -37,7 +41,6 @@ const CreateShipment: React.FC = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev: FormData) => ({ ...prev, [name]: value }));
-        // Clear error for this field
         if (errors[name]) {
             setErrors((prev: FormErrors) => ({ ...prev, [name]: '' }));
         }
@@ -57,18 +60,43 @@ const CreateShipment: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const getErrorMessage = (error: AxiosError<{ message?: string }>): string => {
+        if (error.response?.data?.message) return error.response.data.message;
+        if (error.message) return error.message;
+        return 'Failed to create shipment. Please try again.';
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) return;
 
         setLoading(true);
 
-        // Simulate API request
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            const payload: CreateShipmentRequest = {
+                origin: formData.origin.trim(),
+                destination: formData.destination.trim(),
+                enterpriseId: '',
+                logisticsId: '',
+                offChainMetadata: {
+                    itemDescription: formData.itemDescription.trim(),
+                    weight: formData.weight,
+                    recipientName: formData.recipientName.trim(),
+                    recipientContact: formData.recipientContact.trim(),
+                    expectedDeliveryDate: formData.expectedDeliveryDate,
+                },
+            };
+
+            const shipment = await shipmentApi.create(payload);
+            setShipmentId(shipment._id);
             setSuccess(true);
-            setShipmentId('#SHP-' + Math.floor(10000 + Math.random() * 90000));
-        }, 1500);
+            addToast('Shipment created successfully!', 'success');
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string }>;
+            addToast(getErrorMessage(error), 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (success) {

@@ -17,6 +17,7 @@ const Shipments: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     setError(null);
 

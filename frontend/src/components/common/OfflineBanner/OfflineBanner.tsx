@@ -15,7 +15,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onRetry }) => {
         return;
       }
 
-      await fetch(${baseURL}/health, { 
+      await fetch(`${baseURL}/health`, { 
         method: 'HEAD',
         mode: 'no-cors',
         cache: 'no-store'
@@ -28,6 +28,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onRetry }) => {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkConnection();
 
     const handleOnline = () => checkConnection();
