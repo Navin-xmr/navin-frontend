@@ -2,6 +2,19 @@ import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
 import { afterEach } from 'vitest'
 
+// jsdom does not implement IntersectionObserver — provide a no-op stub so hooks
+// that call it (e.g. useScrollSpy) don't crash during unit tests.
+const IntersectionObserverMock = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: IntersectionObserverMock,
+});
+
 // jsdom v28 introduced --localstorage-file which can break the default Storage API.
 // Replace localStorage/sessionStorage with reliable in-memory implementations.
 const makeStorage = () => {

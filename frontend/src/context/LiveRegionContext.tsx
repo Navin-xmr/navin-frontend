@@ -9,7 +9,7 @@ const LiveRegionContext = createContext<LiveRegionContextType | undefined>(undef
 export const LiveRegionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [politeMessage, setPoliteMessage] = useState("");
   const [assertiveMessage, setAssertiveMessage] = useState("");
-  const clearTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const announce = useCallback((message: string, priority: "polite" | "assertive" = "polite") => {
     if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
