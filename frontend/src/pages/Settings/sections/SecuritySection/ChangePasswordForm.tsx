@@ -7,18 +7,22 @@ const inputCls = 'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,2
 
 interface FieldProps {
   label: string;
+  id: string;
   name: string;
   value: string;
   showValue: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onToggle: () => void;
+  ariaInvalid?: boolean;
+  ariaDescribedby?: string;
 }
 
-const PasswordField: React.FC<FieldProps> = ({ label, name, value, showValue, onChange, onToggle }) => (
+const PasswordField: React.FC<FieldProps> = ({ label, id, name, value, showValue, onChange, onToggle, ariaInvalid, ariaDescribedby }) => (
   <div>
-    <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
+    <label htmlFor={id} className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
     <div className="relative">
       <input
+        id={id}
         name={name}
         type={showValue ? 'text' : 'password'}
         value={value}
@@ -26,6 +30,8 @@ const PasswordField: React.FC<FieldProps> = ({ label, name, value, showValue, on
         className={inputCls}
         placeholder="••••••••••••"
         required
+        aria-invalid={ariaInvalid ?? false}
+        aria-describedby={ariaDescribedby}
       />
       <button
         type="button"
@@ -65,11 +71,32 @@ const ChangePasswordForm: React.FC = () => {
         <Lock size={18} className="text-[#62ffff]" />
         <h3 className="font-semibold">Change Password</h3>
       </div>
-      <PasswordField label="Current Password" name="current" value={form.current} showValue={show.current} onChange={handleChange} onToggle={() => toggle('current')} />
-      <PasswordField label="New Password (min 12 chars)" name="next" value={form.next} showValue={show.next} onChange={handleChange} onToggle={() => toggle('next')} />
+      <PasswordField label="Current Password" id="cp-current" name="current" value={form.current} showValue={show.current} onChange={handleChange} onToggle={() => toggle('current')} />
+      <PasswordField
+        label="New Password (min 12 chars)"
+        id="cp-next"
+        name="next"
+        value={form.next}
+        showValue={show.next}
+        onChange={handleChange}
+        onToggle={() => toggle('next')}
+        ariaInvalid={tooShort}
+        ariaDescribedby={tooShort ? 'cp-next-error' : undefined}
+      />
       <PasswordStrengthMeter password={form.next} />
-      <PasswordField label="Confirm New Password" name="confirm" value={form.confirm} showValue={show.confirm} onChange={handleChange} onToggle={() => toggle('confirm')} />
-      {mismatch && <p className="text-xs text-red-400">Passwords do not match</p>}
+      {tooShort && <p id="cp-next-error" className="text-xs text-red-400" role="alert">Password must be at least 12 characters</p>}
+      <PasswordField
+        label="Confirm New Password"
+        id="cp-confirm"
+        name="confirm"
+        value={form.confirm}
+        showValue={show.confirm}
+        onChange={handleChange}
+        onToggle={() => toggle('confirm')}
+        ariaInvalid={mismatch}
+        ariaDescribedby={mismatch ? 'cp-confirm-error' : undefined}
+      />
+      {mismatch && <p id="cp-confirm-error" className="text-xs text-red-400" role="alert">Passwords do not match</p>}
       {error && <p className="text-sm text-red-400">{error}</p>}
       {success && <p className="text-sm text-green-400">{success}</p>}
       <button
