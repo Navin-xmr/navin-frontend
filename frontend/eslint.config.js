@@ -30,9 +30,10 @@ export default defineConfig([
     },
     rules: {
       // TypeScript-specific rules
-      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
+      'no-undef': 'off', // Handled by TypeScript compiler
     },
   },
 ])

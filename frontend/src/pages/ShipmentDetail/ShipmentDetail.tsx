@@ -1,5 +1,7 @@
 import React from "react";
 import { useParams } from "react-router-dom";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import IoTPanel from "../Shipment/sections/IoTPanel/IoTPanel";
 import MilestoneTimeline, {
     MilestoneDetail,
 } from "./MilestoneTimeline/MilestoneTimeline";
@@ -15,6 +17,7 @@ import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const isOnline = useOnlineStatus();
     const shipmentHeaderData = {
         shipmentId: "#SHP-992834",
         status: "IN_TRANSIT" as const,
@@ -208,6 +211,13 @@ const ShipmentDetail: React.FC = () => {
                     shipmentId={id || shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}
                 />
+                {isOnline ? (
+                    <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
+                ) : (
+                    <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">
+                        Upload Proof requires an internet connection.
+                    </div>
+                )}
                 <DeliveryConfirmation
                     shipmentId={shipmentHeaderData.shipmentId}
                     status={shipmentHeaderData.status}
@@ -224,6 +234,11 @@ const ShipmentDetail: React.FC = () => {
                     userRole={shipmentHeaderData.userRole}
                 />
             </div>
+
+            <IoTPanel
+                shipmentId={id ?? shipmentHeaderData.shipmentId}
+                hasIoTDevice={true}
+            />
         </div>
     );
 };

@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { Menu, Search, User } from "lucide-react";
 import { NotificationDropdown } from "../../notifications/NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../../ThemeToggle/ThemeToggle";
+import WalletPill from "../../wallet/WalletPill";
+import NetworkBadge from "../../wallet/NetworkBadge";
+import WalletModal from "../../wallet/WalletModal";
 
 export interface TopHeaderProps {
   toggleSidebar: () => void;
@@ -39,7 +42,9 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
         </div>
 
         {/* Right */}
-        <div className="flex items-center justify-end gap-3 w-50">
+        <div className="flex items-center justify-end gap-3 w-auto">
+          <NetworkBadge />
+          <WalletPill />
           <ThemeToggle />
           <NotificationDropdown />
           <button
@@ -50,6 +55,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
           >
             <User size={18} />
           </button>
+          <WalletModal />
         </div>
       </header>
     </div>

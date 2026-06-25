@@ -11,11 +11,23 @@ const navLinks = [
   { id: "features",     label: "Features",     href: "#features" },
   { id: "how-it-works", label: "How It Works", href: "#how-it-works" },
   { id: "faq",          label: "FAQ",          href: "#faq" },
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { useScrollSpy } from '../../hooks/useScrollSpy';
+
+const NAV_SECTION_IDS = ['about', 'features', 'how-it-works'] as const;
+
+const navLinks = [
+  { id: 'about', label: 'About', href: '#about' },
+  { id: 'features', label: 'Features', href: '#features' },
+  { id: 'how-it-works', label: 'How It Works', href: '#how-it-works' },
 ];
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const activeSection = useScrollSpy(NAV_SECTION_IDS as unknown as string[]);
 
   // Only run scroll-spy on the landing page
   const isLandingPage = location.pathname === "/";
@@ -32,9 +44,13 @@ const Navbar: React.FC = () => {
 
     if (isLandingPage) {
       e.preventDefault();
+  const handleNavClick = (sectionId: string) => {
+    setIsMenuOpen(false);
+
+    if (location.pathname === '/') {
       const element = document.getElementById(sectionId);
       if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+        element.scrollIntoView({ behavior: 'smooth' });
       }
     }
   };
@@ -42,6 +58,7 @@ const Navbar: React.FC = () => {
   const handleLogoClick = () => {
     setIsMenuOpen(false);
   };
+  const handleLogoClick = () => setIsMenuOpen(false);
 
   return (
     <nav className="absolute top-0 left-0 w-full bg-transparent z-[1000] m-0 p-0">
@@ -76,6 +93,23 @@ const Navbar: React.FC = () => {
                 </a>
               );
             })}
+          <div className="flex flex-row justify-center items-center px-6 py-3.5 gap-10 bg-gradient-card border-t border-[rgba(0,128,128,0.3)] rounded-[30px]">
+            {navLinks.map((link) => (
+              <a
+                key={link.id}
+                href={link.href}
+                className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-primary after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-primary after:transition-all after:duration-300 hover:after:w-full ${
+                  activeSection === link.id ? 'text-primary after:!w-full' : ''
+                }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(link.id);
+                }}
+                aria-current={activeSection === link.id ? 'true' : undefined}
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
 
           {/* CTA Buttons */}
@@ -127,6 +161,22 @@ const Navbar: React.FC = () => {
                   </a>
                 );
               })}
+              {navLinks.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  className={`text-[#E0E0E0] no-underline text-base font-medium transition-colors duration-300 cursor-pointer hover:text-primary ${
+                    activeSection === link.id ? 'text-primary' : ''
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavClick(link.id);
+                  }}
+                  aria-current={activeSection === link.id ? 'true' : undefined}
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
             <div className="flex flex-col gap-3">
               <Link

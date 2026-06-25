@@ -4,6 +4,6 @@ export {
   callContractMethod,
   readContractState,
   toScVal,
-  SorobanRpc,
+  rpc,
   Networks,
 } from "./client";
