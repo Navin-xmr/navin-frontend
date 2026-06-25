@@ -47,3 +47,8 @@ export { default as StatusUpdate } from './shipment/StatusUpdate';
 export type { StatusUpdateProps, ShipmentMilestone } from './shipment/StatusUpdate';
 export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation/DeliveryConfirmation';
 export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/DeliveryConfirmation';
+
+// Onboarding
+export { default as OnboardingTour } from './onboarding';
+export type { OnboardingTourProps, TourStep } from './onboarding';
+export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';
