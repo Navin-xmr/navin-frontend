@@ -29,11 +29,14 @@ export interface PaginatedAnomalies {
     };
 }
 
+export type AnomalyStatus = "OPEN" | "ACKNOWLEDGED" | "RESOLVED";
+
 export interface GetAnomaliesParams {
     cursor?: string;
     limit?: number;
     shipmentId?: string;
     severity?: AnomalySeverity;
+    status?: AnomalyStatus;
 }
 
 export const anomalyApi = {
@@ -44,6 +47,11 @@ export const anomalyApi = {
 
     resolve: async (id: string): Promise<Anomaly> => {
         const res = await apiClient.patch<{ data: Anomaly }>(`/anomalies/${id}/resolve`);
+        return res.data.data;
+    },
+
+    acknowledge: async (id: string): Promise<Anomaly> => {
+        const res = await apiClient.patch<{ data: Anomaly }>(`/anomalies/${id}/acknowledge`);
         return res.data.data;
     },
 };

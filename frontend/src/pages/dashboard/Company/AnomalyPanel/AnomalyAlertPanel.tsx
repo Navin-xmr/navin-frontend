@@ -32,10 +32,8 @@ const AnomalyAlertPanel: React.FC<AnomalyAlertPanelProps> = () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await anomalyApi.getAll();
-      const open = result.data
-        .filter((a) => !a.resolved)
-        .sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+      const result = await anomalyApi.getAll({ status: "OPEN" });
+      const open = result.data.sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
       setAnomalies(open);
     } catch {
       setError('Failed to load anomalies. Please try again.');
@@ -51,7 +49,7 @@ const AnomalyAlertPanel: React.FC<AnomalyAlertPanelProps> = () => {
   const handleAcknowledge = async (id: string) => {
     try {
       setAcknowledging(id);
-      await anomalyApi.resolve(id);
+      await anomalyApi.acknowledge(id);
       setAnomalies((prev) => prev.filter((a) => a._id !== id));
     } catch {
       // keep the item in the list; surface no crash

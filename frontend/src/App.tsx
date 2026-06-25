@@ -2,7 +2,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
-import ForgotPassword from './pages/auth/ForgotPassword/ForgotPassword';
+import ForgotPassword from './pages/auth/ForgotPassword/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPassword/ResetPasswordPage';
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
 import AnomalyAlertPanel from './pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel';
 import Shipments from './pages/Shipments/Shipments';
@@ -44,6 +45,10 @@ const router = createBrowserRouter([
   {
     path: '/forgot-password',
     element: <ForgotPassword />,
+  },
+  {
+    path: '/reset-password',
+    element: <ResetPasswordPage />,
   },
   {
     path: '/pagination-demo',
