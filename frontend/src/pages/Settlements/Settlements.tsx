@@ -17,6 +17,7 @@ import { PaymentDetailModal } from "./components";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { can } from "../../utils/rbac";
 import { useAuthContext } from "../../context/AuthContext";
+import { useLiveRegion } from "../../context/LiveRegionContext";
 
 
 // Local lightweight table formatting (kept inline to avoid coupling)
@@ -66,6 +67,7 @@ const EmptyState: React.FC = () => (
 
 export default function Settlements() {
   const { role } = useAuthContext();
+  const { announce } = useLiveRegion();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const realtimeEvents = useRealtimeEvents(['settlement:status']);
@@ -122,7 +124,12 @@ export default function Settlements() {
         s._id === event.settlementId ? { ...s, status: event.newStatus, stellarTxHash: event.txHash ?? s.stellarTxHash } : s,
       ),
     );
-  }, [realtimeEvents]);
+    const isError = event.newStatus === 'FAILED' || event.newStatus === 'DISPUTED';
+    announce(
+      `Settlement status updated to ${event.newStatus}`,
+      isError ? 'assertive' : 'polite',
+    );
+  }, [realtimeEvents, announce]);
 
   const summary = useMemo(() => {
     // Aggregate from current page (fallback). If backend summary is desired, extend endpoint.

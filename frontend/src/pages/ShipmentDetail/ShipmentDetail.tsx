@@ -16,10 +16,12 @@ import EscrowStatus from "./EscrowStatus/EscrowStatus";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { useAuthContext } from "../../context/AuthContext";
 import { can } from "../../utils/rbac";
+import { useLiveRegion } from "../../context/LiveRegionContext";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { role } = useAuthContext();
+    const { announce } = useLiveRegion();
 
     const [currentStatus, setCurrentStatus] = useState("IN_TRANSIT");
 
@@ -31,8 +33,9 @@ const ShipmentDetail: React.FC = () => {
     React.useEffect(() => {
         if (statusEvent && statusEvent.shipmentId === id) {
             setCurrentStatus(statusEvent.newStatus);
+            announce(`Shipment status updated to ${statusEvent.newStatus}`);
         }
-    }, [statusEvent, id]);
+    }, [statusEvent, id, announce]);
 
 import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
 
