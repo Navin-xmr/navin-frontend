@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
 
 // jsdom does not implement IntersectionObserver — provide a no-op stub so hooks
 // that call it (e.g. useScrollSpy) don't crash during unit tests.
@@ -31,6 +31,18 @@ const makeStorage = () => {
 
 Object.defineProperty(window, 'localStorage', { value: makeStorage(), writable: true, configurable: true });
 Object.defineProperty(window, 'sessionStorage', { value: makeStorage(), writable: true, configurable: true });
+
+// IntersectionObserver is not available in jsdom — provide a no-op mock.
+class IntersectionObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+Object.defineProperty(window, 'IntersectionObserver', {
+  value: IntersectionObserverMock,
+  writable: true,
+  configurable: true,
+});
 
 afterEach(() => {
   cleanup();
