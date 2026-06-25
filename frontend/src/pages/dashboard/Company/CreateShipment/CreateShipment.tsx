@@ -88,7 +88,7 @@ const CreateShipment: React.FC = () => {
             };
 
             const shipment = await shipmentApi.create(payload);
-            setShipmentId(shipment._id);
+            setShipmentId(shipment.id ?? shipment._id);
             setSuccess(true);
             addToast('Shipment created successfully!', 'success');
         } catch (err) {

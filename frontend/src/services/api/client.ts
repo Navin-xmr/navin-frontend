@@ -20,5 +20,28 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
+/**
+ * #202: Recursively map _id → id so frontend code can use the canonical `id`
+ * field regardless of whether MongoDB returns `_id`.
+ */
+const mapIdFields = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(mapIdFields);
+    if (value !== null && typeof value === "object") {
+        const obj = value as Record<string, unknown>;
+        if ("_id" in obj && !("id" in obj)) {
+            obj.id = obj._id;
+        }
+        for (const key of Object.keys(obj)) {
+            obj[key] = mapIdFields(obj[key]);
+        }
+    }
+    return value;
+};
+
+apiClient.interceptors.response.use((response) => {
+    response.data = mapIdFields(response.data);
+    return response;
+});
+
 setupAuthInterceptor(apiClient);
 setupErrorInterceptor(apiClient);

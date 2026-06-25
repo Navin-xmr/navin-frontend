@@ -96,5 +96,13 @@ export const settlementsApi = {
         );
         return res.data.data;
     },
+
+    getByShipmentId: async (shipmentId: string): Promise<Settlement[]> => {
+        const res = await apiClient.get<{ data: PaginatedSettlements }>(
+            "/settlements",
+            { params: { shipmentId } },
+        );
+        return res.data.data.data;
+    },
 };
 
