@@ -5,6 +5,7 @@ import {
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { notificationsApi, Notification as NotificationType } from "../../services/api/endpoints/notifications";
+import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 
 type NotificationFilterType = "all" | "shipments" | "settlements" | "system";
 
@@ -42,6 +43,8 @@ const NotificationsPage = () => {
     return window.localStorage.getItem("notificationsGrouped") === "true";
   });
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+
+  const realtimeEvents = useRealtimeEvents(['notification:new']);
 
   const groupedNotifications = useMemo(() => {
     const rawGroups = new Map<string, NotificationType[]>();
@@ -143,6 +146,26 @@ const NotificationsPage = () => {
       return nextParams;
     });
   }, [activeFilter, searchQuery, fetchNotifications, setSearchParams]);
+
+  // Prepend new notification from realtime stream
+  useEffect(() => {
+    const event = realtimeEvents['notification:new'];
+    if (!event) return;
+    const n = event.notification;
+    setNotificationsList((prev) => {
+      if (prev.some((x) => x.id === n.id)) return prev;
+      const newItem: NotificationType = {
+        id: n.id,
+        type: "system",
+        icon: "system",
+        title: n.title,
+        description: n.description,
+        timestamp: n.timestamp,
+        isRead: false,
+      };
+      return [newItem, ...prev];
+    });
+  }, [realtimeEvents]);
 
   const handleFilterChange = (filter: NotificationFilterType) => {
     if (filter === activeFilter) return;

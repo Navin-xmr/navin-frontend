@@ -75,6 +75,7 @@ const Analytics: React.FC = () => {
         activeAnomalies: anomData.data.filter((a) => !a.resolved).length,
       });
 
+      const allShipments = await shipmentApi.getAll({ limit: 1000 });
       const allShipments = await shipmentApi.getAll({ limit: 100 });
       setShipments(allShipments.data);
     } catch {
@@ -88,6 +89,8 @@ const Analytics: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
+  type TrendType = "up" | "neutral" | "down";
+  const statCards: Array<{ label: string; value: string; trend: string; trendType: TrendType; icon: React.ReactElement }> = [
   const statCards: StatCardProps[] = [
     {
       label: "Total Shipments",
