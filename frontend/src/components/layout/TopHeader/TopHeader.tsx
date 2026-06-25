@@ -33,6 +33,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
               type="text"
               className="w-full border-none outline-none bg-transparent text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-slate-500"
               placeholder="Search shipment ID..."
+              aria-label="Search shipment ID"
             />
           </label>
         </div>
@@ -44,6 +45,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
           <button
             onClick={() => navigate("/dashboard/profile")}
             className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#1e2433] border border-gray-300 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:border-teal-500 dark:hover:border-[#62ffff] transition-colors cursor-pointer"
+            aria-label="View profile"
             title="Profile"
           >
             <User size={18} />

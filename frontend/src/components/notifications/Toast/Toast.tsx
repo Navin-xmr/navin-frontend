@@ -55,6 +55,7 @@ export const Toast: React.FC<ToastProps> = ({
           e.stopPropagation();
           onClose();
         }}
+        aria-label="Dismiss notification"
         className="p-1 ml-4 rounded-full hover:bg-white/10 transition-colors"
       >
         <X className="w-4 h-4 text-secondary" />

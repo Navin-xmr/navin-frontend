@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { Toast } from "../components/notifications/Toast/Toast";
+import { useLiveRegion } from "./LiveRegionContext";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
@@ -21,17 +22,19 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const { announce } = useLiveRegion();
 
   const addToast = useCallback(
     (message: string, type: ToastType, navigateTo?: string) => {
       const id = Math.random().toString(36).substring(2, 9);
       setToasts((prev) => {
         const newList = [...prev, { id, type, message, navigateTo }];
-        // Keep only the latest 3
         return newList.slice(-3);
       });
+      const priority = type === "error" ? "assertive" : "polite";
+      announce(message, priority);
     },
-    [],
+    [announce],
   );
 
   const removeToast = useCallback((id: string) => {
