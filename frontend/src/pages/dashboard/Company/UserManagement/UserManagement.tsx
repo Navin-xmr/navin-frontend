@@ -4,6 +4,7 @@ import { usersApi } from '@services/api';
 import type { User as ApiUser, UserRole } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
+import Avatar from '../../../../components/ui/Avatar';
 import './UserManagement.css';
 
 interface MappedUser {
@@ -219,9 +220,7 @@ const UserManagement: React.FC = () => {
                   <tr key={user.id}>
                     <td>
                       <div className="user-info">
-                        <div className="user-avatar">
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
+                        <Avatar name={user.name} size="sm" />
                         <div className="user-details">
                           <span className="user-name">{user.name}</span>
                           <span className="user-email">{user.email}</span>
