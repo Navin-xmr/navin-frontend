@@ -1,6 +1,7 @@
 // frontend/src/pages/Payments/PaymentDetailModal/PaymentDetailModal.tsx
-import React, { useEffect } from "react";
+import React, { useRef } from "react";
 import { X, ExternalLink, ShieldCheck, MapPin } from "lucide-react";
+import { useFocusTrap } from "@hooks/useFocusTrap";
 import "./PaymentDetailModal.css";
 
 interface PaymentDetailModalProps {
@@ -24,13 +25,8 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
     onClose,
     payment,
 }) => {
-    useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleEsc);
-        return () => window.removeEventListener("keydown", handleEsc);
-    }, [onClose]);
+    const dialogRef = useRef<HTMLDivElement>(null);
+    useFocusTrap(dialogRef, isOpen, onClose);
 
     if (!isOpen || !payment) return null;
 
@@ -57,8 +53,16 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="close-btn" onClick={onClose}>
+            <div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="payment-modal-title"
+                tabIndex={-1}
+                className="modal-content"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button className="close-btn" onClick={onClose} aria-label="Close modal">
                     <X size={24} />
                 </button>
 
@@ -73,7 +77,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                             ID: #{payment.id.padStart(6, "0")}
                         </span>
                     </div>
-                    <h2 className="payment-amount">
+                    <h2 id="payment-modal-title" className="payment-amount">
                         {payment.amount.toLocaleString()}{" "}
                         <span className="token">{payment.token}</span>
                     </h2>

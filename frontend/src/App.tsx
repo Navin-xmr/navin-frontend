@@ -4,6 +4,7 @@ import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
 import ForgotPassword from './pages/auth/ForgotPassword/ForgotPassword';
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
+import AnomalyAlertPanel from './pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel';
 import Shipments from './pages/Shipments/Shipments';
 import ShipmentDetail from './pages/ShipmentDetail/ShipmentDetail';
 import BlockchainLedger from './pages/BlockchainLedger/BlockchainLedger';
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard',
             element: <CompanyDashboard />,
+          },
+          {
+            path: '/dashboard/anomalies',
+            element: <AnomalyAlertPanel />,
           },
           {
             path: '/dashboard/shipments',

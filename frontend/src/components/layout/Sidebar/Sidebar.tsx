@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Rocket,
@@ -8,7 +8,9 @@ import {
   BarChart2,
   Settings,
   HelpCircle,
+  AlertTriangle,
 } from "lucide-react";
+import { anomalyApi } from "@services/api/endpoints/anomalies";
 
 export interface SidebarProps {
   isOpen: boolean;
@@ -25,6 +27,15 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [openAnomalyCount, setOpenAnomalyCount] = useState(0);
+
+  useEffect(() => {
+    anomalyApi.getAll().then((result) => {
+      setOpenAnomalyCount(result.data.filter((a) => !a.resolved).length);
+    }).catch(() => {
+      // non-critical; badge just won't show
+    });
+  }, []);
 
   const mainNav = [
     {
@@ -36,6 +47,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       name: "Shipments",
       icon: <Truck size={22} className="nav-icon-svg" />,
       path: "/dashboard/shipments",
+    },
+    {
+      name: "Anomalies",
+      icon: <AlertTriangle size={22} className="nav-icon-svg" />,
+      path: "/dashboard/anomalies",
+      badge: openAnomalyCount > 0 ? openAnomalyCount : undefined,
     },
     {
       name: "Team",
@@ -86,7 +103,17 @@ const Sidebar: React.FC<SidebarProps> = ({
               }}
               title={item.name}
             >
-              <div className="nav-icon-wrapper">{item.icon}</div>
+              <div className="nav-icon-wrapper" style={{ position: 'relative' }}>
+                {item.icon}
+                {'badge' in item && item.badge !== undefined && (
+                  <span
+                    className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-[#ef4444] text-white text-[9px] font-bold leading-none"
+                    aria-label={`${item.badge} open anomalies`}
+                  >
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </div>
               {!isCollapsed && <span className="nav-label">{item.name}</span>}
             </button>
           );

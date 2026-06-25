@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical, X, Loader2, AlertTriangle } from 'lucide-react';
 import { usersApi } from '@services/api';
 import type { User as ApiUser, UserRole } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
+import { useFocusTrap } from '../../../../hooks/useFocusTrap';
 import './UserManagement.css';
 
 interface MappedUser {
@@ -38,6 +39,9 @@ const UserManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  const inviteModalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(inviteModalRef, isModalOpen, () => setIsModalOpen(false));
 
   // Modal Form State
   const [inviteEmail, setInviteEmail] = useState('');
@@ -303,9 +307,16 @@ const UserManagement: React.FC = () => {
 
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="invite-modal">
+          <div
+            ref={inviteModalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invite-modal-title"
+            tabIndex={-1}
+            className="invite-modal"
+          >
             <div className="modal-header">
-              <h2>Invite New User</h2>
+              <h2 id="invite-modal-title">Invite New User</h2>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
               </button>

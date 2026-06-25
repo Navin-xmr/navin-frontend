@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { Settlement, SettlementDetail } from "@services/api/endpoints/settlements";
+import { useFocusTrap } from "@hooks/useFocusTrap";
 
 interface PaymentDetailModalProps {
     isOpen: boolean;
@@ -28,6 +29,9 @@ export default function PaymentDetailModal({
     detail,
     isLoading,
 }: PaymentDetailModalProps) {
+    const dialogRef = useRef<HTMLDivElement>(null);
+    useFocusTrap(dialogRef, isOpen, onClose);
+
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") onClose();
@@ -54,11 +58,16 @@ export default function PaymentDetailModal({
             onClick={onClose}
         >
             <div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="settlement-modal-title"
+                tabIndex={-1}
                 className="bg-[rgba(8,40,50,0.95)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-6 w-full max-w-md shadow-xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-bold text-[#62ffff]">Escrow Details</h2>
+                    <h2 id="settlement-modal-title" className="text-lg font-bold text-[#62ffff]">Escrow Details</h2>
                     <button
                         onClick={onClose}
                         className="text-text-secondary hover:text-white transition-colors"
