@@ -1,15 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react';
-import { MOCK_SHIPMENTS, type Shipment } from './mockShipments';
-import { getStatusDisplayLabel, getStatusBadgeClass } from '../../../../utils/shipmentStatus';
-import { safeFormatDate, safeDateCompare } from '../../../../utils/safeFormat';
+import { shipmentApi, type Shipment } from '@services/api/endpoints/shipments';
+import { getStatusDisplayLabel, getStatusBadgeClass } from '@utils/shipmentStatus';
+import { safeFormatDate, safeDateCompare } from '@utils/safeFormat';
 
 type SortKey = 'createdAt' | 'status';
 type SortDirection = 'asc' | 'desc';
 
 interface RecentShipmentsProps {
   shipments?: Shipment[];
-  loadingDelayMs?: number;
 }
 
 const PAGE_SIZE = 5;
@@ -21,14 +20,7 @@ const statusRank: Record<Shipment['status'], number> = {
   CANCELLED: 4,
 };
 
-// Uses safeFormatDate from utils/safeFormat
-
-// Now resolved via shared mapping
-
-const RecentShipments: React.FC<RecentShipmentsProps> = ({
-  shipments = MOCK_SHIPMENTS,
-  loadingDelayMs = 500,
-}) => {
+const RecentShipments: React.FC<RecentShipmentsProps> = ({ shipments }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadedShipments, setLoadedShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,9 +28,23 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { setLoadedShipments(shipments); setIsLoading(false); }, loadingDelayMs);
-    return () => window.clearTimeout(timer);
-  }, [shipments, loadingDelayMs]);
+    if (shipments !== undefined) {
+      setLoadedShipments(shipments);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    shipmentApi.getAll({ limit: PAGE_SIZE })
+      .then(response => {
+        setLoadedShipments(response.data);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setLoadedShipments([]);
+        setIsLoading(false);
+      });
+  }, [shipments]);
 
   const sortedShipments = useMemo(() => {
     const sorted = [...loadedShipments].sort((a, b) =>
@@ -123,8 +129,8 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
         </thead>
         <tbody>
           {currentRows.map(shipment => (
-            <tr key={shipment.id} className="hover:bg-[rgba(255,255,255,0.02)] transition-colors">
-              <td className={`${tdBase} font-medium text-text-primary`}>{shipment.id}</td>
+            <tr key={shipment._id} className="hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+              <td className={`${tdBase} font-medium text-text-primary`}>{shipment._id}</td>
               <td className={tdBase}>{shipment.origin}</td>
               <td className={tdBase}>{shipment.destination}</td>
               <td className={tdBase}>
@@ -143,7 +149,6 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
         </tbody>
       </table>
 
-      {/* Pagination */}
       <div className="border-t border-border flex items-center justify-between px-6 py-3.5 gap-3 flex-wrap md:justify-center" aria-label="Recent shipments pagination">
         <button
           type="button"
@@ -189,6 +194,3 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({
 };
 
 export default RecentShipments;
-
-
-

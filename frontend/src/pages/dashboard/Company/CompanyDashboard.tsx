@@ -1,35 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box, Clock, CheckCircle2, Truck,
-  Ship, Plane, Train, ShieldCheck, AlertTriangle,
-  Rocket, Menu, QrCode, MoreHorizontal,
+  Clock, CheckCircle2, Truck,
+  ShieldCheck, AlertTriangle,
+  Rocket, Menu,
 } from "lucide-react";
 
-import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import { QuickActionsCard } from './QuickActions';
-
-const getStatusKey = (status: string) => {
-  switch (status) {
-    case 'DELIVERED':
-      return 'DELIVERED';
-    case 'IN-TRANSIT':
-    case 'IN_TRANSIT':
-      return 'IN_TRANSIT';
-    case 'CANCELLED':
-      return 'CANCELLED';
-    default:
-      return 'CREATED';
-  }
-};
-
-const getTransportIcon = (type: string) => {
-  switch (type) {
-    case "ship": return <Ship size={20} strokeWidth={1.5} />;
-    case "plane": return <Plane size={20} strokeWidth={1.5} />;
-    case "train": return <Train size={20} strokeWidth={1.5} />;
-    default: return <Box size={20} strokeWidth={1.5} />;
-  }
-};
+import RecentShipments from './RecentShipments/RecentShipments';
 
 const TrendIcon = ({ up }: { up: boolean }) => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -44,13 +21,6 @@ const stats = [
   { id: "delivered", label: "Delivered", value: "1,420", trend: "5%", trendType: "positive", icon: <CheckCircle2 size={18} /> },
   { id: "delayed", label: "Delayed", value: "12", trend: "2%", trendType: "negative", icon: <Clock size={18} /> },
   { id: "verified", label: "Verified", value: "45", trend: "0%", trendType: "neutral", icon: <ShieldCheck size={18} /> },
-];
-
-const recentShipments = [
-  { id: "#NVN-9842", destination: "40.7128° N", status: "IN_TRANSIT", type: "box" },
-  { id: "#NVN-8711", destination: "Terminal B", status: "DELIVERED", type: "train" },
-  { id: "#NVN-4420", destination: "Customs Check", status: "CREATED", type: "plane" },
-  { id: "#NVN-2109", destination: "Pacific Route", status: "IN_TRANSIT", type: "ship" },
 ];
 
 const CompanyDashboard: React.FC = () => {
@@ -154,63 +124,9 @@ const CompanyDashboard: React.FC = () => {
           </a>
         </div>
 
-        {isLoading ? (
-          <div className="h-[300px] rounded-xl animate-shimmer" />
-        ) : (
-          <div className="border border-[rgba(30,41,59,0.5)] rounded-xl overflow-hidden max-md:bg-transparent max-md:border-none">
-            {/* Desktop table */}
-            <table className="w-full border-collapse max-md:hidden">
-              <thead>
-                <tr>
-                  {["ID", "Destination", "Status"].map((h) => (
-                    <th key={h} className="text-left px-6 py-4 text-[13px] font-medium text-[#64748b] border-b border-[rgba(30,41,59,0.5)] bg-[rgba(15,23,42,0.5)]">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recentShipments.map((s) => (
-                  <tr key={s.id} className="group">
-                    <td className="px-6 py-4 text-sm border-b border-[rgba(30,41,59,0.5)] bg-[#131720] group-hover:bg-[rgba(255,255,255,0.02)]">
-                      <span className="text-[#94a3b8] font-mono text-[13px]">{s.id}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white border-b border-[rgba(30,41,59,0.5)] bg-[#131720] group-hover:bg-[rgba(255,255,255,0.02)]">{s.destination}</td>
-                    <td className="px-6 py-4 text-sm border-b border-[rgba(30,41,59,0.5)] bg-[#131720] group-hover:bg-[rgba(255,255,255,0.02)]">
-                      {/** Use canonical label and badge classes */}
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-[0.05em] ${getStatusBadgeClass(getStatusKey(s.status))}`}>
-                        {getStatusDisplayLabel(getStatusKey(s.status))}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Mobile cards */}
-            <div className="hidden max-md:flex flex-col">
-              {recentShipments.map((s) => {
-                const key = getStatusKey(s.status);
-                const isQr = key === 'IN_TRANSIT' && s.id === '#NVN-2109';
-                return (
-                  <div key={`mob-${s.id}`} className="flex items-center bg-[#131720] rounded-xl mb-2 border border-[rgba(30,41,59,0.5)] px-4 py-3.5 gap-3">
-                    <div className="w-10 h-10 min-w-[40px] bg-[rgba(255,255,255,0.04)] rounded-[10px] flex items-center justify-center text-[#94a3b8]">
-                      {getTransportIcon(s.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="block font-bold text-[15px] text-white whitespace-nowrap overflow-hidden text-ellipsis">{s.id}</span>
-                      <div className="flex items-center gap-1.5 text-[13px] text-[#94a3b8] mt-0.5">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDotClass(key)}`} />
-                        {getStatusDisplayLabel(key)} - {s.destination}
-                      </div>
-                    </div>
-                    <button className={`min-w-[36px] w-9 h-9 rounded-full border flex items-center justify-center cursor-pointer flex-shrink-0 ${isQr ? "!w-11 !h-11 bg-[#3b82f6] text-white border-[#3b82f6]" : getStatusBadgeClass(key)}`}>
-                      {key === 'DELIVERED' ? <ShieldCheck size={18} /> : isQr ? <QrCode size={18} /> : <MoreHorizontal size={18} />}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        <div className="border border-[rgba(30,41,59,0.5)] rounded-xl overflow-hidden max-md:bg-transparent max-md:border-none">
+          <RecentShipments />
+        </div>
       </div>
 
       {/* Active Fleet — desktop only */}
