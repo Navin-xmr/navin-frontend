@@ -36,8 +36,8 @@ export interface GetAnomaliesParams {
 
 export const anomalyApi = {
     getAll: async (params?: GetAnomaliesParams): Promise<PaginatedAnomalies> => {
-        const res = await apiClient.get<PaginatedAnomalies>("/anomalies", { params });
-        return res.data;
+        const res = await apiClient.get<{ data: Anomaly[]; meta: { nextCursor: string | null; hasMore: boolean } }>("/anomalies", { params });
+        return { data: res.data.data, meta: res.data.meta };
     },
 
     resolve: async (id: string): Promise<Anomaly> => {
