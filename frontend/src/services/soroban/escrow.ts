@@ -1,4 +1,3 @@
-import { xdr } from "@stellar/stellar-sdk";
 import { callContractMethod, readContractState, toScVal } from "./client";
 
 const ESCROW_CONTRACT_ID =
