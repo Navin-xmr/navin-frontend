@@ -48,6 +48,7 @@ export interface GetShipmentsParams {
     status?: ShipmentStatus;
     cursor?: string;
     limit?: number;
+    role?: string;
 }
 
 export const shipmentApi = {
