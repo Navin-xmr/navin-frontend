@@ -6,10 +6,12 @@ import MilestoneTimeline, {
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import ShipmentMap from "./ShipmentMap/ShipmentMap";
 import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
+import DocumentsSection from "./DocumentsSection/DocumentsSection";
 import DeliveryConfirmation from "../../components/shipment/DeliveryConfirmation/DeliveryConfirmation";
 import PaymentStatus, { PaymentData } from "./PaymentStatus/PaymentStatus";
 import SensorDataCards, { SensorData } from "./SensorDataCards/SensorDataCards";
 import EscrowStatus from "./EscrowStatus/EscrowStatus";
+import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -202,6 +204,10 @@ const ShipmentDetail: React.FC = () => {
                 <PaymentStatus payment={mockPaymentData} />
                 <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} />
                 <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
+                <DocumentsSection
+                    shipmentId={id || shipmentHeaderData.shipmentId}
+                    userRole={shipmentHeaderData.userRole}
+                />
                 <DeliveryConfirmation
                     shipmentId={shipmentHeaderData.shipmentId}
                     status={shipmentHeaderData.status}
@@ -212,6 +218,10 @@ const ShipmentDetail: React.FC = () => {
                             feedback,
                         });
                     }}
+                />
+                <NotesSection
+                    shipmentId={id ?? shipmentHeaderData.shipmentId}
+                    userRole={shipmentHeaderData.userRole}
                 />
             </div>
         </div>

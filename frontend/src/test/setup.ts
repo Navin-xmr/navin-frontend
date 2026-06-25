@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
 
 // jsdom v28 introduced --localstorage-file which can break the default Storage API.
 // Replace localStorage/sessionStorage with reliable in-memory implementations.
@@ -18,6 +18,18 @@ const makeStorage = () => {
 
 Object.defineProperty(window, 'localStorage', { value: makeStorage(), writable: true, configurable: true });
 Object.defineProperty(window, 'sessionStorage', { value: makeStorage(), writable: true, configurable: true });
+
+// IntersectionObserver is not available in jsdom — provide a no-op mock.
+class IntersectionObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+Object.defineProperty(window, 'IntersectionObserver', {
+  value: IntersectionObserverMock,
+  writable: true,
+  configurable: true,
+});
 
 afterEach(() => {
   cleanup();
