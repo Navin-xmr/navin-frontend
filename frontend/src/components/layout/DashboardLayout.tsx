@@ -46,6 +46,12 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#07090d] text-gray-900 dark:text-white font-sans flex">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#62ffff] focus:text-black focus:font-semibold focus:rounded-lg focus:outline-none"
+      >
+        Skip to main content
+      </a>
       {/* Mobile Overlay */}
       {isSidebarOpen && (
         <div
@@ -140,7 +146,7 @@ const DashboardLayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-y-auto">
         <TopHeader toggleSidebar={toggleSidebar} />
-        <main className="p-8 lg:p-8 bg-gray-50 dark:bg-transparent">
+        <main id="main-content" tabIndex={-1} className="p-8 lg:p-8 bg-gray-50 dark:bg-transparent outline-none">
           <AnimatedPage key={location.pathname}>
             <Outlet />
           </AnimatedPage>
