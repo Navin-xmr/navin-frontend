@@ -1,4 +1,5 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 import MilestoneTimeline, {
     MilestoneDetail,
 } from "./MilestoneTimeline/MilestoneTimeline";
@@ -10,6 +11,7 @@ import PaymentStatus, { PaymentData } from "./PaymentStatus/PaymentStatus";
 import SensorDataCards, { SensorData } from "./SensorDataCards/SensorDataCards";
 
 const ShipmentDetail: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
     const shipmentHeaderData = {
         shipmentId: "#SHP-992834",
         status: "IN_TRANSIT" as const,
@@ -197,7 +199,7 @@ const ShipmentDetail: React.FC = () => {
 
                 <SensorDataCards sensorData={mockSensorData} />
                 <PaymentStatus payment={mockPaymentData} />
-                <DeliveryProofUpload />
+                <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
                 <DeliveryConfirmation
                     shipmentId={shipmentHeaderData.shipmentId}
                     status={shipmentHeaderData.status}
