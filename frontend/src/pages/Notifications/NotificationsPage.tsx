@@ -2,8 +2,9 @@ import {
   Bell, Settings, UserCircle, Search, Check,
   Truck, FileText, AlertTriangle, Server, Receipt, DollarSign,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 
 type NotificationType = "all" | "shipments" | "settlements" | "system";
 
@@ -37,6 +38,8 @@ const NotificationsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const realtimeEvents = useRealtimeEvents(['notification:new']);
+
   const [notificationsList, setNotificationsList] = useState<Notification[]>([
     { id: "1",  type: "shipments",   icon: "shipment", title: "Shipment Arrived at Port",       badge: "SHIPMENT #NV-9920", badgeColor: "#137FEC", description: "The container has cleared customs in Singapore and is ready for last-mile delivery. All documents have been verified on-chain.", timestamp: "2 mins ago",              actionLabel: "View Details",   isRead: false, link: "/dashboard/shipments/NV-9920" },
     { id: "2",  type: "settlements", icon: "contract", title: "Smart Contract Executed",         badge: "USDC SETTLEMENT",   badgeColor: "#4ADE80", description: "Payment of 500 USDC has been automatically released to Carrier A following successful delivery confirmation.",              timestamp: "1 hour ago",              actionLabel: "View Contract",  isRead: false, link: "/dashboard/settlements" },
@@ -55,6 +58,27 @@ const NotificationsPage = () => {
     { id: "15", type: "system",      icon: "system",   title: "Platform Update",                 badge: "UPDATE v2.1.0",     badgeColor: "#8B5CF6", description: "New features added: Enhanced tracking, multi-currency support, and improved analytics dashboard.",                         timestamp: "3 days ago",              actionLabel: "Learn More",     isRead: true,  link: "/dashboard/updates" },
     { id: "16", type: "settlements", icon: "contract", title: "Contract Renewal Due",            badge: "CONTRACT #CNT-445", badgeColor: "#F59E0B", description: "Your contract with Carrier C is due for renewal in 7 days. Please review and renew to avoid service interruption.",        timestamp: "4 days ago",              actionLabel: "Renew",          isRead: true,  link: "/dashboard/contracts" },
   ]);
+
+  // Prepend new notification from realtime stream
+  useEffect(() => {
+    const event = realtimeEvents['notification:new'];
+    if (!event) return;
+    const n = event.notification;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNotificationsList((prev) => {
+      if (prev.some((x) => x.id === n.id)) return prev;
+      const newItem: Notification = {
+        id: n.id,
+        type: "system",
+        icon: "system",
+        title: n.title,
+        description: n.description,
+        timestamp: n.timestamp,
+        isRead: false,
+      };
+      return [newItem, ...prev];
+    });
+  }, [realtimeEvents]);
 
   const getIconComponent = (iconType: string) => {
     switch (iconType) {

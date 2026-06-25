@@ -14,6 +14,9 @@ import {
   SettlementDetail,
 } from "@services/api/endpoints/settlements";
 import { PaymentDetailModal } from "./components";
+import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
+import { can } from "../../utils/rbac";
+import { useAuthContext } from "../../context/AuthContext";
 
 
 // Local lightweight table formatting (kept inline to avoid coupling)
@@ -62,8 +65,10 @@ const EmptyState: React.FC = () => (
 );
 
 export default function Settlements() {
+  const { role } = useAuthContext();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const realtimeEvents = useRealtimeEvents(['settlement:status']);
 
   const [filterStatus, setFilterStatus] = useState<SettlementStatus | "ALL">("ALL");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -107,6 +112,17 @@ export default function Settlements() {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterStatus, sortOrder]);
+
+  // Apply realtime settlement status updates
+  useEffect(() => {
+    const event = realtimeEvents['settlement:status'];
+    if (!event) return;
+    setSettlements((prev) =>
+      prev.map((s) =>
+        s._id === event.settlementId ? { ...s, status: event.newStatus, stellarTxHash: event.txHash ?? s.stellarTxHash } : s,
+      ),
+    );
+  }, [realtimeEvents]);
 
   const summary = useMemo(() => {
     // Aggregate from current page (fallback). If backend summary is desired, extend endpoint.
@@ -256,6 +272,9 @@ export default function Settlements() {
                   <th className={thClass}>Amount</th>
                   <th className={thClass}>Status</th>
                   <th className={thClass}>Stellar Tx</th>
+                  {(can(role, 'settlement:release-payment') || can(role, 'settlement:dispute')) && (
+                    <th className={thClass}>Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -312,6 +331,22 @@ export default function Settlements() {
                           <span className="text-text-secondary">-</span>
                         )}
                       </td>
+                      {(can(role, 'settlement:release-payment') || can(role, 'settlement:dispute')) && (
+                        <td className={tdClass} onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2">
+                            {can(role, 'settlement:release-payment') && s.status === 'ESCROWED' && (
+                              <button className="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30">
+                                Release
+                              </button>
+                            )}
+                            {can(role, 'settlement:dispute') && s.status !== 'DISPUTED' && (
+                              <button className="px-2 py-1 text-xs font-semibold rounded bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30">
+                                Dispute
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

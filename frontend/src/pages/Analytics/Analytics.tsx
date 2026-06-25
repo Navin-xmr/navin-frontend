@@ -67,7 +67,7 @@ const Analytics: React.FC = () => {
         ) || 1;
 
       setMetrics({
-        totalShipments: shipData.total,
+        totalShipments: shipData.data.length,
         onTimeRate: Math.round(
           (1 - perfData.totalDelayedShipments / total) * 100,
         ),
@@ -75,7 +75,7 @@ const Analytics: React.FC = () => {
         activeAnomalies: anomData.data.filter((a) => !a.resolved).length,
       });
 
-      const allShipments = await shipmentApi.getAll({ limit: shipData.total });
+      const allShipments = await shipmentApi.getAll({ limit: 1000 });
       setShipments(allShipments.data);
     } catch {
       setError("Failed to load analytics data. Please try again.");
@@ -88,33 +88,34 @@ const Analytics: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const statCards = [
+  type TrendType = "up" | "neutral" | "down";
+  const statCards: Array<{ label: string; value: string; trend: string; trendType: TrendType; icon: React.ReactElement }> = [
     {
       label: "Total Shipments",
       value: metrics.totalShipments.toLocaleString(),
       trend: `${metrics.totalShipments > 0 ? "+" : ""}${metrics.totalShipments}`,
-      trendType: metrics.totalShipments > 0 ? "up" : "neutral" as const,
+      trendType: metrics.totalShipments > 0 ? "up" : "neutral",
       icon: <Package size={18} />,
     },
     {
       label: "On-Time Delivery Rate",
       value: `${metrics.onTimeRate}%`,
       trend: `${metrics.onTimeRate}%`,
-      trendType: metrics.onTimeRate >= 80 ? "up" : metrics.onTimeRate >= 50 ? "neutral" : "down" as const,
+      trendType: metrics.onTimeRate >= 80 ? "up" : metrics.onTimeRate >= 50 ? "neutral" : "down",
       icon: <CheckCircle2 size={18} />,
     },
     {
       label: "Average Transit Time",
       value: `${metrics.avgTransitDays}d`,
       trend: `${metrics.avgTransitDays} days`,
-      trendType: metrics.avgTransitDays <= 3 ? "up" : "down" as const,
+      trendType: metrics.avgTransitDays <= 3 ? "up" : "down",
       icon: <Clock size={18} />,
     },
     {
       label: "Active Anomalies",
       value: metrics.activeAnomalies.toString(),
       trend: `${metrics.activeAnomalies} unresolved`,
-      trendType: metrics.activeAnomalies === 0 ? "up" : "down" as const,
+      trendType: metrics.activeAnomalies === 0 ? "up" : "down",
       icon: <AlertTriangle size={18} />,
     },
   ];

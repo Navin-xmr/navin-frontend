@@ -1,5 +1,5 @@
 import {
-  SorobanRpc,
+  rpc,
   Contract,
   TransactionBuilder,
   Networks,
@@ -8,7 +8,7 @@ import {
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { getPublicKey, signTransaction } from "@stellar/freighter-api";
+import { getAddress, signTransaction } from "@stellar/freighter-api";
 
 const SOROBAN_RPC_URL =
   import.meta.env.VITE_SOROBAN_RPC_URL ??
@@ -16,11 +16,11 @@ const SOROBAN_RPC_URL =
 const NETWORK_PASSPHRASE =
   import.meta.env.VITE_STELLAR_NETWORK ?? Networks.TESTNET;
 
-let server: SorobanRpc.Server | null = null;
+let server: rpc.Server | null = null;
 
-function getServer(): SorobanRpc.Server {
+function getServer(): rpc.Server {
   if (!server) {
-    server = new SorobanRpc.Server(SOROBAN_RPC_URL);
+    server = new rpc.Server(SOROBAN_RPC_URL);
   }
   return server;
 }
@@ -37,7 +37,7 @@ export async function callContractMethod(
   method: ContractMethod,
   args: xdr.ScVal[] = [],
 ): Promise<string> {
-  const pubKey = await getPublicKey();
+  const { address: pubKey } = await getAddress();
   const contract = new Contract(contractId);
   const sorobanServer = getServer();
 
@@ -53,11 +53,11 @@ export async function callContractMethod(
 
   const preparedTx = await sorobanServer.prepareTransaction(tx);
 
-  const signedXdr = await signTransaction(preparedTx.toXDR(), {
+  const { signedTxXdr } = await signTransaction(preparedTx.toXDR(), {
     networkPassphrase: NETWORK_PASSPHRASE,
   });
 
-  const signedTx = TransactionBuilder.fromXDR(signedXdr, NETWORK_PASSPHRASE);
+  const signedTx = TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE);
 
   const result = await sorobanServer.sendTransaction(signedTx);
   return result.hash;
@@ -71,8 +71,14 @@ export async function readContractState<T>(
   const contract = new Contract(contractId);
   const sorobanServer = getServer();
 
-  const result = await sorobanServer.simulateContract(
-    contract.call(method, ...args),
+  const result = await sorobanServer.simulateTransaction(
+    new TransactionBuilder(
+      await sorobanServer.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN"),
+      { fee: BASE_FEE, networkPassphrase: NETWORK_PASSPHRASE },
+    )
+      .addOperation(contract.call(method, ...args))
+      .setTimeout(30)
+      .build(),
   );
 
   if (!("result" in result) || !result.result) {
@@ -86,4 +92,4 @@ export function toScVal(value: unknown): xdr.ScVal {
   return nativeToScVal(value);
 }
 
-export { SorobanRpc, Networks };
+export { rpc, Networks };

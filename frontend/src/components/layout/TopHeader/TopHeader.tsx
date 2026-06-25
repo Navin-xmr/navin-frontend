@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Search, User } from "lucide-react";
 import { NotificationDropdown } from "../../notifications/NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../../ThemeToggle/ThemeToggle";
+import ConnectionStatusDot from "../../ui/ConnectionStatusDot";
+import { realtimeService, type ConnectionStatus } from "../../../services/realtime/realtimeService";
 
 export interface TopHeaderProps {
   toggleSidebar: () => void;
@@ -10,6 +12,12 @@ export interface TopHeaderProps {
 
 const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
   const navigate = useNavigate();
+  const [connStatus, setConnStatus] = useState<ConnectionStatus>(realtimeService.status);
+
+  useEffect(() => {
+    const unsub = realtimeService.onStatusChange(setConnStatus);
+    return unsub;
+  }, []);
 
   return (
     <div className="sticky top-0 z-20 w-full bg-white dark:bg-[#14171e]">
@@ -40,6 +48,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
 
         {/* Right */}
         <div className="flex items-center justify-end gap-3 w-50">
+          <ConnectionStatusDot status={connStatus} />
           <ThemeToggle />
           <NotificationDropdown />
           <button
