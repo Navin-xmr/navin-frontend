@@ -1,6 +1,11 @@
 import React, { useState, useRef } from "react";
+import { shipmentApi } from "../../../services/api/endpoints/shipments";
 
-const DeliveryProofUpload: React.FC = () => {
+interface DeliveryProofUploadProps {
+  shipmentId: string;
+}
+
+const DeliveryProofUpload: React.FC<DeliveryProofUploadProps> = ({ shipmentId }) => {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [recipientName, setRecipientName] = useState<string>("");
@@ -52,14 +57,18 @@ const DeliveryProofUpload: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file || !recipientName.trim()) return;
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await shipmentApi.uploadProof(shipmentId, file, recipientName);
       setSubmitted(true);
-    }, 1500);
+    } catch {
+      alert("Failed to upload proof. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
