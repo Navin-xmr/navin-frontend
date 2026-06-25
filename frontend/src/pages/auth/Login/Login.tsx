@@ -121,10 +121,12 @@ const Login: React.FC = () => {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             autoComplete="email"
+                            aria-invalid={!!errors.email}
+                            aria-describedby={errors.email ? "email-error" : undefined}
                             className={`${inputBase} ${errors.email ? "border-[#FF4D4D]" : ""}`}
                         />
                         {errors.email && (
-                            <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">
+                            <span id="email-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">
                                 {errors.email}
                             </span>
                         )}
@@ -148,6 +150,8 @@ const Login: React.FC = () => {
                                 onChange={handleChange}
                                 onBlur={handleBlur}
                                 autoComplete="current-password"
+                                aria-invalid={!!errors.password}
+                                aria-describedby={errors.password ? "password-error" : undefined}
                                 className={`${inputBase} ${errors.password ? "border-[#FF4D4D]" : ""}`}
                             />
                             <button
@@ -168,7 +172,7 @@ const Login: React.FC = () => {
                             </button>
                         </div>
                         {errors.password && (
-                            <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">
+                            <span id="password-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">
                                 {errors.password}
                             </span>
                         )}

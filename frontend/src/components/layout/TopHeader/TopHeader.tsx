@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Menu, Search, User } from "lucide-react";
 import { NotificationDropdown } from "../../notifications/NotificationDropdown/NotificationDropdown";
+import ThemeToggle from "../../ThemeToggle/ThemeToggle";
 
 export interface TopHeaderProps {
   toggleSidebar: () => void;
@@ -11,8 +12,8 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="sticky top-0 z-20 w-full bg-[#14171e]">
-      <header className="w-full max-w-270 mx-auto h-18 flex flex-row items-center justify-between px-4 bg-transparent border-b border-slate-800">
+    <div className="sticky top-0 z-20 w-full bg-white dark:bg-[#14171e]">
+      <header className="w-full max-w-270 mx-auto h-18 flex flex-row items-center justify-between px-4 bg-transparent border-b border-gray-200 dark:border-slate-800">
         {/* Left */}
         <div className="flex items-center w-50">
           <button
@@ -26,11 +27,11 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
 
         {/* Center */}
         <div className="flex-1 flex justify-center">
-          <label className="flex items-center gap-3 w-120 max-w-full h-10 px-4 rounded-[10px] bg-[#111624] border border-slate-800 transition-colors focus-within:border-indigo-500 cursor-text">
-            <Search size={16} className="text-slate-500 shrink-0" />
+          <label className="flex items-center gap-3 w-120 max-w-full h-10 px-4 rounded-[10px] bg-gray-100 dark:bg-[#111624] border border-gray-200 dark:border-slate-800 transition-colors focus-within:border-indigo-500 cursor-text">
+            <Search size={16} className="text-gray-400 dark:text-slate-500 shrink-0" />
             <input
               type="text"
-              className="w-full border-none outline-none bg-transparent text-white text-sm placeholder:text-slate-500"
+              className="w-full border-none outline-none bg-transparent text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-slate-500"
               placeholder="Search shipment ID..."
             />
           </label>
@@ -38,10 +39,11 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
 
         {/* Right */}
         <div className="flex items-center justify-end gap-3 w-50">
+          <ThemeToggle />
           <NotificationDropdown />
           <button
             onClick={() => navigate("/dashboard/profile")}
-            className="w-9 h-9 rounded-full bg-[#1e2433] border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:border-[#62ffff] transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#1e2433] border border-gray-300 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:border-teal-500 dark:hover:border-[#62ffff] transition-colors cursor-pointer"
             title="Profile"
           >
             <User size={18} />

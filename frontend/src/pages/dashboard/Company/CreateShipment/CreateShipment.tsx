@@ -131,10 +131,12 @@ const CreateShipment: React.FC = () => {
                           name="origin"
                           value={formData.origin}
                           onChange={handleInputChange}
+                          aria-invalid={!!errors.origin}
+                          aria-describedby={errors.origin ? "origin-error" : undefined}
                           className={errors.origin ? 'input-error' : ''}
                           placeholder="e.g., Warehouse A, New York"
                       />
-                      {errors.origin && <span className="error-text">{errors.origin}</span>}
+                      {errors.origin && <span id="origin-error" className="error-text" role="alert">{errors.origin}</span>}
                   </div>
 
                   <div className="form-group">
@@ -145,10 +147,12 @@ const CreateShipment: React.FC = () => {
                           name="destination"
                           value={formData.destination}
                           onChange={handleInputChange}
+                          aria-invalid={!!errors.destination}
+                          aria-describedby={errors.destination ? "destination-error" : undefined}
                           className={errors.destination ? 'input-error' : ''}
                           placeholder="e.g., Store B, Los Angeles"
                       />
-                      {errors.destination && <span className="error-text">{errors.destination}</span>}
+                      {errors.destination && <span id="destination-error" className="error-text" role="alert">{errors.destination}</span>}
                   </div>
 
                   <div className="form-group">
@@ -158,11 +162,13 @@ const CreateShipment: React.FC = () => {
                           name="itemDescription"
                           value={formData.itemDescription}
                           onChange={handleInputChange}
+                          aria-invalid={!!errors.itemDescription}
+                          aria-describedby={errors.itemDescription ? "itemDescription-error" : undefined}
                           className={errors.itemDescription ? 'input-error' : ''}
                           placeholder="Describe the items being shipped..."
                           rows={3}
                       />
-                      {errors.itemDescription && <span className="error-text">{errors.itemDescription}</span>}
+                      {errors.itemDescription && <span id="itemDescription-error" className="error-text" role="alert">{errors.itemDescription}</span>}
                   </div>
 
                   <div className="form-row">
@@ -174,12 +180,14 @@ const CreateShipment: React.FC = () => {
                               name="weight"
                               value={formData.weight}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.weight}
+                              aria-describedby={errors.weight ? "weight-error" : undefined}
                               className={errors.weight ? 'input-error' : ''}
                               placeholder="0.00"
                               min="0"
                               step="0.01"
                           />
-                          {errors.weight && <span className="error-text">{errors.weight}</span>}
+                          {errors.weight && <span id="weight-error" className="error-text" role="alert">{errors.weight}</span>}
                       </div>
 
                       <div className="form-group half-width">
@@ -190,9 +198,11 @@ const CreateShipment: React.FC = () => {
                               name="expectedDeliveryDate"
                               value={formData.expectedDeliveryDate}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.expectedDeliveryDate}
+                              aria-describedby={errors.expectedDeliveryDate ? "expectedDeliveryDate-error" : undefined}
                               className={errors.expectedDeliveryDate ? 'input-error' : ''}
                           />
-                          {errors.expectedDeliveryDate && <span className="error-text">{errors.expectedDeliveryDate}</span>}
+                          {errors.expectedDeliveryDate && <span id="expectedDeliveryDate-error" className="error-text" role="alert">{errors.expectedDeliveryDate}</span>}
                       </div>
                   </div>
 
@@ -205,10 +215,12 @@ const CreateShipment: React.FC = () => {
                               name="recipientName"
                               value={formData.recipientName}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.recipientName}
+                              aria-describedby={errors.recipientName ? "recipientName-error" : undefined}
                               className={errors.recipientName ? 'input-error' : ''}
                               placeholder="John Doe"
                           />
-                          {errors.recipientName && <span className="error-text">{errors.recipientName}</span>}
+                          {errors.recipientName && <span id="recipientName-error" className="error-text" role="alert">{errors.recipientName}</span>}
                       </div>
 
                       <div className="form-group half-width">
@@ -219,10 +231,12 @@ const CreateShipment: React.FC = () => {
                               name="recipientContact"
                               value={formData.recipientContact}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.recipientContact}
+                              aria-describedby={errors.recipientContact ? "recipientContact-error" : undefined}
                               className={errors.recipientContact ? 'input-error' : ''}
                               placeholder="Phone or Email"
                           />
-                          {errors.recipientContact && <span className="error-text">{errors.recipientContact}</span>}
+                          {errors.recipientContact && <span id="recipientContact-error" className="error-text" role="alert">{errors.recipientContact}</span>}
                       </div>
                   </div>
 
