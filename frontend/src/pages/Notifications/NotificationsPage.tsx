@@ -37,6 +37,65 @@ const NotificationsPage = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isMarkAllLoading, setIsMarkAllLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isGrouped, setIsGrouped] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("notificationsGrouped") === "true";
+  });
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+
+  const groupedNotifications = useMemo(() => {
+    const rawGroups = new Map<string, NotificationType[]>();
+    const standalone: NotificationType[] = [];
+
+    notificationsList.forEach((notification) => {
+      if (notification.shipmentId) {
+        const group = rawGroups.get(notification.shipmentId) ?? [];
+        group.push(notification);
+        rawGroups.set(notification.shipmentId, group);
+      } else {
+        standalone.push(notification);
+      }
+    });
+
+    const shipmentGroups = Array.from(rawGroups.entries()).map(([shipmentId, notifications]) => {
+      const sortedNotifications = [...notifications].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
+      const mostRecentNotification = sortedNotifications[0];
+      const unreadCount = sortedNotifications.filter((item) => !item.isRead).length;
+
+      return {
+        shipmentId,
+        trackingNumber: mostRecentNotification.trackingNumber,
+        notifications: sortedNotifications,
+        mostRecentNotification,
+        unreadCount,
+      };
+    });
+
+    const sortedGroups = shipmentGroups.sort(
+      (a, b) =>
+        new Date(b.mostRecentNotification.timestamp).getTime() -
+        new Date(a.mostRecentNotification.timestamp).getTime(),
+    );
+
+    const sortedStandalone = [...standalone].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
+
+    return { shipmentGroups: sortedGroups, standaloneNotifications: sortedStandalone };
+  }, [notificationsList]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem("notificationsGrouped", String(isGrouped));
+  }, [isGrouped]);
+
+  const toggleGroupExpansion = (shipmentId: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(shipmentId) ? prev.filter((id) => id !== shipmentId) : [...prev, shipmentId],
+    );
+  };
 
   const fetchNotifications = useCallback(async (page: number, append = false) => {
     setError(null);
@@ -270,7 +329,7 @@ const NotificationsPage = () => {
         </div>
 
         <div className="flex justify-between items-center mb-8 gap-6 border-b border-[#283039] pb-5 flex-wrap">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             {filters.map(({ key, label }) => (
               <button
                 key={key}
@@ -285,6 +344,15 @@ const NotificationsPage = () => {
                 </span>
               </button>
             ))}
+            <button
+              type="button"
+              className={`px-4 py-2.5 border-none rounded-[20px] text-sm cursor-pointer transition-all ${
+                isGrouped ? "bg-[#2563eb] text-white" : "bg-transparent text-[#9ca3af] hover:bg-[#1f2937] hover:text-white"
+              }`}
+              onClick={() => setIsGrouped((prev) => !prev)}
+            >
+              {isGrouped ? "Grouped" : "Ungrouped"}
+            </button>
           </div>
           <div className="flex items-center gap-3 bg-[#1f2937] border border-[#374151] rounded-lg px-4 py-2.5 flex-1 max-w-[400px]">
             <Search size={18} className="text-[#6b7280] shrink-0" />
@@ -330,6 +398,66 @@ const NotificationsPage = () => {
                 {searchQuery ? "Try adjusting your search terms" : "You're all caught up! No notifications in this category."}
               </p>
             </div>
+          ) : isGrouped ? (
+            <>
+              {groupedNotifications.shipmentGroups.length > 0 && (
+                <div className="space-y-4">
+                  {groupedNotifications.shipmentGroups.map((group) => {
+                    const expanded = expandedGroups.includes(group.shipmentId);
+                    return (
+                      <div key={group.shipmentId} className="border border-[#374151] rounded-2xl overflow-hidden bg-[#1f2937]">
+                        <button
+                          type="button"
+                          className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left"
+                          onClick={() => toggleGroupExpansion(group.shipmentId)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 flex-wrap">
+                              <span className="text-base font-semibold text-white">
+                                {group.trackingNumber || group.shipmentId}
+                              </span>
+                              <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-3 py-1 text-xs text-[#9ca3af]">
+                                {group.notifications.length} updates
+                              </span>
+                              {group.unreadCount > 0 && (
+                                <span className="rounded-full bg-[#2563eb] px-3 py-1 text-xs font-semibold text-white">
+                                  {group.unreadCount} unread
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-3 text-sm text-[#9ca3af] truncate">
+                              {group.mostRecentNotification.title}
+                            </p>
+                            <span className="text-xs text-[#6b7280]">
+                              {group.mostRecentNotification.timestamp}
+                            </span>
+                          </div>
+                          <span className="text-sm text-[#9ca3af]">
+                            {expanded ? "Collapse" : "Expand"}
+                          </span>
+                        </button>
+                        {expanded && (
+                          <div className="border-t border-[#283039] p-5 space-y-4">
+                            {group.notifications.map((notification) => (
+                              <NotificationCard key={notification.id} notification={notification} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {groupedNotifications.standaloneNotifications.length > 0 && (
+                <>
+                  <div className="text-xs font-semibold text-[#6b7280] tracking-[0.5px] mt-6 mb-2">OTHER NOTIFICATIONS</div>
+                  {groupedNotifications.standaloneNotifications.map((notification) => (
+                    <NotificationCard key={notification.id} notification={notification} />
+                  ))}
+                </>
+              )}
+            </>
           ) : (
             <>
               {unreadNotifications.length > 0 && (

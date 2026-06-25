@@ -12,6 +12,8 @@ export interface Notification {
   badgeColor?: string;
   description: string;
   timestamp: string;
+  shipmentId?: string;
+  trackingNumber?: string;
   actionLabel?: string;
   isRead: boolean;
   link?: string;
