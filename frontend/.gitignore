@@ -34,3 +34,5 @@ dist-ssr
 # Vite build artifacts
 vite.config.js
 vite.config.ts.timestamp-*
+
+# Somzilla issues document (root-level .gitignore handles this)
