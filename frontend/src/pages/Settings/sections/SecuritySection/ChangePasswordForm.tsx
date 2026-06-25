@@ -1,17 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
-
-function passwordStrength(pw: string): { label: string; color: string; width: string } {
-  if (pw.length === 0) return { label: '', color: '', width: '0%' };
-  if (pw.length < 8) return { label: 'Too short', color: 'bg-red-500', width: '25%' };
-  const has = (re: RegExp) => re.test(pw);
-  const score = [has(/[A-Z]/), has(/[a-z]/), has(/\d/), has(/[^A-Za-z0-9]/), pw.length >= 12].filter(Boolean).length;
-  if (score <= 2) return { label: 'Weak', color: 'bg-orange-500', width: '40%' };
-  if (score === 3) return { label: 'Fair', color: 'bg-yellow-500', width: '60%' };
-  if (score === 4) return { label: 'Strong', color: 'bg-teal-400', width: '80%' };
-  return { label: 'Very strong', color: 'bg-green-400', width: '100%' };
-}
+import PasswordStrengthMeter from '../../../../components/ui/PasswordStrengthMeter';
 
 const inputCls = 'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] pr-10';
 
@@ -54,7 +44,6 @@ const ChangePasswordForm: React.FC = () => {
   const [show, setShow] = useState({ current: false, next: false, confirm: false });
   const { isLoading, error, success, save } = useSettings();
 
-  const strength = passwordStrength(form.next);
   const mismatch = form.confirm !== '' && form.next !== form.confirm;
   const tooShort = form.next.length > 0 && form.next.length < 12;
 
@@ -78,16 +67,7 @@ const ChangePasswordForm: React.FC = () => {
       </div>
       <PasswordField label="Current Password" name="current" value={form.current} showValue={show.current} onChange={handleChange} onToggle={() => toggle('current')} />
       <PasswordField label="New Password (min 12 chars)" name="next" value={form.next} showValue={show.next} onChange={handleChange} onToggle={() => toggle('next')} />
-      {form.next.length > 0 && (
-        <div>
-          <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
-            <div className={`h-full transition-all ${strength.color}`} style={{ width: strength.width }} />
-          </div>
-          <p className={`text-xs mt-1 ${tooShort ? 'text-red-400' : 'text-slate-400'}`}>
-            {tooShort ? 'Password must be at least 12 characters' : strength.label}
-          </p>
-        </div>
-      )}
+      <PasswordStrengthMeter password={form.next} />
       <PasswordField label="Confirm New Password" name="confirm" value={form.confirm} showValue={show.confirm} onChange={handleChange} onToggle={() => toggle('confirm')} />
       {mismatch && <p className="text-xs text-red-400">Passwords do not match</p>}
       {error && <p className="text-sm text-red-400">{error}</p>}
