@@ -184,10 +184,14 @@ const NotificationsPage = () => {
             ))}
           </nav>
           <div className="flex gap-3">
-            {[{ icon: <Bell size={20} />, active: true }, { icon: <Settings size={20} /> }, { icon: <UserCircle size={20} /> }].map(({ icon, active }, i) => (
-              <div key={i} className={`w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer transition-colors ${active ? "bg-[#2563eb] text-white" : "bg-[#1f2937] text-[#9ca3af] hover:bg-[#374151]"}`}>
+            {[
+              { icon: <Bell size={20} />, active: true, label: "Notifications" },
+              { icon: <Settings size={20} />, label: "Settings" },
+              { icon: <UserCircle size={20} />, label: "Profile" },
+            ].map(({ icon, active, label }, i) => (
+              <button key={i} aria-label={label} className={`w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none ${active ? "bg-[#2563eb] text-white" : "bg-[#1f2937] text-[#9ca3af] hover:bg-[#374151]"}`}>
                 {icon}
-              </div>
+              </button>
             ))}
           </div>
         </div>

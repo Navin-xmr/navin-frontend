@@ -47,4 +47,9 @@ export const authApi = {
         localStorage.removeItem("authToken");
         Sentry.setUser(null);
     },
+
+    refresh: async (): Promise<void> => {
+        const res = await apiClient.post<{ data: { token: string } }>("/auth/refresh");
+        localStorage.setItem("authToken", res.data.data.token);
+    },
 };
