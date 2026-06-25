@@ -3,7 +3,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
-import ForgotPassword from './pages/auth/ForgotPassword/ForgotPassword';
+import ForgotPassword from './pages/auth/ForgotPassword/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPassword/ResetPasswordPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import RoleGuard from './components/auth/RoleGuard';
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
   { path: '/signup', element: <Signup /> },
   { path: '/login', element: <Login /> },
   { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/pagination-demo', element: <PaginationDemo /> },
   {
     element: <ProtectedRoute />,

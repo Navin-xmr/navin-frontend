@@ -30,8 +30,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [openAnomalyCount, setOpenAnomalyCount] = useState(0);
 
   useEffect(() => {
-    anomalyApi.getAll().then((result) => {
-      setOpenAnomalyCount(result.data.filter((a) => !a.resolved).length);
+    anomalyApi.getAll({ status: "OPEN" }).then((result) => {
+      setOpenAnomalyCount(result.data.length);
     }).catch(() => {
       // non-critical; badge just won't show
     });

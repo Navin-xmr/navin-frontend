@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bell, Package, DollarSign, AlertTriangle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { notificationsApi } from "../../../services/api/endpoints/notifications";
 
 export interface NotificationItem {
   id: string;
@@ -32,9 +33,9 @@ export const NotificationDropdown: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+  const [unreadCount, setUnreadCount] = useState(() => notifications.filter((n) => !n.read).length);
   const [now] = useState(() => Date.now());
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const getNotificationIcon = (type: NotificationItem["type"]) => {
     const base = "shrink-0";
@@ -45,6 +46,19 @@ export const NotificationDropdown: React.FC = () => {
       default:         return <Bell size={16} className={`${base} text-slate-400`} />;
     }
   };
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const count = await notificationsApi.getUnreadCount();
+        setUnreadCount(count);
+      } catch {
+        // Keep mock count if API fails.
+      }
+    };
+
+    fetchUnreadCount();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
