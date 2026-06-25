@@ -52,4 +52,10 @@ export const authApi = {
         const res = await apiClient.post<{ data: { token: string } }>("/auth/refresh");
         localStorage.setItem("authToken", res.data.data.token);
     },
-};
+    forgotPassword: async (data: { email: string }): Promise<void> => {
+        await apiClient.post('/auth/forgot-password', data);
+    },
+
+    resetPassword: async (data: { token: string; newPassword: string }): Promise<void> => {
+        await apiClient.post('/auth/reset-password', data);
+    },};
