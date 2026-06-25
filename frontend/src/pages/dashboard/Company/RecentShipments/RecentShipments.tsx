@@ -126,8 +126,8 @@ const RecentShipments: React.FC<RecentShipmentsProps> = ({ shipments }) => {
         </thead>
         <tbody>
           {currentRows.map(shipment => (
-            <tr key={shipment._id} className="hover:bg-[rgba(255,255,255,0.02)] transition-colors">
-              <td className={`${tdBase} font-medium text-text-primary`}>{shipment._id}</td>
+            <tr key={shipment.id ?? shipment._id} className="hover:bg-[rgba(255,255,255,0.02)] transition-colors">
+              <td className={`${tdBase} font-medium text-text-primary`}>{shipment.id ?? shipment._id}</td>
               <td className={tdBase}>{shipment.origin}</td>
               <td className={tdBase}>{shipment.destination}</td>
               <td className={tdBase}>

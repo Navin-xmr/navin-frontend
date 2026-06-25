@@ -10,6 +10,8 @@ export interface ShipmentMilestone {
 
 export interface Shipment {
     _id: string;
+    /** Normalized from _id by the apiClient response interceptor (#202). Available on all responses. */
+    id?: string;
     trackingNumber: string;
     origin: string;
     destination: string;

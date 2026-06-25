@@ -9,6 +9,7 @@ import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
 import DeliveryConfirmation from "../../components/shipment/DeliveryConfirmation/DeliveryConfirmation";
 import PaymentStatus, { PaymentData } from "./PaymentStatus/PaymentStatus";
 import SensorDataCards, { SensorData } from "./SensorDataCards/SensorDataCards";
+import EscrowStatus from "./EscrowStatus/EscrowStatus";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -199,6 +200,7 @@ const ShipmentDetail: React.FC = () => {
 
                 <SensorDataCards sensorData={mockSensorData} />
                 <PaymentStatus payment={mockPaymentData} />
+                <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} />
                 <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
                 <DeliveryConfirmation
                     shipmentId={shipmentHeaderData.shipmentId}
