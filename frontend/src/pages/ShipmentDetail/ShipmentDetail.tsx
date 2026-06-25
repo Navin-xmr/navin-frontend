@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import Breadcrumb from "../../components/ui/Breadcrumb";
 import IoTPanel from "../Shipment/sections/IoTPanel/IoTPanel";
 import MilestoneTimeline, {
     MilestoneDetail,
@@ -16,17 +17,16 @@ import EscrowStatus from "./EscrowStatus/EscrowStatus";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { useAuthContext } from "../../context/AuthContext";
 import { can } from "../../utils/rbac";
+import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { role } = useAuthContext();
+    const isOnline = useOnlineStatus();
 
     const [currentStatus, setCurrentStatus] = useState("IN_TRANSIT");
 
-    // Subscribe to real-time events for this shipment
     const events = useRealtimeEvents(['shipment:status', 'shipment:milestone']);
-
-    // Update status when a realtime event arrives for this shipment
     const statusEvent = events['shipment:status'];
     React.useEffect(() => {
         if (statusEvent && statusEvent.shipmentId === id) {
@@ -34,11 +34,6 @@ const ShipmentDetail: React.FC = () => {
         }
     }, [statusEvent, id]);
 
-import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
-
-const ShipmentDetail: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const isOnline = useOnlineStatus();
     const shipmentHeaderData = {
         shipmentId: id ? `#${id}` : "#SHP-992834",
         status: currentStatus,
@@ -87,6 +82,14 @@ const ShipmentDetail: React.FC = () => {
     return (
         <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
             <div className="max-w-300 mx-auto relative z-10">
+                <Breadcrumb
+                    items={[
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Shipments', href: '/dashboard/shipments' },
+                        { label: id ? `#${id}` : '#SHP-992834' },
+                    ]}
+                />
+
                 <div className="text-center mb-16 md:mb-10">
                     <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(2.5rem,7vw,5rem)] font-normal tracking-[0.04em] leading-[1.1] text-white m-0 mb-4">
                         SHIPMENT <span className="text-[#00d4c8]">DETAILS</span>
@@ -133,29 +136,18 @@ const ShipmentDetail: React.FC = () => {
                         }}
                     />
                 )}
-                <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
+
                 <DocumentsSection
                     shipmentId={id || shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}
                 />
-                {isOnline ? (
-                    <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
-                ) : (
+
+                {!isOnline && (
                     <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">
                         Upload Proof requires an internet connection.
                     </div>
                 )}
-                <DeliveryConfirmation
-                    shipmentId={shipmentHeaderData.shipmentId}
-                    status={shipmentHeaderData.status}
-                    onConfirm={async (id, rating, feedback) => {
-                        console.log("Delivery confirmed", {
-                            id,
-                            rating,
-                            feedback,
-                        });
-                    }}
-                />
+
                 <NotesSection
                     shipmentId={id ?? shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}

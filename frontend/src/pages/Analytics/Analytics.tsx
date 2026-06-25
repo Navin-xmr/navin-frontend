@@ -89,8 +89,6 @@ const Analytics: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  type TrendType = "up" | "neutral" | "down";
-  const statCards: Array<{ label: string; value: string; trend: string; trendType: TrendType; icon: React.ReactElement }> = [
   const statCards: StatCardProps[] = [
     {
       label: "Total Shipments",
