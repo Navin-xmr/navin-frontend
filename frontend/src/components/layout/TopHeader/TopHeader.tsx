@@ -5,6 +5,9 @@ import { NotificationDropdown } from "../../notifications/NotificationDropdown/N
 import ThemeToggle from "../../ThemeToggle/ThemeToggle";
 import ConnectionStatusDot from "../../ui/ConnectionStatusDot";
 import { realtimeService, type ConnectionStatus } from "../../../services/realtime/realtimeService";
+import WalletPill from "../../wallet/WalletPill";
+import NetworkBadge from "../../wallet/NetworkBadge";
+import WalletModal from "../../wallet/WalletModal";
 
 export interface TopHeaderProps {
   toggleSidebar: () => void;
@@ -49,6 +52,9 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
         {/* Right */}
         <div className="flex items-center justify-end gap-3 w-50">
           <ConnectionStatusDot status={connStatus} />
+        <div className="flex items-center justify-end gap-3 w-auto">
+          <NetworkBadge />
+          <WalletPill />
           <ThemeToggle />
           <NotificationDropdown />
           <button
@@ -59,6 +65,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
           >
             <User size={18} />
           </button>
+          <WalletModal />
         </div>
       </header>
     </div>

@@ -12,6 +12,7 @@ import * as Sentry from '@sentry/react';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
+import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
@@ -104,6 +105,13 @@ function App() {
         </ErrorBoundary>
       </Sentry.ErrorBoundary>
     </AuthProvider>
+    <Sentry.ErrorBoundary fallback={ErrorFallback}>
+      <ErrorBoundary>
+        <OfflineBanner />
+        <RouterProvider router={router} />
+        <PWAInstallPrompt />
+      </ErrorBoundary>
+    </Sentry.ErrorBoundary>
   );
 }
 

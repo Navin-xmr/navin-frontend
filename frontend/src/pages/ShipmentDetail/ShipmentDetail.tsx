@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import IoTPanel from "../Shipment/sections/IoTPanel/IoTPanel";
 import MilestoneTimeline, {
     MilestoneDetail,
 } from "./MilestoneTimeline/MilestoneTimeline";
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import ShipmentMap from "./ShipmentMap/ShipmentMap";
 import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
+import DocumentsSection from "./DocumentsSection/DocumentsSection";
 import DeliveryConfirmation from "../../components/shipment/DeliveryConfirmation/DeliveryConfirmation";
 import PaymentStatus, { PaymentData } from "./PaymentStatus/PaymentStatus";
 import SensorDataCards, { SensorData } from "./SensorDataCards/SensorDataCards";
@@ -31,6 +34,11 @@ const ShipmentDetail: React.FC = () => {
         }
     }, [statusEvent, id]);
 
+import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
+
+const ShipmentDetail: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const isOnline = useOnlineStatus();
     const shipmentHeaderData = {
         shipmentId: id ? `#${id}` : "#SHP-992834",
         status: currentStatus,
@@ -125,7 +133,39 @@ const ShipmentDetail: React.FC = () => {
                         }}
                     />
                 )}
+                <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
+                <DocumentsSection
+                    shipmentId={id || shipmentHeaderData.shipmentId}
+                    userRole={shipmentHeaderData.userRole}
+                />
+                {isOnline ? (
+                    <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
+                ) : (
+                    <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">
+                        Upload Proof requires an internet connection.
+                    </div>
+                )}
+                <DeliveryConfirmation
+                    shipmentId={shipmentHeaderData.shipmentId}
+                    status={shipmentHeaderData.status}
+                    onConfirm={async (id, rating, feedback) => {
+                        console.log("Delivery confirmed", {
+                            id,
+                            rating,
+                            feedback,
+                        });
+                    }}
+                />
+                <NotesSection
+                    shipmentId={id ?? shipmentHeaderData.shipmentId}
+                    userRole={shipmentHeaderData.userRole}
+                />
             </div>
+
+            <IoTPanel
+                shipmentId={id ?? shipmentHeaderData.shipmentId}
+                hasIoTDevice={true}
+            />
         </div>
     );
 };

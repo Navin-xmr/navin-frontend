@@ -1,5 +1,7 @@
 import {
   rpc,
+  Account,
+  Keypair,
   Contract,
   TransactionBuilder,
   Networks,
@@ -80,6 +82,16 @@ export async function readContractState<T>(
       .setTimeout(30)
       .build(),
   );
+  const dummyAccount = new Account(Keypair.random().publicKey(), "0");
+  const tx = new TransactionBuilder(dummyAccount, {
+    fee: BASE_FEE,
+    networkPassphrase: NETWORK_PASSPHRASE,
+  })
+    .addOperation(contract.call(method, ...args))
+    .setTimeout(30)
+    .build();
+
+  const result = await sorobanServer.simulateTransaction(tx);
 
   if (!("result" in result) || !result.result) {
     throw new Error(`Simulation failed for ${method}`);

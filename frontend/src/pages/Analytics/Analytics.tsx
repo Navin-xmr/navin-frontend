@@ -7,7 +7,7 @@ import {
   Loader2,
   Calendar,
 } from "lucide-react";
-import StatCard from "../../components/dashboard/StatCard/StatCard";
+import StatCard, { type StatCardProps } from "../../components/dashboard/StatCard/StatCard";
 import ShipmentVolumeChart from "../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart";
 import DeliverySuccessChart from "../../components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart";
 import { analyticsApi } from "../../services/api/endpoints/analytics";
@@ -76,6 +76,7 @@ const Analytics: React.FC = () => {
       });
 
       const allShipments = await shipmentApi.getAll({ limit: 1000 });
+      const allShipments = await shipmentApi.getAll({ limit: 100 });
       setShipments(allShipments.data);
     } catch {
       setError("Failed to load analytics data. Please try again.");
@@ -90,6 +91,7 @@ const Analytics: React.FC = () => {
 
   type TrendType = "up" | "neutral" | "down";
   const statCards: Array<{ label: string; value: string; trend: string; trendType: TrendType; icon: React.ReactElement }> = [
+  const statCards: StatCardProps[] = [
     {
       label: "Total Shipments",
       value: metrics.totalShipments.toLocaleString(),
