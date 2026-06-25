@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 // This stops the app from showing multiple pop-ups at the same time if multiple requests fail at once
 let isRedirecting = false;
 
-export const setupErrorInterceptor = (client: AxiosInstance, navigateFn: (path: string) => void) => {
+export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path: string) => void) => {
     client.interceptors.response.use(
         (response) => response,
         (error: AxiosError) => {
@@ -23,7 +23,7 @@ export const setupErrorInterceptor = (client: AxiosInstance, navigateFn: (path: 
                         
                         // Wait 2 seconds so the user can read it, then change pages cleanly
                         setTimeout(() => {
-                            navigateFn("/login");
+                            navigateFn?.("/login");
                             isRedirecting = false;
                         }, 2000);
                     }

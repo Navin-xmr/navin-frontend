@@ -21,27 +21,24 @@ const statusRank: Record<Shipment['status'], number> = {
 };
 
 const RecentShipments: React.FC<RecentShipmentsProps> = ({ shipments }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadedShipments, setLoadedShipments] = useState<Shipment[]>([]);
+  const [isLoading, setIsLoading] = useState(shipments === undefined);
+  const [fetchedShipments, setFetchedShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortKey, setSortKey] = useState<SortKey>('createdAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  useEffect(() => {
-    if (shipments !== undefined) {
-      setLoadedShipments(shipments);
-      setIsLoading(false);
-      return;
-    }
+  const loadedShipments = shipments !== undefined ? shipments : fetchedShipments;
 
-    setIsLoading(true);
+  useEffect(() => {
+    if (shipments !== undefined) return;
+
     shipmentApi.getAll({ limit: PAGE_SIZE })
       .then(response => {
-        setLoadedShipments(response.data);
+        setFetchedShipments(response.data);
         setIsLoading(false);
       })
       .catch(() => {
-        setLoadedShipments([]);
+        setFetchedShipments([]);
         setIsLoading(false);
       });
   }, [shipments]);

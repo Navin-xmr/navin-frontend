@@ -13,8 +13,7 @@ export const safeFormatDate = (
   if (!dateString || typeof dateString !== 'string') return 'N/A';
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 
-'N/A';
+    if (isNaN(date.getTime())) return 'N/A';
     return new Intl.DateTimeFormat('en-US', options).format(date);
   } catch {
     return 'N/A';
@@ -39,7 +38,6 @@ export const safeDateCompare = (
  * Safely renders a rating, returning 0 for null/undefined
  */
 export const safeRating = (rating: number | null | undefined): number => {
-  if (rating === null || rating === undefined || typeof rating !== 
-'number') return 0;
+  if (rating === null || rating === undefined || typeof rating !== 'number') return 0;
   return rating;
 };

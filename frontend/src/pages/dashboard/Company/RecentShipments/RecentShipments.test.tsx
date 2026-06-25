@@ -1,8 +1,7 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import RecentShipments from './RecentShipments';
 import type { Shipment } from '@services/api/endpoints/shipments';
-import * as shipmentsModule from '@services/api/endpoints/shipments';
 
 const MOCK_SHIPMENTS: Shipment[] = [
   { _id: 'SHP-1001', trackingNumber: 'TN-1001', origin: 'Singapore', destination: 'Rotterdam', status: 'IN_TRANSIT', enterpriseId: 'e1', logisticsId: 'l1', milestones: [], createdAt: '2026-02-19T09:20:00Z', updatedAt: '2026-02-19T09:20:00Z' },
@@ -28,14 +27,6 @@ const getFirstDataRow = () => {
 };
 
 describe('RecentShipments', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it('shows a loading skeleton before data is loaded', () => {
     render(<RecentShipments />);
 

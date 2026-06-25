@@ -1,38 +1,39 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { setupErrorInterceptor } from "./errorInterceptor";
 import { toast } from "react-hot-toast";
 
-jest.mock("react-hot-toast", () => ({
+vi.mock("react-hot-toast", () => ({
     toast: {
-        error: jest.fn(),
+        error: vi.fn(),
     },
 }));
 
 describe("Error Interceptor Unit Tests", () => {
     let mockAxiosInstance: any;
-    let mockNavigate: jest.Mock;
-    let responseErrorInterceptorCallback: Function;
+    let mockNavigate: ReturnType<typeof vi.fn>;
+    let responseErrorInterceptorCallback: (error: any) => Promise<any>;
 
     beforeEach(() => {
-        jest.useFakeTimers();
-        jest.clearAllMocks();
+        vi.useFakeTimers();
+        vi.clearAllMocks();
         localStorage.clear();
 
-        mockNavigate = jest.fn();
+        mockNavigate = vi.fn();
         mockAxiosInstance = {
             interceptors: {
                 response: {
-                    use: jest.fn((successCb, errorCb) => {
+                    use: vi.fn((_successCb: any, errorCb: any) => {
                         responseErrorInterceptorCallback = errorCb;
                     }),
                 },
             },
         };
 
-        setupErrorInterceptor(mockAxiosInstance, mockNavigate);
+        setupErrorInterceptor(mockAxiosInstance, mockNavigate as (path: string) => void);
     });
 
     afterEach(() => {
-        jest.useRealTimers();
+        vi.useRealTimers();
     });
 
     it("should handle 401 error, trigger toast, and navigate to login after timeout", async () => {
@@ -40,7 +41,7 @@ describe("Error Interceptor Unit Tests", () => {
         const promise = responseErrorInterceptorCallback(mockError);
 
         expect(toast.error).toHaveBeenCalledWith("Session expired, redirecting to login...");
-        jest.advanceTimersByTime(2000);
+        vi.advanceTimersByTime(2000);
 
         expect(mockNavigate).toHaveBeenCalledWith("/login");
         await expect(promise).rejects.toEqual(mockError);

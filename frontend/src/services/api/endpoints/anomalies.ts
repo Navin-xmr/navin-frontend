@@ -23,8 +23,10 @@ export interface Anomaly {
 
 export interface PaginatedAnomalies {
     data: Anomaly[];
-    nextCursor: string | null;
-    hasMore: boolean;
+    meta: {
+        nextCursor: string | null;
+        hasMore: boolean;
+    };
 }
 
 export interface GetAnomaliesParams {

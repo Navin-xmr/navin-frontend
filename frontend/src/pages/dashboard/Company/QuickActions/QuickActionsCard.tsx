@@ -25,6 +25,7 @@ const ACTIONS: Action[] = [
 ];
 
 export function QuickActionsCard(_props: QuickActionsCardProps) {
+  void _props;
   const navigate = useNavigate();
 
   useKeyboardShortcuts(

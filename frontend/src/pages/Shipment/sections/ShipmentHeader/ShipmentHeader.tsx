@@ -1,8 +1,7 @@
 import { safeFormatDate } from '../../../../utils/safeFormat';
 import React from 'react';
 import { Download, Share2, MapPin } from 'lucide-react';
-import { StatusBadge, ShipmentStatus } from '../../../../components/ui/StatusBadge/StatusBadge';
-import StatusBadge from '../../../../components/ui/StatusBadge/StatusBadge';
+import { StatusBadge } from '../../../../components/ui/StatusBadge/StatusBadge';
 import type { ShipmentStatus } from '../../../../services/api/endpoints/shipments';
 import './ShipmentHeader.css';
 
@@ -35,15 +34,6 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
   onDownloadProof = () => console.log('Download Proof clicked'),
   onShare = () => console.log('Share clicked'),
 }) => {
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   return (
     <header className="shipment-header">
       <div className="shipment-header-content">
@@ -63,11 +53,6 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               <p className="party-name">{sender.name}</p>
               <p className="party-address">{sender.address}</p>
             </div>
-            
-            <div className="route-arrow">
-              <MapPin size={16} />
-            </div>
-            
 
             <div className="route-arrow">
               <MapPin size={16} />
@@ -79,7 +64,6 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               <p className="party-address">{receiver.address}</p>
             </div>
           </div>
-          
 
           <div className="shipment-dates">
             <div className="date-info">
@@ -96,7 +80,6 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
         {/* Right Section - Action Buttons */}
         <section className="shipment-header-right">
           <div className="action-buttons">
-            <button 
             <button
               className="action-btn primary"
               onClick={onTrack}
@@ -105,7 +88,6 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               <MapPin size={16} />
               Track
             </button>
-            <button 
             <button
               className="action-btn secondary"
               onClick={onDownloadProof}
@@ -114,7 +96,6 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               <Download size={16} />
               Download Proof
             </button>
-            <button 
             <button
               className="action-btn secondary"
               onClick={onShare}
@@ -131,6 +112,3 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
 };
 
 export default ShipmentHeader;
-
-
-
