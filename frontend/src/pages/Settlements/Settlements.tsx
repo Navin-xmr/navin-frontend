@@ -185,6 +185,7 @@ export default function Settlements() {
                 setFilterStatus(e.target.value as SettlementStatus | "ALL");
                 setCurrentPage(1);
               }}
+              aria-label="Filter by settlement status"
               className="appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full"
             >
               <option value="ALL">All Status</option>
@@ -199,15 +200,18 @@ export default function Settlements() {
               className="absolute right-3 pointer-events-none text-text-secondary rotate-90"
             />
           </div>
-          <span
+          <button
+            type="button"
             className="inline-flex items-center gap-2 appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
             onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+            aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
+            aria-pressed={sortOrder === "desc"}
           >
             Date <ArrowUpDown size={14} />
             <span className="text-text-secondary max-md:hidden">
               {sortOrder === "desc" ? "Newest" : "Oldest"}
             </span>
-          </span>
+          </button>
         </div>
       </div>
 
@@ -244,8 +248,9 @@ export default function Settlements() {
                   <th
                     className={`${thClass} cursor-pointer select-none`}
                     onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                    aria-sort={sortOrder === "desc" ? "descending" : "ascending"}
                   >
-                    <span className="inline-flex items-center gap-2">Date <ArrowUpDown size={14} /></span>
+                    <span className="inline-flex items-center gap-2">Date <ArrowUpDown size={14} aria-hidden="true" /></span>
                   </th>
                   <th className={thClass}>Shipment ID</th>
                   <th className={thClass}>Amount</th>
@@ -322,6 +327,7 @@ export default function Settlements() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
+                aria-label="Previous page"
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={16} />
@@ -341,6 +347,7 @@ export default function Settlements() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
+                aria-label="Next page"
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={16} />

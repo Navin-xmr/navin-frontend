@@ -66,7 +66,7 @@ export const NotificationDropdown: React.FC = () => {
       <button
         className="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-[#07090d] text-white border-none cursor-pointer transition-all hover:bg-[#1e2433]"
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Notifications"
+        aria-label={unreadCount > 0 ? `Notifications — ${unreadCount} unread` : "Notifications"}
         aria-haspopup="true"
         aria-expanded={isOpen}
       >

@@ -67,6 +67,7 @@ const DashboardLayout: React.FC = () => {
           <button
             className="ml-auto flex lg:hidden bg-transparent border-none text-slate-400 cursor-pointer"
             onClick={closeSidebar}
+            aria-label="Close sidebar"
           >
             <X size={20} />
           </button>

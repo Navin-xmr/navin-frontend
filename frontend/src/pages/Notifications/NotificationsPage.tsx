@@ -159,6 +159,7 @@ const NotificationsPage = () => {
           )}
           <button
             className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white"
+            aria-label="Mark as read"
             onClick={(e) => { e.stopPropagation(); handleNotificationClick(notification.id); }}
           >
             <Check size={16} />
@@ -268,6 +269,7 @@ const NotificationsPage = () => {
                     className="px-5 py-2.5 bg-[#1f2937] border border-[#374151] rounded-lg text-[#9ca3af] text-sm cursor-pointer transition-all hover:not-disabled:bg-[#374151] hover:not-disabled:border-[#4b5563] hover:not-disabled:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
+                    aria-label="Previous page"
                   >
                     Previous
                   </button>
@@ -276,6 +278,7 @@ const NotificationsPage = () => {
                     className="px-5 py-2.5 bg-[#1f2937] border border-[#374151] rounded-lg text-[#9ca3af] text-sm cursor-pointer transition-all hover:not-disabled:bg-[#374151] hover:not-disabled:border-[#4b5563] hover:not-disabled:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
+                    aria-label="Next page"
                   >
                     Next
                   </button>

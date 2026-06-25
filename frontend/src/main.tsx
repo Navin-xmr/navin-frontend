@@ -4,6 +4,7 @@ import * as Sentry from "@sentry/react";
 import "./index.css";
 import App from "./App.tsx";
 import { ToastProvider } from "./context/ToastContext.tsx";
+import { LiveRegionProvider } from "./context/LiveRegionContext.tsx";
 
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({
@@ -25,8 +26,10 @@ if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ToastProvider>
-      <App />
-    </ToastProvider>
+    <LiveRegionProvider>
+      <ToastProvider>
+        <App />
+      </ToastProvider>
+    </LiveRegionProvider>
   </StrictMode>,
 );
