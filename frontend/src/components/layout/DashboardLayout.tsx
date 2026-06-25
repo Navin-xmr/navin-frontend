@@ -16,6 +16,7 @@ import {
   History,
 } from 'lucide-react';
 import TopHeader from './TopHeader/TopHeader';
+import AnimatedPage from './AnimatedPage';
 
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -139,7 +140,9 @@ const DashboardLayout: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-y-auto">
         <TopHeader toggleSidebar={toggleSidebar} />
         <main className="p-8 lg:p-8 bg-gray-50 dark:bg-transparent">
-          <Outlet />
+          <AnimatedPage key={location.pathname}>
+            <Outlet />
+          </AnimatedPage>
         </main>
       </div>
     </div>
