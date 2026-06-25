@@ -2,6 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import MilestoneTimeline from './sections/MilestoneTimeline/MilestoneTimeline';
 import { Milestone } from './sections/MilestoneTimeline/types';
+import IoTPanel from './sections/IoTPanel/IoTPanel';
 
 const Package = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -80,6 +81,8 @@ const ShipmentDetail: React.FC = () => {
         <footer className="mt-12 text-center text-text-secondary text-sm">
           <p>&copy; 2026 Navin Logistics Platform. All milestones are recorded on the Stellar blockchain.</p>
         </footer>
+
+        <IoTPanel shipmentId={id ?? 'NVN-2026-X81'} hasIoTDevice={true} />
       </div>
     </div>
   );
