@@ -28,9 +28,10 @@ export interface Shipment {
 
 export interface PaginatedShipments {
     data: Shipment[];
-    page: number;
-    limit: number;
-    total: number;
+    meta: {
+        nextCursor: string | null;
+        hasMore: boolean;
+    };
 }
 
 export interface CreateShipmentRequest {
@@ -45,14 +46,14 @@ export interface CreateShipmentRequest {
 
 export interface GetShipmentsParams {
     status?: ShipmentStatus;
-    page?: number;
+    cursor?: string;
     limit?: number;
 }
 
 export const shipmentApi = {
     getAll: async (params?: GetShipmentsParams): Promise<PaginatedShipments> => {
-        const res = await apiClient.get<{ data: PaginatedShipments }>("/shipments", { params });
-        return res.data.data;
+        const res = await apiClient.get<{ data: Shipment[]; meta: { nextCursor: string | null; hasMore: boolean } }>("/shipments", { params });
+        return { data: res.data.data, meta: res.data.meta };
     },
 
     getById: async (id: string): Promise<Shipment> => {
