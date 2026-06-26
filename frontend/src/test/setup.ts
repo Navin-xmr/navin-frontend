@@ -2,6 +2,12 @@ import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
 import { afterEach, vi } from 'vitest'
 
+Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
+  value: true,
+  writable: true,
+  configurable: true,
+});
+
 // jsdom does not implement IntersectionObserver — provide a no-op stub.
 class IntersectionObserverMock {
   observe = vi.fn();

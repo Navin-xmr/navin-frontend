@@ -1,7 +1,7 @@
 import { Loader2, Search, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
-interface SearchInputProps {
+export interface SearchInputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -23,13 +23,11 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
   useEffect(() => {
     onChangeRef.current = onChange;
-  });
+  }, [onChange]);
 
   // Sync external value changes (e.g., programmatic clear from parent)
   useEffect(() => {
-    Promise.resolve().then(() => {
-      setInputValue(value);
-    });
+    setInputValue(value);
   }, [value]);
 
   // Debounce onChange — skip on initial mount to avoid double-firing on load
@@ -38,10 +36,12 @@ const SearchInput: React.FC<SearchInputProps> = ({
       hasMounted.current = true;
       return;
     }
-    const timer = setTimeout(() => {
+
+    const timer = window.setTimeout(() => {
       onChangeRef.current(inputValue);
     }, debounceMs);
-    return () => clearTimeout(timer);
+
+    return () => window.clearTimeout(timer);
   }, [inputValue, debounceMs]);
 
   const handleClear = () => {
