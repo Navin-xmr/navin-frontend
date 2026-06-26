@@ -11,6 +11,11 @@ export type { BreadcrumbProps, BreadcrumbItem } from './common/Breadcrumb';
 
 // Reusable UI primitives
 export { default as Button } from './Button';
+// UI
+export { ProgressBar } from './ui/ProgressBar';
+export type { ProgressBarProps, ProgressBarColor, ProgressBarSize } from './ui/ProgressBar';
+export { CircularProgress } from './ui/CircularProgress';
+export type { CircularProgressProps } from './ui/CircularProgress';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 
 export { default as Card, CardHeader, CardBody, CardFooter } from './Card';
