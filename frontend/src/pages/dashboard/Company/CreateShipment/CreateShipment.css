@@ -86,6 +86,31 @@
   color: #F1F5F9;
 }
 
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.address-book-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid #3B82F6;
+  color: #3B82F6;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.address-book-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+}
+
 .form-group input,
 .form-group textarea {
   background-color: #0B0E14;
