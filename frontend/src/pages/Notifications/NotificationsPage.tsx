@@ -1,8 +1,9 @@
 import {
-  Bell, Settings, UserCircle, Search, Check,
+  Bell, Settings, UserCircle, Check,
   Truck, FileText, AlertTriangle, Server, Receipt, DollarSign, Trash2,
 } from "lucide-react";
-import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import SearchInput from "../../components/ui/SearchInput";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { notificationsApi, Notification as NotificationType } from "../../services/api/endpoints/notifications";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
@@ -170,10 +171,6 @@ const NotificationsPage = () => {
   const handleFilterChange = (filter: NotificationFilterType) => {
     if (filter === activeFilter) return;
     setActiveFilter(filter);
-  };
-
-  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
   };
 
   const handleLoadMore = async () => {
@@ -377,16 +374,12 @@ const NotificationsPage = () => {
               {isGrouped ? "Grouped" : "Ungrouped"}
             </button>
           </div>
-          <div className="flex items-center gap-3 bg-[#1f2937] border border-[#374151] rounded-lg px-4 py-2.5 flex-1 max-w-[400px]">
-            <Search size={18} className="text-[#6b7280] shrink-0" />
-            <input
-              type="text"
-              placeholder="Search by ID, contract, or keyword..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="bg-transparent border-none outline-none text-white text-sm flex-1 placeholder:text-[#6b7280]"
-            />
-          </div>
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by ID, contract, or keyword..."
+            isLoading={isLoading}
+          />
         </div>
 
         {error && (
