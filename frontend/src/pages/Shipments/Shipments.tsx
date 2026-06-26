@@ -48,18 +48,90 @@ const Shipments: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const loadingRef = useRef(false);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
+  const [isSavingFilter, setIsSavingFilter] = useState(false);
+  const [newFilterName, setNewFilterName] = useState('');
+  const [savedFilters, setSavedFilters] = useState<{
+    name: string;
+    filters: { search: string; status: string; timeframe: string };
+  }[]>(() => {
+    try {
+      const raw = localStorage.getItem('navin_saved_filters');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const hasMore = shipments.length < total;
 
   const filteredShipments = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return shipments;
-    return shipments.filter(
-      (s) =>
-        s.id.toLowerCase().includes(q) ||
-        s.origin.toLowerCase().includes(q) ||
-        s.destination.toLowerCase().includes(q),
-    );
-  }, [shipments, searchQuery]);
+    let result = shipments;
+
+    if (q) {
+      result = result.filter(
+        (s) =>
+          s.id.toLowerCase().includes(q) ||
+          s.origin.toLowerCase().includes(q) ||
+          s.destination.toLowerCase().includes(q),
+      );
+    }
+
+    if (statusFilter !== 'ALL') {
+      result = result.filter((s) => s.status === statusFilter);
+    }
+
+    if (timeframeFilter !== 'ALL') {
+      const days = parseInt(timeframeFilter, 10);
+      const limitDate = new Date();
+      limitDate.setDate(limitDate.getDate() - days);
+      result = result.filter((s) => new Date(s.createdAt) >= limitDate);
+    }
+
+    return result;
+  }, [shipments, searchQuery, statusFilter, timeframeFilter]);
+
+  const handleSaveFilter = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFilterName.trim()) return;
+    const name = newFilterName.trim();
+
+    if (savedFilters.some((f) => f.name.toLowerCase() === name.toLowerCase())) {
+      alert('A filter with this name already exists.');
+      return;
+    }
+
+    const newFilter = {
+      name,
+      filters: {
+        search: searchQuery,
+        status: statusFilter,
+        timeframe: timeframeFilter,
+      },
+    };
+
+    const updated = [...savedFilters, newFilter];
+    setSavedFilters(updated);
+    localStorage.setItem('navin_saved_filters', JSON.stringify(updated));
+    setNewFilterName('');
+    setIsSavingFilter(false);
+  };
+
+  const handleApplyFilter = (filters: { search: string; status: string; timeframe: string }) => {
+    setSearchQuery(filters.search || '');
+    setStatusFilter((filters.status as 'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED') || 'ALL');
+    setTimeframeFilter((filters.timeframe as 'ALL' | '30' | '90') || 'ALL');
+  };
+
+  const handleDeleteFilter = (name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = savedFilters.filter((f) => f.name !== name);
+    setSavedFilters(updated);
+    localStorage.setItem('navin_saved_filters', JSON.stringify(updated));
+  };
 
   const { parentRef, virtualizer, handleScroll, scrollToIndex } = useVirtualShipments({
     shipments: filteredShipments,
@@ -118,6 +190,7 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL';
   const isEmpty = !isLoading && !error && shipments.length === 0;
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
@@ -143,12 +216,104 @@ const Shipments: React.FC = () => {
         </button>
       </div>
 
-      <div className="shipments-search">
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search by ID, origin, or destination..."
-        />
+      {/* Saved filter chips */}
+      {savedFilters.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4" aria-label="Saved filters">
+          {savedFilters.map((sf) => (
+            <button
+              key={sf.name}
+              type="button"
+              onClick={() => handleApplyFilter(sf.filters)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(98,255,255,0.06)] hover:bg-[rgba(98,255,255,0.12)] border border-[rgba(98,255,255,0.2)] hover:border-[rgba(98,255,255,0.4)] rounded-full text-xs text-[#62ffff] font-medium transition-all cursor-pointer"
+            >
+              <span>{sf.name}</span>
+              <span
+                onClick={(e) => handleDeleteFilter(sf.name, e)}
+                className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.15)] text-[#62ffff] font-bold text-xs"
+                role="button"
+                aria-label={`Delete ${sf.name} filter`}
+              >
+                ×
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Filter and Search Bar */}
+      <div className="flex flex-wrap items-center gap-3 mb-6 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
+        <div className="flex-1 min-w-[280px]">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by ID, origin, or destination..."
+          />
+        </div>
+
+        {/* Status Filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED')}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Status"
+        >
+          <option value="ALL" className="bg-[#121620]">All Statuses</option>
+          <option value="CREATED" className="bg-[#121620]">Created</option>
+          <option value="IN_TRANSIT" className="bg-[#121620]">In Transit</option>
+          <option value="DELIVERED" className="bg-[#121620]">Delivered</option>
+          <option value="CANCELLED" className="bg-[#121620]">Cancelled</option>
+        </select>
+
+        {/* Timeframe Filter */}
+        <select
+          value={timeframeFilter}
+          onChange={(e) => setTimeframeFilter(e.target.value as 'ALL' | '30' | '90')}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Timeframe"
+        >
+          <option value="ALL" className="bg-[#121620]">All Time</option>
+          <option value="30" className="bg-[#121620]">Last 30 Days</option>
+          <option value="90" className="bg-[#121620]">Last 90 Days</option>
+        </select>
+
+        {/* Save Current Filters Button / Inline Form */}
+        {!isSavingFilter ? (
+          <button
+            type="button"
+            onClick={() => setIsSavingFilter(true)}
+            className="px-4 py-2 bg-transparent border border-[rgba(98,255,255,0.3)] hover:bg-[rgba(98,255,255,0.08)] rounded-lg text-sm text-[#62ffff] font-medium transition-colors cursor-pointer"
+          >
+            Save current filters
+          </button>
+        ) : (
+          <form onSubmit={handleSaveFilter} className="flex items-center gap-2">
+            <input
+              type="text"
+              required
+              placeholder="Filter name..."
+              value={newFilterName}
+              onChange={(e) => setNewFilterName(e.target.value)}
+              className="bg-[rgba(19,186,186,0.05)] border border-[#62ffff] rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="px-3 py-2 bg-[#62ffff] text-black font-semibold text-sm rounded-lg hover:bg-[#4ae8e8] transition-colors cursor-pointer"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSavingFilter(false);
+                setNewFilterName('');
+              }}
+              className="px-3 py-2 bg-transparent text-slate-400 hover:text-white text-sm rounded-lg transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </form>
+        )}
       </div>
 
       {error ? (
@@ -161,12 +326,12 @@ const Shipments: React.FC = () => {
       ) : isFilterEmpty ? (
         <div className="shipments-empty">
           <h3>No results found</h3>
-          <p>No shipments match &ldquo;{searchQuery}&rdquo;.</p>
+          <p>No shipments match the selected filters.</p>
         </div>
       ) : (
         <>
           <div className="shipments-summary">
-            Showing {filteredShipments.length}{searchQuery ? ` of ${shipments.length} loaded` : ` of ${total}`} shipments
+            Showing {filteredShipments.length}{isAnyFilterActive ? ` of ${shipments.length} loaded` : ` of ${total}`} shipments
           </div>
 
           {/* Sticky table header */}
@@ -244,7 +409,7 @@ const Shipments: React.FC = () => {
 
           {!hasMore && filteredShipments.length > 0 && (
             <div className="shipments-summary" style={{ marginTop: '0.5rem' }}>
-              {searchQuery ? `${filteredShipments.length} matching shipments` : `All ${total} shipments loaded`}
+              {isAnyFilterActive ? `${filteredShipments.length} matching shipments` : `All ${total} shipments loaded`}
             </div>
           )}
         </>

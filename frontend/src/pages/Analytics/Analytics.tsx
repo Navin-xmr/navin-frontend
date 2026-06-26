@@ -85,7 +85,9 @@ const Analytics: React.FC = () => {
   }, [dateRange]);
 
   useEffect(() => {
-    fetchData();
+    Promise.resolve().then(() => {
+      fetchData();
+    });
   }, [fetchData]);
 
   const statCards: StatCardProps[] = [

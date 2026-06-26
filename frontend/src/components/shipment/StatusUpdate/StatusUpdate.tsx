@@ -36,7 +36,7 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  useEffect(() => { setActiveStatus(currentStatus); }, [currentStatus]);
+  useEffect(() => { Promise.resolve().then(() => { setActiveStatus(currentStatus); }); }, [currentStatus]);
 
   useEffect(() => {
     if (!isMenuOpen) return;

@@ -40,6 +40,7 @@ const PaymentHistory = lazy(() => import('./pages/Payments/PaymentHistory/Paymen
 const NotificationsPage = lazy(() => import('./pages/Notifications/NotificationsPage'));
 const ShipmentHistory = lazy(() => import('./pages/dashboard/Customer/ShipmentHistory/ShipmentHistory'));
 const UserManagement = lazy(() => import('./pages/dashboard/Company/UserManagement/UserManagement'));
+const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/AcceptInvitation'));
 
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
   { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/register/company', element: <CompanyRegister /> },
   { path: '/register/verify-email', element: <EmailVerification /> },
+  { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: <PaginationDemo /> },
   {
     element: <ProtectedRoute />,

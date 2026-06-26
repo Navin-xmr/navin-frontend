@@ -425,7 +425,9 @@ const BlockchainLedger: React.FC = () => {
 
   // Re-fetch whenever cursor or filter changes
   useEffect(() => {
-    void fetchBlocks(currentCursor, filter);
+    Promise.resolve().then(() => {
+      void fetchBlocks(currentCursor, filter);
+    });
   }, [currentCursor, filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterChange = (value: MilestoneEvent | '') => {
