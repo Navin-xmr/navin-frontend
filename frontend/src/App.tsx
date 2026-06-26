@@ -5,6 +5,8 @@ import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
 import ForgotPassword from './pages/auth/ForgotPassword/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPassword/ResetPasswordPage';
+import CompanyRegister from './pages/auth/Register/CompanyRegister';
+import EmailVerification from './pages/auth/EmailVerification/EmailVerification';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import RoleGuard from './components/auth/RoleGuard';
@@ -49,6 +51,8 @@ const router = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/forgot-password', element: <ForgotPassword /> },
   { path: '/reset-password', element: <ResetPasswordPage /> },
+  { path: '/register/company', element: <CompanyRegister /> },
+  { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/pagination-demo', element: <PaginationDemo /> },
   {
     element: <ProtectedRoute />,
