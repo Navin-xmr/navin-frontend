@@ -10,8 +10,9 @@ const NotificationsSection = lazy(() => import('./sections/NotificationsSection'
 const WalletsSection = lazy(() => import('./sections/WalletsSection'));
 const ApiKeysSection = lazy(() => import('./sections/ApiKeysSection'));
 const DangerZone = lazy(() => import('./sections/DangerZone'));
+const AppearanceSection = lazy(() => import('./sections/AppearanceSection'));
 
-type Tab = 'profile' | 'security' | 'notifications' | 'wallets' | 'api-keys' | 'danger';
+type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'danger';
 
 interface TabDef {
   key: Tab;
@@ -23,6 +24,7 @@ const TABS: TabDef[] = [
   { key: 'profile', label: 'Profile' },
   { key: 'security', label: 'Security' },
   { key: 'notifications', label: 'Notifications' },
+  { key: 'appearance', label: 'Appearance' },
   { key: 'wallets', label: 'Wallets', companyOnly: true },
   { key: 'api-keys', label: 'API Keys', companyOnly: true },
   { key: 'danger', label: 'Danger Zone' },
@@ -72,6 +74,7 @@ const Settings: React.FC = () => {
         {activeTab === 'profile' && <ProfileSection isCompany={isCompany} />}
         {activeTab === 'security' && <SecuritySection />}
         {activeTab === 'notifications' && <NotificationsSection />}
+        {activeTab === 'appearance' && <AppearanceSection />}
         {activeTab === 'wallets' && isCompany && <WalletsSection />}
         {activeTab === 'api-keys' && can(role, 'api-keys:manage') && <ApiKeysSection />}
         {activeTab === 'danger' && <DangerZone userEmail={userId ?? ''} />}

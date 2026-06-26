@@ -50,11 +50,12 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
         </div>
 
         {/* Right */}
-        <div className="flex items-center justify-end gap-3 w-50">
-          <ConnectionStatusDot status={connStatus} />
         <div className="flex items-center justify-end gap-3 w-auto">
+          <ConnectionStatusDot status={connStatus} />
           <NetworkBadge />
-          <WalletPill />
+          <div data-tour-id="tour-wallet">
+            <WalletPill />
+          </div>
           <ThemeToggle />
           <NotificationDropdown />
           <button

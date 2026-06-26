@@ -102,16 +102,10 @@ function App() {
           <OfflineBanner />
           <RealtimeManager />
           <RouterProvider router={router} />
+          <PWAInstallPrompt />
         </ErrorBoundary>
       </Sentry.ErrorBoundary>
     </AuthProvider>
-    <Sentry.ErrorBoundary fallback={ErrorFallback}>
-      <ErrorBoundary>
-        <OfflineBanner />
-        <RouterProvider router={router} />
-        <PWAInstallPrompt />
-      </ErrorBoundary>
-    </Sentry.ErrorBoundary>
   );
 }
 
