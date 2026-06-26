@@ -48,13 +48,21 @@ const UserManagement: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [inviteStep, setInviteStep] = useState<InviteStep>('form');
 
-  const inviteModalRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(inviteModalRef, isModalOpen, () => closeModal());
-
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('Viewer');
   const [inviteMessage, setInviteMessage] = useState('');
   const [lastInvitedEmail, setLastInvitedEmail] = useState('');
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setInviteStep('form');
+    setInviteEmail('');
+    setInviteRole('Viewer');
+    setInviteMessage('');
+  }, []);
+
+  const inviteModalRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(inviteModalRef, isModalOpen, closeModal);
 
   const itemsPerPage = 8;
 
@@ -84,8 +92,10 @@ const UserManagement: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchUsers();
-    fetchInvitations();
+    Promise.resolve().then(() => {
+      fetchUsers();
+      fetchInvitations();
+    });
   }, [fetchUsers, fetchInvitations]);
 
   const filteredUsers = useMemo(() => {
@@ -175,13 +185,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setInviteStep('form');
-    setInviteEmail('');
-    setInviteRole('Viewer');
-    setInviteMessage('');
-  };
+
 
   if (error) {
     return (
@@ -301,7 +305,7 @@ const UserManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {currentUsers.length > 0 ? (
+              {currentUsers.length > 0 ?
                 currentUsers.map((user) => (
                   <tr key={user.id}>
                     <td>
@@ -311,17 +315,8 @@ const UserManagement: React.FC = () => {
                           <span className="user-name">{user.name}</span>
                           <span className="user-email">{user.email}</span>
                         </div>
-              {currentUsers.length > 0 ? currentUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    <div className="user-info">
-                      <div className="user-avatar">{user.name.charAt(0).toUpperCase()}</div>
-                      <div className="user-details">
-                        <span className="user-name">{user.name}</span>
-                        <span className="user-email">{user.email}</span>
                       </div>
-                    </div>
-                  </td>
+                    </td>
                   <td>
                     <select className="inline-role-select" value={user.role}
                       onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}>

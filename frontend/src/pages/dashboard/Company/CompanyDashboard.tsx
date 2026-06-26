@@ -9,6 +9,7 @@ import { QuickActionsCard } from './QuickActions';
 import RecentShipments from './RecentShipments/RecentShipments';
 import RecentActivityFeed from './RecentActivity/RecentActivityFeed';
 import ShipmentsMapWidget from './ShipmentsMap/ShipmentsMapWidget';
+import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
 import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
 import type { TourStep } from '@components/onboarding/OnboardingTour';
 
@@ -160,6 +161,7 @@ const CompanyDashboard: React.FC = () => {
           <ShipmentsMapWidget />
         </div>
       </div>
+      <RevenueSummaryWidget />
 
       {/* Shipments */}
       <div className="flex flex-col">

@@ -43,7 +43,9 @@ const AnomalyAlertPanel: React.FC<AnomalyAlertPanelProps> = () => {
   }, []);
 
   useEffect(() => {
-    fetchAnomalies();
+    Promise.resolve().then(() => {
+      fetchAnomalies();
+    });
   }, [fetchAnomalies]);
 
   const handleAcknowledge = async (id: string) => {
