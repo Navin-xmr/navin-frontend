@@ -43,7 +43,9 @@ const WalletModal: React.FC = () => {
 
   useEffect(() => {
     if (!isModalOpen) return;
-    setError(null);
+    Promise.resolve().then(() => {
+      setError(null);
+    });
 
     Promise.all(
       WALLET_ADAPTERS.map(async (a) => {

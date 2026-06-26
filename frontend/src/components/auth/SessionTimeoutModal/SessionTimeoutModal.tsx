@@ -91,7 +91,9 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
 
   // Initial schedule on mount
   useEffect(() => {
-    schedule();
+    Promise.resolve().then(() => {
+      schedule();
+    });
     return clearTimers;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

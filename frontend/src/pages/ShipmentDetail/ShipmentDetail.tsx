@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import Breadcrumb from "../../components/ui/Breadcrumb";
-import IoTPanel from "../Shipment/sections/IoTPanel/IoTPanel";
 import MilestoneTimeline, {
     MilestoneDetail,
 } from "./MilestoneTimeline/MilestoneTimeline";
@@ -32,8 +31,10 @@ const ShipmentDetail: React.FC = () => {
     const statusEvent = events['shipment:status'];
     React.useEffect(() => {
         if (statusEvent && statusEvent.shipmentId === id) {
-            setCurrentStatus(statusEvent.newStatus);
-            announce(`Shipment status updated to ${statusEvent.newStatus}`);
+            Promise.resolve().then(() => {
+                setCurrentStatus(statusEvent.newStatus);
+                announce(`Shipment status updated to ${statusEvent.newStatus}`);
+            });
         }
     }, [statusEvent, id, announce]);
 

@@ -111,7 +111,9 @@ export default function Settlements() {
   };
 
   useEffect(() => {
-    void load();
+    Promise.resolve().then(() => {
+      void load();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterStatus, sortOrder]);
 
@@ -119,16 +121,18 @@ export default function Settlements() {
   useEffect(() => {
     const event = realtimeEvents['settlement:status'];
     if (!event) return;
-    setSettlements((prev) =>
-      prev.map((s) =>
-        s._id === event.settlementId ? { ...s, status: event.newStatus, stellarTxHash: event.txHash ?? s.stellarTxHash } : s,
-      ),
-    );
-    const isError = event.newStatus === 'FAILED' || event.newStatus === 'DISPUTED';
-    announce(
-      `Settlement status updated to ${event.newStatus}`,
-      isError ? 'assertive' : 'polite',
-    );
+    Promise.resolve().then(() => {
+      setSettlements((prev) =>
+        prev.map((s) =>
+          s._id === event.settlementId ? { ...s, status: event.newStatus, stellarTxHash: event.txHash ?? s.stellarTxHash } : s,
+        ),
+      );
+      const isError = event.newStatus === 'FAILED' || event.newStatus === 'DISPUTED';
+      announce(
+        `Settlement status updated to ${event.newStatus}`,
+        isError ? 'assertive' : 'polite',
+      );
+    });
   }, [realtimeEvents, announce]);
 
   const summary = useMemo(() => {

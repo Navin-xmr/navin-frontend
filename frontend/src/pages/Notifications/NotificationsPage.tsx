@@ -144,21 +144,23 @@ const NotificationsPage = () => {
   }, [activeFilter, searchQuery]);
 
   useEffect(() => {
-    setCurrentPage(1);
-    fetchNotifications(1, false);
-    setSearchParams((prevParams) => {
-      const nextParams = new URLSearchParams(prevParams);
-      if (activeFilter !== "all") {
-        nextParams.set("filter", activeFilter);
-      } else {
-        nextParams.delete("filter");
-      }
-      if (searchQuery.trim()) {
-        nextParams.set("q", searchQuery.trim());
-      } else {
-        nextParams.delete("q");
-      }
-      return nextParams;
+    Promise.resolve().then(() => {
+      setCurrentPage(1);
+      fetchNotifications(1, false);
+      setSearchParams((prevParams) => {
+        const nextParams = new URLSearchParams(prevParams);
+        if (activeFilter !== "all") {
+          nextParams.set("filter", activeFilter);
+        } else {
+          nextParams.delete("filter");
+        }
+        if (searchQuery.trim()) {
+          nextParams.set("q", searchQuery.trim());
+        } else {
+          nextParams.delete("q");
+        }
+        return nextParams;
+      });
     });
   }, [activeFilter, searchQuery, fetchNotifications, setSearchParams]);
 
@@ -167,18 +169,20 @@ const NotificationsPage = () => {
     const event = realtimeEvents['notification:new'];
     if (!event) return;
     const n = event.notification;
-    setNotificationsList((prev) => {
-      if (prev.some((x) => x.id === n.id)) return prev;
-      const newItem: NotificationType = {
-        id: n.id,
-        type: "system",
-        icon: "system",
-        title: n.title,
-        description: n.description,
-        timestamp: n.timestamp,
-        isRead: false,
-      };
-      return [newItem, ...prev];
+    Promise.resolve().then(() => {
+      setNotificationsList((prev) => {
+        if (prev.some((x) => x.id === n.id)) return prev;
+        const newItem: NotificationType = {
+          id: n.id,
+          type: "system",
+          icon: "system",
+          title: n.title,
+          description: n.description,
+          timestamp: n.timestamp,
+          isRead: false,
+        };
+        return [newItem, ...prev];
+      });
     });
   }, [realtimeEvents]);
 

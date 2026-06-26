@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ChevronLeft, Check, Pencil } from "lucide-react";
 import { authApi } from "../../../services/api";
+import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
 
 const INDUSTRIES = [
   "Agriculture",
@@ -103,6 +104,17 @@ const STEP_DESCRIPTIONS = [
   "Confirm your details before submitting",
 ];
 
+const SelectWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="relative">
+    {children}
+    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[rgba(255,255,255,0.4)]">
+      <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
+        <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    </div>
+  </div>
+);
+
 const CompanyRegister: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -127,19 +139,6 @@ const CompanyRegister: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<"none" | "weak" | "fair" | "strong">("none");
-
-  const calcPasswordStrength = (pass: string): "none" | "weak" | "fair" | "strong" => {
-    if (!pass) return "none";
-    let strength = 0;
-    if (pass.length >= 8) strength++;
-    if (/[A-Z]/.test(pass)) strength++;
-    if (/[0-9]/.test(pass)) strength++;
-    if (/[^A-Za-z0-9]/.test(pass)) strength++;
-    if (strength <= 1) return "weak";
-    if (strength <= 3) return "fair";
-    return "strong";
-  };
 
   const validateStep1 = (): boolean => {
     const errs: Step1Errors = {};
@@ -192,16 +191,9 @@ const CompanyRegister: React.FC = () => {
     }
   };
 
-  const strengthBarWidth = { none: "0%", weak: "33.33%", fair: "66.66%", strong: "100%" }[passwordStrength];
-  const strengthBarColor = { none: "transparent", weak: "#FF4D4D", fair: "#FFAB00", strong: "#00E676" }[passwordStrength];
-  const strengthLabel = {
-    none: null,
-    weak: <span className="text-[#FF4D4D] font-semibold">Weak</span>,
-    fair: <span className="text-[#FFAB00] font-semibold">Fair</span>,
-    strong: <span className="text-[#00E676] font-semibold">Strong</span>,
-  }[passwordStrength];
 
-  const StepIndicator = () => (
+
+  const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-8" aria-label="Registration steps">
       {[1, 2, 3].map((s, i) => (
         <React.Fragment key={s}>
@@ -238,16 +230,7 @@ const CompanyRegister: React.FC = () => {
     </div>
   );
 
-  const SelectWrapper = ({ children }: { children: React.ReactNode }) => (
-    <div className="relative">
-      {children}
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[rgba(255,255,255,0.4)]">
-        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
-          <path d="M1 1l5 5 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      </div>
-    </div>
-  );
+
 
   const renderStep1 = () => (
     <div className="flex flex-col gap-5">
@@ -416,7 +399,6 @@ const CompanyRegister: React.FC = () => {
             value={step2.password}
             onChange={(e) => {
               setStep2((p) => ({ ...p, password: e.target.value }));
-              setPasswordStrength(calcPasswordStrength(e.target.value));
               if (step2Errors.password) setStep2Errors((p) => ({ ...p, password: undefined }));
             }}
             autoComplete="new-password"
@@ -433,19 +415,7 @@ const CompanyRegister: React.FC = () => {
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        {step2.password && (
-          <div className="mt-2">
-            <div className="h-1 w-full bg-[rgba(255,255,255,0.1)] rounded-sm overflow-hidden mb-1.5">
-              <div
-                className="h-full transition-all duration-400"
-                style={{ width: strengthBarWidth, backgroundColor: strengthBarColor }}
-              />
-            </div>
-            <div className="text-[0.75rem] text-[rgba(255,255,255,0.6)]">
-              Strength: {strengthLabel ?? "None"}
-            </div>
-          </div>
-        )}
+        <PasswordStrengthMeter password={step2.password} />
         {step2Errors.password && (
           <span id="password-error" className={errorClass} role="alert">{step2Errors.password}</span>
         )}
@@ -622,7 +592,7 @@ const CompanyRegister: React.FC = () => {
           </p>
         </div>
 
-        <StepIndicator />
+        {renderStepIndicator()}
 
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}

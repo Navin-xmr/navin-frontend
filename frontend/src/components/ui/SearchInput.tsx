@@ -27,7 +27,9 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
   // Sync external value changes (e.g., programmatic clear from parent)
   useEffect(() => {
-    setInputValue(value);
+    Promise.resolve().then(() => {
+      setInputValue(value);
+    });
   }, [value]);
 
   // Debounce onChange — skip on initial mount to avoid double-firing on load

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { invitationsApi } from '@services/api';
 import type { UserRole } from '@services/api';
+import PasswordStrengthMeter from '../../../components/ui/PasswordStrengthMeter';
 
 interface InviteInfo {
   companyName: string;
@@ -35,8 +36,10 @@ const AcceptInvitation: React.FC = () => {
 
   useEffect(() => {
     if (!token) {
-      setInfoError('Invalid or missing invitation token.');
-      setInfoLoading(false);
+      Promise.resolve().then(() => {
+        setInfoError('Invalid or missing invitation token.');
+        setInfoLoading(false);
+      });
       return;
     }
     invitationsApi.getInfo(token)
@@ -170,6 +173,7 @@ const AcceptInvitation: React.FC = () => {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            <PasswordStrengthMeter password={password} />
             {password && !passwordStrong && (
               <p className="text-xs text-red-400 mt-1">Password must be at least 8 characters.</p>
             )}
