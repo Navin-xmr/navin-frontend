@@ -91,6 +91,9 @@ const Shipments: React.FC = () => {
   };
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
+  const [priorityFilter, setPriorityFilter] = useState<'ALL' | ShipmentPriority>('ALL');
   const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>({
     status: [],
     dateFrom: '',
@@ -412,6 +415,44 @@ const Shipments: React.FC = () => {
           />
         </div>
 
+        {/* Status Filter */}
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED')}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Status"
+        >
+          <option value="ALL" className="bg-[#121620]">All Statuses</option>
+          <option value="CREATED" className="bg-[#121620]">Created</option>
+          <option value="IN_TRANSIT" className="bg-[#121620]">In Transit</option>
+          <option value="DELIVERED" className="bg-[#121620]">Delivered</option>
+          <option value="CANCELLED" className="bg-[#121620]">Cancelled</option>
+        </select>
+
+        {/* Timeframe Filter */}
+        <select
+          value={timeframeFilter}
+          onChange={(e) => setTimeframeFilter(e.target.value as 'ALL' | '30' | '90')}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Timeframe"
+        >
+          <option value="ALL" className="bg-[#121620]">All Time</option>
+          <option value="30" className="bg-[#121620]">Last 30 Days</option>
+          <option value="90" className="bg-[#121620]">Last 90 Days</option>
+        </select>
+
+        {/* Priority Filter */}
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value as 'ALL' | ShipmentPriority)}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Priority"
+        >
+          <option value="ALL" className="bg-[#121620]">All Priorities</option>
+          <option value="URGENT" className="bg-[#121620]">Urgent</option>
+          <option value="STANDARD" className="bg-[#121620]">Standard</option>
+          <option value="ECONOMY" className="bg-[#121620]">Economy</option>
+        </select>
         <ShipmentFilters onFilterChange={setAdvancedFilters} />
 
         {/* Save Current Filters Button / Inline Form */}
