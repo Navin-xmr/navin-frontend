@@ -19,6 +19,7 @@ import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { realtimeService } from './services/realtime/realtimeService';
+import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
 import './App.css';
 
 // Eagerly loaded (critical path)
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: <PaginationDemo /> },
+  { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,
     children: [
