@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import IoTPanel from "../Shipment/sections/IoTPanel/IoTPanel";
 import MilestoneTimeline, {
     MilestoneDetail,
 } from "./MilestoneTimeline/MilestoneTimeline";
@@ -25,10 +23,7 @@ const ShipmentDetail: React.FC = () => {
 
     const [currentStatus, setCurrentStatus] = useState("IN_TRANSIT");
 
-    // Subscribe to real-time events for this shipment
     const events = useRealtimeEvents(['shipment:status', 'shipment:milestone']);
-
-    // Update status when a realtime event arrives for this shipment
     const statusEvent = events['shipment:status'];
     React.useEffect(() => {
         if (statusEvent && statusEvent.shipmentId === id) {
@@ -37,11 +32,6 @@ const ShipmentDetail: React.FC = () => {
         }
     }, [statusEvent, id, announce]);
 
-import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
-
-const ShipmentDetail: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const isOnline = useOnlineStatus();
     const shipmentHeaderData = {
         shipmentId: id ? `#${id}` : "#SHP-992834",
         status: currentStatus,
@@ -51,23 +41,16 @@ const ShipmentDetail: React.FC = () => {
         userRole: (role ?? "customer") as "company" | "customer",
     };
 
-    const handleUpdateStatus = () => {
-        console.log("Update status clicked");
-    };
-    const handleTrack = () => {
-        console.log("Track clicked");
-    };
+    const handleUpdateStatus = () => { console.log("Update status clicked"); };
+    const handleTrack = () => { console.log("Track clicked"); };
 
     const mockPaymentData: PaymentData | null = {
         amount: "1,500.00",
         tokenSymbol: "XLM",
         status: "escrowed",
-        payerAddress:
-            "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI",
-        payeeAddress:
-            "GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB",
-        transactionHash:
-            "a]b c9d4e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9",
+        payerAddress: "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI",
+        payeeAddress: "GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB",
+        transactionHash: "a]b c9d4e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9",
     };
 
     const mockSensorData: SensorData | null = {
@@ -104,15 +87,12 @@ const ShipmentDetail: React.FC = () => {
                         origin={shipmentHeaderData.originAddress}
                         destination={shipmentHeaderData.destinationAddress}
                     />
-
                     <ShipmentDetailHeader
                         {...shipmentHeaderData}
                         onUpdateStatus={handleUpdateStatus}
                         onTrack={handleTrack}
                     />
-
                     <div className="h-px bg-[rgba(0,212,200,0.2)] my-8" />
-
                     <h2 className="font-['Bebas_Neue',sans-serif] text-[clamp(1.75rem,4vw,2.5rem)] font-normal tracking-[0.04em] leading-[1.2] text-white mt-10 mb-0 text-center md:mb-8">
                         MILESTONE <span className="text-[#00d4c8]">TIMELINE</span>
                     </h2>
@@ -127,6 +107,11 @@ const ShipmentDetail: React.FC = () => {
                     <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
                 )}
 
+                <DocumentsSection
+                    shipmentId={id || shipmentHeaderData.shipmentId}
+                    userRole={shipmentHeaderData.userRole}
+                />
+
                 {can(role, 'shipment:confirm-milestone') && (
                     <DeliveryConfirmation
                         shipmentId={shipmentHeaderData.shipmentId}
@@ -136,39 +121,7 @@ const ShipmentDetail: React.FC = () => {
                         }}
                     />
                 )}
-                <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
-                <DocumentsSection
-                    shipmentId={id || shipmentHeaderData.shipmentId}
-                    userRole={shipmentHeaderData.userRole}
-                />
-                {isOnline ? (
-                    <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
-                ) : (
-                    <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">
-                        Upload Proof requires an internet connection.
-                    </div>
-                )}
-                <DeliveryConfirmation
-                    shipmentId={shipmentHeaderData.shipmentId}
-                    status={shipmentHeaderData.status}
-                    onConfirm={async (id, rating, feedback) => {
-                        console.log("Delivery confirmed", {
-                            id,
-                            rating,
-                            feedback,
-                        });
-                    }}
-                />
-                <NotesSection
-                    shipmentId={id ?? shipmentHeaderData.shipmentId}
-                    userRole={shipmentHeaderData.userRole}
-                />
             </div>
-
-            <IoTPanel
-                shipmentId={id ?? shipmentHeaderData.shipmentId}
-                hasIoTDevice={true}
-            />
         </div>
     );
 };
