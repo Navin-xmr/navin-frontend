@@ -4,7 +4,7 @@ import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import Breadcrumb from "../../components/ui/Breadcrumb";
 import MilestoneTimeline, {
     MilestoneDetail,
-} from "./MilestoneTimeline/MilestoneTimeline";
+} from "../../components/shipment/MilestoneTimeline/MilestoneTimeline";
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import ShipmentMap from "./ShipmentMap/ShipmentMap";
 import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
@@ -17,6 +17,10 @@ import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { useAuthContext } from "../../context/AuthContext";
 import { can } from "../../utils/rbac";
 import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
+import ShipmentPrintView from "../Shipment/sections/PrintView/ShipmentPrintView";
+import type { ShipmentPrintData } from "../Shipment/sections/PrintView/ShipmentPrintView";
+import DisputeForm from "../Shipment/sections/DisputeForm/DisputeForm";
+import type { DisputeData } from "../Shipment/sections/DisputeForm/DisputeForm";
 import { useLiveRegion } from "../../context/LiveRegionContext";
 
 const ShipmentDetail: React.FC = () => {
@@ -26,6 +30,9 @@ const ShipmentDetail: React.FC = () => {
     const { announce } = useLiveRegion();
 
     const [currentStatus, setCurrentStatus] = useState("IN_TRANSIT");
+    const [isPrinting, setIsPrinting] = useState(false);
+    const [isDisputeOpen, setIsDisputeOpen] = useState(false);
+    const [existingDispute, setExistingDispute] = useState<DisputeData | null>(null);
 
     const events = useRealtimeEvents(['shipment:status', 'shipment:milestone']);
     const statusEvent = events['shipment:status'];
@@ -50,6 +57,13 @@ const ShipmentDetail: React.FC = () => {
 
     const handleUpdateStatus = () => { console.log("Update status clicked"); };
     const handleTrack = () => { console.log("Track clicked"); };
+    const handlePrint = () => { setIsPrinting(true); };
+    const handleRaiseDispute = () => { setIsDisputeOpen(true); };
+    const handleDisputeSuccess = (dispute: DisputeData) => {
+        setExistingDispute(dispute);
+        setIsDisputeOpen(false);
+        announce(`Dispute submitted. Reference number: ${dispute.referenceNumber}`);
+    };
 
     const mockPaymentData: PaymentData | null = {
         amount: "1,500.00",
@@ -76,6 +90,23 @@ const ShipmentDetail: React.FC = () => {
         { id: "6", name: "Out for Delivery", timestamp: "2026-02-23 09:00 AM EST", location: "Boston, MA", blockchainAddress: "GUVWX6789012345CDEF6789012345FGHIJK", status: "current", notes: "Package is currently out for delivery.", sensorReadings: { temperature: "17°C", humidity: "58%", pressure: "1017 hPa" } },
         { id: "7", name: "Delivered", timestamp: "Expected: 2026-02-23 05:00 PM EST", location: "Boston, MA", blockchainAddress: "GYZAB7890123456DEFG7890123456GHIJKL", status: "upcoming", notes: "Estimated delivery time." },
     ];
+
+    const printData: ShipmentPrintData = {
+        shipmentId: id ? `#${id}` : "#SHP-992834",
+        trackingNumber: id ?? "SHP-992834",
+        status: currentStatus,
+        sender: { name: "Navin Logistics", address: shipmentHeaderData.originAddress },
+        receiver: { name: "Customer", address: shipmentHeaderData.destinationAddress },
+        createdAt: "2026-06-20",
+        expectedDelivery: shipmentHeaderData.expectedDeliveryDate,
+        milestones: mockMilestones.map(m => ({
+            name: m.name,
+            timestamp: m.timestamp,
+            location: m.location,
+            status: m.status,
+        })),
+        stellarTxHash: mockPaymentData?.transactionHash,
+    };
 
     return (
         <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
@@ -106,7 +137,30 @@ const ShipmentDetail: React.FC = () => {
                         {...shipmentHeaderData}
                         onUpdateStatus={handleUpdateStatus}
                         onTrack={handleTrack}
+                        onPrint={handlePrint}
+                        onRaiseDispute={handleRaiseDispute}
                     />
+                    {isDisputeOpen && (
+                        <div className="mt-8">
+                            <DisputeForm
+                                shipmentId={id ?? shipmentHeaderData.shipmentId}
+                                existingDispute={existingDispute}
+                                onClose={() => setIsDisputeOpen(false)}
+                                onSuccess={handleDisputeSuccess}
+                            />
+                        </div>
+                    )}
+
+                    {existingDispute && !isDisputeOpen && (
+                        <div className="mt-8">
+                            <DisputeForm
+                                shipmentId={id ?? shipmentHeaderData.shipmentId}
+                                existingDispute={existingDispute}
+                                onClose={() => setExistingDispute(null)}
+                            />
+                        </div>
+                    )}
+
                     <div className="h-px bg-[rgba(0,212,200,0.2)] my-8" />
                     <h2 className="font-['Bebas_Neue',sans-serif] text-[clamp(1.75rem,4vw,2.5rem)] font-normal tracking-[0.04em] leading-[1.2] text-white mt-10 mb-0 text-center md:mb-8">
                         MILESTONE <span className="text-[#00d4c8]">TIMELINE</span>
@@ -147,6 +201,13 @@ const ShipmentDetail: React.FC = () => {
                     shipmentId={id ?? shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}
                 />
+
+                {isPrinting && (
+                    <ShipmentPrintView
+                        data={printData}
+                        onClose={() => setIsPrinting(false)}
+                    />
+                )}
             </div>
         </div>
     );
