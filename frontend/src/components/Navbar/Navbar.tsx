@@ -11,6 +11,17 @@ const navLinks = [
   { id: "features",     label: "Features",     href: "#features" },
   { id: "how-it-works", label: "How It Works", href: "#how-it-works" },
   { id: "faq",          label: "FAQ",          href: "#faq" },
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { useScrollSpy } from '../../hooks/useScrollSpy';
+
+const NAV_SECTION_IDS = ['about', 'features', 'how-it-works'] as const;
+
+const navLinks = [
+  { id: 'about', label: 'About', href: '#about' },
+  { id: 'features', label: 'Features', href: '#features' },
+  { id: 'how-it-works', label: 'How It Works', href: '#how-it-works' },
 ];
 
 const Navbar: React.FC = () => {
@@ -34,6 +45,11 @@ const Navbar: React.FC = () => {
       if (element) {
         element.scrollIntoView({ behavior: "smooth" });
       }
+  const handleNavClick = (sectionId: string) => {
+    setIsMenuOpen(false);
+    if (location.pathname === '/') {
+      const element = document.getElementById(sectionId);
+      if (element) element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -72,15 +88,26 @@ const Navbar: React.FC = () => {
                 </a>
               );
             })}
+          <div className="flex flex-row justify-center items-center px-6 py-3.5 gap-10 bg-gradient-card border-t border-[rgba(0,128,128,0.3)] rounded-[30px]">
+            {navLinks.map((link) => (
+              <a
+                key={link.id}
+                href={link.href}
+                className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-primary after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-primary after:transition-all after:duration-300 hover:after:w-full ${
+                  activeSection === link.id ? 'text-primary after:!w-full' : ''
+                }`}
+                onClick={(e) => { e.preventDefault(); handleNavClick(link.id); }}
+                aria-current={activeSection === link.id ? 'true' : undefined}
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
 
           {/* CTA Buttons */}
           <div className="flex gap-4 items-center absolute right-8">
-            <Link
-              to="/"
-              className="px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5"
-            >
-              Try now
+            <Link to="/login" className="px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5">
+              Login
             </Link>
             <Link
               to="/signup"
@@ -91,7 +118,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Hamburger Menu (Mobile) */}
+        {/* Hamburger */}
         <button
           className="hidden max-md:block bg-transparent border-none text-primary cursor-pointer text-2xl p-2 transition-transform duration-300 hover:scale-110 absolute right-6 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -123,12 +150,20 @@ const Navbar: React.FC = () => {
                   </a>
                 );
               })}
+              {navLinks.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  className={`text-[#E0E0E0] no-underline text-base font-medium transition-colors duration-300 cursor-pointer hover:text-primary ${activeSection === link.id ? 'text-primary' : ''}`}
+                  onClick={(e) => { e.preventDefault(); handleNavClick(link.id); }}
+                  aria-current={activeSection === link.id ? 'true' : undefined}
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
             <div className="flex flex-col gap-3">
-              <Link
-                to="/login"
-                className="w-full text-center px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5"
-              >
+              <Link to="/login" className="w-full text-center px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5">
                 Login
               </Link>
               <Link
