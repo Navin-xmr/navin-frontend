@@ -135,16 +135,24 @@ html {
 }
 
 @keyframes logo-scroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.logo-strip-wrapper {
+  overflow: hidden;
+  width: 100%;
 }
 
 .logo-strip-track {
+  display: flex;
+  width: max-content;
+  gap: 2.5rem;
   animation: logo-scroll 28s linear infinite;
+}
+
+.logo-strip-wrapper:hover .logo-strip-track {
+  animation-play-state: paused;
 }
 
 @media print {

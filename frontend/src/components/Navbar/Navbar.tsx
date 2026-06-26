@@ -1,34 +1,23 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
-import { useScrollSpy } from "../../hooks/useScrollSpy";
-
-const SECTION_IDS = ["hero", "why-navin", "features", "how-it-works", "faq"] as const;
-
-const navLinks = [
-  { id: "hero",         label: "Hero",         href: "#hero" },
-  { id: "why-navin",    label: "Why Navin",    href: "#why-navin" },
-  { id: "features",     label: "Features",     href: "#features" },
-  { id: "how-it-works", label: "How It Works", href: "#how-it-works" },
-  { id: "faq",          label: "FAQ",          href: "#faq" },
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useScrollSpy } from '../../hooks/useScrollSpy';
 
-const NAV_SECTION_IDS = ['about', 'features', 'how-it-works'] as const;
+const SECTION_IDS = ['hero', 'why-navin', 'features', 'how-it-works', 'faq'] as const;
 
 const navLinks = [
-  { id: 'about', label: 'About', href: '#about' },
-  { id: 'features', label: 'Features', href: '#features' },
+  { id: 'hero',         label: 'Hero',         href: '#hero' },
+  { id: 'why-navin',    label: 'Why Navin',    href: '#why-navin' },
+  { id: 'features',     label: 'Features',     href: '#features' },
   { id: 'how-it-works', label: 'How It Works', href: '#how-it-works' },
+  { id: 'faq',          label: 'FAQ',          href: '#faq' },
 ];
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  const isLandingPage = location.pathname === "/";
+  const isLandingPage = location.pathname === '/';
   const activeSectionId = useScrollSpy(
     isLandingPage ? [...SECTION_IDS] : [],
   );
@@ -38,18 +27,12 @@ const Navbar: React.FC = () => {
     sectionId: string,
   ) => {
     setIsMenuOpen(false);
-
     if (isLandingPage) {
       e.preventDefault();
       const element = document.getElementById(sectionId);
       if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+        element.scrollIntoView({ behavior: 'smooth' });
       }
-  const handleNavClick = (sectionId: string) => {
-    setIsMenuOpen(false);
-    if (location.pathname === '/') {
-      const element = document.getElementById(sectionId);
-      if (element) element.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -70,38 +53,23 @@ const Navbar: React.FC = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-12">
-          {/* Nav Links */}
           <div className="flex flex-row justify-center items-center px-6 py-3.5 gap-12 h-[55.19px] bg-gradient-card border-t border-[rgba(0,128,128,0.3)] rounded-[30px]">
             {navLinks.map((link) => {
               const isActive = activeSectionId === link.id;
               return (
-                <a
-                  key={link.id}
+                
+                 <a key={link.id}
                   href={link.href}
                   className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-[#00d4c8] after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-[#00d4c8] after:transition-all after:duration-300 hover:after:w-full${
-                    isActive ? " !text-[#00d4c8] after:!w-full" : ""
+                    isActive ? ' !text-[#00d4c8] after:!w-full' : ''
                   }`}
                   onClick={(e) => handleNavClick(e, link.id)}
-                  aria-current={isActive ? "true" : undefined}
+                  aria-current={isActive ? 'true' : undefined}
                 >
                   {link.label}
                 </a>
               );
             })}
-          <div className="flex flex-row justify-center items-center px-6 py-3.5 gap-10 bg-gradient-card border-t border-[rgba(0,128,128,0.3)] rounded-[30px]">
-            {navLinks.map((link) => (
-              <a
-                key={link.id}
-                href={link.href}
-                className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-primary after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-primary after:transition-all after:duration-300 hover:after:w-full ${
-                  activeSection === link.id ? 'text-primary after:!w-full' : ''
-                }`}
-                onClick={(e) => { e.preventDefault(); handleNavClick(link.id); }}
-                aria-current={activeSection === link.id ? 'true' : undefined}
-              >
-                {link.label}
-              </a>
-            ))}
           </div>
 
           {/* CTA Buttons */}
@@ -135,32 +103,21 @@ const Navbar: React.FC = () => {
               {navLinks.map((link) => {
                 const isActive = activeSectionId === link.id;
                 return (
-                  <a
-                    key={link.id}
+                  
+                   <a key={link.id}
                     href={link.href}
                     className={`no-underline text-base font-medium transition-colors duration-300 cursor-pointer ${
                       isActive
-                        ? "text-[#00d4c8]"
-                        : "text-[#E0E0E0] hover:text-[#00d4c8]"
+                        ? 'text-[#00d4c8]'
+                        : 'text-[#E0E0E0] hover:text-[#00d4c8]'
                     }`}
                     onClick={(e) => handleNavClick(e, link.id)}
-                    aria-current={isActive ? "true" : undefined}
+                    aria-current={isActive ? 'true' : undefined}
                   >
                     {link.label}
                   </a>
                 );
               })}
-              {navLinks.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.href}
-                  className={`text-[#E0E0E0] no-underline text-base font-medium transition-colors duration-300 cursor-pointer hover:text-primary ${activeSection === link.id ? 'text-primary' : ''}`}
-                  onClick={(e) => { e.preventDefault(); handleNavClick(link.id); }}
-                  aria-current={activeSection === link.id ? 'true' : undefined}
-                >
-                  {link.label}
-                </a>
-              ))}
             </div>
             <div className="flex flex-col gap-3">
               <Link to="/login" className="w-full text-center px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5">
