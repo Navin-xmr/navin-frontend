@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Camera, Save, CheckCircle2, Loader2, Link as LinkIcon, Building2 } from 'lucide-react';
 import { WalletConnectButton } from '../../../../components/auth/WalletConnectButton/WalletConnectButton';
 import NotificationPreferences from '../../../Settings/NotificationPreferences/NotificationPreferences';
+import MyTemplatesSection from '../../../Settings/sections/MyTemplatesSection';
 import './CompanySettings.css';
 
 const CompanySettings: React.FC = () => {
@@ -105,6 +106,8 @@ const CompanySettings: React.FC = () => {
 
               {/* Notification Preferences Section */}
               <NotificationPreferences />
+
+              <MyTemplatesSection />
 
               {/* Connected Wallet Section */}
               <section className="settings-card">
