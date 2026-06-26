@@ -73,15 +73,6 @@ export async function readContractState<T>(
   const contract = new Contract(contractId);
   const sorobanServer = getServer();
 
-  const result = await sorobanServer.simulateTransaction(
-    new TransactionBuilder(
-      await sorobanServer.getAccount("GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN"),
-      { fee: BASE_FEE, networkPassphrase: NETWORK_PASSPHRASE },
-    )
-      .addOperation(contract.call(method, ...args))
-      .setTimeout(30)
-      .build(),
-  );
   const dummyAccount = new Account(Keypair.random().publicKey(), "0");
   const tx = new TransactionBuilder(dummyAccount, {
     fee: BASE_FEE,

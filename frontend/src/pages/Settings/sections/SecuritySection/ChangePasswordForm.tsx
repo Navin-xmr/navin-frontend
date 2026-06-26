@@ -1,34 +1,28 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
-
-function passwordStrength(pw: string): { label: string; color: string; width: string } {
-  if (pw.length === 0) return { label: '', color: '', width: '0%' };
-  if (pw.length < 8) return { label: 'Too short', color: 'bg-red-500', width: '25%' };
-  const has = (re: RegExp) => re.test(pw);
-  const score = [has(/[A-Z]/), has(/[a-z]/), has(/\d/), has(/[^A-Za-z0-9]/), pw.length >= 12].filter(Boolean).length;
-  if (score <= 2) return { label: 'Weak', color: 'bg-orange-500', width: '40%' };
-  if (score === 3) return { label: 'Fair', color: 'bg-yellow-500', width: '60%' };
-  if (score === 4) return { label: 'Strong', color: 'bg-teal-400', width: '80%' };
-  return { label: 'Very strong', color: 'bg-green-400', width: '100%' };
-}
+import PasswordStrengthMeter from '../../../../components/ui/PasswordStrengthMeter';
 
 const inputCls = 'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] pr-10';
 
 interface FieldProps {
   label: string;
+  id: string;
   name: string;
   value: string;
   showValue: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onToggle: () => void;
+  ariaInvalid?: boolean;
+  ariaDescribedby?: string;
 }
 
-const PasswordField: React.FC<FieldProps> = ({ label, name, value, showValue, onChange, onToggle }) => (
+const PasswordField: React.FC<FieldProps> = ({ label, id, name, value, showValue, onChange, onToggle, ariaInvalid, ariaDescribedby }) => (
   <div>
-    <label className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
+    <label htmlFor={id} className="block text-xs font-medium text-slate-400 mb-1.5">{label}</label>
     <div className="relative">
       <input
+        id={id}
         name={name}
         type={showValue ? 'text' : 'password'}
         value={value}
@@ -36,6 +30,8 @@ const PasswordField: React.FC<FieldProps> = ({ label, name, value, showValue, on
         className={inputCls}
         placeholder="••••••••••••"
         required
+        aria-invalid={ariaInvalid ?? false}
+        aria-describedby={ariaDescribedby}
       />
       <button
         type="button"
@@ -54,7 +50,6 @@ const ChangePasswordForm: React.FC = () => {
   const [show, setShow] = useState({ current: false, next: false, confirm: false });
   const { isLoading, error, success, save } = useSettings();
 
-  const strength = passwordStrength(form.next);
   const mismatch = form.confirm !== '' && form.next !== form.confirm;
   const tooShort = form.next.length > 0 && form.next.length < 12;
 
@@ -76,20 +71,32 @@ const ChangePasswordForm: React.FC = () => {
         <Lock size={18} className="text-[#62ffff]" />
         <h3 className="font-semibold">Change Password</h3>
       </div>
-      <PasswordField label="Current Password" name="current" value={form.current} showValue={show.current} onChange={handleChange} onToggle={() => toggle('current')} />
-      <PasswordField label="New Password (min 12 chars)" name="next" value={form.next} showValue={show.next} onChange={handleChange} onToggle={() => toggle('next')} />
-      {form.next.length > 0 && (
-        <div>
-          <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden">
-            <div className={`h-full transition-all ${strength.color}`} style={{ width: strength.width }} />
-          </div>
-          <p className={`text-xs mt-1 ${tooShort ? 'text-red-400' : 'text-slate-400'}`}>
-            {tooShort ? 'Password must be at least 12 characters' : strength.label}
-          </p>
-        </div>
-      )}
-      <PasswordField label="Confirm New Password" name="confirm" value={form.confirm} showValue={show.confirm} onChange={handleChange} onToggle={() => toggle('confirm')} />
-      {mismatch && <p className="text-xs text-red-400">Passwords do not match</p>}
+      <PasswordField label="Current Password" id="cp-current" name="current" value={form.current} showValue={show.current} onChange={handleChange} onToggle={() => toggle('current')} />
+      <PasswordField
+        label="New Password (min 12 chars)"
+        id="cp-next"
+        name="next"
+        value={form.next}
+        showValue={show.next}
+        onChange={handleChange}
+        onToggle={() => toggle('next')}
+        ariaInvalid={tooShort}
+        ariaDescribedby={tooShort ? 'cp-next-error' : undefined}
+      />
+      <PasswordStrengthMeter password={form.next} />
+      {tooShort && <p id="cp-next-error" className="text-xs text-red-400" role="alert">Password must be at least 12 characters</p>}
+      <PasswordField
+        label="Confirm New Password"
+        id="cp-confirm"
+        name="confirm"
+        value={form.confirm}
+        showValue={show.confirm}
+        onChange={handleChange}
+        onToggle={() => toggle('confirm')}
+        ariaInvalid={mismatch}
+        ariaDescribedby={mismatch ? 'cp-confirm-error' : undefined}
+      />
+      {mismatch && <p id="cp-confirm-error" className="text-xs text-red-400" role="alert">Passwords do not match</p>}
       {error && <p className="text-sm text-red-400">{error}</p>}
       {success && <p className="text-sm text-green-400">{success}</p>}
       <button

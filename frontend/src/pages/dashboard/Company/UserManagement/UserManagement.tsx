@@ -1,7 +1,10 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical, X, Loader2, AlertTriangle } from 'lucide-react';
-import { usersApi } from '@services/api';
-import type { User as ApiUser, UserRole } from '@services/api';
+import {
+  Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical,
+  X, Loader2, AlertTriangle, Mail, RefreshCw, Trash2, Clock,
+} from 'lucide-react';
+import { usersApi, invitationsApi } from '@services/api';
+import type { User as ApiUser, UserRole, Invitation } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
 import Avatar from '../../../../components/ui/Avatar';
@@ -28,25 +31,30 @@ function mapApiUser(u: ApiUser): MappedUser {
 }
 
 type ActionMenuState = string | null;
+type InviteStep = 'form' | 'success';
 
 const UserManagement: React.FC = () => {
   const { addToast } = useToast();
   const [users, setUsers] = useState<MappedUser[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<ActionMenuState>(null);
   const [loading, setLoading] = useState(true);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [inviteStep, setInviteStep] = useState<InviteStep>('form');
 
   const inviteModalRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(inviteModalRef, isModalOpen, () => setIsModalOpen(false));
+  useFocusTrap(inviteModalRef, isModalOpen, () => closeModal());
 
-  // Modal Form State
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('Viewer');
+  const [inviteMessage, setInviteMessage] = useState('');
+  const [lastInvitedEmail, setLastInvitedEmail] = useState('');
 
   const itemsPerPage = 8;
 
@@ -63,9 +71,22 @@ const UserManagement: React.FC = () => {
     }
   }, []);
 
+  const fetchInvitations = useCallback(async () => {
+    try {
+      setInvitationsLoading(true);
+      const data = await invitationsApi.list();
+      setInvitations(data.filter((inv) => inv.status === 'pending'));
+    } catch {
+      // non-critical
+    } finally {
+      setInvitationsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+    fetchInvitations();
+  }, [fetchUsers, fetchInvitations]);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -104,11 +125,8 @@ const UserManagement: React.FC = () => {
     setUsers(users.map(u => u.id === id ? { ...u, status: newStatus } : u));
     setActiveMenu(null);
     try {
-      if (newStatus === 'Inactive') {
-        await usersApi.deactivate(id);
-      } else {
-        await usersApi.activate(id);
-      }
+      if (newStatus === 'Inactive') { await usersApi.deactivate(id); }
+      else { await usersApi.activate(id); }
       addToast(`User ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully`, 'success');
     } catch {
       setUsers(prev);
@@ -121,17 +139,48 @@ const UserManagement: React.FC = () => {
     if (!inviteEmail.trim()) return;
     setActionLoading('invite');
     try {
-      const newUser = await usersApi.invite({ email: inviteEmail, role: inviteRole });
-      setUsers([mapApiUser(newUser), ...users]);
-      setInviteEmail('');
-      setInviteRole('Viewer');
-      setIsModalOpen(false);
-      addToast(`Invitation sent to ${inviteEmail}`, 'success');
+      await invitationsApi.send({ email: inviteEmail, role: inviteRole, message: inviteMessage || undefined });
+      setLastInvitedEmail(inviteEmail);
+      setInviteStep('success');
+      await fetchInvitations();
     } catch {
       addToast('Failed to send invitation', 'error');
     } finally {
       setActionLoading(null);
     }
+  };
+
+  const handleResend = async (id: string, email: string) => {
+    setActionLoading(`resend-${id}`);
+    try {
+      await invitationsApi.resend(id);
+      addToast(`Invitation resent to ${email}`, 'success');
+    } catch {
+      addToast('Failed to resend invitation', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRevoke = async (id: string, email: string) => {
+    setActionLoading(`revoke-${id}`);
+    try {
+      await invitationsApi.revoke(id);
+      setInvitations((prev) => prev.filter((inv) => inv._id !== id));
+      addToast(`Invitation to ${email} revoked`, 'success');
+    } catch {
+      addToast('Failed to revoke invitation', 'error');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setInviteStep('form');
+    setInviteEmail('');
+    setInviteRole('Viewer');
+    setInviteMessage('');
   };
 
   if (error) {
@@ -162,9 +211,59 @@ const UserManagement: React.FC = () => {
         </div>
         <button className="invite-btn" onClick={() => setIsModalOpen(true)}>
           <Plus size={18} />
-          Invite User
+          Invite Member
         </button>
       </div>
+
+      {(invitations.length > 0 || invitationsLoading) && (
+        <div className="pending-invitations-section">
+          <div className="pending-header">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Clock size={16} style={{ color: '#f59e0b' }} />
+              <h2 className="pending-title">Pending Invitations</h2>
+              <span className="pending-count">{invitations.length}</span>
+            </div>
+          </div>
+          {invitationsLoading ? (
+            <div className="loading-state" style={{ padding: '16px 0' }}>
+              <Loader2 className="spin-icon" size={20} />
+              <p>Loading…</p>
+            </div>
+          ) : (
+            <div className="pending-list">
+              {invitations.map((inv) => (
+                <div key={inv._id} className="pending-item">
+                  <div className="pending-info">
+                    <div className="pending-avatar"><Mail size={16} /></div>
+                    <div>
+                      <span className="pending-email">{inv.email}</span>
+                      <span className="pending-role-badge">{inv.role}</span>
+                    </div>
+                  </div>
+                  <div className="pending-actions">
+                    <button
+                      className="pending-action-btn resend"
+                      disabled={actionLoading === `resend-${inv._id}`}
+                      onClick={() => handleResend(inv._id, inv.email)}
+                    >
+                      {actionLoading === `resend-${inv._id}` ? <Loader2 size={14} className="spin-icon" /> : <RefreshCw size={14} />}
+                      Resend
+                    </button>
+                    <button
+                      className="pending-action-btn revoke"
+                      disabled={actionLoading === `revoke-${inv._id}`}
+                      onClick={() => handleRevoke(inv._id, inv.email)}
+                    >
+                      {actionLoading === `revoke-${inv._id}` ? <Loader2 size={14} className="spin-icon" /> : <Trash2 size={14} />}
+                      Revoke
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="um-controls">
         <div className="search-bar">
@@ -173,22 +272,12 @@ const UserManagement: React.FC = () => {
             type="text"
             placeholder="Search by name or email..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
           />
         </div>
-
         <div className="filter-dropdown">
           <Filter className="filter-icon" size={18} />
-          <select
-            value={roleFilter}
-            onChange={(e) => {
-              setRoleFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
+          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }}>
             <option value="All">All Roles</option>
             <option value="Admin">Admin</option>
             <option value="Manager">Manager</option>
@@ -207,10 +296,7 @@ const UserManagement: React.FC = () => {
           <table className="um-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Last Login</th>
+                <th>User</th><th>Role</th><th>Status</th><th>Last Login</th>
                 <th className="actions-col">Actions</th>
               </tr>
             </thead>
@@ -225,54 +311,46 @@ const UserManagement: React.FC = () => {
                           <span className="user-name">{user.name}</span>
                           <span className="user-email">{user.email}</span>
                         </div>
+              {currentUsers.length > 0 ? currentUsers.map((user) => (
+                <tr key={user.id}>
+                  <td>
+                    <div className="user-info">
+                      <div className="user-avatar">{user.name.charAt(0).toUpperCase()}</div>
+                      <div className="user-details">
+                        <span className="user-name">{user.name}</span>
+                        <span className="user-email">{user.email}</span>
                       </div>
-                    </td>
-                    <td>
-                      <select
-                        className="inline-role-select"
-                        value={user.role}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Viewer">Viewer</option>
-                      </select>
-                    </td>
-                    <td>
-                      <span className={`status-badge ${user.status.toLowerCase()}`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="last-login">{user.lastLogin}</td>
-                    <td className="actions-col">
-                      <div className="action-menu-container">
-                        <button
-                          className="action-menu-btn"
-                          onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
-                        >
-                          <MoreVertical size={18} />
-                        </button>
-
-                        {activeMenu === user.id && (
-                          <div className="action-dropdown">
-                            <button onClick={() => toggleUserStatus(user.id)}>
-                              {user.status === 'Active' ? 'Deactivate' : 'Activate'}
-                            </button>
-                            <button onClick={() => setActiveMenu(null)}>
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="empty-state">
-                    No users found matching your criteria.
+                    </div>
+                  </td>
+                  <td>
+                    <select className="inline-role-select" value={user.role}
+                      onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}>
+                      <option value="Admin">Admin</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Viewer">Viewer</option>
+                    </select>
+                  </td>
+                  <td><span className={`status-badge ${user.status.toLowerCase()}`}>{user.status}</span></td>
+                  <td className="last-login">{user.lastLogin}</td>
+                  <td className="actions-col">
+                    <div className="action-menu-container">
+                      <button className="action-menu-btn"
+                        onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}>
+                        <MoreVertical size={18} />
+                      </button>
+                      {activeMenu === user.id && (
+                        <div className="action-dropdown">
+                          <button onClick={() => toggleUserStatus(user.id)}>
+                            {user.status === 'Active' ? 'Deactivate' : 'Activate'}
+                          </button>
+                          <button onClick={() => setActiveMenu(null)}>Edit</button>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
+              )) : (
+                <tr><td colSpan={5} className="empty-state">No users found matching your criteria.</td></tr>
               )}
             </tbody>
           </table>
@@ -285,19 +363,13 @@ const UserManagement: React.FC = () => {
             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
           </span>
           <div className="page-controls">
-            <button
-              className="page-btn"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            >
+            <button className="page-btn" disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}>
               <ChevronLeft size={16} />
             </button>
             <span className="current-page">{currentPage}</span>
-            <button
-              className="page-btn"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-            >
+            <button className="page-btn" disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -306,53 +378,60 @@ const UserManagement: React.FC = () => {
 
       {isModalOpen && (
         <div className="modal-overlay">
-          <div
-            ref={inviteModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="invite-modal-title"
-            tabIndex={-1}
-            className="invite-modal"
-          >
+          <div ref={inviteModalRef} role="dialog" aria-modal="true"
+            aria-labelledby="invite-modal-title" tabIndex={-1} className="invite-modal">
             <div className="modal-header">
-              <h2 id="invite-modal-title">Invite New User</h2>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}>
-                <X size={20} />
-              </button>
+              <h2 id="invite-modal-title">
+                {inviteStep === 'success' ? 'Invitation Sent!' : 'Invite Team Member'}
+              </h2>
+              <button className="close-btn" onClick={closeModal}><X size={20} /></button>
             </div>
-            <form onSubmit={handleInviteSubmit} className="modal-body">
-              <div className="form-group">
-                <label htmlFor="inviteEmail">Email Address</label>
-                <input
-                  type="email"
-                  id="inviteEmail"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  required
-                />
+            {inviteStep === 'success' ? (
+              <div className="modal-body invite-success">
+                <div className="success-icon"><Mail size={32} /></div>
+                <p className="success-message">
+                  An invitation has been sent to <strong>{lastInvitedEmail}</strong>.
+                  They'll receive an email with a link to create their account.
+                </p>
+                <div className="modal-footer">
+                  <button type="button" className="cancel-btn" onClick={closeModal}>Close</button>
+                  <button type="button" className="submit-btn" onClick={() => {
+                    setInviteStep('form'); setInviteEmail(''); setInviteMessage(''); setInviteRole('Viewer');
+                  }}>Invite Another</button>
+                </div>
               </div>
-              <div className="form-group">
-                <label htmlFor="inviteRole">Role</label>
-                <select
-                  id="inviteRole"
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as UserRole)}
-                >
-                  <option value="Admin">Admin - Full Access</option>
-                  <option value="Manager">Manager - Edit & View</option>
-                  <option value="Viewer">Viewer - Read Only</option>
-                </select>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn" disabled={!inviteEmail.trim() || actionLoading === 'invite'}>
-                  {actionLoading === 'invite' ? 'Sending...' : 'Send Invite'}
-                </button>
-              </div>
-            </form>
+            ) : (
+              <form onSubmit={handleInviteSubmit} className="modal-body">
+                <div className="form-group">
+                  <label htmlFor="inviteEmail">Email Address *</label>
+                  <input type="email" id="inviteEmail" value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="name@company.com" required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="inviteRole">Role *</label>
+                  <select id="inviteRole" value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as UserRole)}>
+                    <option value="Admin">Admin — Full access</option>
+                    <option value="Manager">Manager — Edit &amp; View</option>
+                    <option value="Viewer">Viewer — Read only</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="inviteMessage">Personal Message (optional)</label>
+                  <textarea id="inviteMessage" value={inviteMessage}
+                    onChange={(e) => setInviteMessage(e.target.value)}
+                    placeholder="Add a personal note to the invitation email…" rows={3} />
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="cancel-btn" onClick={closeModal}>Cancel</button>
+                  <button type="submit" className="submit-btn"
+                    disabled={!inviteEmail.trim() || actionLoading === 'invite'}>
+                    {actionLoading === 'invite' ? 'Sending…' : 'Send Invite'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
