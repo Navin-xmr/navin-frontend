@@ -24,6 +24,7 @@ import './App.css';
 
 // Eagerly loaded (critical path)
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
+import CustomerDashboard from './pages/dashboard/Customer/CustomerDashboard';
 import AnomalyAlertPanel from './pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel';
 import Shipments from './pages/Shipments/Shipments';
 import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
@@ -79,6 +80,13 @@ const router = createBrowserRouter([
               { path: '/dashboard/shipments/create', element: <CreateShipment /> },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
               { path: '/dashboard/calendar', element: S(<CalendarView />) },
+            ],
+          },
+          // Customer-only routes
+          {
+            element: <RoleGuard allowedRoles={['customer']} />,
+            children: [
+              { path: '/dashboard/customer', element: <CustomerDashboard /> },
             ],
           },
           // Shared routes (both roles)
