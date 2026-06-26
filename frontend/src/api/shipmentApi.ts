@@ -70,12 +70,21 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
     createdAt: String(shipment.createdAt),
     deliveryProof: shipment.deliveryProof?.url
       ? {
-          url: String(shipment.deliveryProof.url),
-          recipientSignatureName: String(shipment.deliveryProof.recipientSignatureName ?? ''),
-          uploadedAt: String(shipment.deliveryProof.uploadedAt ?? ''),
-        }
+        url: String(shipment.deliveryProof.url),
+        recipientSignatureName: String(shipment.deliveryProof.recipientSignatureName ?? ''),
+        uploadedAt: String(shipment.deliveryProof.uploadedAt ?? ''),
+      }
       : undefined,
   };
+};
+
+export type ShipmentWithGps = Shipment & {
+  lat?: number;
+  lng?: number;
+  trackingNumber?: string;
+  // Optional backend flags for coloring. These may be absent.
+  anomalyDetected?: boolean;
+  isDelayed?: boolean;
 };
 
 export const shipmentApi = {
@@ -103,6 +112,59 @@ export const shipmentApi = {
       meta: {
         page: typeof meta.page === 'number' ? meta.page : params.page ?? 1,
         limit: typeof meta.limit === 'number' ? meta.limit : params.limit ?? items.length,
+        total: typeof meta.total === 'number' ? meta.total : items.length,
+        ...meta,
+      },
+    };
+  },
+
+  async getAllInTransitWithGps(): Promise<ShipmentsResponse & { data: ShipmentWithGps[] }> {
+    const response = await axios.get<BackendResponse>('/api/shipments', {
+      params: { status: 'IN_TRANSIT', hasGPS: true },
+    });
+
+    const payload = response.data ?? {};
+    const items = Array.isArray(payload.data)
+      ? payload.data.map((s: BackendShipment) => {
+        // Extend the existing normalized payload with best-effort GPS fields.
+        const normalized = normalizeShipment(s) as Shipment;
+        const raw: Record<string, unknown> = s as unknown as Record<string, unknown>;
+
+        const lat =
+          typeof raw.lat === 'number'
+            ? raw.lat
+            : typeof raw.latitude === 'number'
+              ? raw.latitude
+              : undefined;
+        const lng =
+          typeof raw.lng === 'number'
+            ? raw.lng
+            : typeof raw.longitude === 'number'
+              ? raw.longitude
+              : undefined;
+
+        const anomalyDetected = typeof raw.anomalyDetected === 'boolean' ? raw.anomalyDetected : undefined;
+        const isDelayed = typeof raw.isDelayed === 'boolean' ? raw.isDelayed : undefined;
+        const trackingNumber = raw.trackingNumber != null ? String(raw.trackingNumber) : undefined;
+
+        return {
+          ...normalized,
+          lat,
+          lng,
+          anomalyDetected,
+          isDelayed,
+          trackingNumber,
+        } satisfies ShipmentWithGps;
+      })
+      : [];
+
+    const meta = payload.meta ?? {};
+
+    return {
+      data: items,
+      meta: {
+        page: typeof meta.page === 'number' ? meta.page : 1,
+        limit: typeof meta.limit === 'number' ? meta.limit : items.length,
         total: typeof meta.total === 'number' ? meta.total : items.length,
         ...meta,
       },
