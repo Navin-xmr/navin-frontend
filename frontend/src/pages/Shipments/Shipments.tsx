@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2, ChevronDown } from 'lucide-react';
+import { Download, Loader2, ChevronDown, List, LayoutGrid } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
@@ -8,6 +8,7 @@ import PriorityBadge from '../../components/ui/PriorityBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
 import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
+import ShipmentsKanban from './KanbanView/ShipmentsKanban';
 import './Shipments.css';
 
 function exportShipmentsToCSV(shipments: Shipment[]): void {
@@ -39,8 +40,10 @@ function exportShipmentsToCSV(shipments: Shipment[]): void {
 
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
+const VIEW_KEY = 'shipments-view';
 
 type PriorityFilter = 'ALL' | 'URGENT' | 'STANDARD' | 'ECONOMY';
+type ShipmentsView = 'list' | 'kanban';
 
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
@@ -52,6 +55,23 @@ const Shipments: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const loadingRef = useRef(false);
+
+  const [view, setView] = useState<ShipmentsView>(() => {
+    try {
+      return localStorage.getItem(VIEW_KEY) === 'kanban' ? 'kanban' : 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (next: ShipmentsView) => {
+    setView(next);
+    try {
+      localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      // ignore persistence failures
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
@@ -228,22 +248,58 @@ const Shipments: React.FC = () => {
     <div className="shipments-page">
       <div className="shipments-header">
         <h1>Shipments</h1>
-        <button
-          type="button"
-          className="export-csv-btn"
-          onClick={handleExportCSV}
-          disabled={isExporting || shipments.length === 0}
-          aria-label="Export shipments to CSV"
-        >
-          {isExporting ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Download size={16} />
-          )}
-          {isExporting ? 'Exporting…' : 'Export CSV'}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* List / Kanban view toggle */}
+          <div
+            className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
+            role="group"
+            aria-label="Toggle shipments view"
+          >
+            <button
+              type="button"
+              onClick={() => handleViewChange('list')}
+              aria-pressed={view === 'list'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                view === 'list' ? 'bg-[#62ffff] text-black' : 'text-[#94a3b8] hover:text-white'
+              }`}
+            >
+              <List size={14} />
+              List
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewChange('kanban')}
+              aria-pressed={view === 'kanban'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                view === 'kanban' ? 'bg-[#62ffff] text-black' : 'text-[#94a3b8] hover:text-white'
+              }`}
+            >
+              <LayoutGrid size={14} />
+              Kanban
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="export-csv-btn"
+            onClick={handleExportCSV}
+            disabled={isExporting || shipments.length === 0}
+            aria-label="Export shipments to CSV"
+          >
+            {isExporting ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
+            {isExporting ? 'Exporting…' : 'Export CSV'}
+          </button>
+        </div>
       </div>
 
+      {view === 'kanban' ? (
+        <ShipmentsKanban />
+      ) : (
+        <>
       {/* Saved filter chips */}
       {savedFilters.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4" aria-label="Saved filters">
@@ -486,6 +542,8 @@ const Shipments: React.FC = () => {
               {isAnyFilterActive ? `${filteredShipments.length} matching shipments` : `All ${total} shipments loaded`}
             </div>
           )}
+        </>
+      )}
         </>
       )}
     </div>
