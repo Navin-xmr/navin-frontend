@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
 import { useToast } from '@context/ToastContext';
+import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
+import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
+import { getTemplatePreview, toTemplateFields } from '@types/shipmentTemplate';
 import type { AxiosError } from 'axios';
 import './CreateShipment.css';
 
@@ -20,23 +23,59 @@ interface FormErrors {
     [key: string]: string;
 }
 
+const EMPTY_FORM: FormData = {
+    origin: '',
+    destination: '',
+    itemDescription: '',
+    weight: '',
+    recipientName: '',
+    recipientContact: '',
+    expectedDeliveryDate: '',
+};
+
 const CreateShipment: React.FC = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { addToast } = useToast();
-    const [formData, setFormData] = useState<FormData>({
-        origin: '',
-        destination: '',
-        itemDescription: '',
-        weight: '',
-        recipientName: '',
-        recipientContact: '',
-        expectedDeliveryDate: '',
-    });
-
+    const { templates, isLoading: templatesLoading, createTemplate } = useShipmentTemplates();
+    const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [shipmentId, setShipmentId] = useState('');
+    const [selectedTemplateId, setSelectedTemplateId] = useState('');
+    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+
+    const templateOptions = useMemo(
+        () =>
+            templates.map((template) => ({
+                id: template.id,
+                label: `${template.name} — ${getTemplatePreview(template)}`,
+            })),
+        [templates],
+    );
+
+    const applyTemplate = (templateId: string) => {
+        const template = templates.find((item) => item.id === templateId);
+        if (!template) return;
+
+        setFormData((prev) => ({
+            ...prev,
+            ...template.fields,
+            expectedDeliveryDate: prev.expectedDeliveryDate,
+        }));
+        setSelectedTemplateId(templateId);
+        setErrors({});
+        addToast(`Loaded template "${template.name}"`, 'success');
+    };
+
+    useEffect(() => {
+        const templateId = searchParams.get('template');
+        if (!templateId || templatesLoading || templates.length === 0) return;
+        if (selectedTemplateId === templateId) return;
+        applyTemplate(templateId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, templates, templatesLoading]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -56,6 +95,18 @@ const CreateShipment: React.FC = () => {
         if (!formData.recipientContact.trim()) newErrors.recipientContact = 'Recipient contact is required';
         if (!formData.expectedDeliveryDate) newErrors.expectedDeliveryDate = 'Expected delivery date is required';
 
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const validateTemplateFields = (): boolean => {
+        const newErrors: FormErrors = {};
+        if (!formData.origin.trim()) newErrors.origin = 'Origin address is required';
+        if (!formData.destination.trim()) newErrors.destination = 'Destination address is required';
+        if (!formData.itemDescription.trim()) newErrors.itemDescription = 'Item description is required';
+        if (!formData.weight || Number(formData.weight) <= 0) newErrors.weight = 'Valid weight is required';
+        if (!formData.recipientName.trim()) newErrors.recipientName = 'Recipient name is required';
+        if (!formData.recipientContact.trim()) newErrors.recipientContact = 'Recipient contact is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -99,6 +150,33 @@ const CreateShipment: React.FC = () => {
         }
     };
 
+    const handleSaveTemplate = async (name: string) => {
+        if (!validateTemplateFields()) {
+            throw new Error('Fill in all reusable shipment fields before saving a template.');
+        }
+
+        const duplicate = templates.some(
+            (template) => template.name.toLowerCase() === name.trim().toLowerCase(),
+        );
+        if (duplicate) {
+            throw new Error('A template with this name already exists.');
+        }
+
+        await createTemplate({
+            name,
+            fields: toTemplateFields(formData),
+        });
+        addToast('Template saved successfully!', 'success');
+    };
+
+    const handleOpenSaveModal = () => {
+        if (!validateTemplateFields()) {
+            addToast('Fill in all reusable shipment fields before saving a template.', 'error');
+            return;
+        }
+        setIsSaveModalOpen(true);
+    };
+
     if (success) {
         return (
             <div className="create-shipment-container success-view">
@@ -116,15 +194,8 @@ const CreateShipment: React.FC = () => {
                         </button>
                         <button className="secondary-btn" onClick={() => {
                             setSuccess(false);
-                            setFormData({
-                                origin: '',
-                                destination: '',
-                                itemDescription: '',
-                                weight: '',
-                                recipientName: '',
-                                recipientContact: '',
-                                expectedDeliveryDate: '',
-                            });
+                            setFormData(EMPTY_FORM);
+                            setSelectedTemplateId('');
                         }}>
                             Create Another
                         </button>
@@ -148,6 +219,36 @@ const CreateShipment: React.FC = () => {
                   <Package className="form-icon" size={28} />
                   <h2>Create New Shipment</h2>
                   <p>Enter the shipment details to register it on the blockchain.</p>
+              </div>
+
+              <div className="template-toolbar">
+                  <div className="form-group template-select-group">
+                      <label htmlFor="load-template">Load Template</label>
+                      <select
+                          id="load-template"
+                          value={selectedTemplateId}
+                          onChange={(e) => {
+                              const templateId = e.target.value;
+                              setSelectedTemplateId(templateId);
+                              if (templateId) applyTemplate(templateId);
+                          }}
+                          disabled={templatesLoading || templates.length === 0}
+                          className="template-select"
+                      >
+                          <option value="">
+                              {templatesLoading
+                                  ? 'Loading templates…'
+                                  : templates.length === 0
+                                    ? 'No saved templates'
+                                    : 'Select a template'}
+                          </option>
+                          {templateOptions.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                  {option.label}
+                              </option>
+                          ))}
+                      </select>
+                  </div>
               </div>
 
               <form onSubmit={handleSubmit} className="shipment-form">
@@ -272,6 +373,9 @@ const CreateShipment: React.FC = () => {
                       <button type="button" className="cancel-btn" onClick={() => navigate(-1)} disabled={loading}>
                           Cancel
                       </button>
+                      <button type="button" className="template-btn" onClick={handleOpenSaveModal} disabled={loading}>
+                          Save as Template
+                      </button>
                       <button type="submit" className="submit-btn" disabled={loading}>
                           {loading ? (
                               <>
@@ -285,6 +389,12 @@ const CreateShipment: React.FC = () => {
                   </div>
               </form>
           </div>
+
+          <SaveTemplateModal
+              isOpen={isSaveModalOpen}
+              onClose={() => setIsSaveModalOpen(false)}
+              onSave={handleSaveTemplate}
+          />
     </div>
   );
 };
