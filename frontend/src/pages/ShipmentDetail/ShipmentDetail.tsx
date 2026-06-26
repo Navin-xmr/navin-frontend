@@ -16,10 +16,12 @@ import EscrowStatus from "./EscrowStatus/EscrowStatus";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { useAuthContext } from "../../context/AuthContext";
 import { can } from "../../utils/rbac";
+import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { role } = useAuthContext();
+    const isOnline = useOnlineStatus();
 
     const [currentStatus, setCurrentStatus] = useState("IN_TRANSIT");
 
@@ -34,13 +36,9 @@ const ShipmentDetail: React.FC = () => {
         }
     }, [statusEvent, id]);
 
-import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
-
-const ShipmentDetail: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const isOnline = useOnlineStatus();
     const shipmentHeaderData = {
         shipmentId: id ? `#${id}` : "#SHP-992834",
+        trackingNumber: id ?? "SHP-992834", // TODO: swap for real public tracking token once backend exposes one
         status: currentStatus,
         originAddress: "New York Distribution Center, NY 10001",
         destinationAddress: "123 Main Street, Boston, MA 02101",
@@ -133,7 +131,6 @@ const ShipmentDetail: React.FC = () => {
                         }}
                     />
                 )}
-                <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
                 <DocumentsSection
                     shipmentId={id || shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}
@@ -145,17 +142,6 @@ const ShipmentDetail: React.FC = () => {
                         Upload Proof requires an internet connection.
                     </div>
                 )}
-                <DeliveryConfirmation
-                    shipmentId={shipmentHeaderData.shipmentId}
-                    status={shipmentHeaderData.status}
-                    onConfirm={async (id, rating, feedback) => {
-                        console.log("Delivery confirmed", {
-                            id,
-                            rating,
-                            feedback,
-                        });
-                    }}
-                />
                 <NotesSection
                     shipmentId={id ?? shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}
