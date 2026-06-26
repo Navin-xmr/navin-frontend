@@ -2,6 +2,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap");
 @import "tailwindcss";
 
+/* ── Global smooth scrolling ── */
+html {
+  scroll-behavior: smooth;
+}
+
 /* ── Shared keyframe animations (used by migrated components) ── */
 @keyframes pulse-glow {
   0%,
@@ -127,6 +132,36 @@
 }
 .animate-fade-in-up {
   animation: fade-in-up 1s ease-out;
+}
+
+@keyframes logo-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.logo-strip-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+.logo-strip-track {
+  display: flex;
+  width: max-content;
+  gap: 2.5rem;
+  animation: logo-scroll 28s linear infinite;
+}
+
+.logo-strip-wrapper:hover .logo-strip-track {
+  animation-play-state: paused;
+}
+
+@media print {
+  body > *:not(#shipment-print-root) {
+    display: none !important;
+  }
+  #shipment-print-root {
+    display: block !important;
+  }
 }
 .animate-spin-svg {
   animation: spin 2s linear infinite;

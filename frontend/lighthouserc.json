@@ -1,0 +1,17 @@
+{
+  "ci": {
+    "assert": {
+      "assertions": {
+        "first-contentful-paint": ["warn", { "maxNumericValue": 2000 }],
+        "largest-contentful-paint": ["warn", { "maxNumericValue": 2500 }],
+        "total-blocking-time": ["warn", { "maxNumericValue": 300 }],
+        "cumulative-layout-shift": ["warn", { "maxNumericValue": 0.1 }]
+      }
+    },
+    "collect": {
+      "url": ["http://localhost:4173/"],
+      "startServerCommand": "pnpm run preview",
+      "numberOfRuns": 1
+    }
+  }
+}

@@ -537,3 +537,71 @@
     width: auto;
   }
 }
+
+/* ── Pending Invitations ── */
+.pending-invitations-section {
+  background-color: #14171e;
+  border: 1px solid #2d3748;
+  border-left: 3px solid #f59e0b;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.pending-header { display: flex; align-items: center; margin-bottom: 12px; }
+.pending-title { font-size: 14px; font-weight: 600; color: #F1F5F9; margin: 0; }
+.pending-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  background-color: rgba(245,158,11,0.15); color: #f59e0b;
+  border-radius: 999px; font-size: 11px; font-weight: 700;
+  padding: 1px 7px; min-width: 20px;
+}
+.pending-list { display: flex; flex-direction: column; gap: 8px; }
+.pending-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background-color: rgba(30,41,59,0.4); border: 1px solid #1E293B;
+  border-radius: 8px; padding: 10px 14px;
+}
+.pending-info { display: flex; align-items: center; gap: 10px; }
+.pending-avatar {
+  width: 32px; height: 32px; background-color: rgba(245,158,11,0.1);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #f59e0b; flex-shrink: 0;
+}
+.pending-email { font-size: 13px; font-weight: 500; color: #E2E8F0; margin-right: 8px; }
+.pending-role-badge {
+  font-size: 11px; font-weight: 500; color: #94a3b8;
+  background-color: #1e293b; border-radius: 4px; padding: 2px 8px;
+}
+.pending-actions { display: flex; gap: 8px; }
+.pending-action-btn {
+  display: flex; align-items: center; gap: 5px;
+  border: none; border-radius: 6px; padding: 6px 12px;
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+}
+.pending-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pending-action-btn.resend { background-color: rgba(59,130,246,0.1); color: #60a5fa; }
+.pending-action-btn.resend:hover:not(:disabled) { background-color: rgba(59,130,246,0.2); }
+.pending-action-btn.revoke { background-color: rgba(239,68,68,0.08); color: #f87171; }
+.pending-action-btn.revoke:hover:not(:disabled) { background-color: rgba(239,68,68,0.15); }
+
+/* ── Form groups (textarea) ── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 13px; font-weight: 500; color: #94A3B8; }
+.form-group input, .form-group select, .form-group textarea {
+  background-color: #0b0e14; border: 1px solid #1E293B; border-radius: 8px;
+  padding: 10px 14px; color: #F1F5F9; font-size: 14px; outline: none;
+  font-family: inherit; transition: border-color 0.2s;
+}
+.form-group textarea { resize: vertical; min-height: 72px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #3B82F6; }
+.form-group select option { background-color: #14171E; }
+
+/* ── Invite success state ── */
+.invite-success { align-items: center; text-align: center; }
+.success-icon {
+  width: 56px; height: 56px; background-color: rgba(16,185,129,0.1);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #10B981; margin-bottom: 4px;
+}
+.success-message { color: #94A3B8; font-size: 14px; line-height: 1.6; margin: 0; }
+.success-message strong { color: #F1F5F9; }

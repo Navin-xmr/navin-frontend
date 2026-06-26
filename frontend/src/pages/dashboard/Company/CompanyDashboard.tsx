@@ -8,6 +8,41 @@ import {
 import { QuickActionsCard } from './QuickActions';
 import RecentShipments from './RecentShipments/RecentShipments';
 import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
+import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
+import type { TourStep } from '@components/onboarding/OnboardingTour';
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'tour-welcome',
+    heading: 'Welcome to Navin 🎉',
+    body: 'This is your logistics command center. Monitor shipments, track performance, and manage your team — all in one place.',
+    placement: 'bottom',
+  },
+  {
+    targetId: 'tour-create-shipment',
+    heading: 'Create Your First Shipment',
+    body: 'Click here to create a new shipment, assign routes, set milestones, and configure automated settlements.',
+    placement: 'bottom',
+  },
+  {
+    targetId: 'tour-shipments-link',
+    heading: 'Track Shipments',
+    body: 'View all active and historical shipments with real-time on-chain milestone updates and IoT sensor data.',
+    placement: 'right',
+  },
+  {
+    targetId: 'tour-settlements-link',
+    heading: 'Automated Settlements',
+    body: 'Settlements trigger automatically when delivery milestones are verified on the Stellar blockchain.',
+    placement: 'right',
+  },
+  {
+    targetId: 'tour-wallet',
+    heading: 'Connect Your Stellar Wallet',
+    body: 'Connect your Stellar wallet to sign settlement transactions and interact with Soroban smart contracts.',
+    placement: 'bottom',
+  },
+];
 
 const TrendIcon = ({ up }: { up: boolean }) => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,6 +62,7 @@ const stats = [
 const CompanyDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -34,6 +70,7 @@ const CompanyDashboard: React.FC = () => {
         setIsLoading(true);
         await new Promise((resolve) => setTimeout(resolve, 1200));
         setIsLoading(false);
+        if (!isTourComplete()) setShowTour(true);
       } catch {
         setHasError(true);
         setIsLoading(false);
@@ -60,6 +97,8 @@ const CompanyDashboard: React.FC = () => {
   return (
     <div className="font-sans text-white bg-transparent w-full max-w-[1080px] mx-auto min-h-[calc(100vh-72px)] px-[46px] py-6 flex flex-col gap-8 max-md:px-4 max-md:gap-6 max-md:pb-[90px]">
 
+      {showTour && <OnboardingTour steps={TOUR_STEPS} onClose={() => setShowTour(false)} />}
+
       {/* Mobile branded header */}
       <div className="hidden max-md:flex items-center justify-between py-3">
         <div className="flex items-center gap-2.5">
@@ -74,7 +113,7 @@ const CompanyDashboard: React.FC = () => {
       </div>
 
       {/* Title */}
-      <div className="flex justify-between items-end max-md:flex-col max-md:items-start max-md:gap-1">
+      <div className="flex justify-between items-end max-md:flex-col max-md:items-start max-md:gap-1" data-tour-id="tour-welcome">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1 max-md:text-[22px] max-md:font-bold">Logistics Overview</h1>
           <p className="text-[#94a3b8] text-sm m-0">Blockchain-synced real-time data</p>
@@ -109,7 +148,7 @@ const CompanyDashboard: React.FC = () => {
         </div>
 
         {/* Quick Actions — top-right, desktop only */}
-        <div className="max-md:hidden">
+        <div className="max-md:hidden" data-tour-id="tour-create-shipment">
           <QuickActionsCard />
         </div>
       </div>

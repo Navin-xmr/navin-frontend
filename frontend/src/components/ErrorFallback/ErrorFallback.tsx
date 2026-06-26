@@ -1,12 +1,15 @@
 import React from 'react';
 
 interface ErrorFallbackProps {
-  error: Error;
-  componentStack: string | null;
-  resetError: () => void;
+  error: unknown;
+  componentStack?: string | null;
+  eventId?: string;
+  resetError?: () => void;
 }
 
-const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
+function ErrorFallback({ error, resetError }: ErrorFallbackProps): React.ReactElement {
+  const message = error instanceof Error ? error.message : String(error);
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-white">
       <div className="max-w-lg text-center">
@@ -22,14 +25,16 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
           </p>
         </div>
         <pre className="bg-gray-100 dark:bg-[rgba(0,0,0,0.6)] p-4 rounded-lg text-xs text-left overflow-auto max-h-40 whitespace-pre-wrap text-gray-700 dark:text-gray-300 mb-6">
-          {error.message}
+          {message}
         </pre>
-        <button
-          onClick={resetError}
-          className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors"
-        >
-          Try Again
-        </button>
+        {resetError && (
+          <button
+            onClick={resetError}
+            className="px-6 py-3 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 transition-colors"
+          >
+            Try Again
+          </button>
+        )}
       </div>
     </div>
   );

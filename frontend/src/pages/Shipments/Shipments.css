@@ -3,6 +3,44 @@
   padding: 24px;
 }
 
+.shipments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.shipments-header h1 {
+  margin: 0;
+}
+
+.export-csv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(98, 255, 255, 0.3);
+  border-radius: 8px;
+  color: #62ffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.export-csv-btn:hover:not(:disabled) {
+  background: rgba(98, 255, 255, 0.08);
+  border-color: rgba(98, 255, 255, 0.5);
+}
+
+.export-csv-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .shipments-table {
   width: 100%;
   border-collapse: collapse;

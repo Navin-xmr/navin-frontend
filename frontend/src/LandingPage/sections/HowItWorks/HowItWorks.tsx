@@ -1,6 +1,6 @@
 function HowItWorks() {
     return (
-        <section className="py-20">
+        <section id="how-it-works" className="py-20">
             <h3 className="font-display font-normal text-[1.5rem] md:text-[2.25rem] lg:text-[3.25rem] mb-12">
                 <span className="text-[#62ffff]">How Navin</span> Works
             </h3>

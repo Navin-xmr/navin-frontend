@@ -200,15 +200,26 @@ const Login: React.FC = () => {
                     </button>
                 </form>
 
-                <p className="text-center text-[0.9rem] text-[rgba(255,255,255,0.6)] mt-6">
-                    Don't have an account?{" "}
-                    <Link
-                        to="/signup"
-                        className="text-[#00DAC1] no-underline font-semibold hover:underline"
-                    >
-                        Sign Up
-                    </Link>
-                </p>
+                <div className="flex flex-col gap-2 mt-6 text-center">
+                    <p className="text-[0.9rem] text-[rgba(255,255,255,0.6)]">
+                        Don't have an account?{" "}
+                        <Link
+                            to="/signup"
+                            className="text-[#00DAC1] no-underline font-semibold hover:underline"
+                        >
+                            Sign Up
+                        </Link>
+                    </p>
+                    <p className="text-[0.9rem] text-[rgba(255,255,255,0.6)]">
+                        Registering a company?{" "}
+                        <Link
+                            to="/register/company"
+                            className="text-[#00DAC1] no-underline font-semibold hover:underline"
+                        >
+                            Create Company Account
+                        </Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
