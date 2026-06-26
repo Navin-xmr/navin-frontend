@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Loader2 } from 'lucide-react';
-import { shipmentApi, type Shipment } from '../../api/shipmentApi';
+import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
+import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import './Shipments.css';
@@ -51,6 +52,7 @@ const Shipments: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
+  const [priorityFilter, setPriorityFilter] = useState<'ALL' | ShipmentPriority>('ALL');
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState('');
   const [savedFilters, setSavedFilters] = useState<{
@@ -91,8 +93,12 @@ const Shipments: React.FC = () => {
       result = result.filter((s) => new Date(s.createdAt) >= limitDate);
     }
 
+    if (priorityFilter !== 'ALL') {
+      result = result.filter((s) => s.priority === priorityFilter);
+    }
+
     return result;
-  }, [shipments, searchQuery, statusFilter, timeframeFilter]);
+  }, [shipments, searchQuery, statusFilter, timeframeFilter, priorityFilter]);
 
   const handleSaveFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +196,7 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL';
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL' || priorityFilter !== 'ALL';
   const isEmpty = !isLoading && !error && shipments.length === 0;
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
@@ -276,6 +282,19 @@ const Shipments: React.FC = () => {
           <option value="90" className="bg-[#121620]">Last 90 Days</option>
         </select>
 
+        {/* Priority Filter */}
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value as 'ALL' | ShipmentPriority)}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Priority"
+        >
+          <option value="ALL" className="bg-[#121620]">All Priorities</option>
+          <option value="URGENT" className="bg-[#121620]">Urgent</option>
+          <option value="STANDARD" className="bg-[#121620]">Standard</option>
+          <option value="ECONOMY" className="bg-[#121620]">Economy</option>
+        </select>
+
         {/* Save Current Filters Button / Inline Form */}
         {!isSavingFilter ? (
           <button
@@ -342,6 +361,7 @@ const Shipments: React.FC = () => {
                 <th>Origin</th>
                 <th>Destination</th>
                 <th>Status</th>
+                <th>Priority</th>
                 <th>Created Date</th>
                 <th>Actions</th>
               </tr>
@@ -383,6 +403,9 @@ const Shipments: React.FC = () => {
                       <td>{shipment.destination}</td>
                       <td>
                         <StatusBadge status={shipment.status} />
+                      </td>
+                      <td>
+                        <PriorityBadge priority={shipment.priority} />
                       </td>
                       <td>{safeFormatDate(shipment.createdAt)}</td>
                       <td>

@@ -1,12 +1,15 @@
 import axios from 'axios';
 import type { ShipmentStatus } from '../services/api/endpoints/shipments';
 
+export type ShipmentPriority = 'URGENT' | 'STANDARD' | 'ECONOMY';
+
 export interface Shipment {
   id: string;
   origin: string;
   destination: string;
   status: ShipmentStatus;
   createdAt: string;
+  priority?: ShipmentPriority;
   deliveryProof?: {
     url: string;
     recipientSignatureName: string;
@@ -58,7 +61,14 @@ const STATUS_MAP: Record<string, ShipmentStatus> = {
   CANCELLED: 'CANCELLED',
 };
 
+const PRIORITY_MAP: Record<string, ShipmentPriority> = {
+  URGENT: 'URGENT',
+  STANDARD: 'STANDARD',
+  ECONOMY: 'ECONOMY',
+};
+
 const normalizeShipment = (shipment: BackendShipment): Shipment => {
+  const rawPriority = shipment.priority ? String(shipment.priority).toUpperCase() : undefined;
   return {
     id: String(shipment.id),
     origin: String(shipment.origin),
@@ -68,6 +78,7 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
       (shipment.status as ShipmentStatus) ??
       'CREATED',
     createdAt: String(shipment.createdAt),
+    priority: rawPriority ? (PRIORITY_MAP[rawPriority] ?? undefined) : undefined,
     deliveryProof: shipment.deliveryProof?.url
       ? {
           url: String(shipment.deliveryProof.url),
@@ -107,5 +118,9 @@ export const shipmentApi = {
         ...meta,
       },
     };
+  },
+
+  async patchPriority(id: string, priority: ShipmentPriority): Promise<void> {
+    await axios.patch(`/api/shipments/${id}`, { priority });
   },
 };
