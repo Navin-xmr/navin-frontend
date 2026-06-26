@@ -8,7 +8,7 @@ import MilestoneTimeline, {
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import ShipmentMap from "./ShipmentMap/ShipmentMap";
 import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
-import DocumentsSection from "./DocumentsSection/DocumentsSection";
+import DocumentsSection from "../Shipment/sections/DocumentsSection/DocumentsSection";
 import DeliveryConfirmation from "../../components/shipment/DeliveryConfirmation/DeliveryConfirmation";
 import PaymentStatus, { PaymentData } from "./PaymentStatus/PaymentStatus";
 import SensorDataCards, { SensorData } from "./SensorDataCards/SensorDataCards";
