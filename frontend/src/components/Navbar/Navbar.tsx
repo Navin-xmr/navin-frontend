@@ -1,3 +1,16 @@
+import React, { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X } from "lucide-react";
+import { useScrollSpy } from "../../hooks/useScrollSpy";
+
+const SECTION_IDS = ["hero", "why-navin", "features", "how-it-works", "faq"] as const;
+
+const navLinks = [
+  { id: "hero",         label: "Hero",         href: "#hero" },
+  { id: "why-navin",    label: "Why Navin",    href: "#why-navin" },
+  { id: "features",     label: "Features",     href: "#features" },
+  { id: "how-it-works", label: "How It Works", href: "#how-it-works" },
+  { id: "faq",          label: "FAQ",          href: "#faq" },
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -58,6 +71,7 @@ const Navbar: React.FC = () => {
               const isActive = activeSectionId === link.id;
               return (
                 
+                  < a key={link.id}
                  <a key={link.id}
                   href={link.href}
                   className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-[#00d4c8] after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-[#00d4c8] after:transition-all after:duration-300 hover:after:w-full${
@@ -104,6 +118,7 @@ const Navbar: React.FC = () => {
                 const isActive = activeSectionId === link.id;
                 return (
                   
+                    < a key={link.id}
                    <a key={link.id}
                     href={link.href}
                     className={`no-underline text-base font-medium transition-colors duration-300 cursor-pointer ${
