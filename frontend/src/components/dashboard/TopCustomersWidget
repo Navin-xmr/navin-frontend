@@ -1,0 +1,182 @@
+import React, { useState, useEffect } from "react";
+
+export interface CustomerStat {
+  id: string;
+  name: string;
+  avatarUrl?: string;
+  shipmentCount: number;
+  totalRevenue: number;
+  momChange: number; // e.g., 0.12 for +12%, -0.05 for -5%
+  sparklineData: number[]; // 7 numbers for the 7-day trend
+}
+
+interface TopCustomersWidgetProps {
+  fetchDataFn: () => Promise<CustomerStat[]>;
+  onNavigateToDetail: (id: string) => void;
+  onNavigateToAll: () => void;
+}
+
+type SortMetric = "revenue" | "volume";
+
+export const TopCustomersWidget: React.FC<TopCustomersWidgetProps> = ({
+  fetchDataFn,
+  onNavigateToDetail,
+  onNavigateToAll,
+}) => {
+  const [data, setData] = useState<CustomerStat[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [metric, setMetric] = useState<SortMetric>("revenue");
+
+  useEffect(() => {
+    fetchDataFn()
+      .then((res) => {
+        setData(res);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [fetchDataFn]);
+
+  // Handle sorting based on the active metrics toggle
+  const sortedCustomers = [...data]
+    .sort((a, b) => {
+      if (metric === "revenue") return b.totalRevenue - a.totalRevenue;
+      return b.shipmentCount - a.shipmentCount;
+    })
+    .slice(0, 10);
+
+  // Quick Inline SVG Sparkline builder
+  const renderSparkline = (points: number[]) => {
+    if (!points || points.length < 2) return null;
+    const max = Math.max(...points);
+    const min = Math.min(...points);
+    const range = max - min === 0 ? 1 : max - min;
+    
+    const width = 60;
+    const height = 20;
+    const coordinates = points.map((val, index) => {
+      const x = (index / (points.length - 1)) * width;
+      const y = height - ((val - min) / range) * height;
+      return `${x},${y}`;
+    }).join(" ");
+
+    return (
+      <svg width={width} height={height} className="overflow-visible">
+        <polyline
+          fill="none"
+          stroke="#3b82f6"
+          strokeWidth="1.5"
+          points={coordinates}
+        />
+      </svg>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 space-y-4 animate-pulse">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 w-1/3 rounded" />
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-4 h-12 bg-gray-100 dark:bg-gray-800 rounded-xl px-4" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full">
+      {/* Header with Segmented Toggle */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Top Customers</h3>
+          <p className="text-xs text-gray-500">Value and performance rankings</p>
+        </div>
+        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl border border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setMetric("revenue")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              metric === "revenue"
+                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            By Revenue
+          </button>
+          <button
+            onClick={() => setMetric("volume")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+              metric === "volume"
+                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm"
+                : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            By Volume
+          </button>
+        </div>
+      </div>
+
+      {/* Leaderboard Table Grid */}
+      <div className="flex-1 overflow-x-auto space-y-2 min-w-full">
+        {sortedCustomers.map((customer, index) => {
+          const isPositive = customer.momChange >= 0;
+          return (
+            <div
+              key={customer.id}
+              onClick={() => onNavigateToDetail(customer.id)}
+              className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition border border-transparent hover:border-gray-100 dark:hover:border-gray-800 minimal-row-gap"
+            >
+              <div className="flex items-center gap-3">
+                <span className="w-5 text-sm font-bold text-gray-400 text-center">{index + 1}</span>
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center font-bold text-sm text-gray-600 dark:text-gray-300 overflow-hidden">
+                  {customer.avatarUrl ? (
+                    <img src={customer.avatarUrl} alt={customer.name} className="object-cover w-full h-full" />
+                  ) : (
+                    customer.name.charAt(0)
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate max-w-[140px]">
+                    {customer.name}
+                  </h4>
+                  <p className="text-xs text-gray-500">
+                    {customer.shipmentCount} shipments
+                  </p>
+                </div>
+              </div>
+
+              {/* Data metrics / sparkline layer */}
+              <div className="flex items-center gap-6">
+                <div className="hidden md:block">{renderSparkline(customer.sparklineData)}</div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                    ${customer.totalRevenue.toLocaleString()}
+                  </p>
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                      isPositive
+                        ? "bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400"
+                        : "bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400"
+                    }`}
+                  >
+                    {isPositive ? "+" : ""}{(customer.momChange * 100).toFixed(1)}% MoM
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer View All Link */}
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 text-center">
+        <button
+          onClick={onNavigateToAll}
+          className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400"
+        >
+          View All Customer Analytics →
+        </button>
+      </div>
+    </div>
+  );
+};
