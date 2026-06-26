@@ -46,9 +46,11 @@ const ShipmentDetail: React.FC = () => {
         destinationAddress: "123 Main Street, Boston, MA 02101",
         expectedDeliveryDate: "Oct 24, 2026 by 5:00 PM EST",
         userRole: (role ?? "customer") as "company" | "customer",
+        priority: "STANDARD" as const,
     };
 
     const handleUpdateStatus = () => { console.log("Update status clicked"); };
+    const handleUpdatePriority = (priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => { console.log("Update priority clicked", priority); };
     const handleTrack = () => { console.log("Track clicked"); };
 
     const mockPaymentData: PaymentData | null = {
@@ -105,6 +107,7 @@ const ShipmentDetail: React.FC = () => {
                     <ShipmentDetailHeader
                         {...shipmentHeaderData}
                         onUpdateStatus={handleUpdateStatus}
+                        onUpdatePriority={handleUpdatePriority}
                         onTrack={handleTrack}
                     />
                     <div className="h-px bg-[rgba(0,212,200,0.2)] my-8" />

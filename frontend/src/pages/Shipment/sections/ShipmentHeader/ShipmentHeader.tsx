@@ -1,7 +1,8 @@
 import { safeFormatDate } from '../../../../utils/safeFormat';
 import React, { useState } from 'react';
-import { Download, Share2, MapPin, Printer } from 'lucide-react';
+import { Download, Share2, MapPin, Printer, ChevronDown } from 'lucide-react';
 import { StatusBadge } from '../../../../components/ui/StatusBadge/StatusBadge';
+import PriorityBadge from '../../../../components/ui/PriorityBadge';
 import type { ShipmentStatus } from '../../../../services/api/endpoints/shipments';
 import ShipmentPrintView from '../PrintView/ShipmentPrintView';
 import './ShipmentHeader.css';
@@ -21,9 +22,12 @@ export interface ShipmentHeaderProps {
   expectedDelivery: string;
   trackingNumber?: string;
   stellarTxHash?: string;
+  priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';
+  userRole?: 'company' | 'customer';
   onTrack?: () => void;
   onDownloadProof?: () => void;
   onShare?: () => void;
+  onUpdatePriority?: (priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => void;
 }
 
 export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
@@ -35,11 +39,16 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
   expectedDelivery,
   trackingNumber,
   stellarTxHash,
+  priority,
+  userRole = 'customer',
   onTrack = () => console.log('Track clicked'),
   onDownloadProof = () => console.log('Download Proof clicked'),
   onShare = () => console.log('Share clicked'),
+  onUpdatePriority,
 }) => {
   const [printing, setPrinting] = useState(false);
+  const [showPriorityMenu, setShowPriorityMenu] = useState(false);
+  const isCompanyUser = userRole === 'company';
 
   return (
     <header className="shipment-header">
@@ -48,7 +57,41 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
         <section className="shipment-header-left">
           <div className="shipment-id-section">
             <h1 className="shipment-id">#{shipmentId}</h1>
-            <StatusBadge status={status} />
+            <div className="flex items-center gap-2 flex-wrap">
+              <StatusBadge status={status} />
+              {isCompanyUser ? (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+                    className="flex items-center gap-1"
+                    aria-label="Change priority"
+                  >
+                    <PriorityBadge priority={priority} />
+                    <ChevronDown size={12} className="text-gray-400" />
+                  </button>
+                  {showPriorityMenu && (
+                    <div className="absolute z-10 mt-1 w-32 bg-[#1a1f2e] border border-[rgba(255,255,255,0.1)] rounded-lg shadow-lg py-1">
+                      {(['URGENT', 'STANDARD', 'ECONOMY'] as const).map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => {
+                            onUpdatePriority?.(p);
+                            setShowPriorityMenu(false);
+                          }}
+                          className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[rgba(255,255,255,0.05)] ${priority === p ? 'text-white font-medium' : 'text-gray-300'}`}
+                        >
+                          {p === 'URGENT' ? 'Urgent' : p === 'STANDARD' ? 'Standard' : 'Economy'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <PriorityBadge priority={priority} />
+              )}
+            </div>
           </div>
         </section>
 
