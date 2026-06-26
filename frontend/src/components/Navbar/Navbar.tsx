@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { useScrollSpy } from "@/hooks";
+import { useScrollSpy } from "../../hooks/useScrollSpy";
 
 const SECTION_IDS = ["hero", "why-navin", "features", "how-it-works", "faq"] as const;
 
@@ -17,19 +17,16 @@ const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
 
-  // Only run scroll-spy on the landing page
   const isLandingPage = location.pathname === "/";
   const activeSectionId = useScrollSpy(
     isLandingPage ? [...SECTION_IDS] : [],
   );
 
-  // Handle smooth scroll navigation
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     sectionId: string,
   ) => {
     setIsMenuOpen(false);
-
     if (isLandingPage) {
       e.preventDefault();
       const element = document.getElementById(sectionId);
@@ -39,9 +36,7 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const handleLogoClick = () => {
-    setIsMenuOpen(false);
-  };
+  const handleLogoClick = () => setIsMenuOpen(false);
 
   return (
     <nav className="absolute top-0 left-0 w-full bg-transparent z-[1000] m-0 p-0">
@@ -64,7 +59,7 @@ const Navbar: React.FC = () => {
               const isActive = activeSectionId === link.id;
               return (
                 
-                  <a key={link.id}
+                  < a key={link.id}
                   href={link.href}
                   className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-[#00d4c8] after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-[#00d4c8] after:transition-all after:duration-300 hover:after:w-full${
                     isActive ? " !text-[#00d4c8] after:!w-full" : ""
@@ -80,11 +75,8 @@ const Navbar: React.FC = () => {
 
           {/* CTA Buttons */}
           <div className="flex gap-4 items-center absolute right-8">
-            <Link
-              to="/"
-              className="px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5"
-            >
-              Try now
+            <Link to="/login" className="px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5">
+              Login
             </Link>
             <Link
               to="/signup"
@@ -95,7 +87,7 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Hamburger Menu (Mobile) */}
+        {/* Hamburger */}
         <button
           className="hidden max-md:block bg-transparent border-none text-primary cursor-pointer text-2xl p-2 transition-transform duration-300 hover:scale-110 absolute right-6 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -129,10 +121,7 @@ const Navbar: React.FC = () => {
               })}
             </div>
             <div className="flex flex-col gap-3">
-              <Link
-                to="/login"
-                className="w-full text-center px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5"
-              >
+              <Link to="/login" className="w-full text-center px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5">
                 Login
               </Link>
               <Link

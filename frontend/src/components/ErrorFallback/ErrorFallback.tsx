@@ -38,6 +38,6 @@ function ErrorFallback({ error, resetError }: ErrorFallbackProps): React.ReactEl
       </div>
     </div>
   );
-}
+};
 
 export default ErrorFallback;
