@@ -1,8 +1,25 @@
 import '@testing-library/jest-dom'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
 
-// jsdom v28 introduced --localstorage-file which can break the default Storage API.
+Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
+  value: true,
+  writable: true,
+  configurable: true,
+});
+
+// jsdom does not implement IntersectionObserver — provide a no-op stub.
+class IntersectionObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+Object.defineProperty(window, 'IntersectionObserver', {
+  value: IntersectionObserverMock,
+  writable: true,
+  configurable: true,
+});
+
 // Replace localStorage/sessionStorage with reliable in-memory implementations.
 const makeStorage = () => {
   const store: Record<string, string> = {};

@@ -37,7 +37,7 @@ const Features: React.FC = () => {
     ];
 
     return (
-        <section className="features">
+        <section id="features" className="features">
             <div className="features__container">
                 <h2 className="features__heading">
                     Key <span className="features__accent">Features</span>

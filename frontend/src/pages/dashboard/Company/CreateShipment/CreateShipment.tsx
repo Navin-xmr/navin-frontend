@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
+import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
+import { useToast } from '@context/ToastContext';
+import type { AxiosError } from 'axios';
 import './CreateShipment.css';
 
 interface FormData {
@@ -19,6 +22,7 @@ interface FormErrors {
 
 const CreateShipment: React.FC = () => {
     const navigate = useNavigate();
+    const { addToast } = useToast();
     const [formData, setFormData] = useState<FormData>({
         origin: '',
         destination: '',
@@ -37,7 +41,6 @@ const CreateShipment: React.FC = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev: FormData) => ({ ...prev, [name]: value }));
-        // Clear error for this field
         if (errors[name]) {
             setErrors((prev: FormErrors) => ({ ...prev, [name]: '' }));
         }
@@ -57,18 +60,43 @@ const CreateShipment: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const getErrorMessage = (error: AxiosError<{ message?: string }>): string => {
+        if (error.response?.data?.message) return error.response.data.message;
+        if (error.message) return error.message;
+        return 'Failed to create shipment. Please try again.';
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validateForm()) return;
 
         setLoading(true);
 
-        // Simulate API request
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            const payload: CreateShipmentRequest = {
+                origin: formData.origin.trim(),
+                destination: formData.destination.trim(),
+                enterpriseId: '',
+                logisticsId: '',
+                offChainMetadata: {
+                    itemDescription: formData.itemDescription.trim(),
+                    weight: formData.weight,
+                    recipientName: formData.recipientName.trim(),
+                    recipientContact: formData.recipientContact.trim(),
+                    expectedDeliveryDate: formData.expectedDeliveryDate,
+                },
+            };
+
+            const shipment = await shipmentApi.create(payload);
+            setShipmentId(shipment.id ?? shipment._id);
             setSuccess(true);
-            setShipmentId('#SHP-' + Math.floor(10000 + Math.random() * 90000));
-        }, 1500);
+            addToast('Shipment created successfully!', 'success');
+        } catch (err) {
+            const error = err as AxiosError<{ message?: string }>;
+            addToast(getErrorMessage(error), 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     if (success) {
@@ -131,10 +159,12 @@ const CreateShipment: React.FC = () => {
                           name="origin"
                           value={formData.origin}
                           onChange={handleInputChange}
+                          aria-invalid={!!errors.origin}
+                          aria-describedby={errors.origin ? "origin-error" : undefined}
                           className={errors.origin ? 'input-error' : ''}
                           placeholder="e.g., Warehouse A, New York"
                       />
-                      {errors.origin && <span className="error-text">{errors.origin}</span>}
+                      {errors.origin && <span id="origin-error" className="error-text" role="alert">{errors.origin}</span>}
                   </div>
 
                   <div className="form-group">
@@ -145,10 +175,12 @@ const CreateShipment: React.FC = () => {
                           name="destination"
                           value={formData.destination}
                           onChange={handleInputChange}
+                          aria-invalid={!!errors.destination}
+                          aria-describedby={errors.destination ? "destination-error" : undefined}
                           className={errors.destination ? 'input-error' : ''}
                           placeholder="e.g., Store B, Los Angeles"
                       />
-                      {errors.destination && <span className="error-text">{errors.destination}</span>}
+                      {errors.destination && <span id="destination-error" className="error-text" role="alert">{errors.destination}</span>}
                   </div>
 
                   <div className="form-group">
@@ -158,11 +190,13 @@ const CreateShipment: React.FC = () => {
                           name="itemDescription"
                           value={formData.itemDescription}
                           onChange={handleInputChange}
+                          aria-invalid={!!errors.itemDescription}
+                          aria-describedby={errors.itemDescription ? "itemDescription-error" : undefined}
                           className={errors.itemDescription ? 'input-error' : ''}
                           placeholder="Describe the items being shipped..."
                           rows={3}
                       />
-                      {errors.itemDescription && <span className="error-text">{errors.itemDescription}</span>}
+                      {errors.itemDescription && <span id="itemDescription-error" className="error-text" role="alert">{errors.itemDescription}</span>}
                   </div>
 
                   <div className="form-row">
@@ -174,12 +208,14 @@ const CreateShipment: React.FC = () => {
                               name="weight"
                               value={formData.weight}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.weight}
+                              aria-describedby={errors.weight ? "weight-error" : undefined}
                               className={errors.weight ? 'input-error' : ''}
                               placeholder="0.00"
                               min="0"
                               step="0.01"
                           />
-                          {errors.weight && <span className="error-text">{errors.weight}</span>}
+                          {errors.weight && <span id="weight-error" className="error-text" role="alert">{errors.weight}</span>}
                       </div>
 
                       <div className="form-group half-width">
@@ -190,9 +226,11 @@ const CreateShipment: React.FC = () => {
                               name="expectedDeliveryDate"
                               value={formData.expectedDeliveryDate}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.expectedDeliveryDate}
+                              aria-describedby={errors.expectedDeliveryDate ? "expectedDeliveryDate-error" : undefined}
                               className={errors.expectedDeliveryDate ? 'input-error' : ''}
                           />
-                          {errors.expectedDeliveryDate && <span className="error-text">{errors.expectedDeliveryDate}</span>}
+                          {errors.expectedDeliveryDate && <span id="expectedDeliveryDate-error" className="error-text" role="alert">{errors.expectedDeliveryDate}</span>}
                       </div>
                   </div>
 
@@ -205,10 +243,12 @@ const CreateShipment: React.FC = () => {
                               name="recipientName"
                               value={formData.recipientName}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.recipientName}
+                              aria-describedby={errors.recipientName ? "recipientName-error" : undefined}
                               className={errors.recipientName ? 'input-error' : ''}
                               placeholder="John Doe"
                           />
-                          {errors.recipientName && <span className="error-text">{errors.recipientName}</span>}
+                          {errors.recipientName && <span id="recipientName-error" className="error-text" role="alert">{errors.recipientName}</span>}
                       </div>
 
                       <div className="form-group half-width">
@@ -219,10 +259,12 @@ const CreateShipment: React.FC = () => {
                               name="recipientContact"
                               value={formData.recipientContact}
                               onChange={handleInputChange}
+                              aria-invalid={!!errors.recipientContact}
+                              aria-describedby={errors.recipientContact ? "recipientContact-error" : undefined}
                               className={errors.recipientContact ? 'input-error' : ''}
                               placeholder="Phone or Email"
                           />
-                          {errors.recipientContact && <span className="error-text">{errors.recipientContact}</span>}
+                          {errors.recipientContact && <span id="recipientContact-error" className="error-text" role="alert">{errors.recipientContact}</span>}
                       </div>
                   </div>
 

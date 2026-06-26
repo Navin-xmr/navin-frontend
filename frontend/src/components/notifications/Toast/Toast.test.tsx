@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { ToastProvider, useToast } from "../../../context/ToastContext";
+import { LiveRegionProvider } from "../../../context/LiveRegionContext";
 import { BrowserRouter } from "react-router-dom";
 
 // Helper component to trigger toasts during testing
@@ -17,7 +18,9 @@ const TestComponent = () => {
 const renderWithProviders = (ui: React.ReactElement) => {
   return render(
     <BrowserRouter>
-      <ToastProvider>{ui}</ToastProvider>
+      <LiveRegionProvider>
+        <ToastProvider>{ui}</ToastProvider>
+      </LiveRegionProvider>
     </BrowserRouter>,
   );
 };
@@ -38,9 +41,8 @@ describe("Toast System", () => {
     fireEvent.click(screen.getByText("Show Toast"));
     expect(screen.getByText("Test Message")).toBeInTheDocument();
 
-    // Fast-forward 5 seconds
     act(() => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(8000);
     });
 
     expect(screen.queryByText("Test Message")).not.toBeInTheDocument();
@@ -51,7 +53,7 @@ describe("Toast System", () => {
     renderWithProviders(<TestComponent />);
 
     fireEvent.click(screen.getByText("Show Toast"));
-    const closeButton = screen.getByRole("button", { name: "" }); // The X icon button
+    const closeButton = screen.getByRole("button", { name: "Dismiss notification" });
 
     fireEvent.click(closeButton);
 

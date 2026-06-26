@@ -14,6 +14,13 @@ export interface SettlementSummary {
     totalCount: number;
 }
 
+export interface RevenueSummaryResponse {
+    totalReleased: number;
+    totalInEscrow: number;
+    totalPending: number;
+    sparkline: number[];
+}
+
 export interface Settlement {
     _id: string;
     createdAt: string;
@@ -80,6 +87,14 @@ export interface PaginatedSettlements {
 }
 
 export const settlementsApi = {
+    getSummary: async (period: "week" | "month" | "quarter" = "month"): Promise<RevenueSummaryResponse> => {
+        const res = await apiClient.get<{ data: RevenueSummaryResponse }>(
+            "/settlements/summary",
+            { params: { period } },
+        );
+        return res.data.data;
+    },
+
     getSettlements: async (
         params?: GetSettlementsParams,
     ): Promise<PaginatedSettlements> => {
@@ -95,6 +110,14 @@ export const settlementsApi = {
             `/settlements/${id}`,
         );
         return res.data.data;
+    },
+
+    getByShipmentId: async (shipmentId: string): Promise<Settlement[]> => {
+        const res = await apiClient.get<{ data: PaginatedSettlements }>(
+            "/settlements",
+            { params: { shipmentId } },
+        );
+        return res.data.data.data;
     },
 };
 

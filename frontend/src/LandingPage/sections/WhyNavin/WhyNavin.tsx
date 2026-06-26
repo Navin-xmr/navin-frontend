@@ -34,7 +34,7 @@ function WhyNavin() {
     ];
 
     return (
-        <section className="py-20">
+        <section id="about" className="py-20">
             <h2 className="font-display font-normal text-[1.5rem] md:text-[2.25rem] lg:text-[3.25rem] mb-12">
                 Why <span className="text-[#62ffff]"> Navin?</span>
             </h2>

@@ -1,12 +1,18 @@
 import React, { useState, useRef } from "react";
+import { shipmentApi } from "../../../services/api/endpoints/shipments";
 
-const DeliveryProofUpload: React.FC = () => {
+interface DeliveryProofUploadProps {
+  shipmentId: string;
+}
+
+const DeliveryProofUpload: React.FC<DeliveryProofUploadProps> = ({ shipmentId }) => {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [recipientName, setRecipientName] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [recipientNameError, setRecipientNameError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -52,14 +58,22 @@ const DeliveryProofUpload: React.FC = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!recipientName.trim()) {
+      setRecipientNameError('Recipient name is required');
+      return;
+    }
     if (!file || !recipientName.trim()) return;
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await shipmentApi.uploadProof(shipmentId, file, recipientName);
       setSubmitted(true);
-    }, 1500);
+    } catch {
+      alert("Failed to upload proof. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -154,10 +168,14 @@ const DeliveryProofUpload: React.FC = () => {
               id="recipientName"
               className="bg-[rgba(0,0,0,0.3)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-xl px-6 py-4 text-white text-base font-[inherit] transition-all w-full focus:outline-none focus:border-[#00d4c8] focus:shadow-[0_0_0_4px_rgba(0,212,200,0.1)] placeholder:text-[rgba(255,255,255,0.3)]"
               value={recipientName}
-              onChange={(e) => setRecipientName(e.target.value)}
+              onChange={(e) => { setRecipientName(e.target.value); if (e.target.value.trim()) setRecipientNameError(''); }}
               placeholder="Who signed for this delivery?"
-              required
+              aria-invalid={!!recipientNameError}
+              aria-describedby={recipientNameError ? 'recipientName-error' : undefined}
             />
+            {recipientNameError && (
+              <span id="recipientName-error" className="text-[#ff3b30] text-sm" role="alert">{recipientNameError}</span>
+            )}
           </div>
 
           {/* Submit button */}

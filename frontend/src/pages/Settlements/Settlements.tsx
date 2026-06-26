@@ -14,6 +14,10 @@ import {
   SettlementDetail,
 } from "@services/api/endpoints/settlements";
 import { PaymentDetailModal } from "./components";
+import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
+import { can } from "../../utils/rbac";
+import { useAuthContext } from "../../context/AuthContext";
+import { useLiveRegion } from "../../context/LiveRegionContext";
 
 
 // Local lightweight table formatting (kept inline to avoid coupling)
@@ -62,8 +66,11 @@ const EmptyState: React.FC = () => (
 );
 
 export default function Settlements() {
+  const { role } = useAuthContext();
+  const { announce } = useLiveRegion();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const realtimeEvents = useRealtimeEvents(['settlement:status']);
 
   const [filterStatus, setFilterStatus] = useState<SettlementStatus | "ALL">("ALL");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -104,9 +111,29 @@ export default function Settlements() {
   };
 
   useEffect(() => {
-    void load();
+    Promise.resolve().then(() => {
+      void load();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterStatus, sortOrder]);
+
+  // Apply realtime settlement status updates
+  useEffect(() => {
+    const event = realtimeEvents['settlement:status'];
+    if (!event) return;
+    Promise.resolve().then(() => {
+      setSettlements((prev) =>
+        prev.map((s) =>
+          s._id === event.settlementId ? { ...s, status: event.newStatus, stellarTxHash: event.txHash ?? s.stellarTxHash } : s,
+        ),
+      );
+      const isError = event.newStatus === 'FAILED' || event.newStatus === 'DISPUTED';
+      announce(
+        `Settlement status updated to ${event.newStatus}`,
+        isError ? 'assertive' : 'polite',
+      );
+    });
+  }, [realtimeEvents, announce]);
 
   const summary = useMemo(() => {
     // Aggregate from current page (fallback). If backend summary is desired, extend endpoint.
@@ -185,6 +212,7 @@ export default function Settlements() {
                 setFilterStatus(e.target.value as SettlementStatus | "ALL");
                 setCurrentPage(1);
               }}
+              aria-label="Filter by settlement status"
               className="appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full"
             >
               <option value="ALL">All Status</option>
@@ -199,15 +227,18 @@ export default function Settlements() {
               className="absolute right-3 pointer-events-none text-text-secondary rotate-90"
             />
           </div>
-          <span
+          <button
+            type="button"
             className="inline-flex items-center gap-2 appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
             onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+            aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
+            aria-pressed={sortOrder === "desc"}
           >
             Date <ArrowUpDown size={14} />
             <span className="text-text-secondary max-md:hidden">
               {sortOrder === "desc" ? "Newest" : "Oldest"}
             </span>
-          </span>
+          </button>
         </div>
       </div>
 
@@ -244,13 +275,17 @@ export default function Settlements() {
                   <th
                     className={`${thClass} cursor-pointer select-none`}
                     onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                    aria-sort={sortOrder === "desc" ? "descending" : "ascending"}
                   >
-                    <span className="inline-flex items-center gap-2">Date <ArrowUpDown size={14} /></span>
+                    <span className="inline-flex items-center gap-2">Date <ArrowUpDown size={14} aria-hidden="true" /></span>
                   </th>
                   <th className={thClass}>Shipment ID</th>
                   <th className={thClass}>Amount</th>
                   <th className={thClass}>Status</th>
                   <th className={thClass}>Stellar Tx</th>
+                  {(can(role, 'settlement:release-payment') || can(role, 'settlement:dispute')) && (
+                    <th className={thClass}>Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -307,6 +342,22 @@ export default function Settlements() {
                           <span className="text-text-secondary">-</span>
                         )}
                       </td>
+                      {(can(role, 'settlement:release-payment') || can(role, 'settlement:dispute')) && (
+                        <td className={tdClass} onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-2">
+                            {can(role, 'settlement:release-payment') && s.status === 'ESCROWED' && (
+                              <button className="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30">
+                                Release
+                              </button>
+                            )}
+                            {can(role, 'settlement:dispute') && s.status !== 'DISPUTED' && (
+                              <button className="px-2 py-1 text-xs font-semibold rounded bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30">
+                                Dispute
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -322,6 +373,7 @@ export default function Settlements() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
+                aria-label="Previous page"
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={16} />
@@ -341,6 +393,7 @@ export default function Settlements() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
+                aria-label="Next page"
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={16} />

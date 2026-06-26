@@ -3,14 +3,28 @@ import Hero from "./sections/Hero/Hero";
 import HowItWorks from "@/LandingPage/sections/HowItWorks/HowItWorks";
 import WhyNavin from "@/LandingPage/sections/WhyNavin/WhyNavin";
 import Features from "@/pages/LandingPage/sections/Features/Features";
+import FAQSection from "./sections/FAQSection/FAQSection";
+import LogoStrip from "./sections/LogoStrip/LogoStrip";
 
 const LandingPage: React.FC = () => {
   return (
-    <main>
-      <Hero />
-      <WhyNavin />
-      <Features />
-      <HowItWorks />
+    <main className="scroll-smooth w-full">
+      <section id="hero">
+        <Hero />
+      </section>
+      <LogoStrip />
+      <section id="why-navin">
+        <WhyNavin />
+      </section>
+      <section id="features">
+        <Features />
+      </section>
+      <section id="how-it-works">
+        <HowItWorks />
+      </section>
+      <section id="faq">
+        <FAQSection />
+      </section>
     </main>
   );
 };

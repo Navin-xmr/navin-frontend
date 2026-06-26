@@ -26,9 +26,6 @@ const MOCK_SHIPMENT_HISTORY: HistoricalShipment[] = [
   { id: "SHP-5692", origin: "Ho Chi Minh", destination: "San Francisco", deliveredDate: "2026-01-18", rating: null },
 ];
 
-const formatDate = (dateString: string) =>
-  new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(dateString));
-
 const StarRating: React.FC<{ rating: number | null }> = ({ rating }) => {
   if (rating === null) {
     return <span className="text-text-secondary text-xs italic">Not rated</span>;
@@ -204,7 +201,7 @@ const ShipmentHistory: React.FC = () => {
                     <td className={`${tdClass} text-text-primary`}>{shipment.origin}</td>
                     <td className={`${tdClass} text-text-primary`}>{shipment.destination}</td>
                     <td className={`${tdClass} text-text-secondary`}>
-                      {safesafeFormatDate(shipment.deliveredDate)}
+                      {safeFormatDate(shipment.deliveredDate)}
                     </td>
                     <td className={tdClass}>
                       <StarRating rating={safeRating(shipment.rating)} />

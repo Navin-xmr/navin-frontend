@@ -1,69 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
-interface OfflineBannerProps {
-  onRetry?: () => void;
-}
-
-export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onRetry }) => {
-  const [isOffline, setIsOffline] = useState(false);
-
-  const checkConnection = useCallback(async () => {
-    try {
-      const baseURL = import.meta.env.VITE_API_BASE_URL;
-      if (!baseURL) {
-        setIsOffline(true);
-        return;
-      }
-
-      await fetch(${baseURL}/health, { 
-        method: 'HEAD',
-        mode: 'no-cors',
-        cache: 'no-store'
-      });
-      
-      setIsOffline(false);
-    } catch {
-      setIsOffline(true);
-    }
-  }, []);
+const OfflineBanner: React.FC = () => {
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    checkConnection();
-
-    const handleOnline = () => checkConnection();
-    const handleOffline = () => setIsOffline(true);
-
+    const handleOnline = () => { setIsOnline(true); setDismissed(false); };
+    const handleOffline = () => { setIsOnline(false); setDismissed(false); };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [checkConnection]);
+  }, []);
 
-  const handleRetry = () => {
-    checkConnection();
-    onRetry?.();
-  };
-
-  if (!isOffline) return null;
+  if (isOnline || dismissed) return null;
 
   return (
-    <div 
-      className="bg-red-500 text-white px-4 py-3 text-center flex items-center justify-center gap-4"
+    <div
+      className="bg-amber-500 text-white px-4 py-3 text-center flex items-center justify-center gap-4 fixed top-0 left-0 right-0 z-[9999]"
       role="alert"
       aria-live="polite"
     >
       <span className="text-sm font-medium">
-        Unable to connect to server. Please check your connection.
+        You are offline — displaying cached data. Some features are unavailable.
       </span>
       <button
-        onClick={handleRetry}
-        className="bg-white text-red-500 px-3 py-1 rounded text-sm font-medium hover:bg-red-50 transition-colors"
-        aria-label="Retry connection"
+        onClick={() => setDismissed(true)}
+        className="bg-white text-amber-600 px-3 py-1 rounded text-sm font-medium hover:bg-amber-50 transition-colors"
+        aria-label="Dismiss offline banner"
       >
-        Retry
+        Dismiss
       </button>
     </div>
   );

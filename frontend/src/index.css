@@ -2,6 +2,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap");
 @import "tailwindcss";
 
+/* ── Global smooth scrolling ── */
+html {
+  scroll-behavior: smooth;
+}
+
 /* ── Shared keyframe animations (used by migrated components) ── */
 @keyframes pulse-glow {
   0%,
@@ -127,6 +132,36 @@
 }
 .animate-fade-in-up {
   animation: fade-in-up 1s ease-out;
+}
+
+@keyframes logo-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.logo-strip-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+.logo-strip-track {
+  display: flex;
+  width: max-content;
+  gap: 2.5rem;
+  animation: logo-scroll 28s linear infinite;
+}
+
+.logo-strip-wrapper:hover .logo-strip-track {
+  animation-play-state: paused;
+}
+
+@media print {
+  body > *:not(#shipment-print-root) {
+    display: none !important;
+  }
+  #shipment-print-root {
+    display: block !important;
+  }
 }
 .animate-spin-svg {
   animation: spin 2s linear infinite;
@@ -402,9 +437,9 @@
     line-height: 1.5;
     font-weight: 400;
 
-    color-scheme: dark;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #050505;
+    color-scheme: light;
+    color: #1f2937;
+    background-color: #f9fafb;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -412,12 +447,22 @@
     -moz-osx-font-smoothing: grayscale;
 
     /* CSS Variables for compatibility */
-    --bg-card: #0f1419;
-    --border-color: #1e2433;
-    --text-secondary: #9ca3af;
+    --bg-card: #ffffff;
+    --border-color: #e5e7eb;
+    --text-secondary: #6b7280;
     --accent-blue: #3b82f6;
     --accent-green: #10b981;
     --accent-red: #ef4444;
+  }
+
+  .dark {
+    color-scheme: dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #050505;
+
+    --bg-card: #0f1419;
+    --border-color: #1e2433;
+    --text-secondary: #9ca3af;
   }
 
   * {
@@ -429,6 +474,11 @@
   body {
     min-width: 320px;
     min-height: 100vh;
+    background-color: #f9fafb;
+  }
+
+  .dark body,
+  body:has(.dark) {
     background-color: #050505;
   }
 
