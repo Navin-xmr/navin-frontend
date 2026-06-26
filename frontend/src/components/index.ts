@@ -20,6 +20,8 @@ export { default as Avatar } from './ui/Avatar';
 export type { AvatarProps } from './ui/Avatar';
 export { default as PriorityBadge } from './ui/PriorityBadge';
 export type { PriorityBadgeProps } from './ui/PriorityBadge';
+export { default as Tag } from './ui/Tag';
+export type { TagProps } from './ui/Tag';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 
 export { default as Card, CardHeader, CardBody, CardFooter } from './Card';

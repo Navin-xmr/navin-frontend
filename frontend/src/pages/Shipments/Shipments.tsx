@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2, ChevronDown, List, LayoutGrid } from 'lucide-react';
-import { shipmentApi, type Shipment } from '../../api/shipmentApi';
+import { Download, LayoutGrid, List, Loader2, Map } from 'lucide-react';
+import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
-import PriorityBadge from '../../components/ui/PriorityBadge';
+import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
 import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
@@ -58,7 +58,9 @@ const Shipments: React.FC = () => {
 
   const [view, setView] = useState<ShipmentsView>(() => {
     try {
-      return localStorage.getItem(VIEW_KEY) === 'kanban' ? 'kanban' : 'list';
+      const saved = localStorage.getItem(VIEW_KEY);
+      if (saved === 'kanban' || saved === 'routeMap') return saved;
+      return 'list';
     } catch {
       return 'list';
     }
@@ -322,6 +324,17 @@ const Shipments: React.FC = () => {
               <LayoutGrid size={14} />
               Kanban
             </button>
+            <button
+              type="button"
+              onClick={() => handleViewChange('routeMap')}
+              aria-pressed={view === 'routeMap'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                view === 'routeMap' ? 'bg-[#62ffff] text-black' : 'text-[#94a3b8] hover:text-white'
+              }`}
+            >
+              <Map size={14} />
+              Route Map
+            </button>
           </div>
 
           <button
@@ -343,6 +356,8 @@ const Shipments: React.FC = () => {
 
       {view === 'kanban' ? (
         <ShipmentsKanban />
+      ) : view === 'routeMap' ? (
+        <RouteMap />
       ) : (
         <>
       {/* Saved filter chips */}
@@ -491,36 +506,7 @@ const Shipments: React.FC = () => {
                         <StatusBadge status={shipment.status} />
                       </td>
                       <td>
-                        {isCompanyUser ? (
-                          <div className="relative inline-block">
-                            <button
-                              type="button"
-                              onClick={() => setActivePriorityMenu(activePriorityMenu === shipment.id ? null : shipment.id)}
-                              className="flex items-center gap-1"
-                              aria-label="Change priority"
-                            >
-                              <PriorityBadge priority={shipment.priority} />
-                              <ChevronDown size={12} className="text-gray-400" />
-                            </button>
-                            {activePriorityMenu === shipment.id && (
-                              <div className="absolute z-10 mt-1 w-32 bg-[#1a1f2e] border border-[rgba(255,255,255,0.1)] rounded-lg shadow-lg py-1">
-                                {(['URGENT', 'STANDARD', 'ECONOMY'] as const).map((p) => (
-                                  <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => handlePriorityChange(shipment.id, p)}
-                                    disabled={updatingPriority === shipment.id}
-                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-50 ${shipment.priority === p ? 'text-white font-medium' : 'text-gray-300'}`}
-                                  >
-                                    {p === 'URGENT' ? 'Urgent' : p === 'STANDARD' ? 'Standard' : 'Economy'}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <PriorityBadge priority={shipment.priority} />
-                        )}
+                        <PriorityBadge priority={shipment.priority} />
                       </td>
                       <td>{safeFormatDate(shipment.createdAt)}</td>
                       <td>

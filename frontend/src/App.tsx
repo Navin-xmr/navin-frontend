@@ -24,6 +24,7 @@ import './App.css';
 
 // Eagerly loaded (critical path)
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
+import CustomerDashboard from './pages/dashboard/Customer/CustomerDashboard';
 import AnomalyAlertPanel from './pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel';
 import Shipments from './pages/Shipments/Shipments';
 import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
@@ -42,6 +43,7 @@ const NotificationsPage = lazy(() => import('./pages/Notifications/Notifications
 const ShipmentHistory = lazy(() => import('./pages/dashboard/Customer/ShipmentHistory/ShipmentHistory'));
 const UserManagement = lazy(() => import('./pages/dashboard/Company/UserManagement/UserManagement'));
 const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/AcceptInvitation'));
+const CalendarView = lazy(() => import('./pages/dashboard/Company/CalendarView/CalendarView'));
 
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
@@ -77,6 +79,14 @@ const router = createBrowserRouter([
               { path: '/dashboard/team', element: S(<UserManagement />) },
               { path: '/dashboard/shipments/create', element: <CreateShipment /> },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
+              { path: '/dashboard/calendar', element: S(<CalendarView />) },
+            ],
+          },
+          // Customer-only routes
+          {
+            element: <RoleGuard allowedRoles={['customer']} />,
+            children: [
+              { path: '/dashboard/customer', element: <CustomerDashboard /> },
             ],
           },
           // Shared routes (both roles)

@@ -1,5 +1,35 @@
 import React, { useState, useEffect } from "react";
 import {
+  Box, Clock, CheckCircle2, Truck,
+  Ship, Plane, Train, ShieldCheck, AlertTriangle,
+  Rocket, Menu, QrCode, MoreHorizontal,
+} from "lucide-react";
+
+import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
+import { QuickActionsCard } from './QuickActions';
+
+const getStatusKey = (status: string) => {
+  switch (status) {
+    case 'DELIVERED':
+      return 'DELIVERED';
+    case 'IN-TRANSIT':
+    case 'IN_TRANSIT':
+      return 'IN_TRANSIT';
+    case 'CANCELLED':
+      return 'CANCELLED';
+    default:
+      return 'CREATED';
+  }
+};
+
+const getTransportIcon = (type: string) => {
+  switch (type) {
+    case "ship": return <Ship size={20} strokeWidth={1.5} />;
+    case "plane": return <Plane size={20} strokeWidth={1.5} />;
+    case "train": return <Train size={20} strokeWidth={1.5} />;
+    default: return <Box size={20} strokeWidth={1.5} />;
+  }
+};
   Clock, CheckCircle2, Truck,
   ShieldCheck, AlertTriangle,
   Rocket, Menu,
@@ -148,6 +178,10 @@ const CompanyDashboard: React.FC = () => {
             ))
           }
         </div>
+
+        {/* Quick Actions — top-right, desktop only */}
+        <div className="max-md:hidden">
+          <QuickActionsCard />
 
         {/* Quick Actions — top-right, desktop only */}
         <div className="max-md:hidden" data-tour-id="tour-create-shipment">
