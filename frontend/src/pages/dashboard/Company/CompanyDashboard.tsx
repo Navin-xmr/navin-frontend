@@ -7,6 +7,7 @@ import {
 
 import { QuickActionsCard } from './QuickActions';
 import RecentShipments from './RecentShipments/RecentShipments';
+import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
 
 const TrendIcon = ({ up }: { up: boolean }) => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -112,6 +113,8 @@ const CompanyDashboard: React.FC = () => {
           <QuickActionsCard />
         </div>
       </div>
+
+      <RevenueSummaryWidget />
 
       {/* Shipments */}
       <div className="flex flex-col">

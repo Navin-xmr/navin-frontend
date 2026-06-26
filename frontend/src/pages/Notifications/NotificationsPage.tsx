@@ -37,6 +37,7 @@ const NotificationsPage = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isMarkAllLoading, setIsMarkAllLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isGrouped, setIsGrouped] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("notificationsGrouped") === "true";
@@ -90,6 +91,19 @@ const NotificationsPage = () => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem("notificationsGrouped", String(isGrouped));
   }, [isGrouped]);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const count = await notificationsApi.getUnreadCount();
+        setUnreadCount(count);
+      } catch {
+        setError("Unable to load unread notification count.");
+      }
+    };
+
+    void fetchUnreadCount();
+  }, []);
 
   const toggleGroupExpansion = (shipmentId: string) => {
     setExpandedGroups((prev) =>
@@ -165,6 +179,7 @@ const NotificationsPage = () => {
     try {
       await notificationsApi.markAllAsRead();
       setNotificationsList((prev) => prev.map((notification) => ({ ...notification, isRead: true })));
+      setUnreadCount(0);
     } catch {
       setError("Could not mark all notifications as read. Please try again.");
     } finally {
@@ -180,6 +195,7 @@ const NotificationsPage = () => {
       try {
         await notificationsApi.markAsRead(id);
         setNotificationsList((prev) => prev.map((item) => item.id === id ? { ...item, isRead: true } : item));
+        setUnreadCount((prev) => Math.max(0, prev - 1));
       } catch {
         setError("Unable to mark notification as read. Please try again.");
       }
@@ -209,6 +225,7 @@ const NotificationsPage = () => {
 
   const unreadNotifications = notificationsList.filter((notification) => !notification.isRead);
   const readNotifications = notificationsList.filter((notification) => notification.isRead);
+  const currentUnreadCount = unreadNotifications.length || unreadCount;
 
   const filters: { key: NotificationFilterType; label: string }[] = [
     { key: "all", label: "All" },
@@ -322,7 +339,7 @@ const NotificationsPage = () => {
           <button
             className="flex items-center gap-2 px-4 py-2.5 bg-[#283039] border border-[#374151] rounded-lg text-white text-sm cursor-pointer transition-all hover:bg-[#1f2937] hover:border-[#4b5563] disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleMarkAllAsRead}
-            disabled={isMarkAllLoading || notificationsList.every((notification) => notification.isRead)}
+            disabled={isMarkAllLoading || currentUnreadCount === 0}
           >
             <Check size={16} /> Mark all as read
           </button>
