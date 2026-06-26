@@ -81,12 +81,21 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
     priority: rawPriority ? (PRIORITY_MAP[rawPriority] ?? undefined) : undefined,
     deliveryProof: shipment.deliveryProof?.url
       ? {
-          url: String(shipment.deliveryProof.url),
-          recipientSignatureName: String(shipment.deliveryProof.recipientSignatureName ?? ''),
-          uploadedAt: String(shipment.deliveryProof.uploadedAt ?? ''),
-        }
+        url: String(shipment.deliveryProof.url),
+        recipientSignatureName: String(shipment.deliveryProof.recipientSignatureName ?? ''),
+        uploadedAt: String(shipment.deliveryProof.uploadedAt ?? ''),
+      }
       : undefined,
   };
+};
+
+export type ShipmentWithGps = Shipment & {
+  lat?: number;
+  lng?: number;
+  trackingNumber?: string;
+  // Optional backend flags for coloring. These may be absent.
+  anomalyDetected?: boolean;
+  isDelayed?: boolean;
 };
 
 export const shipmentApi = {

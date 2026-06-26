@@ -23,9 +23,12 @@ export interface ShipmentHeaderProps {
   expectedDelivery: string;
   trackingNumber?: string;
   stellarTxHash?: string;
+  priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';
+  userRole?: 'company' | 'customer';
   onTrack?: () => void;
   onDownloadProof?: () => void;
   onShare?: () => void;
+  onUpdatePriority?: (priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => void;
 }
 
 export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
@@ -40,9 +43,12 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
   expectedDelivery,
   trackingNumber,
   stellarTxHash,
+  priority,
+  userRole = 'customer',
   onTrack = () => console.log('Track clicked'),
   onDownloadProof = () => console.log('Download Proof clicked'),
   onShare = () => console.log('Share clicked'),
+  onUpdatePriority,
 }) => {
   const [printing, setPrinting] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
