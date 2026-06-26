@@ -2,9 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, LayoutGrid, List, Loader2, Map } from 'lucide-react';
 import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
+import type { ShipmentStatus } from '../../services/api/endpoints/shipments';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
+import { BulkActionBar } from '../../components/shipment/BulkActionBar';
+import { BulkStatusModal } from '../../components/shipment/BulkStatusModal';
+import { useBulkSelection } from '../../hooks/useBulkSelection';
+import { useToast } from '../../context/ToastContext';
 import { safeFormatDate } from '../../utils/safeFormat';
 import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
@@ -12,7 +17,7 @@ import ShipmentsKanban from './KanbanView/ShipmentsKanban';
 import RouteMap from './RouteMap/RouteMap';
 import './Shipments.css';
 
-function exportShipmentsToCSV(shipments: Shipment[]): void {
+function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
   const headers = ['Tracking Number', 'Origin', 'Destination', 'Status', 'Created At', 'Expected Delivery', 'Carrier'];
   const rows = shipments.map((s) => [
     s.id,
@@ -28,13 +33,11 @@ function exportShipmentsToCSV(shipments: Shipment[]): void {
   const csv = [headers.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))].join('\n');
 
   const today = new Date().toISOString().slice(0, 10);
-  const filename = `navin-shipments-${today}.csv`;
-
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = filename;
+  link.download = filename ?? `navin-shipments-${today}.csv`;
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -49,13 +52,25 @@ type ShipmentsView = 'list' | 'kanban' | 'routeMap';
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
   const { role } = useAuthContext();
+  const { addToast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const loadingRef = useRef(false);
+
+  const {
+    selectedIds,
+    isSelected,
+    toggleOne,
+    toggleAll,
+    clearSelection,
+    selectedCount,
+  } = useBulkSelection();
 
   const [view, setView] = useState<ShipmentsView>(() => {
     try {
@@ -82,8 +97,6 @@ const Shipments: React.FC = () => {
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState('');
-  const [activePriorityMenu, setActivePriorityMenu] = useState<string | null>(null);
-  const [updatingPriority, setUpdatingPriority] = useState<string | null>(null);
   const [savedFilters, setSavedFilters] = useState<{
     name: string;
     filters: { search: string; status: string; priority: string; timeframe: string };
@@ -128,6 +141,10 @@ const Shipments: React.FC = () => {
 
     return result;
   }, [shipments, searchQuery, statusFilter, timeframeFilter, priorityFilter]);
+
+  const visibleIds = useMemo(() => filteredShipments.map((s) => s.id), [filteredShipments]);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
+  const someVisibleSelected = !allVisibleSelected && visibleIds.some((id) => isSelected(id));
 
   const handleSaveFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,12 +244,45 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
+  const handleExportSelected = () => {
+    const selected = filteredShipments.filter((s) => selectedIds.has(s.id));
+    const today = new Date().toISOString().slice(0, 10);
+    exportShipmentsToCSV(selected, `navin-shipments-selected-${today}.csv`);
+  };
+
+  const handleBulkStatusConfirm = async (status: ShipmentStatus) => {
+    setIsBulkUpdating(true);
+    const ids = [...selectedIds];
+    try {
+      const { updated, failed } = await shipmentApi.bulkUpdateStatus(ids, status);
+      // Optimistically update local state
+      setShipments((prev) =>
+        prev.map((s) => (updated.includes(s.id) ? { ...s, status } : s)),
+      );
+      clearSelection();
+      setIsBulkModalOpen(false);
+      if (failed.length === 0) {
+        addToast(`${updated.length} shipment${updated.length !== 1 ? 's' : ''} updated to ${status}.`, 'success');
+      } else {
+        addToast(
+          `${updated.length} updated, ${failed.length} failed. Please retry the failed ones.`,
+          'error',
+        );
+      }
+    } catch {
+      addToast('Bulk update failed. Please try again.', 'error');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL' || priorityFilter !== 'ALL';
   const isEmpty = !isLoading && !error && shipments.length === 0;
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
-  const isCompanyUser = role === 'company';
+  // role is used by company feature guard elsewhere; keep reference to suppress unused-var lint
+  void (role as unknown);
 
   return (
     <div className="shipments-page">
@@ -438,6 +488,19 @@ const Shipments: React.FC = () => {
           <table className="shipments-table" style={{ tableLayout: 'fixed', width: '100%' }}>
             <thead>
               <tr>
+                {/* Header checkbox — selects/deselects all visible rows */}
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    aria-label="Select all visible shipments"
+                    checked={allVisibleSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someVisibleSelected;
+                    }}
+                    onChange={() => toggleAll(visibleIds)}
+                    className="cursor-pointer accent-[#62ffff] w-4 h-4"
+                  />
+                </th>
                 <th>Shipment ID</th>
                 <th>Origin</th>
                 <th>Destination</th>
@@ -464,11 +527,13 @@ const Shipments: React.FC = () => {
                 {virtualItems.map((virtualRow) => {
                   const shipment = filteredShipments[virtualRow.index];
                   if (!shipment) return null;
+                  const selected = isSelected(shipment.id);
                   return (
                     <tr
                       key={virtualRow.key}
                       data-index={virtualRow.index}
                       ref={virtualizer.measureElement}
+                      aria-selected={selected}
                       style={{
                         position: 'absolute',
                         top: 0,
@@ -477,8 +542,20 @@ const Shipments: React.FC = () => {
                         transform: `translateY(${virtualRow.start}px)`,
                         display: 'table',
                         tableLayout: 'fixed',
+                        background: selected ? 'rgba(98,255,255,0.06)' : undefined,
                       }}
                     >
+                      {/* Row checkbox */}
+                      <td style={{ width: '40px' }}>
+                        <input
+                          type="checkbox"
+                          aria-label={`Select shipment ${shipment.id}`}
+                          checked={selected}
+                          onChange={() => toggleOne(shipment.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="cursor-pointer accent-[#62ffff] w-4 h-4"
+                        />
+                      </td>
                       <td>{shipment.id}</td>
                       <td>{shipment.origin}</td>
                       <td>{shipment.destination}</td>
@@ -486,7 +563,7 @@ const Shipments: React.FC = () => {
                         <StatusBadge status={shipment.status} />
                       </td>
                       <td>
-                        <PriorityBadge priority={shipment.priority} />
+                        <PriorityBadge priority={shipment.priority as ShipmentPriority} />
                       </td>
                       <td>{safeFormatDate(shipment.createdAt)}</td>
                       <td>
@@ -520,6 +597,23 @@ const Shipments: React.FC = () => {
       )}
         </>
       )}
+
+      {/* Floating bulk action bar */}
+      <BulkActionBar
+        count={selectedCount}
+        onUpdateStatus={() => setIsBulkModalOpen(true)}
+        onExport={handleExportSelected}
+        onClear={clearSelection}
+      />
+
+      {/* Bulk status update modal */}
+      <BulkStatusModal
+        isOpen={isBulkModalOpen}
+        count={selectedCount}
+        isLoading={isBulkUpdating}
+        onConfirm={handleBulkStatusConfirm}
+        onClose={() => setIsBulkModalOpen(false)}
+      />
     </div>
   );
 };
