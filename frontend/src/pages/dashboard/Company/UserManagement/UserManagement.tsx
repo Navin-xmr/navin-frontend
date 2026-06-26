@@ -7,6 +7,7 @@ import { usersApi, invitationsApi } from '@services/api';
 import type { User as ApiUser, UserRole, Invitation } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
+import Avatar from '../../../../components/ui/Avatar';
 import './UserManagement.css';
 
 interface MappedUser {
@@ -300,6 +301,16 @@ const UserManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
+              {currentUsers.length > 0 ? (
+                currentUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <div className="user-info">
+                        <Avatar name={user.name} size="sm" />
+                        <div className="user-details">
+                          <span className="user-name">{user.name}</span>
+                          <span className="user-email">{user.email}</span>
+                        </div>
               {currentUsers.length > 0 ? currentUsers.map((user) => (
                 <tr key={user.id}>
                   <td>

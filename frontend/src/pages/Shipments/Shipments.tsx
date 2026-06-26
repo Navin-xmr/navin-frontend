@@ -1,10 +1,38 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Download, Loader2 } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import './Shipments.css';
+
+function exportShipmentsToCSV(shipments: Shipment[]): void {
+  const headers = ['Tracking Number', 'Origin', 'Destination', 'Status', 'Created At', 'Expected Delivery', 'Carrier'];
+  const rows = shipments.map((s) => [
+    s.id,
+    s.origin,
+    s.destination,
+    s.status,
+    safeFormatDate(s.createdAt),
+    'N/A',
+    'N/A',
+  ]);
+
+  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const csv = [headers.map(escape).join(','), ...rows.map((r) => r.map(escape).join(','))].join('\n');
+
+  const today = new Date().toISOString().slice(0, 10);
+  const filename = `navin-shipments-${today}.csv`;
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
@@ -16,6 +44,7 @@ const Shipments: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const loadingRef = useRef(false);
 
   const hasMore = shipments.length < total;
@@ -69,13 +98,37 @@ const Shipments: React.FC = () => {
     navigate(`/dashboard/shipments/${shipmentId}`);
   };
 
+  const handleExportCSV = () => {
+    setIsExporting(true);
+    setTimeout(() => {
+      exportShipmentsToCSV(shipments);
+      setIsExporting(false);
+    }, 0);
+  };
+
   const isEmpty = !isLoading && !error && shipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
 
   return (
     <div className="shipments-page">
-      <h1>Shipments</h1>
+      <div className="shipments-header">
+        <h1>Shipments</h1>
+        <button
+          type="button"
+          className="export-csv-btn"
+          onClick={handleExportCSV}
+          disabled={isExporting || shipments.length === 0}
+          aria-label="Export shipments to CSV"
+        >
+          {isExporting ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : (
+            <Download size={16} />
+          )}
+          {isExporting ? 'Exporting…' : 'Export CSV'}
+        </button>
+      </div>
 
       {error ? (
         <div className="shipments-error">{error}</div>

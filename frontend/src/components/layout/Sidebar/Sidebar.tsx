@@ -11,6 +11,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { anomalyApi } from "@services/api/endpoints/anomalies";
+import Avatar from "../../ui/Avatar";
+import { useAuthContext } from "../../../context/AuthContext";
 
 export interface SidebarProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = useAuthContext();
   const [openAnomalyCount, setOpenAnomalyCount] = useState(0);
 
   useEffect(() => {
@@ -143,11 +146,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClose();
           }}
         >
-          <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=ffcba4"
-            alt="User Profile"
-            className="user-avatar-img"
-          />
+          <Avatar name={role ?? 'User'} size="sm" />
           {!isCollapsed && <span className="nav-label">Profile</span>}
         </button>
       </div>
