@@ -6,7 +6,7 @@ interface ErrorFallbackProps {
   resetError?: () => void;
 }
 
-const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
+function ErrorFallback({ error, resetError }: ErrorFallbackProps): React.ReactElement {
   const message = error instanceof Error ? error.message : String(error);
 
   return (
