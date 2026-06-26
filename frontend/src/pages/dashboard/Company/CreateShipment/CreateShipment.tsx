@@ -1,12 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { CheckCircle2, Package, ArrowLeft, Loader2, Book } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
+import { addressesApi } from '@services/api/endpoints/addresses';
+import type { Address } from '@services/api/endpoints/addresses';
 import { useToast } from '@context/ToastContext';
 import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
 import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
 import { getTemplatePreview, toTemplateFields } from '@types/shipmentTemplate';
 import type { AxiosError } from 'axios';
+import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
 import './CreateShipment.css';
 
 interface FormData {
@@ -76,6 +82,25 @@ const CreateShipment: React.FC = () => {
         applyTemplate(templateId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, templates, templatesLoading]);
+    const [pickerTarget, setPickerTarget] = useState<'origin' | 'destination' | null>(null);
+
+    useEffect(() => {
+        addressesApi.getAll().then((addrs) => {
+            const def = addrs.find((a) => a.isDefault);
+            if (def) {
+                setFormData((prev) => ({ ...prev, origin: formatAddress(def) }));
+            }
+        }).catch(() => {});
+    }, []);
+
+    const formatAddress = (addr: Address): string =>
+        `${addr.street}, ${addr.city}, ${addr.state} ${addr.postalCode}, ${addr.country}`;
+
+    const handleAddressSelect = (addr: Address) => {
+        const formatted = formatAddress(addr);
+        setFormData((prev) => ({ ...prev, [pickerTarget!]: formatted }));
+        setPickerTarget(null);
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -253,7 +278,13 @@ const CreateShipment: React.FC = () => {
 
               <form onSubmit={handleSubmit} className="shipment-form">
                   <div className="form-group">
-                      <label htmlFor="origin">Origin Address</label>
+                      <div className="label-row">
+                          <label htmlFor="origin">Origin Address</label>
+                          <button type="button" className="address-book-btn" onClick={() => setPickerTarget('origin')}>
+                              <Book size={14} />
+                              Address Book
+                          </button>
+                      </div>
                       <input
                           type="text"
                           id="origin"
@@ -269,7 +300,13 @@ const CreateShipment: React.FC = () => {
                   </div>
 
                   <div className="form-group">
-                      <label htmlFor="destination">Destination Address</label>
+                      <div className="label-row">
+                          <label htmlFor="destination">Destination Address</label>
+                          <button type="button" className="address-book-btn" onClick={() => setPickerTarget('destination')}>
+                              <Book size={14} />
+                              Address Book
+                          </button>
+                      </div>
                       <input
                           type="text"
                           id="destination"
@@ -388,6 +425,12 @@ const CreateShipment: React.FC = () => {
                       </button>
                   </div>
               </form>
+
+              <AddressBookPickerModal
+                  isOpen={pickerTarget !== null}
+                  onClose={() => setPickerTarget(null)}
+                  onSelect={handleAddressSelect}
+              />
           </div>
 
           <SaveTemplateModal
