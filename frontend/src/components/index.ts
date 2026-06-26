@@ -50,6 +50,8 @@ export { default as StatCard } from './dashboard/StatCard';
 export type { StatCardProps } from './dashboard/StatCard';
 export { default as DeliverySuccessChart } from './dashboard/Charts/DeliverySuccessChart';
 export { default as ShipmentVolumeChart } from './dashboard/Charts/ShipmentVolumeChart';
+export { default as RevenueTargetWidget } from './dashboard/RevenueTargetWidget';
+export { default as CostPerRouteWidget } from './dashboard/CostPerRouteWidget';
 
 // Shipment
 export { default as TrackingTimeline } from './shipment/TrackingTimeline';
