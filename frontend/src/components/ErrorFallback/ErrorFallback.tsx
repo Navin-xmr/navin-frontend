@@ -3,18 +3,13 @@ import React from 'react';
 interface ErrorFallbackProps {
   error: unknown;
   componentStack?: string | null;
+  eventId?: string;
   resetError?: () => void;
 }
 
-const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
+function ErrorFallback({ error, resetError }: ErrorFallbackProps): React.ReactElement {
   const message = error instanceof Error ? error.message : String(error);
 
-  componentStack: string;
-  eventId: string;
-  resetError: () => void;
-}
-
-function ErrorFallback({ error, resetError }: ErrorFallbackProps): React.ReactElement {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-white">
       <div className="max-w-lg text-center">
@@ -31,7 +26,6 @@ function ErrorFallback({ error, resetError }: ErrorFallbackProps): React.ReactEl
         </div>
         <pre className="bg-gray-100 dark:bg-[rgba(0,0,0,0.6)] p-4 rounded-lg text-xs text-left overflow-auto max-h-40 whitespace-pre-wrap text-gray-700 dark:text-gray-300 mb-6">
           {message}
-          {error instanceof Error ? error.message : String(error)}
         </pre>
         {resetError && (
           <button
