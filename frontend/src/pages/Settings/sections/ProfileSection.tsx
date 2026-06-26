@@ -72,17 +72,18 @@ const ProfileSection: React.FC<{ isCompany: boolean }> = ({ isCompany }) => {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">Full Name</label>
-          <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Your name" className={inputCls} />
+          <label htmlFor="profile-fullName" className="block text-xs font-medium text-slate-400 mb-1.5">Full Name</label>
+          <input id="profile-fullName" name="fullName" value={form.fullName} onChange={handleChange} placeholder="Your name" className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
-          <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@company.com" className={inputCls} />
+          <label htmlFor="profile-email" className="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
+          <input id="profile-email" name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@company.com" className={inputCls} />
         </div>
         {isCompany && (
           <div className="md:col-span-2">
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Company Name (read-only)</label>
+            <label htmlFor="profile-companyName" className="block text-xs font-medium text-slate-400 mb-1.5">Company Name (read-only)</label>
             <input
+              id="profile-companyName"
               name="companyName"
               value={form.companyName}
               readOnly
