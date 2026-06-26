@@ -1,11 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2 } from 'lucide-react';
-import { shipmentApi, type Shipment } from '../../api/shipmentApi';
+import { Download, LayoutGrid, List, Loader2, Map } from 'lucide-react';
+import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
+import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
+import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
+import ShipmentsKanban from './KanbanView/ShipmentsKanban';
+import RouteMap from './RouteMap/RouteMap';
 import './Shipments.css';
 
 function exportShipmentsToCSV(shipments: Shipment[]): void {
@@ -37,9 +41,14 @@ function exportShipmentsToCSV(shipments: Shipment[]): void {
 
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
+const VIEW_KEY = 'shipments-view';
+
+type PriorityFilter = 'ALL' | 'URGENT' | 'STANDARD' | 'ECONOMY';
+type ShipmentsView = 'list' | 'kanban' | 'routeMap';
 
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
+  const { role } = useAuthContext();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -48,14 +57,36 @@ const Shipments: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const loadingRef = useRef(false);
 
+  const [view, setView] = useState<ShipmentsView>(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_KEY);
+      if (saved === 'kanban' || saved === 'routeMap') return saved;
+      return 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
+  const handleViewChange = (next: ShipmentsView) => {
+    setView(next);
+    try {
+      localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      // ignore persistence failures
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL');
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState('');
+  const [activePriorityMenu, setActivePriorityMenu] = useState<string | null>(null);
+  const [updatingPriority, setUpdatingPriority] = useState<string | null>(null);
   const [savedFilters, setSavedFilters] = useState<{
     name: string;
-    filters: { search: string; status: string; timeframe: string };
+    filters: { search: string; status: string; priority: string; timeframe: string };
   }[]>(() => {
     try {
       const raw = localStorage.getItem('navin_saved_filters');
@@ -84,6 +115,10 @@ const Shipments: React.FC = () => {
       result = result.filter((s) => s.status === statusFilter);
     }
 
+    if (priorityFilter !== 'ALL') {
+      result = result.filter((s) => s.priority === priorityFilter);
+    }
+
     if (timeframeFilter !== 'ALL') {
       const days = parseInt(timeframeFilter, 10);
       const limitDate = new Date();
@@ -92,7 +127,7 @@ const Shipments: React.FC = () => {
     }
 
     return result;
-  }, [shipments, searchQuery, statusFilter, timeframeFilter]);
+  }, [shipments, searchQuery, statusFilter, timeframeFilter, priorityFilter]);
 
   const handleSaveFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +144,7 @@ const Shipments: React.FC = () => {
       filters: {
         search: searchQuery,
         status: statusFilter,
+        priority: priorityFilter,
         timeframe: timeframeFilter,
       },
     };
@@ -120,9 +156,10 @@ const Shipments: React.FC = () => {
     setIsSavingFilter(false);
   };
 
-  const handleApplyFilter = (filters: { search: string; status: string; timeframe: string }) => {
+  const handleApplyFilter = (filters: { search: string; status: string; priority: string; timeframe: string }) => {
     setSearchQuery(filters.search || '');
     setStatusFilter((filters.status as 'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED') || 'ALL');
+    setPriorityFilter((filters.priority as PriorityFilter) || 'ALL');
     setTimeframeFilter((filters.timeframe as 'ALL' | '30' | '90') || 'ALL');
   };
 
@@ -190,32 +227,82 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL';
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL' || priorityFilter !== 'ALL';
   const isEmpty = !isLoading && !error && shipments.length === 0;
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
+  const isCompanyUser = role === 'company';
 
   return (
     <div className="shipments-page">
       <div className="shipments-header">
         <h1>Shipments</h1>
-        <button
-          type="button"
-          className="export-csv-btn"
-          onClick={handleExportCSV}
-          disabled={isExporting || shipments.length === 0}
-          aria-label="Export shipments to CSV"
-        >
-          {isExporting ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Download size={16} />
-          )}
-          {isExporting ? 'Exporting…' : 'Export CSV'}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* List / Kanban view toggle */}
+          <div
+            className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
+            role="group"
+            aria-label="Toggle shipments view"
+          >
+            <button
+              type="button"
+              onClick={() => handleViewChange('list')}
+              aria-pressed={view === 'list'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                view === 'list' ? 'bg-[#62ffff] text-black' : 'text-[#94a3b8] hover:text-white'
+              }`}
+            >
+              <List size={14} />
+              List
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewChange('kanban')}
+              aria-pressed={view === 'kanban'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                view === 'kanban' ? 'bg-[#62ffff] text-black' : 'text-[#94a3b8] hover:text-white'
+              }`}
+            >
+              <LayoutGrid size={14} />
+              Kanban
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewChange('routeMap')}
+              aria-pressed={view === 'routeMap'}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                view === 'routeMap' ? 'bg-[#62ffff] text-black' : 'text-[#94a3b8] hover:text-white'
+              }`}
+            >
+              <Map size={14} />
+              Route Map
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="export-csv-btn"
+            onClick={handleExportCSV}
+            disabled={isExporting || shipments.length === 0}
+            aria-label="Export shipments to CSV"
+          >
+            {isExporting ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
+            {isExporting ? 'Exporting…' : 'Export CSV'}
+          </button>
+        </div>
       </div>
 
+      {view === 'kanban' ? (
+        <ShipmentsKanban />
+      ) : view === 'routeMap' ? (
+        <RouteMap />
+      ) : (
+        <>
       {/* Saved filter chips */}
       {savedFilters.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4" aria-label="Saved filters">
@@ -262,6 +349,19 @@ const Shipments: React.FC = () => {
           <option value="IN_TRANSIT" className="bg-[#121620]">In Transit</option>
           <option value="DELIVERED" className="bg-[#121620]">Delivered</option>
           <option value="CANCELLED" className="bg-[#121620]">Cancelled</option>
+        </select>
+
+        {/* Priority Filter */}
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Priority"
+        >
+          <option value="ALL" className="bg-[#121620]">All Priorities</option>
+          <option value="URGENT" className="bg-[#121620]">Urgent</option>
+          <option value="STANDARD" className="bg-[#121620]">Standard</option>
+          <option value="ECONOMY" className="bg-[#121620]">Economy</option>
         </select>
 
         {/* Timeframe Filter */}
@@ -342,6 +442,7 @@ const Shipments: React.FC = () => {
                 <th>Origin</th>
                 <th>Destination</th>
                 <th>Status</th>
+                <th>Priority</th>
                 <th>Created Date</th>
                 <th>Actions</th>
               </tr>
@@ -384,6 +485,9 @@ const Shipments: React.FC = () => {
                       <td>
                         <StatusBadge status={shipment.status} />
                       </td>
+                      <td>
+                        <PriorityBadge priority={shipment.priority} />
+                      </td>
                       <td>{safeFormatDate(shipment.createdAt)}</td>
                       <td>
                         <button
@@ -412,6 +516,8 @@ const Shipments: React.FC = () => {
               {isAnyFilterActive ? `${filteredShipments.length} matching shipments` : `All ${total} shipments loaded`}
             </div>
           )}
+        </>
+      )}
         </>
       )}
     </div>

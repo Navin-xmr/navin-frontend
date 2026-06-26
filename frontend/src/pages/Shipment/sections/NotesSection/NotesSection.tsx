@@ -4,6 +4,7 @@ import {
   NoteResponse,
 } from "../../../../services/api/endpoints/shipments";
 import { useToast } from "../../../../context/ToastContext";
+import Avatar from "../../../../components/ui/Avatar";
 
 interface Note {
   id: string;
@@ -132,12 +133,7 @@ const NotesSection: React.FC<NotesSectionProps> = ({ shipmentId, userRole }) => 
             className="bg-[rgba(0,0,0,0.2)] border border-[rgba(255,255,255,0.06)] rounded-2xl px-6 py-5 flex gap-4"
           >
             {/* Avatar */}
-            <div
-              className="w-10 h-10 rounded-full bg-[rgba(0,212,200,0.2)] border border-[rgba(0,212,200,0.5)] flex items-center justify-center shrink-0 text-[#00d4c8] text-sm font-semibold select-none"
-              aria-hidden="true"
-            >
-              {note.author.initials}
-            </div>
+            <Avatar name={note.author.name} size="md" />
 
             {/* Content */}
             <div className="flex-1 min-w-0">
