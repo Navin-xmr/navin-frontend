@@ -50,16 +50,15 @@ const Tooltip: React.FC<TooltipProps> = ({ content, children, placement = 'top' 
       onMouseLeave={hide}
       onFocusCapture={show}
       onBlurCapture={hide}
-      aria-describedby={visible ? tooltipId : undefined}
+      aria-describedby={tooltipId}
     >
       {children}
       <span
         id={tooltipId}
         role="tooltip"
         aria-hidden={!visible}
-        className={`absolute z-50 pointer-events-none whitespace-nowrap px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#0F1419] text-white border border-[rgba(98,255,255,0.25)] shadow-lg transition-opacity duration-150 ${
-          visible ? 'opacity-100' : 'opacity-0'
-        } ${POSITION_CLASSES[effectivePlacement]}`}
+        className={`absolute z-50 pointer-events-none whitespace-nowrap px-2.5 py-1.5 rounded-md text-xs font-medium bg-[#0F1419] text-white border border-[rgba(98,255,255,0.25)] shadow-lg transition-opacity duration-150 ${visible ? 'opacity-100' : 'opacity-0'
+          } ${POSITION_CLASSES[effectivePlacement]}`}
       >
         {content}
       </span>

@@ -57,9 +57,29 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
             </span>
           </div>
 
-          <p className="text-sm md:text-base text-text-primary text-white/80">
-            ETA: {expectedDeliveryDate}
-          </p>
+          {(() => {
+            const shipmentStatus = status as ShipmentStatus;
+            if (shipmentStatus === "DELIVERED") {
+              const deliveredDate = new Date(expectedDeliveryDate);
+              const hasValidDate = !Number.isNaN(deliveredDate.getTime());
+              return (
+                <p className="text-sm md:text-base text-text-primary text-white/80">
+                  Delivered on {hasValidDate ? deliveredDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" }) : expectedDeliveryDate}
+                </p>
+              );
+            }
+
+            if (shipmentStatus === "IN_TRANSIT") {
+              return <ETACountdown expectedDelivery={expectedDeliveryDate} status={shipmentStatus} />;
+            }
+
+            return (
+              <p className="text-sm md:text-base text-text-primary text-white/80">
+                ETA: {expectedDeliveryDate}
+              </p>
+            );
+          })()}
+
 
           {/* Origin to Destination */}
           {originAddress && destinationAddress && (

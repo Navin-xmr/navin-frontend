@@ -7,6 +7,8 @@ import {
 
 import { QuickActionsCard } from './QuickActions';
 import RecentShipments from './RecentShipments/RecentShipments';
+import RecentActivityFeed from './RecentActivity/RecentActivityFeed';
+import ShipmentsMapWidget from './ShipmentsMap/ShipmentsMapWidget';
 import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
 import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
 import type { TourStep } from '@components/onboarding/OnboardingTour';
@@ -153,6 +155,12 @@ const CompanyDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Shipments map */}
+      <div className="flex flex-col">
+        <div className="mb-4">
+          <ShipmentsMapWidget />
+        </div>
+      </div>
       <RevenueSummaryWidget />
 
       {/* Shipments */}
@@ -171,9 +179,16 @@ const CompanyDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Recent Activity */}
+      <div className="flex flex-col">
+        <RecentActivityFeed />
+      </div>
+
+
       {/* Active Fleet — desktop only */}
       {!isLoading && (
         <div className="max-md:hidden bg-[#14171e] border border-[#1e293b] rounded-xl px-6 py-4 flex justify-between items-center">
+
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-[rgba(79,70,229,0.1)] text-[#4f46e5] rounded-md flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
