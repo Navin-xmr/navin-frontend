@@ -18,6 +18,7 @@ function formatRemainingTime(diffMs: number) {
 
 const ETACountdown: React.FC<ETACountdownProps> = ({ expectedDelivery, status }) => {
     const isInTransit = status === "IN_TRANSIT";
+    const isDelivered = status === "DELIVERED";
 
     const targetDate = React.useMemo(() => {
         const d = new Date(expectedDelivery);
@@ -38,7 +39,23 @@ const ETACountdown: React.FC<ETACountdownProps> = ({ expectedDelivery, status })
         };
     }, [isInTransit, targetDate]);
 
-    if (!isInTransit || !targetDate) return null;
+    if (isDelivered) {
+        const deliveredDate = new Date(expectedDelivery);
+        const hasValidDate = !Number.isNaN(deliveredDate.getTime());
+        return (
+            <p className="text-sm md:text-base text-text-primary text-white/80">
+                Delivered on {hasValidDate ? deliveredDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" }) : expectedDelivery}
+            </p>
+        );
+    }
+
+    if (!isInTransit || !targetDate) {
+        return (
+            <p className="text-sm md:text-base text-text-primary text-white/80">
+                ETA: {expectedDelivery}
+            </p>
+        );
+    }
 
     const diffMs = targetDate.getTime() - nowTs;
 
@@ -64,4 +81,3 @@ const ETACountdown: React.FC<ETACountdownProps> = ({ expectedDelivery, status })
 
 
 export default ETACountdown;
-

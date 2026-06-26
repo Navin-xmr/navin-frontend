@@ -35,6 +35,7 @@ export interface Shipment {
     enterpriseId: string;
     logisticsId: string;
     status: ShipmentStatus;
+    priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';
     milestones: ShipmentMilestone[];
     offChainMetadata?: Record<string, unknown>;
     createdAt: string;
@@ -101,6 +102,11 @@ export const shipmentApi = {
 
     updateStatus: async (id: string, status: ShipmentStatus): Promise<Shipment> => {
         const res = await apiClient.patch<{ data: Shipment }>(`/shipments/${id}/status`, { status });
+        return res.data.data;
+    },
+
+    updatePriority: async (id: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY'): Promise<Shipment> => {
+        const res = await apiClient.patch<{ data: Shipment }>(`/shipments/${id}`, { priority });
         return res.data.data;
     },
 

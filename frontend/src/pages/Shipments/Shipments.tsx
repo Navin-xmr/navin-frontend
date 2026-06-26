@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, ChevronDown } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
+import PriorityBadge from '../../components/ui/PriorityBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
+import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import './Shipments.css';
 
@@ -38,8 +40,11 @@ function exportShipmentsToCSV(shipments: Shipment[]): void {
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
 
+type PriorityFilter = 'ALL' | 'URGENT' | 'STANDARD' | 'ECONOMY';
+
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
+  const { role } = useAuthContext();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -50,12 +55,15 @@ const Shipments: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL');
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState('');
+  const [activePriorityMenu, setActivePriorityMenu] = useState<string | null>(null);
+  const [updatingPriority, setUpdatingPriority] = useState<string | null>(null);
   const [savedFilters, setSavedFilters] = useState<{
     name: string;
-    filters: { search: string; status: string; timeframe: string };
+    filters: { search: string; status: string; priority: string; timeframe: string };
   }[]>(() => {
     try {
       const raw = localStorage.getItem('navin_saved_filters');
@@ -84,6 +92,10 @@ const Shipments: React.FC = () => {
       result = result.filter((s) => s.status === statusFilter);
     }
 
+    if (priorityFilter !== 'ALL') {
+      result = result.filter((s) => s.priority === priorityFilter);
+    }
+
     if (timeframeFilter !== 'ALL') {
       const days = parseInt(timeframeFilter, 10);
       const limitDate = new Date();
@@ -92,7 +104,7 @@ const Shipments: React.FC = () => {
     }
 
     return result;
-  }, [shipments, searchQuery, statusFilter, timeframeFilter]);
+  }, [shipments, searchQuery, statusFilter, priorityFilter, timeframeFilter]);
 
   const handleSaveFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +121,7 @@ const Shipments: React.FC = () => {
       filters: {
         search: searchQuery,
         status: statusFilter,
+        priority: priorityFilter,
         timeframe: timeframeFilter,
       },
     };
@@ -120,9 +133,10 @@ const Shipments: React.FC = () => {
     setIsSavingFilter(false);
   };
 
-  const handleApplyFilter = (filters: { search: string; status: string; timeframe: string }) => {
+  const handleApplyFilter = (filters: { search: string; status: string; priority: string; timeframe: string }) => {
     setSearchQuery(filters.search || '');
     setStatusFilter((filters.status as 'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED') || 'ALL');
+    setPriorityFilter((filters.priority as PriorityFilter) || 'ALL');
     setTimeframeFilter((filters.timeframe as 'ALL' | '30' | '90') || 'ALL');
   };
 
@@ -190,11 +204,25 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL';
+  const handlePriorityChange = async (shipmentId: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => {
+    setUpdatingPriority(shipmentId);
+    setActivePriorityMenu(null);
+    try {
+      const updated = await shipmentApi.updatePriority(shipmentId, priority);
+      setShipments((prev) => prev.map((s) => (s.id === shipmentId ? updated : s)));
+    } catch {
+      // keep optimistic update or revert
+    } finally {
+      setUpdatingPriority(null);
+    }
+  };
+
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || priorityFilter !== 'ALL' || timeframeFilter !== 'ALL';
   const isEmpty = !isLoading && !error && shipments.length === 0;
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
+  const isCompanyUser = role === 'company';
 
   return (
     <div className="shipments-page">
@@ -262,6 +290,19 @@ const Shipments: React.FC = () => {
           <option value="IN_TRANSIT" className="bg-[#121620]">In Transit</option>
           <option value="DELIVERED" className="bg-[#121620]">Delivered</option>
           <option value="CANCELLED" className="bg-[#121620]">Cancelled</option>
+        </select>
+
+        {/* Priority Filter */}
+        <select
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
+          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
+          aria-label="Filter by Priority"
+        >
+          <option value="ALL" className="bg-[#121620]">All Priorities</option>
+          <option value="URGENT" className="bg-[#121620]">Urgent</option>
+          <option value="STANDARD" className="bg-[#121620]">Standard</option>
+          <option value="ECONOMY" className="bg-[#121620]">Economy</option>
         </select>
 
         {/* Timeframe Filter */}
@@ -342,6 +383,7 @@ const Shipments: React.FC = () => {
                 <th>Origin</th>
                 <th>Destination</th>
                 <th>Status</th>
+                <th>Priority</th>
                 <th>Created Date</th>
                 <th>Actions</th>
               </tr>
@@ -383,6 +425,38 @@ const Shipments: React.FC = () => {
                       <td>{shipment.destination}</td>
                       <td>
                         <StatusBadge status={shipment.status} />
+                      </td>
+                      <td>
+                        {isCompanyUser ? (
+                          <div className="relative inline-block">
+                            <button
+                              type="button"
+                              onClick={() => setActivePriorityMenu(activePriorityMenu === shipment.id ? null : shipment.id)}
+                              className="flex items-center gap-1"
+                              aria-label="Change priority"
+                            >
+                              <PriorityBadge priority={shipment.priority} />
+                              <ChevronDown size={12} className="text-gray-400" />
+                            </button>
+                            {activePriorityMenu === shipment.id && (
+                              <div className="absolute z-10 mt-1 w-32 bg-[#1a1f2e] border border-[rgba(255,255,255,0.1)] rounded-lg shadow-lg py-1">
+                                {(['URGENT', 'STANDARD', 'ECONOMY'] as const).map((p) => (
+                                  <button
+                                    key={p}
+                                    type="button"
+                                    onClick={() => handlePriorityChange(shipment.id, p)}
+                                    disabled={updatingPriority === shipment.id}
+                                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-50 ${shipment.priority === p ? 'text-white font-medium' : 'text-gray-300'}`}
+                                  >
+                                    {p === 'URGENT' ? 'Urgent' : p === 'STANDARD' ? 'Standard' : 'Economy'}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <PriorityBadge priority={shipment.priority} />
+                        )}
                       </td>
                       <td>{safeFormatDate(shipment.createdAt)}</td>
                       <td>

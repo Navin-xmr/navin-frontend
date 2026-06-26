@@ -7,6 +7,7 @@ export interface Shipment {
   destination: string;
   status: ShipmentStatus;
   createdAt: string;
+  priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';
   deliveryProof?: {
     url: string;
     recipientSignatureName: string;
@@ -59,6 +60,7 @@ const STATUS_MAP: Record<string, ShipmentStatus> = {
 };
 
 const normalizeShipment = (shipment: BackendShipment): Shipment => {
+  const priority = shipment.priority as Shipment['priority'] | undefined;
   return {
     id: String(shipment.id),
     origin: String(shipment.origin),
@@ -68,6 +70,7 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
       (shipment.status as ShipmentStatus) ??
       'CREATED',
     createdAt: String(shipment.createdAt),
+    priority,
     deliveryProof: shipment.deliveryProof?.url
       ? {
         url: String(shipment.deliveryProof.url),
@@ -169,5 +172,10 @@ export const shipmentApi = {
         ...meta,
       },
     };
+  },
+
+  async updatePriority(id: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY'): Promise<Shipment> {
+    const response = await axios.patch<{ data: BackendShipment }>(`/api/shipments/${id}`, { priority });
+    return normalizeShipment(response.data.data);
   },
 };
