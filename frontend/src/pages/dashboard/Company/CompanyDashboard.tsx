@@ -40,6 +40,7 @@ import RecentShipments from './RecentShipments/RecentShipments';
 import RecentActivityFeed from './RecentActivity/RecentActivityFeed';
 import ShipmentsMapWidget from './ShipmentsMap/ShipmentsMapWidget';
 import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
+import { CostPerRouteWidget, RevenueTargetWidget } from '@components';
 import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
 import type { TourStep } from '@components/onboarding/OnboardingTour';
 
@@ -196,6 +197,11 @@ const CompanyDashboard: React.FC = () => {
         </div>
       </div>
       <RevenueSummaryWidget />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <RevenueTargetWidget />
+        <CostPerRouteWidget />
+      </div>
 
       {/* Shipments */}
       <div className="flex flex-col">
