@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, Loader2 } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
+import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
@@ -49,8 +50,19 @@ const Shipments: React.FC = () => {
 
   const hasMore = shipments.length < total;
 
+  const filteredShipments = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return shipments;
+    return shipments.filter(
+      (s) =>
+        s.id.toLowerCase().includes(q) ||
+        s.origin.toLowerCase().includes(q) ||
+        s.destination.toLowerCase().includes(q),
+    );
+  }, [shipments, searchQuery]);
+
   const { parentRef, virtualizer, handleScroll, scrollToIndex } = useVirtualShipments({
-    shipments,
+    shipments: filteredShipments,
     onLoadMore: () => setCurrentPage((p) => p + 1),
     hasMore,
   });
@@ -107,6 +119,7 @@ const Shipments: React.FC = () => {
   };
 
   const isEmpty = !isLoading && !error && shipments.length === 0;
+  const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
 
@@ -130,6 +143,14 @@ const Shipments: React.FC = () => {
         </button>
       </div>
 
+      <div className="shipments-search">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search by ID, origin, or destination..."
+        />
+      </div>
+
       {error ? (
         <div className="shipments-error">{error}</div>
       ) : isEmpty ? (
@@ -137,10 +158,15 @@ const Shipments: React.FC = () => {
           <h3>No shipments available</h3>
           <p>There are no shipments to show.</p>
         </div>
+      ) : isFilterEmpty ? (
+        <div className="shipments-empty">
+          <h3>No results found</h3>
+          <p>No shipments match &ldquo;{searchQuery}&rdquo;.</p>
+        </div>
       ) : (
         <>
           <div className="shipments-summary">
-            Showing {shipments.length} of {total} shipments
+            Showing {filteredShipments.length}{searchQuery ? ` of ${shipments.length} loaded` : ` of ${total}`} shipments
           </div>
 
           {/* Sticky table header */}
@@ -170,7 +196,7 @@ const Shipments: React.FC = () => {
             >
               <tbody style={{ display: 'block', height: `${totalSize}px`, position: 'relative' }}>
                 {virtualItems.map((virtualRow) => {
-                  const shipment = shipments[virtualRow.index];
+                  const shipment = filteredShipments[virtualRow.index];
                   if (!shipment) return null;
                   return (
                     <tr
@@ -216,9 +242,9 @@ const Shipments: React.FC = () => {
             </div>
           )}
 
-          {!hasMore && shipments.length > 0 && (
+          {!hasMore && filteredShipments.length > 0 && (
             <div className="shipments-summary" style={{ marginTop: '0.5rem' }}>
-              All {total} shipments loaded
+              {searchQuery ? `${filteredShipments.length} matching shipments` : `All ${total} shipments loaded`}
             </div>
           )}
         </>

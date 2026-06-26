@@ -3,6 +3,7 @@ import React from 'react';
 interface ErrorFallbackProps {
   error: unknown;
   componentStack?: string | null;
+  eventId?: string;
   resetError?: () => void;
 }
 

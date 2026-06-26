@@ -8,6 +8,16 @@ export interface SignupRequest {
     organizationId?: string;
 }
 
+export interface CompanyRegisterRequest {
+    companyName: string;
+    industry: string;
+    country: string;
+    companySize: string;
+    adminName: string;
+    email: string;
+    password: string;
+}
+
 export interface LoginRequest {
     email: string;
     password: string;
@@ -40,6 +50,10 @@ export const authApi = {
         localStorage.setItem("authToken", token);
         Sentry.setUser({ id: user.id, email: user.email, username: user.role });
         return res.data.data;
+    },
+
+    registerCompany: async (data: CompanyRegisterRequest): Promise<void> => {
+        await apiClient.post("/auth/register/company", data);
     },
 
     logout: async (): Promise<void> => {

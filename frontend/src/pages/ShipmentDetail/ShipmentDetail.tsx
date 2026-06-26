@@ -35,11 +35,11 @@ const ShipmentDetail: React.FC = () => {
             setCurrentStatus(statusEvent.newStatus);
             announce(`Shipment status updated to ${statusEvent.newStatus}`);
         }
-    }, [statusEvent, id]);
     }, [statusEvent, id, announce]);
 
     const shipmentHeaderData = {
         shipmentId: id ? `#${id}` : "#SHP-992834",
+        trackingNumber: id ?? "SHP-992834", // TODO: swap for real public tracking token once backend exposes one
         status: currentStatus,
         originAddress: "New York Distribution Center, NY 10001",
         destinationAddress: "123 Main Street, Boston, MA 02101",
@@ -135,11 +135,6 @@ const ShipmentDetail: React.FC = () => {
                         }}
                     />
                 )}
-
-                <DocumentsSection
-                    shipmentId={id || shipmentHeaderData.shipmentId}
-                    userRole={shipmentHeaderData.userRole}
-                />
 
                 {!isOnline && (
                     <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">

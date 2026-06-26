@@ -1,14 +1,13 @@
-import React from "react";
-import { Package, ArrowRight } from "lucide-react";
+import React, { useState } from "react";
+import { Package, ArrowRight, QrCode } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
-import ETACountdown from "../../../components/shipment/ETACountdown";
-import type { ShipmentStatus } from "../../../utils/shipmentStatus";
-
+import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
 
 export type UserRole = "company" | "customer";
 
 export interface ShipmentDetailHeaderProps {
   shipmentId: string;
+  trackingNumber: string;
   status: string; // backend enum
   expectedDeliveryDate: string;
   userRole: UserRole;
@@ -20,6 +19,7 @@ export interface ShipmentDetailHeaderProps {
 
 const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   shipmentId,
+  trackingNumber,
   status,
   expectedDeliveryDate,
   userRole,
@@ -28,6 +28,8 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   onUpdateStatus,
   onTrack,
 }) => {
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+
   const formatStatus = (status: string): string => getStatusDisplayLabel(status);
 
   return (
@@ -114,7 +116,22 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
             Track
           </button>
         )}
+
+        <button
+          onClick={() => setIsQrModalOpen(true)}
+          aria-label="Share QR Code"
+          className="px-6 py-3 rounded-lg bg-background-elevated border border-border hover:bg-background-card text-white font-semibold transition-colors duration-200 flex items-center gap-2 justify-center"
+        >
+          <QrCode className="w-5 h-5" />
+          Share QR Code
+        </button>
       </div>
+
+      <ShareQRCodeModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        trackingNumber={trackingNumber}
+      />
     </div>
   );
 };
