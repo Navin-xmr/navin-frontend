@@ -7,6 +7,7 @@ import {
 
 import { QuickActionsCard } from './QuickActions';
 import RecentShipments from './RecentShipments/RecentShipments';
+import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
 import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
 import type { TourStep } from '@components/onboarding/OnboardingTour';
 
@@ -151,6 +152,8 @@ const CompanyDashboard: React.FC = () => {
           <QuickActionsCard />
         </div>
       </div>
+
+      <RevenueSummaryWidget />
 
       {/* Shipments */}
       <div className="flex flex-col">
