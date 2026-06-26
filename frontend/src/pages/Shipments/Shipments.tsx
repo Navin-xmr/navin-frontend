@@ -9,7 +9,7 @@ import { safeFormatDate } from '../../utils/safeFormat';
 import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import ShipmentsKanban from './KanbanView/ShipmentsKanban';
-import RouteMap from './RouteMap/RouteMap';
+import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus, type Priority } from './ShipmentFilters';
 import './Shipments.css';
 
 function exportShipmentsToCSV(shipments: Shipment[]): void {
@@ -43,8 +43,7 @@ const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
 const VIEW_KEY = 'shipments-view';
 
-type PriorityFilter = 'ALL' | 'URGENT' | 'STANDARD' | 'ECONOMY';
-type ShipmentsView = 'list' | 'kanban' | 'routeMap';
+type ShipmentsView = 'list' | 'kanban';
 
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
@@ -77,9 +76,17 @@ const Shipments: React.FC = () => {
   };
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL');
-  const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
+  const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>({
+    status: [],
+    dateFrom: '',
+    dateTo: '',
+    carrier: '',
+    origin: '',
+    destination: '',
+    weightMin: '',
+    weightMax: '',
+    priority: [],
+  });
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState('');
   const [activePriorityMenu, setActivePriorityMenu] = useState<string | null>(null);
@@ -111,23 +118,39 @@ const Shipments: React.FC = () => {
       );
     }
 
-    if (statusFilter !== 'ALL') {
-      result = result.filter((s) => s.status === statusFilter);
+    const { status, dateFrom, dateTo, origin, destination, priority } = advancedFilters;
+
+    if (status.length > 0) {
+      result = result.filter((s) => status.includes(s.status));
     }
 
-    if (priorityFilter !== 'ALL') {
-      result = result.filter((s) => s.priority === priorityFilter);
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      result = result.filter((s) => new Date(s.createdAt) >= from);
     }
 
-    if (timeframeFilter !== 'ALL') {
-      const days = parseInt(timeframeFilter, 10);
-      const limitDate = new Date();
-      limitDate.setDate(limitDate.getDate() - days);
-      result = result.filter((s) => new Date(s.createdAt) >= limitDate);
+    if (dateTo) {
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      result = result.filter((s) => new Date(s.createdAt) <= to);
+    }
+
+    if (priority.length > 0) {
+      result = result.filter((s) => s.priority && priority.includes(s.priority));
+    }
+
+    if (origin) {
+      const o = origin.toLowerCase();
+      result = result.filter((s) => s.origin.toLowerCase().includes(o));
+    }
+
+    if (destination) {
+      const d = destination.toLowerCase();
+      result = result.filter((s) => s.destination.toLowerCase().includes(d));
     }
 
     return result;
-  }, [shipments, searchQuery, statusFilter, timeframeFilter, priorityFilter]);
+  }, [shipments, searchQuery, advancedFilters]);
 
   const handleSaveFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,13 +162,16 @@ const Shipments: React.FC = () => {
       return;
     }
 
+    const savedStatus = advancedFilters.status.length === 1 ? advancedFilters.status[0] : 'ALL';
+    const savedPriority = advancedFilters.priority.length === 1 ? advancedFilters.priority[0] : 'ALL';
+
     const newFilter = {
       name,
       filters: {
         search: searchQuery,
-        status: statusFilter,
-        priority: priorityFilter,
-        timeframe: timeframeFilter,
+        status: savedStatus,
+        priority: savedPriority,
+        timeframe: 'ALL',
       },
     };
 
@@ -156,11 +182,19 @@ const Shipments: React.FC = () => {
     setIsSavingFilter(false);
   };
 
-  const handleApplyFilter = (filters: { search: string; status: string; priority: string; timeframe: string }) => {
-    setSearchQuery(filters.search || '');
-    setStatusFilter((filters.status as 'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED') || 'ALL');
-    setPriorityFilter((filters.priority as PriorityFilter) || 'ALL');
-    setTimeframeFilter((filters.timeframe as 'ALL' | '30' | '90') || 'ALL');
+  const handleApplyFilter = (saved: { search: string; status: string; priority: string; timeframe: string }) => {
+    setSearchQuery(saved.search || '');
+    setAdvancedFilters({
+      status: saved.status !== 'ALL' ? [saved.status as ShipmentStatus] : [],
+      dateFrom: '',
+      dateTo: '',
+      carrier: '',
+      origin: '',
+      destination: '',
+      weightMin: '',
+      weightMax: '',
+      priority: saved.priority !== 'ALL' ? [saved.priority as Priority] : [],
+    });
   };
 
   const handleDeleteFilter = (name: string, e: React.MouseEvent) => {
@@ -227,7 +261,30 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL' || priorityFilter !== 'ALL';
+  const handlePriorityChange = async (shipmentId: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => {
+    setUpdatingPriority(shipmentId);
+    setActivePriorityMenu(null);
+    try {
+      const updated = await shipmentApi.updatePriority(shipmentId, priority);
+      setShipments((prev) => prev.map((s) => (s.id === shipmentId ? updated : s)));
+    } catch {
+      // keep optimistic update or revert
+    } finally {
+      setUpdatingPriority(null);
+    }
+  };
+
+  const isAnyFilterActive =
+    searchQuery !== '' ||
+    advancedFilters.status.length > 0 ||
+    advancedFilters.dateFrom !== '' ||
+    advancedFilters.dateTo !== '' ||
+    advancedFilters.carrier !== '' ||
+    advancedFilters.origin !== '' ||
+    advancedFilters.destination !== '' ||
+    advancedFilters.weightMin !== '' ||
+    advancedFilters.weightMax !== '' ||
+    advancedFilters.priority.length > 0;
   const isEmpty = !isLoading && !error && shipments.length === 0;
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
@@ -337,44 +394,7 @@ const Shipments: React.FC = () => {
           />
         </div>
 
-        {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED')}
-          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-          aria-label="Filter by Status"
-        >
-          <option value="ALL" className="bg-[#121620]">All Statuses</option>
-          <option value="CREATED" className="bg-[#121620]">Created</option>
-          <option value="IN_TRANSIT" className="bg-[#121620]">In Transit</option>
-          <option value="DELIVERED" className="bg-[#121620]">Delivered</option>
-          <option value="CANCELLED" className="bg-[#121620]">Cancelled</option>
-        </select>
-
-        {/* Priority Filter */}
-        <select
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
-          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-          aria-label="Filter by Priority"
-        >
-          <option value="ALL" className="bg-[#121620]">All Priorities</option>
-          <option value="URGENT" className="bg-[#121620]">Urgent</option>
-          <option value="STANDARD" className="bg-[#121620]">Standard</option>
-          <option value="ECONOMY" className="bg-[#121620]">Economy</option>
-        </select>
-
-        {/* Timeframe Filter */}
-        <select
-          value={timeframeFilter}
-          onChange={(e) => setTimeframeFilter(e.target.value as 'ALL' | '30' | '90')}
-          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-          aria-label="Filter by Timeframe"
-        >
-          <option value="ALL" className="bg-[#121620]">All Time</option>
-          <option value="30" className="bg-[#121620]">Last 30 Days</option>
-          <option value="90" className="bg-[#121620]">Last 90 Days</option>
-        </select>
+        <ShipmentFilters onFilterChange={setAdvancedFilters} />
 
         {/* Save Current Filters Button / Inline Form */}
         {!isSavingFilter ? (
