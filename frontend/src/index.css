@@ -133,6 +133,28 @@ html {
 .animate-fade-in-up {
   animation: fade-in-up 1s ease-out;
 }
+
+@keyframes logo-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.logo-strip-track {
+  animation: logo-scroll 28s linear infinite;
+}
+
+@media print {
+  body > *:not(#shipment-print-root) {
+    display: none !important;
+  }
+  #shipment-print-root {
+    display: block !important;
+  }
+}
 .animate-spin-svg {
   animation: spin 2s linear infinite;
 }

@@ -49,6 +49,7 @@ const DashboardLayout: React.FC = () => {
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-teal-600 focus:text-white focus:rounded-lg focus:font-medium"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#62ffff] focus:text-black focus:font-semibold focus:rounded-lg focus:outline-none"
       >
         Skip to main content
       </a>
@@ -89,6 +90,11 @@ const DashboardLayout: React.FC = () => {
               return (
                 <button
                   key={item.name}
+                  data-tour-id={
+                    item.path === '/dashboard/shipments' ? 'tour-shipments-link' :
+                    item.path === '/dashboard/settlements' ? 'tour-settlements-link' :
+                    undefined
+                  }
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all border-none w-full text-left
                     ${isActive
                       ? 'bg-teal-50 dark:bg-[rgba(19,186,186,0.15)] text-teal-700 dark:text-white border-l-[3px] border-l-teal-500 dark:border-l-[#62ffff] pl-2.25 [&_svg]:text-teal-500 dark:[&_svg]:text-[#62ffff]'
