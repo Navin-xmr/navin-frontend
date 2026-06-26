@@ -3,8 +3,8 @@ import { useParams } from "react-router-dom";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import Breadcrumb from "../../components/ui/Breadcrumb";
 import MilestoneTimeline, {
-    MilestoneDetail,
-} from "./MilestoneTimeline/MilestoneTimeline";
+    TimelineMilestone,
+} from "../../components/shipment/MilestoneTimeline";
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import ShipmentMap from "./ShipmentMap/ShipmentMap";
 import DeliveryProofUpload from "./DeliveryProofUpload/DeliveryProofUpload";
@@ -67,14 +67,12 @@ const ShipmentDetail: React.FC = () => {
         shockTilt: { eventCount: 2, lastUpdated: "2026-02-22 03:45 PM EST" },
     };
 
-    const mockMilestones: MilestoneDetail[] = [
-        { id: "1", name: "Order Confirmed", timestamp: "2026-02-20 09:15 AM EST", location: "New York Distribution Center, NY", blockchainAddress: "GABCD1234567890WXYZ1234567890ABCDEF", status: "completed", notes: "Order successfully confirmed.", sensorReadings: { temperature: "22°C", humidity: "45%", pressure: "1013 hPa" } },
-        { id: "2", name: "Picked Up by Carrier", timestamp: "2026-02-20 02:30 PM EST", location: "New York Distribution Center, NY", blockchainAddress: "GEFGH2345678901YZAB2345678901BCDEFG", status: "completed", notes: "Package picked up by carrier.", sensorReadings: { temperature: "21°C", humidity: "48%", pressure: "1012 hPa" } },
-        { id: "3", name: "In Transit - Philadelphia Hub", timestamp: "2026-02-21 08:45 AM EST", location: "Philadelphia Logistics Hub, PA", blockchainAddress: "GIJKL3456789012ZABC3456789012CDEFGH", status: "completed", notes: "Shipment arrived at Philadelphia hub.", sensorReadings: { temperature: "20°C", humidity: "50%", pressure: "1014 hPa" } },
-        { id: "4", name: "Departed Philadelphia Hub", timestamp: "2026-02-21 03:20 PM EST", location: "Philadelphia Logistics Hub, PA", blockchainAddress: "GMNOP4567890123ABCD4567890123DEFGHI", status: "completed", notes: "Package departed Philadelphia hub.", sensorReadings: { temperature: "19°C", humidity: "52%", pressure: "1015 hPa" } },
-        { id: "5", name: "Arrived at Boston Facility", timestamp: "2026-02-22 07:10 AM EST", location: "Boston Regional Facility, MA", blockchainAddress: "GQRST5678901234BCDE5678901234EFGHIJ", status: "completed", notes: "Shipment arrived at Boston facility.", sensorReadings: { temperature: "18°C", humidity: "55%", pressure: "1016 hPa" } },
-        { id: "6", name: "Out for Delivery", timestamp: "2026-02-23 09:00 AM EST", location: "Boston, MA", blockchainAddress: "GUVWX6789012345CDEF6789012345FGHIJK", status: "current", notes: "Package is currently out for delivery.", sensorReadings: { temperature: "17°C", humidity: "58%", pressure: "1017 hPa" } },
-        { id: "7", name: "Delivered", timestamp: "Expected: 2026-02-23 05:00 PM EST", location: "Boston, MA", blockchainAddress: "GYZAB7890123456DEFG7890123456GHIJKL", status: "upcoming", notes: "Estimated delivery time." },
+    const mockMilestones: TimelineMilestone[] = [
+        { id: "1", eventType: "PICKED_UP", name: "Picked up by carrier", timestamp: "2026-02-20 02:30 PM EST", location: "New York Distribution Center, NY", status: "completed", txHash: "3389e9f0f5b3d4c2a1b0e9f8a7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8" },
+        { id: "2", eventType: "IN_TRANSIT", name: "In transit — Philadelphia hub", timestamp: "2026-02-21 08:45 AM EST", location: "Philadelphia Logistics Hub, PA", status: "completed", txHash: "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" },
+        { id: "3", eventType: "CUSTOMS", name: "Customs cleared", timestamp: "2026-02-22 07:10 AM EST", location: "Boston Regional Facility, MA", status: "completed", txHash: "f1e2d3c4b5a60918273645546372819a0b1c2d3e4f5061728394a5b6c7d8e9f0" },
+        { id: "4", eventType: "IN_TRANSIT", name: "Out for delivery", timestamp: "2026-02-23 09:00 AM EST", location: "Boston, MA", status: "active" },
+        { id: "5", eventType: "DELIVERED", name: "Delivered", timestamp: "Expected: 2026-02-23 05:00 PM EST", location: "Boston, MA", status: "pending" },
     ];
 
     return (
