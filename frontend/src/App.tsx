@@ -42,6 +42,7 @@ const NotificationsPage = lazy(() => import('./pages/Notifications/Notifications
 const ShipmentHistory = lazy(() => import('./pages/dashboard/Customer/ShipmentHistory/ShipmentHistory'));
 const UserManagement = lazy(() => import('./pages/dashboard/Company/UserManagement/UserManagement'));
 const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/AcceptInvitation'));
+const CalendarView = lazy(() => import('./pages/dashboard/Company/CalendarView/CalendarView'));
 
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
@@ -77,6 +78,7 @@ const router = createBrowserRouter([
               { path: '/dashboard/team', element: S(<UserManagement />) },
               { path: '/dashboard/shipments/create', element: <CreateShipment /> },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
+              { path: '/dashboard/calendar', element: S(<CalendarView />) },
             ],
           },
           // Shared routes (both roles)
