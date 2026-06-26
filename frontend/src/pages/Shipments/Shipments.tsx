@@ -75,7 +75,6 @@ const Shipments: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL');
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
   const [priorityFilter, setPriorityFilter] = useState<'ALL' | ShipmentPriority>('ALL');
   const [isSavingFilter, setIsSavingFilter] = useState(false);
@@ -122,10 +121,6 @@ const Shipments: React.FC = () => {
       const limitDate = new Date();
       limitDate.setDate(limitDate.getDate() - days);
       result = result.filter((s) => new Date(s.createdAt) >= limitDate);
-    }
-
-    if (priorityFilter !== 'ALL') {
-      result = result.filter((s) => s.priority === priorityFilter);
     }
 
     return result;
@@ -338,19 +333,6 @@ const Shipments: React.FC = () => {
           <option value="IN_TRANSIT" className="bg-[#121620]">In Transit</option>
           <option value="DELIVERED" className="bg-[#121620]">Delivered</option>
           <option value="CANCELLED" className="bg-[#121620]">Cancelled</option>
-        </select>
-
-        {/* Priority Filter */}
-        <select
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value as PriorityFilter)}
-          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-          aria-label="Filter by Priority"
-        >
-          <option value="ALL" className="bg-[#121620]">All Priorities</option>
-          <option value="URGENT" className="bg-[#121620]">Urgent</option>
-          <option value="STANDARD" className="bg-[#121620]">Standard</option>
-          <option value="ECONOMY" className="bg-[#121620]">Economy</option>
         </select>
 
         {/* Timeframe Filter */}
