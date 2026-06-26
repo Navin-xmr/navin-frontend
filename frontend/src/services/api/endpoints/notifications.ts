@@ -1,5 +1,46 @@
 import { apiClient } from "../client";
 
+// ---------- Notification Preferences ----------
+
+export type NotificationChannel = "email" | "sms";
+
+export type NotificationEventType =
+  | "shipment_created"
+  | "status_changed"
+  | "delivery_confirmed"
+  | "payment_received"
+  | "dispute_opened"
+  | "dispute_resolved";
+
+export interface NotificationPreference {
+  event: NotificationEventType;
+  email: boolean;
+  sms: boolean;
+}
+
+export type PreferencesMap = Record<NotificationEventType, { email: boolean; sms: boolean }>;
+
+export const notificationPreferencesApi = {
+  getPreferences: async (): Promise<PreferencesMap> => {
+    const res = await apiClient.get<{ data: NotificationPreference[] }>("/notifications/preferences");
+    return Object.fromEntries(res.data.data.map((p) => [p.event, { email: p.email, sms: p.sms }])) as PreferencesMap;
+  },
+
+  updatePreference: async (event: NotificationEventType, channel: NotificationChannel, enabled: boolean): Promise<void> => {
+    await apiClient.patch("/notifications/preferences", { event, channel, enabled });
+  },
+
+  sendOtp: async (phone: string): Promise<void> => {
+    await apiClient.post("/notifications/phone/send-otp", { phone });
+  },
+
+  verifyOtp: async (phone: string, otp: string): Promise<void> => {
+    await apiClient.post("/notifications/phone/verify-otp", { phone, otp });
+  },
+};
+
+// ---------- Notifications ----------
+
 export type NotificationType = "all" | "shipments" | "settlements" | "system";
 export type NotificationIcon = "shipment" | "contract" | "alert" | "system" | "invoice" | "payment";
 
