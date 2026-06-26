@@ -53,14 +53,27 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
 
   useEffect(() => {
     if (!trackingNumber) return;
-    setLoading(true);
-    axios
-      .get<{ data: PublicShipment }>(`/api/public/shipments/${trackingNumber}`)
-      .then((res) => setShipment(res.data.data))
-      .catch((err) => {
-        if (err.response?.status === 404) setNotFound(true);
-      })
-      .finally(() => setLoading(false));
+    let isActive = true;
+
+    const fetchShipment = async () => {
+      try {
+        const res = await axios.get<{ data: PublicShipment }>(`/api/public/shipments/${trackingNumber}`);
+        if (isActive) setShipment(res.data.data);
+      } catch (err: any) {
+        if (isActive && err.response?.status === 404) setNotFound(true);
+      } finally {
+        if (isActive) setLoading(false);
+      }
+    };
+
+    // Defer setLoading to avoid synchronous setState warning
+    Promise.resolve().then(() => {
+      if (isActive) setLoading(true);
+    }).then(() => fetchShipment());
+
+    return () => {
+      isActive = false;
+    };
   }, [trackingNumber]);
 
   return (

@@ -59,7 +59,6 @@ const router = createBrowserRouter([
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: <PaginationDemo /> },
-  { path: '/skeleton-demo', element: <SkeletonDemo /> },
   { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {

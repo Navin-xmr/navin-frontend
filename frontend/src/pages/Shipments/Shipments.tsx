@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2 } from 'lucide-react';
-import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
+import { Download, Loader2, List, LayoutGrid } from 'lucide-react';
+import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
 import { safeFormatDate } from '../../utils/safeFormat';
-import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import ShipmentsKanban from './KanbanView/ShipmentsKanban';
 import './Shipments.css';
@@ -47,7 +46,6 @@ type ShipmentsView = 'list' | 'kanban';
 
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
-  const { role } = useAuthContext();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -77,11 +75,8 @@ const Shipments: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('ALL');
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
-  const [priorityFilter, setPriorityFilter] = useState<'ALL' | ShipmentPriority>('ALL');
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState('');
-  const [activePriorityMenu, setActivePriorityMenu] = useState<string | null>(null);
-  const [updatingPriority, setUpdatingPriority] = useState<string | null>(null);
   const [savedFilters, setSavedFilters] = useState<{
     name: string;
     filters: { search: string; status: string; priority: string; timeframe: string };
@@ -122,10 +117,6 @@ const Shipments: React.FC = () => {
       const limitDate = new Date();
       limitDate.setDate(limitDate.getDate() - days);
       result = result.filter((s) => new Date(s.createdAt) >= limitDate);
-    }
-
-    if (priorityFilter !== 'ALL') {
-      result = result.filter((s) => s.priority === priorityFilter);
     }
 
     return result;
@@ -234,7 +225,6 @@ const Shipments: React.FC = () => {
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
-  const isCompanyUser = role === 'company';
 
   return (
     <div className="shipments-page">
@@ -365,18 +355,6 @@ const Shipments: React.FC = () => {
           <option value="90" className="bg-[#121620]">Last 90 Days</option>
         </select>
 
-        {/* Priority Filter */}
-        <select
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value as 'ALL' | ShipmentPriority)}
-          className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-          aria-label="Filter by Priority"
-        >
-          <option value="ALL" className="bg-[#121620]">All Priorities</option>
-          <option value="URGENT" className="bg-[#121620]">Urgent</option>
-          <option value="STANDARD" className="bg-[#121620]">Standard</option>
-          <option value="ECONOMY" className="bg-[#121620]">Economy</option>
-        </select>
 
         {/* Save Current Filters Button / Inline Form */}
         {!isSavingFilter ? (

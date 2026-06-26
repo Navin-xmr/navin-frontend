@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Package, ArrowRight, QrCode, ChevronDown } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass, type ShipmentStatus } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
-import PriorityBadge from "../../../../components/ui/PriorityBadge";
+import PriorityBadge from "../../../components/ui/PriorityBadge";
+import ETACountdown from "../../../components/shipment/ETACountdown";
 
 export type UserRole = "company" | "customer";
 

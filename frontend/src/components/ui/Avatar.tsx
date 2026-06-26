@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-interface AvatarProps {
+export interface AvatarProps {
   src?: string;
   name: string;
   size?: 'sm' | 'md' | 'lg';

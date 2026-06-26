@@ -132,4 +132,9 @@ export const shipmentApi = {
   async patchPriority(id: string, priority: ShipmentPriority): Promise<void> {
     await axios.patch(`/api/shipments/${id}`, { priority });
   },
+
+  async getAllInTransitWithGps(): Promise<{ data: ShipmentWithGps[] }> {
+    const response = await axios.get<{ data: ShipmentWithGps[] }>('/api/shipments/in-transit-gps');
+    return { data: response.data.data ?? [] };
+  },
 };
