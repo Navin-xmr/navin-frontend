@@ -4,6 +4,7 @@ import HowItWorks from "@/LandingPage/sections/HowItWorks/HowItWorks";
 import WhyNavin from "@/LandingPage/sections/WhyNavin/WhyNavin";
 import Features from "@/pages/LandingPage/sections/Features/Features";
 import FAQSection from "./sections/FAQSection/FAQSection";
+import LogoStrip from "./sections/LogoStrip/LogoStrip";
 
 const LandingPage: React.FC = () => {
   return (
@@ -11,6 +12,7 @@ const LandingPage: React.FC = () => {
       <section id="hero">
         <Hero />
       </section>
+      <LogoStrip />
       <section id="why-navin">
         <WhyNavin />
       </section>

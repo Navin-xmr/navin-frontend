@@ -109,8 +109,6 @@ const Popover: React.FC<PopoverProps> = ({
   onNext,
   onSkip,
 }) => {
-  // onNext is reserved for the Next button (to be added in a follow-up)
-  void onNext;
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     zIndex: 9999,
@@ -257,6 +255,21 @@ const Popover: React.FC<PopoverProps> = ({
               }}
             >
               Skip
+            </button>
+            <button
+              onClick={onNext}
+              style={{
+                background: 'linear-gradient(135deg, #13baba 0%, #0d9488 100%)',
+                border: 'none',
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                padding: '7px 18px',
+                borderRadius: 8,
+              }}
+            >
+              {stepIndex + 1 === totalSteps ? 'Done' : 'Next →'}
             </button>
           </div>
         </div>

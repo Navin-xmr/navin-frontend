@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import Breadcrumb from "../../components/ui/Breadcrumb";
 import IoTPanel from "../Shipment/sections/IoTPanel/IoTPanel";
 import MilestoneTimeline, {
     MilestoneDetail,
@@ -16,29 +17,27 @@ import EscrowStatus from "./EscrowStatus/EscrowStatus";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { useAuthContext } from "../../context/AuthContext";
 import { can } from "../../utils/rbac";
+import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
+import { useLiveRegion } from "../../context/LiveRegionContext";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const { role } = useAuthContext();
+    const isOnline = useOnlineStatus();
+    const { announce } = useLiveRegion();
 
     const [currentStatus, setCurrentStatus] = useState("IN_TRANSIT");
 
-    // Subscribe to real-time events for this shipment
     const events = useRealtimeEvents(['shipment:status', 'shipment:milestone']);
-
-    // Update status when a realtime event arrives for this shipment
     const statusEvent = events['shipment:status'];
     React.useEffect(() => {
         if (statusEvent && statusEvent.shipmentId === id) {
             setCurrentStatus(statusEvent.newStatus);
+            announce(`Shipment status updated to ${statusEvent.newStatus}`);
         }
     }, [statusEvent, id]);
+    }, [statusEvent, id, announce]);
 
-import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
-
-const ShipmentDetail: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const isOnline = useOnlineStatus();
     const shipmentHeaderData = {
         shipmentId: id ? `#${id}` : "#SHP-992834",
         status: currentStatus,
@@ -48,23 +47,16 @@ const ShipmentDetail: React.FC = () => {
         userRole: (role ?? "customer") as "company" | "customer",
     };
 
-    const handleUpdateStatus = () => {
-        console.log("Update status clicked");
-    };
-    const handleTrack = () => {
-        console.log("Track clicked");
-    };
+    const handleUpdateStatus = () => { console.log("Update status clicked"); };
+    const handleTrack = () => { console.log("Track clicked"); };
 
     const mockPaymentData: PaymentData | null = {
         amount: "1,500.00",
         tokenSymbol: "XLM",
         status: "escrowed",
-        payerAddress:
-            "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI",
-        payeeAddress:
-            "GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB",
-        transactionHash:
-            "a]b c9d4e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9",
+        payerAddress: "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI",
+        payeeAddress: "GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB",
+        transactionHash: "a]b c9d4e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9",
     };
 
     const mockSensorData: SensorData | null = {
@@ -87,6 +79,14 @@ const ShipmentDetail: React.FC = () => {
     return (
         <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
             <div className="max-w-300 mx-auto relative z-10">
+                <Breadcrumb
+                    items={[
+                        { label: 'Dashboard', href: '/dashboard' },
+                        { label: 'Shipments', href: '/dashboard/shipments' },
+                        { label: id ? `#${id}` : '#SHP-992834' },
+                    ]}
+                />
+
                 <div className="text-center mb-16 md:mb-10">
                     <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(2.5rem,7vw,5rem)] font-normal tracking-[0.04em] leading-[1.1] text-white m-0 mb-4">
                         SHIPMENT <span className="text-[#00d4c8]">DETAILS</span>
@@ -101,15 +101,12 @@ const ShipmentDetail: React.FC = () => {
                         origin={shipmentHeaderData.originAddress}
                         destination={shipmentHeaderData.destinationAddress}
                     />
-
                     <ShipmentDetailHeader
                         {...shipmentHeaderData}
                         onUpdateStatus={handleUpdateStatus}
                         onTrack={handleTrack}
                     />
-
                     <div className="h-px bg-[rgba(0,212,200,0.2)] my-8" />
-
                     <h2 className="font-['Bebas_Neue',sans-serif] text-[clamp(1.75rem,4vw,2.5rem)] font-normal tracking-[0.04em] leading-[1.2] text-white mt-10 mb-0 text-center md:mb-8">
                         MILESTONE <span className="text-[#00d4c8]">TIMELINE</span>
                     </h2>
@@ -124,6 +121,11 @@ const ShipmentDetail: React.FC = () => {
                     <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
                 )}
 
+                <DocumentsSection
+                    shipmentId={id || shipmentHeaderData.shipmentId}
+                    userRole={shipmentHeaderData.userRole}
+                />
+
                 {can(role, 'shipment:confirm-milestone') && (
                     <DeliveryConfirmation
                         shipmentId={shipmentHeaderData.shipmentId}
@@ -133,39 +135,23 @@ const ShipmentDetail: React.FC = () => {
                         }}
                     />
                 )}
-                <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
+
                 <DocumentsSection
                     shipmentId={id || shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}
                 />
-                {isOnline ? (
-                    <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />
-                ) : (
+
+                {!isOnline && (
                     <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">
                         Upload Proof requires an internet connection.
                     </div>
                 )}
-                <DeliveryConfirmation
-                    shipmentId={shipmentHeaderData.shipmentId}
-                    status={shipmentHeaderData.status}
-                    onConfirm={async (id, rating, feedback) => {
-                        console.log("Delivery confirmed", {
-                            id,
-                            rating,
-                            feedback,
-                        });
-                    }}
-                />
+
                 <NotesSection
                     shipmentId={id ?? shipmentHeaderData.shipmentId}
                     userRole={shipmentHeaderData.userRole}
                 />
             </div>
-
-            <IoTPanel
-                shipmentId={id ?? shipmentHeaderData.shipmentId}
-                hasIoTDevice={true}
-            />
         </div>
     );
 };

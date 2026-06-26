@@ -1,8 +1,9 @@
 import { safeFormatDate } from '../../../../utils/safeFormat';
-import React from 'react';
-import { Download, Share2, MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Share2, MapPin, Printer } from 'lucide-react';
 import { StatusBadge } from '../../../../components/ui/StatusBadge/StatusBadge';
 import type { ShipmentStatus } from '../../../../services/api/endpoints/shipments';
+import ShipmentPrintView from '../PrintView/ShipmentPrintView';
 import './ShipmentHeader.css';
 
 export interface ShipmentHeaderProps {
@@ -18,6 +19,8 @@ export interface ShipmentHeaderProps {
   };
   createdAt: string;
   expectedDelivery: string;
+  trackingNumber?: string;
+  stellarTxHash?: string;
   onTrack?: () => void;
   onDownloadProof?: () => void;
   onShare?: () => void;
@@ -30,10 +33,14 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
   receiver,
   createdAt,
   expectedDelivery,
+  trackingNumber,
+  stellarTxHash,
   onTrack = () => console.log('Track clicked'),
   onDownloadProof = () => console.log('Download Proof clicked'),
   onShare = () => console.log('Share clicked'),
 }) => {
+  const [printing, setPrinting] = useState(false);
+
   return (
     <header className="shipment-header">
       <div className="shipment-header-content">
@@ -104,9 +111,33 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
               <Share2 size={16} />
               Share
             </button>
+            <button
+              className="action-btn secondary"
+              onClick={() => setPrinting(true)}
+              aria-label="Print shipment receipt"
+            >
+              <Printer size={16} />
+              Print Receipt
+            </button>
           </div>
         </section>
       </div>
+
+      {printing && (
+        <ShipmentPrintView
+          data={{
+            shipmentId,
+            trackingNumber,
+            status,
+            sender,
+            receiver,
+            createdAt: safeFormatDate(createdAt),
+            expectedDelivery: safeFormatDate(expectedDelivery),
+            stellarTxHash,
+          }}
+          onClose={() => setPrinting(false)}
+        />
+      )}
     </header>
   );
 };
