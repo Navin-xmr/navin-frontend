@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, Package, ArrowLeft, Loader2, Book } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
 import { addressesApi } from '@services/api/endpoints/addresses';
@@ -10,7 +7,7 @@ import type { Address } from '@services/api/endpoints/addresses';
 import { useToast } from '@context/ToastContext';
 import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
 import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
-import { getTemplatePreview, toTemplateFields } from '@types/shipmentTemplate';
+import { getTemplatePreview, toTemplateFields } from '../../../../types/shipmentTemplate';
 import type { AxiosError } from 'axios';
 import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
 import './CreateShipment.css';

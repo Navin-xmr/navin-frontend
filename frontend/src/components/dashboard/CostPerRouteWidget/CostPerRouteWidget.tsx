@@ -174,7 +174,7 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
                     stackId="cost"
                     fill={segment.color}
                     radius={segment.key === 'insurance' ? [0, 4, 4, 0] : [0, 0, 0, 0]}
-                    onClick={(barData) => openRoute(String(barData.route))}
+                    onClick={(barData: any) => openRoute(String(barData.route || barData.payload?.route))}
                     className="cursor-pointer"
                   />
                 ))}

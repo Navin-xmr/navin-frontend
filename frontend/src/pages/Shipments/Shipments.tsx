@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Download, LayoutGrid, List, Loader2, Map } from 'lucide-react';
-import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
-import type { ShipmentStatus } from '../../services/api/endpoints/shipments';
+import type { ShipmentPriority } from '../../api/shipmentApi';
+import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
@@ -13,6 +13,7 @@ import { useToast } from '../../context/ToastContext';
 import { safeFormatDate } from '../../utils/safeFormat';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import ShipmentsKanban from './KanbanView/ShipmentsKanban';
+import RouteMap from './RouteMap/RouteMap';
 import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus, type Priority } from './ShipmentFilters';
 import './Shipments.css';
 
@@ -45,7 +46,7 @@ const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
 const VIEW_KEY = 'shipments-view';
 
-type ShipmentsView = 'list' | 'kanban';
+type ShipmentsView = 'list' | 'kanban' | 'routeMap';
 
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
@@ -278,18 +279,29 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
-  const handlePriorityChange = async (shipmentId: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => {
-    setUpdatingPriority(shipmentId);
-    setActivePriorityMenu(null);
-    try {
-      const updated = await shipmentApi.updatePriority(shipmentId, priority);
-      setShipments((prev) => prev.map((s) => (s.id === shipmentId ? updated : s)));
-    } catch {
-      // keep optimistic update or revert
-    } finally {
-      setUpdatingPriority(null);
+  const handleExportSelected = () => {
+    const selectedShipments = shipments.filter(s => isSelected(s.id));
+    if (selectedShipments.length > 0) {
+      exportShipmentsToCSV(selectedShipments, `navin-selected-shipments-${new Date().toISOString().slice(0, 10)}.csv`);
     }
   };
+
+  const handleBulkStatusConfirm = async (newStatus: ShipmentStatus) => {
+    if (selectedIds.size === 0) return;
+    setIsBulkUpdating(true);
+    try {
+      await shipmentApi.bulkUpdateStatus(Array.from(selectedIds), newStatus);
+      setShipments(prev => prev.map(s => selectedIds.has(s.id) ? { ...s, status: newStatus } as Shipment : s));
+      addToast('Status updated successfully', 'success');
+      clearSelection();
+      setIsBulkModalOpen(false);
+    } catch (err) {
+      addToast('Failed to update status', 'error');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
 
   const isAnyFilterActive =
     searchQuery !== '' ||

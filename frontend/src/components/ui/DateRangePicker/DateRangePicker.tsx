@@ -100,7 +100,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
     }
   };
 
-  const getDateClassName = (date: Date, month: Date): string => {
+  const getDateClassName = (date: Date): string => {
     const baseClasses = 'w-8 h-8 flex items-center justify-center rounded-full text-sm cursor-pointer transition-all duration-200';
     
     if (isDateDisabled(date)) {
@@ -128,7 +128,6 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const renderCalendar = (month: Date, isLeft: boolean) => {
     const monthStart = startOfMonth(month);
-    const monthEnd = endOfMonth(month);
     const startDate = new Date(monthStart);
     startDate.setDate(startDate.getDate() - startDate.getDay());
 
@@ -176,7 +175,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 onMouseEnter={() => handleDateHover(date)}
                 onMouseLeave={() => setHoveredDate(null)}
                 disabled={isDateDisabled(date)}
-                className={getDateClassName(date, month)}
+                className={getDateClassName(date)}
                 style={{ opacity: isCurrentMonth ? 1 : 0.3 }}
               >
                 {date.getDate()}
