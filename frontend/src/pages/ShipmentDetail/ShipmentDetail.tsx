@@ -130,8 +130,20 @@ const ShipmentDetail: React.FC = () => {
 
                 <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl p-8 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] md:p-5 md:rounded-2xl sm:p-4">
                     <ShipmentMap
+                        shipmentId={id}
                         origin={shipmentHeaderData.originAddress}
                         destination={shipmentHeaderData.destinationAddress}
+                        originCoords={{ lat: 40.7128, lng: -74.006 }}
+                        destinationCoords={{ lat: 42.3601, lng: -71.0589 }}
+                        initialLocation={
+                            mockSensorData?.gps
+                                ? {
+                                      lat: mockSensorData.gps.latitude,
+                                      lng: mockSensorData.gps.longitude,
+                                      timestamp: mockSensorData.gps.lastUpdated,
+                                  }
+                                : undefined
+                        }
                     />
                     <ShipmentDetailHeader
                         {...shipmentHeaderData}
