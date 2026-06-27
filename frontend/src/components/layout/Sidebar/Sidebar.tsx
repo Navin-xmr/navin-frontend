@@ -9,6 +9,7 @@ import {
   Settings,
   HelpCircle,
   AlertTriangle,
+  Calendar,
 } from "lucide-react";
 import { anomalyApi } from "@services/api/endpoints/anomalies";
 import Avatar from "../../ui/Avatar";
@@ -50,6 +51,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       name: "Shipments",
       icon: <Truck size={22} className="nav-icon-svg" />,
       path: "/dashboard/shipments",
+    },
+    {
+      name: "Calendar",
+      icon: <Calendar size={22} className="nav-icon-svg" />,
+      path: "/dashboard/calendar",
     },
     {
       name: "Anomalies",

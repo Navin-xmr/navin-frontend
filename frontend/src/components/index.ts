@@ -16,6 +16,14 @@ export { ProgressBar } from './ui/ProgressBar';
 export type { ProgressBarProps, ProgressBarColor, ProgressBarSize } from './ui/ProgressBar';
 export { CircularProgress } from './ui/CircularProgress';
 export type { CircularProgressProps } from './ui/CircularProgress';
+export { default as Avatar } from './ui/Avatar';
+export type { AvatarProps } from './ui/Avatar';
+export { default as PriorityBadge } from './ui/PriorityBadge';
+export type { PriorityBadgeProps } from './ui/PriorityBadge';
+export { default as Tag } from './ui/Tag';
+export type { TagProps } from './ui/Tag';
+export { default as MultiSelect } from './ui/MultiSelect';
+export type { MultiSelectOption, MultiSelectProps } from './ui/MultiSelect';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 
 export { default as Card, CardHeader, CardBody, CardFooter } from './Card';
@@ -44,6 +52,8 @@ export { default as StatCard } from './dashboard/StatCard';
 export type { StatCardProps } from './dashboard/StatCard';
 export { default as DeliverySuccessChart } from './dashboard/Charts/DeliverySuccessChart';
 export { default as ShipmentVolumeChart } from './dashboard/Charts/ShipmentVolumeChart';
+export { default as RevenueTargetWidget } from './dashboard/RevenueTargetWidget';
+export { default as CostPerRouteWidget } from './dashboard/CostPerRouteWidget';
 
 // Shipment
 export { default as TrackingTimeline } from './shipment/TrackingTimeline';

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Package, ArrowRight, QrCode } from "lucide-react";
+import { Package, ArrowRight, QrCode, Printer, AlertTriangle } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
+import PriorityBadge from "../../../../components/ui/PriorityBadge";
 
 export type UserRole = "company" | "customer";
 
@@ -13,8 +14,12 @@ export interface ShipmentDetailHeaderProps {
   userRole: UserRole;
   originAddress?: string;
   destinationAddress?: string;
+  priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';
   onUpdateStatus?: () => void;
+  onUpdatePriority?: (priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => void;
   onTrack?: () => void;
+  onPrint?: () => void;
+  onRaiseDispute?: () => void;
 }
 
 const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
@@ -25,12 +30,18 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   userRole,
   originAddress,
   destinationAddress,
+  priority,
   onUpdateStatus,
+  onUpdatePriority,
   onTrack,
+  onPrint,
+  onRaiseDispute,
 }) => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [showPriorityMenu, setShowPriorityMenu] = useState(false);
 
   const formatStatus = (status: string): string => getStatusDisplayLabel(status);
+  const isCompanyUser = userRole === "company";
 
   return (
     <div className="bg-background-card p-6 md:p-8 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -43,7 +54,7 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
 
         {/* Shipment Info */}
         <div className="flex flex-col gap-2">
-          {/* Title + Status */}
+          {/* Title + Status + Priority */}
           <div className="flex items-center gap-4 flex-wrap">
             <h1 className="text-3xl md:text-4xl font-bold text-white">
               {shipmentId}
@@ -55,29 +66,44 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
               <span className={`w-2 h-2 ${getStatusDotClass(status)} rounded-full animate-pulse`}></span>
               {formatStatus(status)}
             </span>
+
+            {isCompanyUser ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+                  className="flex items-center gap-1"
+                  aria-label="Change priority"
+                >
+                  <PriorityBadge priority={priority} />
+                  <ChevronDown size={12} className="text-gray-400" />
+                </button>
+                {showPriorityMenu && (
+                  <div className="absolute z-10 mt-1 w-32 bg-[#1a1f2e] border border-[rgba(255,255,255,0.1)] rounded-lg shadow-lg py-1">
+                    {(['URGENT', 'STANDARD', 'ECONOMY'] as const).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => {
+                          onUpdatePriority?.(p);
+                          setShowPriorityMenu(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[rgba(255,255,255,0.05)] ${priority === p ? 'text-white font-medium' : 'text-gray-300'}`}
+                      >
+                        {p === 'URGENT' ? 'Urgent' : p === 'STANDARD' ? 'Standard' : 'Economy'}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <PriorityBadge priority={priority} />
+            )}
           </div>
 
           {(() => {
             const shipmentStatus = status as ShipmentStatus;
-            if (shipmentStatus === "DELIVERED") {
-              const deliveredDate = new Date(expectedDeliveryDate);
-              const hasValidDate = !Number.isNaN(deliveredDate.getTime());
-              return (
-                <p className="text-sm md:text-base text-text-primary text-white/80">
-                  Delivered on {hasValidDate ? deliveredDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" }) : expectedDeliveryDate}
-                </p>
-              );
-            }
-
-            if (shipmentStatus === "IN_TRANSIT") {
-              return <ETACountdown expectedDelivery={expectedDeliveryDate} status={shipmentStatus} />;
-            }
-
-            return (
-              <p className="text-sm md:text-base text-text-primary text-white/80">
-                ETA: {expectedDeliveryDate}
-              </p>
-            );
+            return <ETACountdown expectedDelivery={expectedDeliveryDate} status={shipmentStatus} />;
           })()}
 
 
@@ -117,6 +143,17 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
           </button>
         )}
 
+        {status === "DELIVERED" && onRaiseDispute && (
+          <button
+            onClick={onRaiseDispute}
+            aria-label="Raise dispute"
+            className="px-6 py-3 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold transition-colors duration-200 flex items-center gap-2 justify-center"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            Raise Dispute
+          </button>
+        )}
+
         <button
           onClick={() => setIsQrModalOpen(true)}
           aria-label="Share QR Code"
@@ -124,6 +161,14 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
         >
           <QrCode className="w-5 h-5" />
           Share QR Code
+        </button>
+        <button
+          onClick={onPrint}
+          aria-label="Print shipment receipt"
+          className="px-6 py-3 rounded-lg bg-background-elevated border border-border hover:bg-background-card text-white font-semibold transition-colors duration-200 flex items-center gap-2 justify-center"
+        >
+          <Printer className="w-5 h-5" />
+          Print Receipt
         </button>
       </div>
 

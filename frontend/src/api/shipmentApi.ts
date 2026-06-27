@@ -1,5 +1,11 @@
 import axios from 'axios';
 import type { ShipmentStatus } from '../services/api/endpoints/shipments';
+import {
+  readNumericField,
+  resolveLocationCoords,
+} from '../utils/routeCoordinates';
+
+export type ShipmentPriority = 'URGENT' | 'STANDARD' | 'ECONOMY';
 
 export interface Shipment {
   id: string;
@@ -7,6 +13,7 @@ export interface Shipment {
   destination: string;
   status: ShipmentStatus;
   createdAt: string;
+  priority?: ShipmentPriority;
   deliveryProof?: {
     url: string;
     recipientSignatureName: string;
@@ -58,7 +65,14 @@ const STATUS_MAP: Record<string, ShipmentStatus> = {
   CANCELLED: 'CANCELLED',
 };
 
+const PRIORITY_MAP: Record<string, ShipmentPriority> = {
+  URGENT: 'URGENT',
+  STANDARD: 'STANDARD',
+  ECONOMY: 'ECONOMY',
+};
+
 const normalizeShipment = (shipment: BackendShipment): Shipment => {
+  const rawPriority = shipment.priority ? String(shipment.priority).toUpperCase() : undefined;
   return {
     id: String(shipment.id),
     origin: String(shipment.origin),
@@ -68,6 +82,7 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
       (shipment.status as ShipmentStatus) ??
       'CREATED',
     createdAt: String(shipment.createdAt),
+    priority: rawPriority ? (PRIORITY_MAP[rawPriority] ?? undefined) : undefined,
     deliveryProof: shipment.deliveryProof?.url
       ? {
         url: String(shipment.deliveryProof.url),
@@ -86,6 +101,118 @@ export type ShipmentWithGps = Shipment & {
   anomalyDetected?: boolean;
   isDelayed?: boolean;
 };
+
+export type ShipmentRoute = Shipment & {
+  originLat: number;
+  originLng: number;
+  destinationLat: number;
+  destinationLng: number;
+  isDelayed?: boolean;
+  trackingNumber?: string;
+};
+
+export type RouteDisplayStatus = 'IN_TRANSIT' | 'DELAYED' | 'DELIVERED';
+
+const ACTIVE_ROUTE_STATUSES: ShipmentStatus[] = ['IN_TRANSIT', 'DELIVERED'];
+
+export function getRouteDisplayStatus(route: ShipmentRoute): RouteDisplayStatus {
+  if (route.status === 'DELIVERED') return 'DELIVERED';
+  if (route.isDelayed) return 'DELAYED';
+  return 'IN_TRANSIT';
+}
+
+const toShipmentRoute = (shipment: BackendShipment): ShipmentRoute | null => {
+  const base = normalizeShipment(shipment);
+  if (!ACTIVE_ROUTE_STATUSES.includes(base.status)) return null;
+
+  const raw = shipment as Record<string, unknown>;
+  const metadata =
+    raw.offChainMetadata && typeof raw.offChainMetadata === 'object'
+      ? (raw.offChainMetadata as Record<string, unknown>)
+      : {};
+
+  let originLat = readNumericField(raw, [
+    'originLat',
+    'origin_lat',
+    'originLatitude',
+    'origin_latitude',
+  ]) ?? readNumericField(metadata, ['originLat', 'origin_lat']);
+  let originLng = readNumericField(raw, [
+    'originLng',
+    'origin_lng',
+    'originLongitude',
+    'origin_longitude',
+  ]) ?? readNumericField(metadata, ['originLng', 'origin_lng']);
+  let destinationLat = readNumericField(raw, [
+    'destinationLat',
+    'destination_lat',
+    'destinationLatitude',
+    'destination_latitude',
+  ]) ?? readNumericField(metadata, ['destinationLat', 'destination_lat']);
+  let destinationLng = readNumericField(raw, [
+    'destinationLng',
+    'destination_lng',
+    'destinationLongitude',
+    'destination_longitude',
+  ]) ?? readNumericField(metadata, ['destinationLng', 'destination_lng']);
+
+  if (
+    originLat === undefined ||
+    originLng === undefined ||
+    destinationLat === undefined ||
+    destinationLng === undefined
+  ) {
+    const [resolvedOriginLat, resolvedOriginLng] = resolveLocationCoords(base.origin);
+    const [resolvedDestinationLat, resolvedDestinationLng] = resolveLocationCoords(
+      base.destination,
+    );
+    originLat ??= resolvedOriginLat;
+    originLng ??= resolvedOriginLng;
+    destinationLat ??= resolvedDestinationLat;
+    destinationLng ??= resolvedDestinationLng;
+  }
+
+  const isDelayed =
+    raw.isDelayed === true ||
+    raw.is_delayed === true ||
+    metadata.isDelayed === true ||
+    String(raw.status ?? '').toUpperCase().includes('DELAY');
+
+  return {
+    ...base,
+    originLat,
+    originLng,
+    destinationLat,
+    destinationLng,
+    isDelayed,
+    trackingNumber:
+      typeof raw.trackingNumber === 'string'
+        ? raw.trackingNumber
+        : typeof raw.tracking_number === 'string'
+          ? raw.tracking_number
+          : undefined,
+  };
+};
+
+async function fetchAllShipmentPages(): Promise<BackendShipment[]> {
+  const all: BackendShipment[] = [];
+  let page = 1;
+  let total = Infinity;
+
+  while (all.length < total && page <= 50) {
+    const response = await axios.get<BackendResponse>('/api/shipments', {
+      params: { limit: 100, page },
+    });
+    const payload = response.data ?? {};
+    const items = Array.isArray(payload.data) ? payload.data : [];
+    all.push(...items);
+    total = typeof payload.meta?.total === 'number' ? payload.meta.total : items.length;
+    if (items.length === 0) break;
+    page += 1;
+  }
+
+  return all;
+}
 
 export const shipmentApi = {
   async getAll(params: { limit?: number; page?: number } = {}): Promise<ShipmentsResponse> {
@@ -118,56 +245,58 @@ export const shipmentApi = {
     };
   },
 
-  async getAllInTransitWithGps(): Promise<ShipmentsResponse & { data: ShipmentWithGps[] }> {
-    const response = await axios.get<BackendResponse>('/api/shipments', {
-      params: { status: 'IN_TRANSIT', hasGPS: true },
-    });
+  async patchPriority(id: string, priority: ShipmentPriority): Promise<void> {
+    await axios.patch(`/api/shipments/${id}`, { priority });
+  },
 
-    const payload = response.data ?? {};
-    const items = Array.isArray(payload.data)
-      ? payload.data.map((s: BackendShipment) => {
-        // Extend the existing normalized payload with best-effort GPS fields.
-        const normalized = normalizeShipment(s) as Shipment;
-        const raw: Record<string, unknown> = s as unknown as Record<string, unknown>;
+  async bulkUpdateStatus(
+    ids: string[],
+    status: ShipmentStatus,
+  ): Promise<{ updated: string[]; failed: string[] }> {
+    try {
+      const res = await axios.patch<{ data: { updated: string[]; failed: string[] } }>(
+        '/api/shipments/bulk-status',
+        { ids, status },
+      );
+      return res.data.data ?? { updated: ids, failed: [] };
+    } catch {
+      // Fallback: update one-by-one so we can report partial failures
+      const updated: string[] = [];
+      const failed: string[] = [];
+      await Promise.all(
+        ids.map(async (id) => {
+          try {
+            await axios.patch(`/api/shipments/${id}/status`, { status });
+            updated.push(id);
+          } catch {
+            failed.push(id);
+          }
+        }),
+      );
+      return { updated, failed };
+    }
+  },
 
-        const lat =
-          typeof raw.lat === 'number'
-            ? raw.lat
-            : typeof raw.latitude === 'number'
-              ? raw.latitude
-              : undefined;
-        const lng =
-          typeof raw.lng === 'number'
-            ? raw.lng
-            : typeof raw.longitude === 'number'
-              ? raw.longitude
-              : undefined;
+  async getAllActiveWithRoutes(): Promise<{ data: ShipmentRoute[] }> {
+    const items = await fetchAllShipmentPages();
+    const routes = items
+      .map(toShipmentRoute)
+      .filter((route): route is ShipmentRoute => route !== null);
+    return { data: routes };
+  },
 
-        const anomalyDetected = typeof raw.anomalyDetected === 'boolean' ? raw.anomalyDetected : undefined;
-        const isDelayed = typeof raw.isDelayed === 'boolean' ? raw.isDelayed : undefined;
-        const trackingNumber = raw.trackingNumber != null ? String(raw.trackingNumber) : undefined;
-
-        return {
-          ...normalized,
-          lat,
-          lng,
-          anomalyDetected,
-          isDelayed,
-          trackingNumber,
-        } satisfies ShipmentWithGps;
-      })
-      : [];
-
-    const meta = payload.meta ?? {};
-
-    return {
-      data: items,
-      meta: {
-        page: typeof meta.page === 'number' ? meta.page : 1,
-        limit: typeof meta.limit === 'number' ? meta.limit : items.length,
-        total: typeof meta.total === 'number' ? meta.total : items.length,
-        ...meta,
-      },
-    };
+  async getAllInTransitWithGps(): Promise<{ data: ShipmentWithGps[] }> {
+    const items = await fetchAllShipmentPages();
+    const inTransit = items
+      .map(toShipmentRoute)
+      .filter(
+        (route): route is ShipmentRoute => route !== null && route.status === 'IN_TRANSIT',
+      )
+      .map((route) => ({
+        ...route,
+        lat: route.destinationLat,
+        lng: route.destinationLng,
+      }));
+    return { data: inTransit };
   },
 };
