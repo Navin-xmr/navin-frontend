@@ -45,11 +45,20 @@ export type AnomalyEvent = {
   severity: 'LOW' | 'MEDIUM' | 'HIGH';
 };
 
+export type LocationUpdateEvent = {
+  type: 'location:update';
+  shipmentId: string;
+  lat: number;
+  lng: number;
+  timestamp: string;
+};
+
 export type RealtimeEvent =
   | ShipmentStatusEvent
   | MilestoneEvent
   | SettlementEvent
   | NotificationEvent
-  | AnomalyEvent;
+  | AnomalyEvent
+  | LocationUpdateEvent;
 
 export type RealtimeEventType = RealtimeEvent['type'];
