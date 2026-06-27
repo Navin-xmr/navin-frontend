@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Package, ArrowRight, QrCode, ChevronDown } from "lucide-react";
-import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass, type ShipmentStatus } from '../../../utils/shipmentStatus';
+import { Package, ArrowRight, QrCode, Printer, AlertTriangle } from "lucide-react";
+import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
 import PriorityBadge from "../../../components/ui/PriorityBadge";
 import ETACountdown from "../../../components/shipment/ETACountdown";
@@ -19,6 +19,8 @@ export interface ShipmentDetailHeaderProps {
   onUpdateStatus?: () => void;
   onUpdatePriority?: (priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => void;
   onTrack?: () => void;
+  onPrint?: () => void;
+  onRaiseDispute?: () => void;
 }
 
 const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
@@ -33,6 +35,8 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   onUpdateStatus,
   onUpdatePriority,
   onTrack,
+  onPrint,
+  onRaiseDispute,
 }) => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
@@ -140,6 +144,17 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
           </button>
         )}
 
+        {status === "DELIVERED" && onRaiseDispute && (
+          <button
+            onClick={onRaiseDispute}
+            aria-label="Raise dispute"
+            className="px-6 py-3 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold transition-colors duration-200 flex items-center gap-2 justify-center"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            Raise Dispute
+          </button>
+        )}
+
         <button
           onClick={() => setIsQrModalOpen(true)}
           aria-label="Share QR Code"
@@ -147,6 +162,14 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
         >
           <QrCode className="w-5 h-5" />
           Share QR Code
+        </button>
+        <button
+          onClick={onPrint}
+          aria-label="Print shipment receipt"
+          className="px-6 py-3 rounded-lg bg-background-elevated border border-border hover:bg-background-card text-white font-semibold transition-colors duration-200 flex items-center gap-2 justify-center"
+        >
+          <Printer className="w-5 h-5" />
+          Print Receipt
         </button>
       </div>
 

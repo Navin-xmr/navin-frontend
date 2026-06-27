@@ -10,7 +10,7 @@ interface RoleGuardProps {
 
 const ROLE_DASHBOARDS: Record<UserRole, string> = {
   company: '/dashboard',
-  customer: '/dashboard',
+  customer: '/dashboard/customer',
 };
 
 const RoleGuard: React.FC<RoleGuardProps> = ({ allowedRoles, children }) => {

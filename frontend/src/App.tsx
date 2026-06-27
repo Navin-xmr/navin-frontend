@@ -17,6 +17,7 @@ import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
 import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
+import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { realtimeService } from './services/realtime/realtimeService';
@@ -25,6 +26,7 @@ import './App.css';
 
 // Eagerly loaded (critical path)
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
+import CustomerDashboard from './pages/dashboard/Customer/CustomerDashboard';
 import AnomalyAlertPanel from './pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel';
 import Shipments from './pages/Shipments/Shipments';
 import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
@@ -60,6 +62,7 @@ const router = createBrowserRouter([
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: <PaginationDemo /> },
   { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
+  { path: '/skeleton-demo', element: <SkeletonDemo /> },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,
@@ -81,6 +84,13 @@ const router = createBrowserRouter([
               { path: '/dashboard/shipments/create', element: <CreateShipment /> },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
               { path: '/dashboard/calendar', element: S(<CalendarView />) },
+            ],
+          },
+          // Customer-only routes
+          {
+            element: <RoleGuard allowedRoles={['customer']} />,
+            children: [
+              { path: '/dashboard/customer', element: <CustomerDashboard /> },
             ],
           },
           // Shared routes (both roles)
