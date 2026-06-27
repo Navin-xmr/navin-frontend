@@ -11,6 +11,9 @@ export type { BreadcrumbProps, BreadcrumbItem } from './common/Breadcrumb';
 
 // Reusable UI primitives
 export { default as Button } from './Button';
+// ui/DataTable — client-side sorting & pagination variant
+export { default as DataTableUI } from './ui/DataTable';
+export type { ColumnDef as DataTableUIColumnDef, DataTableProps as DataTableUIProps, SortDirection as DataTableUISortDirection } from './ui/DataTable';
 // UI
 export { ProgressBar } from './ui/ProgressBar';
 export type { ProgressBarProps, ProgressBarColor, ProgressBarSize } from './ui/ProgressBar';
