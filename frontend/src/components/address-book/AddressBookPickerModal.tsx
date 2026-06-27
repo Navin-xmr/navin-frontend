@@ -21,6 +21,7 @@ const AddressBookPickerModal: React.FC<AddressBookPickerModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     addressesApi
       .getAll()

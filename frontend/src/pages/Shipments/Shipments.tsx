@@ -295,7 +295,7 @@ const Shipments: React.FC = () => {
       addToast('Status updated successfully', 'success');
       clearSelection();
       setIsBulkModalOpen(false);
-    } catch (err) {
+    } catch {
       addToast('Failed to update status', 'error');
     } finally {
       setIsBulkUpdating(false);

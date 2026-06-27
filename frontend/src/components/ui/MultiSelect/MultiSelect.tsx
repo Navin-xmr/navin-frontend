@@ -36,6 +36,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   }, [options, searchable, searchTerm]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlightedIndex(0);
   }, [searchTerm, isOpen]);
 
