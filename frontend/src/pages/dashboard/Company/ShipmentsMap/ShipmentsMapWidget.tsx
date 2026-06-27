@@ -92,8 +92,7 @@ const ShipmentsMapWidget: React.FC = () => {
                 if (cancelled) return;
                 setHasError(true);
             } finally {
-                if (cancelled) return;
-                setIsLoading(false);
+                if (!cancelled) setIsLoading(false);
             }
         };
 
@@ -105,14 +104,14 @@ const ShipmentsMapWidget: React.FC = () => {
     }, []);
 
     const bounds = useMemo(() => {
-        const latLngs: Array<readonly [number, number]> = shipments
+        const latLngs: Array<[number, number]> = shipments
             .filter((s: ShipmentWithGps) => typeof s.lat === 'number' && typeof s.lng === 'number')
-            .map((s: ShipmentWithGps) => [s.lat, s.lng] as const);
+            .map((s: ShipmentWithGps) => [s.lat as number, s.lng as number]);
 
 
         if (!latLngs.length) return undefined;
 
-        const b = L.latLngBounds(latLngs);
+        const b = L.latLngBounds(latLngs as L.LatLngExpression[]);
         return b;
     }, [shipments]);
 
@@ -150,7 +149,6 @@ const ShipmentsMapWidget: React.FC = () => {
 
                     <MarkerClusterGroup
                         chunkedLoading
-                        // @ts-expect-error react-leaflet-cluster types can be incomplete
                         showCoverageOnHover={false}
                     >
                         {shipments
@@ -160,7 +158,7 @@ const ShipmentsMapWidget: React.FC = () => {
                                 const icon = icons[color];
 
                                 return (
-                                    <Marker key={s.id} position={[s.lat, s.lng]} icon={icon}>
+                                    <Marker key={s.id} position={[s.lat as number, s.lng as number]} icon={icon}>
                                         <Popup>
                                             <div className="min-w-[240px]">
                                                 <div className="text-xs uppercase tracking-[0.05em] text-[#94a3b8] font-semibold mb-2">

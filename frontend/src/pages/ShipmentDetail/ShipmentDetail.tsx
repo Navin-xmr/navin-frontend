@@ -83,12 +83,12 @@ const ShipmentDetail: React.FC = () => {
         shockTilt: { eventCount: 2, lastUpdated: "2026-02-22 03:45 PM EST" },
     };
 
-    const mockMilestones: TimelineMilestone[] = [
-        { id: "1", eventType: "PICKED_UP", name: "Picked up by carrier", timestamp: "2026-02-20 02:30 PM EST", location: "New York Distribution Center, NY", status: "completed", txHash: "3389e9f0f5b3d4c2a1b0e9f8a7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8" },
-        { id: "2", eventType: "IN_TRANSIT", name: "In transit — Philadelphia hub", timestamp: "2026-02-21 08:45 AM EST", location: "Philadelphia Logistics Hub, PA", status: "completed", txHash: "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" },
-        { id: "3", eventType: "CUSTOMS", name: "Customs cleared", timestamp: "2026-02-22 07:10 AM EST", location: "Boston Regional Facility, MA", status: "completed", txHash: "f1e2d3c4b5a60918273645546372819a0b1c2d3e4f5061728394a5b6c7d8e9f0" },
-        { id: "4", eventType: "IN_TRANSIT", name: "Out for delivery", timestamp: "2026-02-23 09:00 AM EST", location: "Boston, MA", status: "active" },
-        { id: "5", eventType: "DELIVERED", name: "Delivered", timestamp: "Expected: 2026-02-23 05:00 PM EST", location: "Boston, MA", status: "pending" },
+    const mockMilestones: MilestoneDetail[] = [
+        { id: "1", name: "Picked up by carrier", timestamp: "2026-02-20 02:30 PM EST", location: "New York Distribution Center, NY", status: "completed", blockchainAddress: "3389e9f0f5b3d4c2a1b0e9f8a7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8" },
+        { id: "2", name: "In transit — Philadelphia hub", timestamp: "2026-02-21 08:45 AM EST", location: "Philadelphia Logistics Hub, PA", status: "completed", blockchainAddress: "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90" },
+        { id: "3", name: "Customs cleared", timestamp: "2026-02-22 07:10 AM EST", location: "Boston Regional Facility, MA", status: "completed", blockchainAddress: "f1e2d3c4b5a60918273645546372819a0b1c2d3e4f5061728394a5b6c7d8e9f0" },
+        { id: "4", name: "Out for delivery", timestamp: "2026-02-23 09:00 AM EST", location: "Boston, MA", status: "current", blockchainAddress: "pending..." },
+        { id: "5", name: "Delivered", timestamp: "Expected: 2026-02-23 05:00 PM EST", location: "Boston, MA", status: "upcoming", blockchainAddress: "" },
     ];
 
     const printData: ShipmentPrintData = {

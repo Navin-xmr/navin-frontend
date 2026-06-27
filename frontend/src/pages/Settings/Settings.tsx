@@ -14,11 +14,10 @@ const DangerZone = lazy(() => import('./sections/DangerZone'));
 const AppearanceSection = lazy(() => import('./sections/AppearanceSection'));
 const MyTemplatesSection = lazy(() => import('./sections/MyTemplatesSection'));
 
-type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'templates' | 'danger';
 const TeamSection = lazy(() => import('./sections/TeamSection'));
 const AddressBookSection = lazy(() => import('./sections/AddressBookSection'));
 
-type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'team' | 'address-book' | 'danger';
+type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'templates' | 'team' | 'address-book' | 'danger';
 
 interface TabDef {
   key: Tab;

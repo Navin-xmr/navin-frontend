@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Download, Loader2, LayoutList, LayoutGrid } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import { Download, LayoutGrid, List, Loader2, Map } from 'lucide-react';
-import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
-import type { ShipmentStatus } from '../../services/api/endpoints/shipments';
+import type { ShipmentPriority } from '../../api/shipmentApi';
+import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
@@ -13,16 +13,13 @@ import { BulkStatusModal } from '../../components/shipment/BulkStatusModal';
 import { useBulkSelection } from '../../hooks/useBulkSelection';
 import { useToast } from '../../context/ToastContext';
 import { safeFormatDate } from '../../utils/safeFormat';
-import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import ShipmentsKanban from './KanbanView/ShipmentsKanban';
+import RouteMap from './RouteMap/RouteMap';
+import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus, type Priority } from './ShipmentFilters';
 import './Shipments.css';
 
 type ViewMode = 'list' | 'kanban';
-
-function exportShipmentsToCSV(shipments: Shipment[]): void {
-import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus, type Priority } from './ShipmentFilters';
-import './Shipments.css';
 
 function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
   const headers = ['Tracking Number', 'Origin', 'Destination', 'Status', 'Created At', 'Expected Delivery', 'Carrier'];
@@ -53,11 +50,10 @@ const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
 const VIEW_KEY = 'shipments-view';
 
-type ShipmentsView = 'list' | 'kanban';
+type ShipmentsView = 'list' | 'kanban' | 'routeMap';
 
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
-  const { role } = useAuthContext();
   const { addToast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -178,7 +174,6 @@ const Shipments: React.FC = () => {
       const d = destination.toLowerCase();
       result = result.filter((s) => s.destination.toLowerCase().includes(d));
     }
-
     return result;
   }, [shipments, searchQuery, advancedFilters]);
 
@@ -295,26 +290,29 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
-  const handleViewToggle = (mode: ViewMode) => {
-    setViewMode(mode);
-    try {
-      localStorage.setItem('navin_shipments_view', mode);
-    } catch { /* ignore */ }
-  };
-
-  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL';
-  const handlePriorityChange = async (shipmentId: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => {
-    setUpdatingPriority(shipmentId);
-    setActivePriorityMenu(null);
-    try {
-      const updated = await shipmentApi.updatePriority(shipmentId, priority);
-      setShipments((prev) => prev.map((s) => (s.id === shipmentId ? updated : s)));
-    } catch {
-      // keep optimistic update or revert
-    } finally {
-      setUpdatingPriority(null);
+  const handleExportSelected = () => {
+    const selectedShipments = shipments.filter(s => isSelected(s.id));
+    if (selectedShipments.length > 0) {
+      exportShipmentsToCSV(selectedShipments, `navin-selected-shipments-${new Date().toISOString().slice(0, 10)}.csv`);
     }
   };
+
+  const handleBulkStatusConfirm = async (newStatus: ShipmentStatus) => {
+    if (selectedIds.size === 0) return;
+    setIsBulkUpdating(true);
+    try {
+      await shipmentApi.bulkUpdateStatus(Array.from(selectedIds), newStatus);
+      setShipments(prev => prev.map(s => selectedIds.has(s.id) ? { ...s, status: newStatus } as Shipment : s));
+      addToast('Status updated successfully', 'success');
+      clearSelection();
+      setIsBulkModalOpen(false);
+    } catch {
+      addToast('Failed to update status', 'error');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
 
   const isAnyFilterActive =
     searchQuery !== '' ||
@@ -331,8 +329,7 @@ const Shipments: React.FC = () => {
   const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
-  // role is used by company feature guard elsewhere; keep reference to suppress unused-var lint
-  void (role as unknown);
+
 
   return (
     <div className="shipments-page">

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Package, ArrowRight, QrCode, Printer, AlertTriangle } from "lucide-react";
+import { Package, ArrowRight, QrCode, Printer, AlertTriangle, ChevronDown } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
-import PriorityBadge from "../../../../components/ui/PriorityBadge";
+import PriorityBadge from "../../../components/ui/PriorityBadge";
+import ETACountdown from "../../../components/shipment/ETACountdown";
+import type { ShipmentStatus } from "../../../services/api/endpoints/shipments";
 
 export type UserRole = "company" | "customer";
 

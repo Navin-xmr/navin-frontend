@@ -16,6 +16,7 @@ import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
+import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
 import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: <PaginationDemo /> },
+  { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
   { path: '/skeleton-demo', element: <SkeletonDemo /> },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {

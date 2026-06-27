@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import RevenueTargetWidget from './RevenueTargetWidget';
 import { MOCK_REVENUE_TARGET_DATA } from './mockRevenueTargetData';
