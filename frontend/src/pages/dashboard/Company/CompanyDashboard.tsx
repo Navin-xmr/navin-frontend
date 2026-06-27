@@ -10,6 +10,7 @@ import RecentShipments from './RecentShipments/RecentShipments';
 import RecentActivityFeed from './RecentActivity/RecentActivityFeed';
 import ShipmentsMapWidget from './ShipmentsMap/ShipmentsMapWidget';
 import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
+import PerformanceScorecardWidget from './Scorecard/PerformanceScorecardWidget';
 import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
 import type { TourStep } from '@components/onboarding/OnboardingTour';
 
@@ -162,6 +163,7 @@ const CompanyDashboard: React.FC = () => {
         </div>
       </div>
       <RevenueSummaryWidget />
+      <PerformanceScorecardWidget />
 
       {/* Shipments */}
       <div className="flex flex-col">
