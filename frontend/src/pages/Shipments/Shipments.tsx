@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Download, Loader2, LayoutList, LayoutGrid } from 'lucide-react';
+import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import { Download, LayoutGrid, List, Loader2, Map } from 'lucide-react';
 import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
 import type { ShipmentStatus } from '../../services/api/endpoints/shipments';
@@ -14,6 +16,11 @@ import { safeFormatDate } from '../../utils/safeFormat';
 import { useAuthContext } from '../../context/AuthContext';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
 import ShipmentsKanban from './KanbanView/ShipmentsKanban';
+import './Shipments.css';
+
+type ViewMode = 'list' | 'kanban';
+
+function exportShipmentsToCSV(shipments: Shipment[]): void {
 import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus, type Priority } from './ShipmentFilters';
 import './Shipments.css';
 
@@ -93,6 +100,13 @@ const Shipments: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED'>('ALL');
   const [timeframeFilter, setTimeframeFilter] = useState<'ALL' | '30' | '90'>('ALL');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const saved = localStorage.getItem('navin_shipments_view');
+      return saved === 'kanban' ? 'kanban' : 'list';
+    } catch {
+      return 'list';
+    }
   const [priorityFilter, setPriorityFilter] = useState<'ALL' | ShipmentPriority>('ALL');
   const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>({
     status: [],
@@ -281,6 +295,14 @@ const Shipments: React.FC = () => {
     }, 0);
   };
 
+  const handleViewToggle = (mode: ViewMode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('navin_shipments_view', mode);
+    } catch { /* ignore */ }
+  };
+
+  const isAnyFilterActive = searchQuery !== '' || statusFilter !== 'ALL' || timeframeFilter !== 'ALL';
   const handlePriorityChange = async (shipmentId: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => {
     setUpdatingPriority(shipmentId);
     setActivePriorityMenu(null);
@@ -317,6 +339,19 @@ const Shipments: React.FC = () => {
       <div className="shipments-header">
         <h1>Shipments</h1>
         <div className="flex items-center gap-3">
+          {/* View toggle */}
+          <div className="flex items-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-lg p-1 gap-1" role="group" aria-label="View mode">
+            <button
+              type="button"
+              onClick={() => handleViewToggle('list')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                viewMode === 'list'
+                  ? 'bg-[rgba(98,255,255,0.12)] text-[#62ffff] border border-[rgba(98,255,255,0.3)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              aria-pressed={viewMode === 'list'}
+            >
+              <LayoutList size={14} />
           {/* List / Kanban view toggle */}
           <div
             className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
@@ -336,6 +371,13 @@ const Shipments: React.FC = () => {
             </button>
             <button
               type="button"
+              onClick={() => handleViewToggle('kanban')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
+                viewMode === 'kanban'
+                  ? 'bg-[rgba(98,255,255,0.12)] text-[#62ffff] border border-[rgba(98,255,255,0.3)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              aria-pressed={viewMode === 'kanban'}
               onClick={() => handleViewChange('kanban')}
               aria-pressed={view === 'kanban'}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
@@ -497,6 +539,8 @@ const Shipments: React.FC = () => {
 
       {error ? (
         <div className="shipments-error">{error}</div>
+      ) : viewMode === 'kanban' ? (
+        <ShipmentsKanban shipments={filteredShipments} isLoading={isLoading} />
       ) : isEmpty ? (
         <div className="shipments-empty">
           <h3>No shipments available</h3>
