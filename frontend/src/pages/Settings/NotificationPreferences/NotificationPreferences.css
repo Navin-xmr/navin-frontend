@@ -1,3 +1,4 @@
+/* ====== Container ====== */
 .notif-pref-container {
   background-color: #14171E;
   border: 1px solid #1E293B;
@@ -6,6 +7,17 @@
   width: 100%;
 }
 
+.notif-pref-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  color: #64748B;
+  font-size: 14px;
+}
+
+/* ====== Header ====== */
 .notif-pref-header {
   display: flex;
   align-items: center;
@@ -36,18 +48,164 @@
   margin: 0;
 }
 
+/* ====== Phone verification ====== */
+.notif-phone-section {
+  padding: 16px 24px;
+  border-bottom: 1px solid #1E293B;
+  background: rgba(30, 41, 59, 0.3);
+}
+
+.notif-phone-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.notif-phone-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #E2E8F0;
+}
+
+.notif-phone-verified {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #10B981;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.notif-phone-unverified {
+  font-size: 12px;
+  color: #F59E0B;
+}
+
+.notif-phone-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.notif-phone-row {
+  display: flex;
+  gap: 8px;
+}
+
+.notif-phone-input {
+  flex: 1;
+  background: #0F1117;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #E2E8F0;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 0;
+}
+
+.notif-phone-input:focus {
+  border-color: #3B82F6;
+}
+
+.notif-phone-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.notif-phone-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #1E293B;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #CBD5E1;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.notif-phone-btn:hover:not(:disabled) {
+  background: #293548;
+  border-color: #475569;
+}
+
+.notif-phone-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.notif-phone-btn--primary {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3B82F6;
+  color: #60A5FA;
+}
+
+.notif-phone-btn--primary:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.notif-phone-error {
+  font-size: 12px;
+  color: #F87171;
+  margin: 2px 0 0;
+}
+
+/* ====== Channel column headers ====== */
+.notif-channel-header {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+  padding: 8px 24px 0;
+}
+
+.notif-channel-label {
+  width: 44px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ====== Category groups ====== */
 .notif-pref-list {
-  padding: 8px 24px;
+  padding: 0 24px 8px;
   display: flex;
   flex-direction: column;
 }
 
+.notif-category {
+  padding: 16px 0 4px;
+}
+
+.notif-category + .notif-category {
+  border-top: 1px solid rgba(30, 41, 59, 0.6);
+}
+
+.notif-category-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 4px;
+}
+
+/* ====== Preference rows ====== */
 .notif-pref-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
-  border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.4);
   gap: 16px;
 }
 
@@ -55,23 +213,21 @@
   border-bottom: none;
 }
 
-.notif-pref-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
 .notif-pref-label {
-  font-size: 15px;
+  flex: 1;
+  font-size: 14px;
   font-weight: 500;
   color: #E2E8F0;
 }
 
-.notif-pref-desc {
-  font-size: 13px;
-  color: #64748B;
+.notif-pref-toggles {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-shrink: 0;
 }
 
+/* ====== Toggle switch ====== */
 .notif-switch {
   position: relative;
   display: inline-block;
@@ -116,6 +272,15 @@
   transform: translateX(20px);
 }
 
+.notif-switch--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.notif-switch--disabled .notif-slider {
+  cursor: not-allowed;
+}
+
 .notif-slider.round {
   border-radius: 24px;
 }
@@ -124,56 +289,22 @@
   border-radius: 50%;
 }
 
-.notif-pref-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 24px;
-  border-top: 1px solid #1E293B;
-}
-
-.notif-selection-count {
-  margin-right: auto;
-  font-size: 13px;
-  color: #94A3B8;
-}
-
-.notif-success-toast {
+/* ====== Inline saved indicator ====== */
+.notif-saved-indicator {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  font-size: 12px;
   color: #10B981;
-  background-color: rgba(16, 185, 129, 0.1);
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
   font-weight: 500;
-  animation: notifSlideIn 0.3s ease-out;
+  white-space: nowrap;
+  animation: notifFadeIn 0.25s ease-out;
 }
 
-.notif-save-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background-color: #3B82F6;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.notif-save-btn:hover:not(:disabled) {
-  background-color: #2563EB;
-}
-
-.notif-save-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
+/* ====== Animations ====== */
+@keyframes notifFadeIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .notif-spinner {
@@ -181,43 +312,20 @@
 }
 
 @keyframes notifSpin {
-  100% {
-    transform: rotate(360deg);
-  }
+  100% { transform: rotate(360deg); }
 }
 
-@keyframes notifSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
+/* ====== Responsive ====== */
 @media (max-width: 640px) {
   .notif-pref-header,
   .notif-pref-list,
-  .notif-pref-footer {
+  .notif-phone-section,
+  .notif-channel-header {
     padding-left: 16px;
     padding-right: 16px;
   }
 
-  .notif-pref-footer {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
-  .notif-selection-count {
-    margin: 0;
-    text-align: center;
-  }
-
-  .notif-save-btn {
-    justify-content: center;
-    width: 100%;
+  .notif-pref-label {
+    font-size: 13px;
   }
 }

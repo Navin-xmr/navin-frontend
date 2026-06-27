@@ -1,6 +1,6 @@
 import { apiClient } from "../client";
 
-export type UserRole = "Admin" | "Manager" | "Viewer";
+export type UserRole = "Admin" | "Manager" | "Viewer" | "Driver";
 export type UserStatus = "Active" | "Inactive";
 
 export interface User {
