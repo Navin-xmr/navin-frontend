@@ -16,6 +16,8 @@ import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
+import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
+import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { realtimeService } from './services/realtime/realtimeService';
@@ -24,6 +26,7 @@ import './App.css';
 
 // Eagerly loaded (critical path)
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
+import CustomerDashboard from './pages/dashboard/Customer/CustomerDashboard';
 import AnomalyAlertPanel from './pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel';
 import Shipments from './pages/Shipments/Shipments';
 import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
@@ -34,6 +37,8 @@ const ShipmentDetail = lazy(() => import('./pages/ShipmentDetail/ShipmentDetail'
 const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainLedger'));
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
 const Analytics = lazy(() => import('./pages/Analytics/Analytics'));
+const RevenueAnalytics = lazy(() => import('./pages/Analytics/RevenueAnalytics'));
+const ExceptionDashboard = lazy(() => import('./pages/dashboard/ExceptionDashboard'));
 const CompanySettings = lazy(() => import('./pages/dashboard/Company/Settings/CompanySettings'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter/HelpCenter'));
@@ -58,6 +63,8 @@ const router = createBrowserRouter([
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: <PaginationDemo /> },
+  { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
+  { path: '/skeleton-demo', element: <SkeletonDemo /> },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,
@@ -75,10 +82,19 @@ const router = createBrowserRouter([
               { path: '/dashboard/settlements', element: S(<Settlements />) },
               { path: '/dashboard/payments', element: S(<PaymentHistory />) },
               { path: '/dashboard/analytics', element: S(<Analytics />) },
+              { path: '/dashboard/analytics/revenue', element: S(<RevenueAnalytics />) },
+              { path: '/dashboard/analytics/exceptions', element: S(<ExceptionDashboard />) },
               { path: '/dashboard/team', element: S(<UserManagement />) },
               { path: '/dashboard/shipments/create', element: <CreateShipment /> },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
               { path: '/dashboard/calendar', element: S(<CalendarView />) },
+            ],
+          },
+          // Customer-only routes
+          {
+            element: <RoleGuard allowedRoles={['customer']} />,
+            children: [
+              { path: '/dashboard/customer', element: <CustomerDashboard /> },
             ],
           },
           // Shared routes (both roles)

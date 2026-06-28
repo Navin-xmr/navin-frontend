@@ -15,6 +15,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   Admin: 'Admin — Full access',
   Manager: 'Manager — Edit & View',
   Viewer: 'Viewer — Read only',
+  Driver: 'Driver — Assigned Routes',
 };
 
 const AcceptInvitation: React.FC = () => {

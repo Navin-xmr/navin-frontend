@@ -6,14 +6,19 @@ import PageSkeleton from '../../components/ui/PageSkeleton';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 
 const ProfileSection = lazy(() => import('./sections/ProfileSection'));
+const CompanyProfileSection = lazy(() => import('./CompanyProfile/CompanyProfile'));
 const SecuritySection = lazy(() => import('./sections/SecuritySection/SecuritySection'));
 const NotificationsSection = lazy(() => import('./sections/NotificationsSection'));
 const WalletsSection = lazy(() => import('./sections/WalletsSection'));
 const ApiKeysSection = lazy(() => import('./sections/ApiKeysSection'));
 const DangerZone = lazy(() => import('./sections/DangerZone'));
 const AppearanceSection = lazy(() => import('./sections/AppearanceSection'));
+const MyTemplatesSection = lazy(() => import('./sections/MyTemplatesSection'));
 
-type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'danger';
+const TeamSection = lazy(() => import('./sections/TeamSection'));
+const AddressBookSection = lazy(() => import('./sections/AddressBookSection'));
+
+type Tab = 'profile' | 'company-profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'templates' | 'team' | 'address-book' | 'danger';
 
 interface TabDef {
   key: Tab;
@@ -23,11 +28,15 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { key: 'profile', label: 'Profile' },
+  { key: 'company-profile', label: 'Company Profile', companyOnly: true },
   { key: 'security', label: 'Security' },
   { key: 'notifications', label: 'Notifications' },
   { key: 'appearance', label: 'Appearance' },
   { key: 'wallets', label: 'Wallets', companyOnly: true },
+  { key: 'templates', label: 'My Templates', companyOnly: true },
   { key: 'api-keys', label: 'API Keys', companyOnly: true },
+  { key: 'team', label: 'Team', companyOnly: true },
+  { key: 'address-book', label: 'Address Book', companyOnly: true },
   { key: 'danger', label: 'Danger Zone' },
 ];
 
@@ -82,11 +91,15 @@ const Settings: React.FC = () => {
       {/* Tab content */}
       <Suspense fallback={<PageSkeleton />}>
         {activeTab === 'profile' && <ProfileSection isCompany={isCompany} />}
+        {activeTab === 'company-profile' && isCompany && <CompanyProfileSection />}
         {activeTab === 'security' && <SecuritySection />}
         {activeTab === 'notifications' && <NotificationsSection />}
         {activeTab === 'appearance' && <AppearanceSection />}
         {activeTab === 'wallets' && isCompany && <WalletsSection />}
+        {activeTab === 'templates' && isCompany && <MyTemplatesSection />}
         {activeTab === 'api-keys' && can(role, 'api-keys:manage') && <ApiKeysSection />}
+        {activeTab === 'team' && isCompany && <TeamSection />}
+        {activeTab === 'address-book' && isCompany && <AddressBookSection />}
         {activeTab === 'danger' && <DangerZone userEmail={userId ?? ''} />}
       </Suspense>
     </div>

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import type { ShipmentPriority } from '../../api/shipmentApi';
+import type { ShipmentPriority } from '../../../api/shipmentApi';
 
 export interface PriorityBadgeProps {
   priority?: ShipmentPriority;

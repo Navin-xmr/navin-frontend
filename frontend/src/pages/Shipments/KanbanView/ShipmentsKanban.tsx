@@ -24,7 +24,6 @@ const COLUMNS: ColumnConfig[] = [
   { status: 'CANCELLED', title: 'Cancelled', accent: 'bg-rose-400' },
 ];
 
-/** Fetch every shipment by walking the paginated endpoint. */
 async function fetchAllShipments(): Promise<Shipment[]> {
   const all: Shipment[] = [];
   let page = 1;
@@ -105,7 +104,9 @@ const ShipmentsKanban: React.FC = () => {
       CANCELLED: [],
     };
     for (const shipment of shipments) {
-      (map[shipment.status] ??= []).push(shipment);
+      if (shipment.status in map) {
+        map[shipment.status].push(shipment);
+      }
     }
     return map;
   }, [shipments]);
@@ -127,7 +128,11 @@ const ShipmentsKanban: React.FC = () => {
   }
 
   if (error) {
-    return <div className="shipments-error">{error}</div>;
+    return (
+      <div className="flex items-center justify-center gap-2 py-16 text-red-400">
+        Error: {error}
+      </div>
+    );
   }
 
   return (

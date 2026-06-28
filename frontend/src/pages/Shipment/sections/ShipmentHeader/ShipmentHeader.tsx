@@ -4,8 +4,7 @@ import { Download, Share2, MapPin, Printer, AlertCircle } from 'lucide-react';
 import { StatusBadge } from '../../../../components/ui/StatusBadge/StatusBadge';
 import PriorityBadge from '../../../../components/shipment/PriorityBadge/PriorityBadge';
 import Modal from '../../../../components/common/Modal/Modal';
-import DisputeForm from '../DisputeForm/DisputeForm';
-import type { ExistingDispute } from '../DisputeForm/DisputeForm';
+import DisputeForm, { type DisputeData } from '../DisputeForm/DisputeForm';
 import type { ShipmentStatus } from '../../../../services/api/endpoints/shipments';
 import type { ShipmentPriority } from '../../../../api/shipmentApi';
 import ShipmentPrintView from '../PrintView/ShipmentPrintView';
@@ -16,19 +15,16 @@ export interface ShipmentHeaderProps {
   status: ShipmentStatus;
   priority?: ShipmentPriority;
   onChangePriority?: (priority: ShipmentPriority) => void;
-  existingDispute?: ExistingDispute;
+  existingDispute?: DisputeData;
   sender: { name: string; address: string };
   receiver: { name: string; address: string };
   createdAt: string;
   expectedDelivery: string;
   trackingNumber?: string;
   stellarTxHash?: string;
-  priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';
-  userRole?: 'company' | 'customer';
   onTrack?: () => void;
   onDownloadProof?: () => void;
   onShare?: () => void;
-  onUpdatePriority?: (priority: 'URGENT' | 'STANDARD' | 'ECONOMY') => void;
 }
 
 export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
@@ -43,12 +39,9 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
   expectedDelivery,
   trackingNumber,
   stellarTxHash,
-  priority,
-  userRole = 'customer',
   onTrack = () => console.log('Track clicked'),
   onDownloadProof = () => console.log('Download Proof clicked'),
   onShare = () => console.log('Share clicked'),
-  onUpdatePriority,
 }) => {
   const [printing, setPrinting] = useState(false);
   const [disputeOpen, setDisputeOpen] = useState(false);
@@ -152,6 +145,7 @@ export const ShipmentHeader: React.FC<ShipmentHeaderProps> = ({
           shipmentId={shipmentId}
           existingDispute={existingDispute}
           onSuccess={() => setDisputeOpen(false)}
+          onClose={() => setDisputeOpen(false)}
         />
       </Modal>
     </header>
