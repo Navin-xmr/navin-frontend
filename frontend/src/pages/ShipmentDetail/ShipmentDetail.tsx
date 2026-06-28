@@ -22,6 +22,8 @@ import type { ShipmentPrintData } from "../Shipment/sections/PrintView/ShipmentP
 import DisputeForm from "../Shipment/sections/DisputeForm/DisputeForm";
 import type { DisputeData } from "../Shipment/sections/DisputeForm/DisputeForm";
 import { useLiveRegion } from "../../context/LiveRegionContext";
+import CostBreakdown from "../../components/shipment/CostBreakdown/CostBreakdown";
+import type { CostBreakdownData } from "../../components/shipment/CostBreakdown/CostBreakdown";
 
 const ShipmentDetail: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -90,6 +92,18 @@ const ShipmentDetail: React.FC = () => {
         { id: "4", name: "Out for delivery", timestamp: "2026-02-23 09:00 AM EST", location: "Boston, MA", status: "current", blockchainAddress: "pending..." },
         { id: "5", name: "Delivered", timestamp: "Expected: 2026-02-23 05:00 PM EST", location: "Boston, MA", status: "upcoming", blockchainAddress: "" },
     ];
+
+
+        const mockCostBreakdown: CostBreakdownData = {
+        baseRate: 850.00,
+        weightSurcharge: 120.50,
+        fuelSurcharge: 64.75,
+        insuranceFee: 45.00,
+        customsDuty: 95.30,
+        discount: 25.00,
+        total: 1150.55,
+        currency: "USD",
+    };
 
     const printData: ShipmentPrintData = {
         shipmentId: id ? `#${id}` : "#SHP-992834",
@@ -183,6 +197,7 @@ const ShipmentDetail: React.FC = () => {
 
                 <SensorDataCards sensorData={mockSensorData} />
                 <PaymentStatus payment={mockPaymentData} />
+                <CostBreakdown data={mockCostBreakdown} mode="confirmed" />
                 <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} />
 
                 {can(role, 'shipment:upload-proof') && (
