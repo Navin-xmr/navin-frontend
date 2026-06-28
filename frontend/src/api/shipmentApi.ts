@@ -194,14 +194,14 @@ const toShipmentRoute = (shipment: BackendShipment): ShipmentRoute | null => {
   };
 };
 
-async function fetchAllShipmentPages(): Promise<BackendShipment[]> {
+async function fetchAllShipmentPages(params?: Record<string, string | number | boolean>): Promise<BackendShipment[]> {
   const all: BackendShipment[] = [];
   let page = 1;
   let total = Infinity;
 
   while (all.length < total && page <= 50) {
     const response = await axios.get<BackendResponse>('/api/shipments', {
-      params: { limit: 100, page },
+      params: { limit: 100, page, ...params },
     });
     const payload = response.data ?? {};
     const items = Array.isArray(payload.data) ? payload.data : [];
@@ -286,7 +286,7 @@ export const shipmentApi = {
   },
 
   async getAllInTransitWithGps(): Promise<{ data: ShipmentWithGps[] }> {
-    const items = await fetchAllShipmentPages();
+    const items = await fetchAllShipmentPages({ status: 'IN_TRANSIT', hasGPS: true });
     const inTransit = items
       .map(toShipmentRoute)
       .filter(
@@ -296,7 +296,8 @@ export const shipmentApi = {
         ...route,
         lat: route.destinationLat,
         lng: route.destinationLng,
-      }));
+      }))
+      .filter((shipment): shipment is ShipmentWithGps => Number.isFinite(shipment.lat) && Number.isFinite(shipment.lng));
     return { data: inTransit };
   },
 };
