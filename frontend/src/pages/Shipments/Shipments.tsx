@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Download, Loader2, LayoutList, LayoutGrid } from 'lucide-react';
+import { Download, Loader2, LayoutGrid, List, Map } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
-import { Download, LayoutGrid, List, Loader2, Map } from 'lucide-react';
 import type { ShipmentPriority } from '../../api/shipmentApi';
-import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
@@ -337,19 +335,6 @@ const Shipments: React.FC = () => {
         <h1>Shipments</h1>
         <div className="flex items-center gap-3">
           {/* View toggle */}
-          <div className="flex items-center bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-lg p-1 gap-1" role="group" aria-label="View mode">
-            <button
-              type="button"
-              onClick={() => handleViewToggle('list')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                viewMode === 'list'
-                  ? 'bg-[rgba(98,255,255,0.12)] text-[#62ffff] border border-[rgba(98,255,255,0.3)]'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              aria-pressed={viewMode === 'list'}
-            >
-              <LayoutList size={14} />
-          {/* List / Kanban view toggle */}
           <div
             className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
             role="group"
@@ -368,13 +353,6 @@ const Shipments: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => handleViewToggle('kanban')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer ${
-                viewMode === 'kanban'
-                  ? 'bg-[rgba(98,255,255,0.12)] text-[#62ffff] border border-[rgba(98,255,255,0.3)]'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-              aria-pressed={viewMode === 'kanban'}
               onClick={() => handleViewChange('kanban')}
               aria-pressed={view === 'kanban'}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
@@ -393,7 +371,7 @@ const Shipments: React.FC = () => {
               }`}
             >
               <Map size={14} />
-              Route Map
+              Map
             </button>
           </div>
 
