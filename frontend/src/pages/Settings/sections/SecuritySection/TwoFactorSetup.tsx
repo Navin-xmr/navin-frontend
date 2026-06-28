@@ -11,7 +11,7 @@ const TwoFactorSetup: React.FC = () => {
   const [verified, setVerified] = useState(false);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [showBackupCodes, setShowBackupCodes] = useState(false);
-  const [backupCodesAcknowledged, setBackupCodesAcknowledged] = useState(false);
+  const [_backupCodesAcknowledged, setBackupCodesAcknowledged] = useState(false);
   const [disablePassword, setDisablePassword] = useState('');
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [copied, setCopied] = useState(false);
