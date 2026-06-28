@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useScrollSpy } from '../../hooks/useScrollSpy';
@@ -15,6 +15,7 @@ const navLinks = [
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   const location = useLocation();
 
   const isLandingPage = location.pathname === '/';
@@ -36,6 +37,11 @@ const Navbar: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const storedLogo = window.localStorage.getItem('navin-company-logo');
+    setCompanyLogo(storedLogo ?? null);
+  }, [location.pathname]);
+
   const handleLogoClick = () => setIsMenuOpen(false);
 
   return (
@@ -47,7 +53,11 @@ const Navbar: React.FC = () => {
           className="flex items-center gap-2 no-underline font-albert font-normal text-[30px] text-white transition-opacity duration-300 hover:opacity-80 absolute left-8"
           onClick={handleLogoClick}
         >
-          <img src="/images/logo.svg" alt="Navin Logo" className="w-[56.44px] h-[55.19px] object-contain" />
+          {companyLogo ? (
+            <img src={companyLogo} alt="Company logo" className="w-[56.44px] h-[55.19px] object-cover rounded-xl border border-white/10" />
+          ) : (
+            <img src="/images/logo.svg" alt="Navin Logo" className="w-[56.44px] h-[55.19px] object-contain" />
+          )}
           <span className="bg-white bg-clip-text text-transparent">Navin</span>
         </Link>
 
