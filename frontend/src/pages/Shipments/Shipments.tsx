@@ -101,6 +101,7 @@ const Shipments: React.FC = () => {
     } catch {
       return 'list';
     }
+  });
   const [priorityFilter, setPriorityFilter] = useState<'ALL' | ShipmentPriority>('ALL');
   const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>({
     status: [],

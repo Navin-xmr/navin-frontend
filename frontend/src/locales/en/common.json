@@ -1,0 +1,34 @@
+{
+  "appName": "Navin",
+  "language": "Language",
+  "save": "Save",
+  "saveChanges": "Save Changes",
+  "saving": "Saving...",
+  "cancel": "Cancel",
+  "loading": "Loading...",
+
+  "dashboard": "Dashboard",
+  "settings": "Settings",
+
+  "hero": "Hero",
+  "whyNavin": "Why Navin",
+  "features": "Features",
+  "howItWorks": "How It Works",
+  "faq": "FAQ",
+
+  "login": "Login",
+  "freeDemo": "Free Demo",
+
+  "companyProfile": "Company Profile",
+  "companyLogo": "Company Logo",
+  "companyName": "Company Name",
+  "companyAddress": "Company Address",
+  "uploadNew": "Upload New",
+  "uploadHint": "JPG, GIF or PNG. Max size 2MB",
+
+  "connectedWallet": "Connected Wallet",
+  "connectWalletDescription": "Connect your Freighter wallet to authorize blockchain transactions and manage smart contracts.",
+
+  "settingsSaved": "Settings saved successfully!",
+  "manageCompanyProfile": "Manage your company profile, notifications, and connected wallets."
+}

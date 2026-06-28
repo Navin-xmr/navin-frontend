@@ -1,0 +1,34 @@
+{
+  "appName": "Navin",
+  "language": "Idioma",
+  "save": "Guardar",
+  "saveChanges": "Guardar cambios",
+  "saving": "Guardando...",
+  "cancel": "Cancelar",
+  "loading": "Cargando...",
+
+  "dashboard": "Panel",
+  "settings": "Configuración",
+
+  "hero": "Inicio",
+  "whyNavin": "Por qué Navin",
+  "features": "Características",
+  "howItWorks": "Cómo funciona",
+  "faq": "Preguntas frecuentes",
+
+  "login": "Iniciar sesión",
+  "freeDemo": "Demostración gratuita",
+
+  "companyProfile": "Perfil de la empresa",
+  "companyLogo": "Logotipo de la empresa",
+  "companyName": "Nombre de la empresa",
+  "companyAddress": "Dirección de la empresa",
+  "uploadNew": "Subir",
+  "uploadHint": "JPG, GIF o PNG. Tamaño máximo: 2 MB",
+
+  "connectedWallet": "Billetera conectada",
+  "connectWalletDescription": "Conecta tu billetera Freighter para autorizar transacciones en blockchain y administrar contratos inteligentes.",
+
+  "settingsSaved": "¡Configuración guardada correctamente!",
+  "manageCompanyProfile": "Administra el perfil de tu empresa, las notificaciones y las billeteras conectadas."
+}
