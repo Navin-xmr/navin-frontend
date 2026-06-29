@@ -74,7 +74,6 @@ const ShipmentsMapWidget: React.FC = () => {
             orange: buildMarkerIcon('orange'),
             red: buildMarkerIcon('red'),
         } as const;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -139,7 +138,7 @@ const ShipmentsMapWidget: React.FC = () => {
                     scrollWheelZoom={true}
                     worldCopyJump={true}
                     // If we have bounds, zoom to them; otherwise keep default world view.
-                    bounds={bounds as any}
+                    bounds={bounds as L.LatLngBoundsExpression}
                     boundsOptions={{ padding: [20, 20] }}
                 >
                     <TileLayer
