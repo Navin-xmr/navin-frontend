@@ -1,66 +1,59 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Marker, Popup, TileLayer } from 'react-leaflet';
-import { MapContainer } from 'react-leaflet';
+import { Marker, Popup, TileLayer, MapContainer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import { shipmentApi, type ShipmentWithGps } from '../../../../api/shipmentApi';
 import { Link } from 'react-router-dom';
+import { shipmentApi, type ShipmentWithGps } from '../../../../api/shipmentApi';
 
-
-// Fix default marker icon paths for webpack/vite environments
-// (Markers use divIcon, so this is intentionally a no-op.)
 const fixLeafletIcon = () => {
-    return;
+  return undefined;
 };
-
 
 type MarkerColor = 'blue' | 'orange' | 'red';
 
-const colorToClass = (c: MarkerColor) => {
-    switch (c) {
-        case 'orange':
-            return '#f59e0b';
-        case 'red':
-            return '#ef4444';
-        default:
-            return '#3b82f6';
-    }
+const colorToHex = (color: MarkerColor) => {
+  switch (color) {
+    case 'orange':
+      return '#f59e0b';
+    case 'red':
+      return '#ef4444';
+    default:
+      return '#3b82f6';
+  }
 };
 
 const buildMarkerIcon = (color: MarkerColor) => {
-    const html = `
+  const html = `
     <div style="
       width: 16px;
       height: 16px;
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
-      background: ${colorToClass(color)};
+      background: ${colorToHex(color)};
       border: 2px solid #0b1220;
       box-shadow: 0 2px 8px rgba(0,0,0,0.35);
     "></div>
   `;
 
-    return L.divIcon({
-        className: 'shipments-map__marker',
-        html,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
-        popupAnchor: [0, -8],
-    });
+  return L.divIcon({
+    className: 'shipments-map__marker',
+    html,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+    popupAnchor: [0, -8],
+  });
 };
 
-const getMarkerColor = (s: ShipmentWithGps): MarkerColor => {
-    // Primary: anomaly/delay flags if present.
-    if (typeof s.anomalyDetected === 'boolean' && s.anomalyDetected) return 'red';
-    if (typeof s.isDelayed === 'boolean' && s.isDelayed) return 'orange';
+const getMarkerColor = (shipment: ShipmentWithGps): MarkerColor => {
+  if (shipment.anomalyDetected) return 'red';
+  if (shipment.isDelayed) return 'orange';
 
-    // Fallback: map from more detailed status strings if backend provides them.
-    const statusUpper = String(s.status ?? '').toUpperCase();
-    if (statusUpper.includes('ANOM')) return 'red';
-    if (statusUpper.includes('DELAY') || statusUpper.includes('LATE')) return 'orange';
+  const statusUpper = String(shipment.status ?? '').toUpperCase();
+  if (statusUpper.includes('ANOM')) return 'red';
+  if (statusUpper.includes('DELAY') || statusUpper.includes('LATE')) return 'orange';
 
-    return 'blue';
+  return 'blue';
 };
 
 const ShipmentsMapWidget: React.FC = () => {
@@ -185,7 +178,67 @@ const ShipmentsMapWidget: React.FC = () => {
                 </MapContainer>
             </div>
         </div>
-    );
+        {hasError ? (
+          <div className="text-xs text-[#ef4444] font-medium">Failed to load</div>
+        ) : isLoading ? (
+          <div className="text-xs text-[#94a3b8] font-medium">Loading…</div>
+        ) : (
+          <div className="text-xs text-[#94a3b8] font-medium">{shipments.length} active</div>
+        )}
+      </div>
+
+      <div className="h-[400px] max-md:h-[250px] rounded-lg overflow-hidden">
+        <MapContainer
+          style={{ height: '100%', width: '100%' }}
+          center={[20, 0]}
+          zoom={2}
+          scrollWheelZoom
+          worldCopyJump
+          bounds={bounds as L.LatLngBoundsExpression | undefined}
+          boundsOptions={{ padding: [20, 20] }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+
+          <MarkerClusterGroup chunkedLoading showCoverageOnHover={false}>
+            {shipments
+              .filter((shipment): shipment is ShipmentWithGps => typeof shipment.lat === 'number' && typeof shipment.lng === 'number')
+              .map((shipment) => {
+                const color = getMarkerColor(shipment);
+                const icon = icons[color];
+
+                return (
+                  <Marker key={shipment.id} position={[shipment.lat as number, shipment.lng as number]} icon={icon}>
+                    <Popup>
+                      <div className="min-w-[240px]">
+                        <div className="text-xs uppercase tracking-[0.05em] text-[#94a3b8] font-semibold mb-2">
+                          Shipment
+                        </div>
+                        <div className="text-sm font-semibold mb-1">{shipment.trackingNumber ?? shipment.id}</div>
+                        <div className="text-xs text-[#94a3b8] mb-3">
+                          {shipment.origin} → {shipment.destination}
+                        </div>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="text-xs text-[#94a3b8]">Status: {shipment.status}</div>
+                          <Link
+                            to={`/dashboard/shipments/${encodeURIComponent(String(shipment.id))}`}
+                            className="text-xs font-semibold text-[#3b82f6] no-underline hover:underline"
+                          >
+                            View
+                          </Link>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+          </MarkerClusterGroup>
+        </MapContainer>
+      </div>
+    </div>
+  );
 };
 
 export default ShipmentsMapWidget;

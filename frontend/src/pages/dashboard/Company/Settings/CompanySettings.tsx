@@ -3,9 +3,11 @@ import { Camera, Save, CheckCircle2, Loader2, Link as LinkIcon, Building2 } from
 import { WalletConnectButton } from '../../../../components/auth/WalletConnectButton/WalletConnectButton';
 import NotificationPreferences from '../../../Settings/NotificationPreferences/NotificationPreferences';
 import MyTemplatesSection from '../../../Settings/sections/MyTemplatesSection';
+import { useTranslation } from "react-i18next";
 import './CompanySettings.css';
 
 const CompanySettings: React.FC = () => {
+    const { t, i18n } = useTranslation("common");
     const [profile, setProfile] = useState({
         name: 'Navin Logistics',
         address: '123 Supply Chain Blvd, Singapore 109332',
@@ -40,22 +42,41 @@ const CompanySettings: React.FC = () => {
     };
 
   return (
-    <div className="company-settings-container">
-      <div className="settings-header">
-        <h1>Company Settings</h1>
-        <p>Manage your company profile, notifications, and connected wallets.</p>
-      </div>
+ <div className="settings-header">
+    <div className="flex justify-between items-center">
+        <div>
+            <h1>{t("settings")}</h1>
+            <p>
+                Manage your company profile, notifications, and connected wallets.
+            </p>
+        </div>
+
+        <select
+            value={i18n.language}
+            onChange={(e) => {
+                const lang = e.target.value;
+                i18n.changeLanguage(lang);
+                localStorage.setItem("language", lang);
+            }}
+            className="border rounded-md px-3 py-2"
+        >
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+        </select>
+    </div>
+
 
           <div className="settings-content">
               {/* Company Profile Section */}
               <section className="settings-card">
                   <div className="card-header">
                       <Building2 className="card-icon" size={24} />
-                      <h2>Company Profile</h2>
+                      <h2>{t("companyProfile")}</h2>
                   </div>
                   <div className="card-body">
                       <div className="logo-upload-group">
-                          <label>Company Logo</label>
+                          <label>{t("companyLogo")}</label>
                           <div className="logo-preview-container">
                               {logoPreview ? (
                                   <img src={logoPreview} alt="Company Logo" className="logo-preview" />

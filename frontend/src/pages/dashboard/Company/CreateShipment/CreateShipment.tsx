@@ -10,6 +10,8 @@ import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTempla
 import { getTemplatePreview, toTemplateFields } from '../../../../types/shipmentTemplate';
 import type { AxiosError } from 'axios';
 import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
+import CostBreakdown from '@components/shipment/CostBreakdown/CostBreakdown';
+import type { CostBreakdownData } from '@components/shipment/CostBreakdown/CostBreakdown';
 import './CreateShipment.css';
 
 interface FormData {
@@ -48,6 +50,8 @@ const CreateShipment: React.FC = () => {
     const [shipmentId, setShipmentId] = useState('');
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [costEstimate, setCostEstimate] = useState<CostBreakdownData | null>(null);
+    const [isEstimating, setIsEstimating] = useState(false);
 
     const templateOptions = useMemo(
         () =>
@@ -98,6 +102,40 @@ const CreateShipment: React.FC = () => {
         setFormData((prev) => ({ ...prev, [pickerTarget!]: formatted }));
         setPickerTarget(null);
     };
+
+    // Auto-fetch cost estimate when required fields are filled
+useEffect(() => {
+    const { origin, destination, weight } = formData;
+    const hasRequired = origin.trim() && destination.trim() && Number(weight) > 0;
+    if (!hasRequired) {
+        setCostEstimate(null);
+        return;
+    }
+
+    const timer = setTimeout(() => {
+        setIsEstimating(true);
+        const weightKg = Number(weight);
+        const baseRate = 250 + weightKg * 8;
+        const weightSurcharge = weightKg > 50 ? weightKg * 1.5 : weightKg * 0.8;
+        const fuelSurcharge = baseRate * 0.075;
+        const insuranceFee = baseRate * 0.03;
+        const total = baseRate + weightSurcharge + fuelSurcharge + insuranceFee;
+
+        setTimeout(() => {
+            setCostEstimate({
+                baseRate: parseFloat(baseRate.toFixed(2)),
+                weightSurcharge: parseFloat(weightSurcharge.toFixed(2)),
+                fuelSurcharge: parseFloat(fuelSurcharge.toFixed(2)),
+                insuranceFee: parseFloat(insuranceFee.toFixed(2)),
+                total: parseFloat(total.toFixed(2)),
+                currency: 'USD',
+            });
+            setIsEstimating(false);
+        }, 900);
+    }, 600);
+
+    return () => clearTimeout(timer);
+}, [formData.origin, formData.destination, formData.weight]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -402,6 +440,12 @@ const CreateShipment: React.FC = () => {
                           {errors.recipientContact && <span id="recipientContact-error" className="error-text" role="alert">{errors.recipientContact}</span>}
                       </div>
                   </div>
+
+                  <CostBreakdown
+                    data={costEstimate}
+                    isLoading={isEstimating}
+                    mode="estimate"
+                />
 
                   <div className="form-actions">
                       <button type="button" className="cancel-btn" onClick={() => navigate(-1)} disabled={loading}>

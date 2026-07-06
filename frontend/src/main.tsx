@@ -1,4 +1,5 @@
 import { StrictMode } from "react";
+import "./i18n";
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import "./index.css";

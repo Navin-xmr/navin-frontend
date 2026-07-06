@@ -38,6 +38,7 @@ const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainL
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
 const Analytics = lazy(() => import('./pages/Analytics/Analytics'));
 const RevenueAnalytics = lazy(() => import('./pages/Analytics/RevenueAnalytics'));
+const ExceptionDashboard = lazy(() => import('./pages/dashboard/ExceptionDashboard'));
 const CompanySettings = lazy(() => import('./pages/dashboard/Company/Settings/CompanySettings'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter/HelpCenter'));
@@ -82,6 +83,7 @@ const router = createBrowserRouter([
               { path: '/dashboard/payments', element: S(<PaymentHistory />) },
               { path: '/dashboard/analytics', element: S(<Analytics />) },
               { path: '/dashboard/analytics/revenue', element: S(<RevenueAnalytics />) },
+              { path: '/dashboard/analytics/exceptions', element: S(<ExceptionDashboard />) },
               { path: '/dashboard/team', element: S(<UserManagement />) },
               { path: '/dashboard/shipments/create', element: <CreateShipment /> },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
