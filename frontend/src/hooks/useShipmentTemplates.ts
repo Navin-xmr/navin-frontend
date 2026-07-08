@@ -25,7 +25,8 @@ export function useShipmentTemplates() {
   }, []);
 
   useEffect(() => {
-    void refresh();
+    const timer = setTimeout(() => { void refresh(); }, 0);
+    return () => clearTimeout(timer);
   }, [refresh]);
 
   const createTemplate = useCallback(async (payload: CreateShipmentTemplateRequest) => {

@@ -25,7 +25,7 @@ describe("RevenueAnalytics", () => {
 
   it("displays date input fields", () => {
     render(<RevenueAnalytics />);
-    const dateInputs = screen.getAllByRole("textbox");
+    const dateInputs = screen.getAllByDisplayValue(/2026|2025/);
     expect(dateInputs.length).toBeGreaterThan(0);
   });
 

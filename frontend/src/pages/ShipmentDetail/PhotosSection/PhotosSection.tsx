@@ -119,9 +119,6 @@ const Lightbox: React.FC<{
   onPrev: () => void;
   onNext: () => void;
 }> = ({ items, index, onClose, onPrev, onNext }) => {
-  const item = items[index];
-  if (!item) return null;
-
   // Keyboard nav
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -137,6 +134,9 @@ const Lightbox: React.FC<{
       document.body.style.overflow = "";
     };
   }, [onClose, onPrev, onNext]);
+
+  const item = items[index];
+  if (!item) return null;
 
   const s = TYPE_STYLES[item.type];
 

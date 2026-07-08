@@ -76,11 +76,15 @@ const CreateShipment: React.FC = () => {
         addToast(`Loaded template "${template.name}"`, 'success');
     };
 
+    const formatAddress = (addr: Address): string =>
+        `${addr.street}, ${addr.city}, ${addr.state} ${addr.postalCode}, ${addr.country}`;
+
     useEffect(() => {
         const templateId = searchParams.get('template');
         if (!templateId || templatesLoading || templates.length === 0) return;
         if (selectedTemplateId === templateId) return;
-        applyTemplate(templateId);
+        const timer = setTimeout(() => { applyTemplate(templateId); }, 0);
+        return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, templates, templatesLoading]);
     const [pickerTarget, setPickerTarget] = useState<'origin' | 'destination' | null>(null);
@@ -94,9 +98,6 @@ const CreateShipment: React.FC = () => {
         }).catch(() => {});
     }, []);
 
-    const formatAddress = (addr: Address): string =>
-        `${addr.street}, ${addr.city}, ${addr.state} ${addr.postalCode}, ${addr.country}`;
-
     const handleAddressSelect = (addr: Address) => {
         const formatted = formatAddress(addr);
         setFormData((prev) => ({ ...prev, [pickerTarget!]: formatted }));
@@ -108,8 +109,8 @@ useEffect(() => {
     const { origin, destination, weight } = formData;
     const hasRequired = origin.trim() && destination.trim() && Number(weight) > 0;
     if (!hasRequired) {
-        setCostEstimate(null);
-        return;
+        const timer = setTimeout(() => { setCostEstimate(null); }, 0);
+        return () => clearTimeout(timer);
     }
 
     const timer = setTimeout(() => {

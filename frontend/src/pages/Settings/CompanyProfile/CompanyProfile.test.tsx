@@ -15,7 +15,7 @@ describe('CompanyProfile', () => {
 
     await user.type(emailInput, 'not-an-email');
     await user.type(phoneInput, 'abc');
-    await user.type(websiteInput, 'not-a-url');
+    await user.type(websiteInput, 'not-a-valid-url@');
 
     expect(screen.getByLabelText(/unsaved changes/i)).toBeInTheDocument();
 

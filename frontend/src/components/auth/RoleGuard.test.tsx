@@ -25,6 +25,7 @@ function renderWithAuth(token: string | null, path: string) {
             <Route path="/company" element={<div>Company Page</div>} />
           </Route>
           <Route path="/dashboard" element={<div>Dashboard</div>} />
+          <Route path="/dashboard/customer" element={<div>Customer Dashboard</div>} />
           <Route path="/login" element={<div>Login</div>} />
         </Routes>
       </AuthProvider>
@@ -56,7 +57,7 @@ describe('RoleGuard', () => {
   it('redirects to dashboard when role does not match', () => {
     renderWithAuth(makeToken({ role: 'customer', sub: '2' }), '/company');
     act(() => vi.advanceTimersByTime(200));
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Customer Dashboard')).toBeInTheDocument();
     expect(screen.queryByText('Company Page')).not.toBeInTheDocument();
   });
 

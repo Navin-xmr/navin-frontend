@@ -79,7 +79,7 @@ const Shipments: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED">("ALL");
   const [timeframeFilter, setTimeframeFilter] = useState<"ALL" | "30" | "90">("ALL");
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+  const [viewMode] = useState<ViewMode>(() => {
     try {
       const saved = localStorage.getItem("navin_shipments_view");
       return saved === "kanban" ? "kanban" : "list";

@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
 import { useTranslation } from "react-i18next";
 import { useScrollSpy } from '../../hooks/useScrollSpy';
 
@@ -15,8 +14,13 @@ const navLinks = [
 ];
 
 const Navbar: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+  const [companyLogo] = React.useState<string | null>(() => {
+    try {
+      return window.localStorage.getItem('navin-company-logo');
+    } catch {
+      return null;
+    }
+  });
   const location = useLocation();
 const { t, i18n } = useTranslation(["common"]);
   const isLandingPage = location.pathname === '/';
@@ -28,7 +32,6 @@ const { t, i18n } = useTranslation(["common"]);
     e: React.MouseEvent<HTMLAnchorElement>,
     sectionId: string,
   ) => {
-    setIsMenuOpen(false);
     if (isLandingPage) {
       e.preventDefault();
       const element = document.getElementById(sectionId);
@@ -38,13 +41,6 @@ const { t, i18n } = useTranslation(["common"]);
     }
   };
 
-  useEffect(() => {
-    const storedLogo = window.localStorage.getItem('navin-company-logo');
-    setCompanyLogo(storedLogo ?? null);
-  }, [location.pathname]);
-
-  const handleLogoClick = () => setIsMenuOpen(false);
-
  return (
   <nav className="absolute top-0 left-0 w-full bg-transparent z-[1000] m-0 p-0">
     <div className="max-w-[1480px] mx-auto px-8 py-3 flex justify-center items-center relative gap-12">
@@ -53,7 +49,6 @@ const { t, i18n } = useTranslation(["common"]);
       <Link
         to="/"
         className="flex items-center gap-2 no-underline font-albert font-normal text-[30px] text-white transition-opacity duration-300 hover:opacity-80 absolute left-8"
-        onClick={handleLogoClick}
       >
         {companyLogo ? (
           <img
@@ -135,53 +130,6 @@ const { t, i18n } = useTranslation(["common"]);
     </div>
   </nav>
 );
-
-        {/* Hamburger */}
-        <button
-          className="hidden max-md:block bg-transparent border-none text-primary cursor-pointer text-2xl p-2 transition-transform duration-300 hover:scale-110 absolute right-6 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
-          aria-expanded={isMenuOpen}
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 w-full bg-[rgba(10,22,40,0.98)] backdrop-blur-[10px] border-b border-border-light px-6 py-4 animate-[slideDown_0.3s_ease]">
-            <div className="flex flex-col gap-4 mb-6 border-b border-border-light pb-6">
-              {navLinks.map((link) => {
-                const isActive = activeSectionId === link.id;
-                return (
-                  <a key={link.id}
-                    href={link.href}
-                    className={`no-underline text-base font-medium transition-colors duration-300 cursor-pointer ${
-                      isActive
-                        ? 'text-[#00d4c8]'
-                        : 'text-[#E0E0E0] hover:text-[#00d4c8]'
-                    }`}
-                    onClick={(e) => handleNavClick(e, link.id)}
-                    aria-current={isActive ? 'true' : undefined}
-                  >
-                    {t(link.key)}
-                  </a>
-                );
-              })}
-            </div>
-            <div className="flex flex-col gap-3">
-              <Link to="/login" className="w-full text-center px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5">
-                {t("login")}
-              </Link>
-              <Link
-                to="/signup"
-                className="w-full text-center font-display flex flex-row justify-center items-center px-8 py-3.5 gap-2 bg-[rgba(1,56,59)] backdrop-blur-xs text-[#E5FFFF] font-bold text-lg leading-[21px] tracking-[-0.32px] no-underline cursor-pointer transition-all duration-300 rounded-full border border-[#60C9CD] shadow-glow-blue shadow-inset-teal hover:-translate-y-0.5 hover:shadow-glow-blue-hover hover:shadow-inset-teal-hover"
-              >
-                {t("freeDemo")}
-              </Link>
-            </div>
-          </div>
-        )}
-    
-  };
+};
 
 export default Navbar;

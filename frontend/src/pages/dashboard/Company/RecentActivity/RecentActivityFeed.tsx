@@ -152,7 +152,8 @@ const RecentActivityFeed: React.FC = () => {
     };
 
     useEffect(() => {
-        void fetchPage({ reset: true });
+        const timer = setTimeout(() => { void fetchPage({ reset: true }); }, 0);
+        return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

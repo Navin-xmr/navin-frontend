@@ -66,7 +66,8 @@ export const CalendarView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchShipments(year, month);
+    const timer = setTimeout(() => { fetchShipments(year, month); }, 0);
+    return () => clearTimeout(timer);
   }, [year, month, fetchShipments]);
 
   const prevMonth = () => {

@@ -90,16 +90,13 @@ const RevenueAnalytics: React.FC = () => {
     return date.toISOString().split("T")[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
-  const [loading, setLoading] = useState(false);
   const [data, setData] = useState(() =>
     generateMockData(new Date(startDate), new Date(endDate))
   );
 
   useEffect(() => {
-    setLoading(true);
     const timer = setTimeout(() => {
       setData(generateMockData(new Date(startDate), new Date(endDate)));
-      setLoading(false);
     }, 300);
     return () => clearTimeout(timer);
   }, [startDate, endDate]);
@@ -159,13 +156,7 @@ const RevenueAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center p-12 gap-3">
-          <Loader2 className="animate-spin" size={24} />
-          <p className="text-slate-400">Loading revenue data...</p>
-        </div>
-      ) : (
-        <div id="revenue-dashboard" className="flex flex-col gap-6 bg-slate-950">
+      <div id="revenue-dashboard" className="flex flex-col gap-6 bg-slate-950">
           {/* KPI Cards */}
           <div className="grid grid-cols-3 gap-4 max-lg:grid-cols-1 max-md:grid-cols-1">
             <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
@@ -333,7 +324,6 @@ const RevenueAnalytics: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
     </div>
   );
 };

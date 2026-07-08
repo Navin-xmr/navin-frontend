@@ -12,7 +12,8 @@ describe('ExceptionDashboard', () => {
     expect(screen.getByText(/exception trend/i)).toBeInTheDocument();
     expect(screen.getByText(/open exceptions/i)).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByLabelText(/filter/i), 'DELAYED');
+    const selects = screen.getAllByRole('combobox');
+    await user.selectOptions(selects[0], 'DELAYED');
     await user.click(screen.getAllByRole('button', { name: /resolve/i })[0]);
 
     expect(screen.getByPlaceholderText(/add an update/i)).toBeInTheDocument();

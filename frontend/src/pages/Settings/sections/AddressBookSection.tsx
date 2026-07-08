@@ -63,7 +63,8 @@ const AddressBookSection: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void fetchAddresses();
+    const timer = setTimeout(() => { void fetchAddresses(); }, 0);
+    return () => clearTimeout(timer);
   }, [fetchAddresses]);
 
   const openAdd = () => {

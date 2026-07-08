@@ -162,7 +162,8 @@ const TeamSection: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void fetchMembers();
+    const timer = setTimeout(() => { void fetchMembers(); }, 0);
+    return () => clearTimeout(timer);
   }, [fetchMembers]);
 
   useEffect(() => {

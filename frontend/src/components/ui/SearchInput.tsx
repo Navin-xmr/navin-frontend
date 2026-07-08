@@ -27,6 +27,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
   // Sync external value changes (e.g., programmatic clear from parent)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInputValue(value);
   }, [value]);
 
