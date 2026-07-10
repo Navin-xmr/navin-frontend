@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AlertTriangle, CalendarRange, Clock3, Filter, RefreshCw, Search, TrendingUp, Truck } from 'lucide-react';
+import { CalendarRange, Filter, RefreshCw, Search, TrendingUp } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type ExceptionType = 'DELAYED' | 'DAMAGED' | 'LOST' | 'RETURNED' | 'CUSTOMS_HOLD';

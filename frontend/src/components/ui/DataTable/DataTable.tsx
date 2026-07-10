@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ArrowUpDown } from 'lucide-react';
-import type { ColumnDef, DataTableProps, SortDirection } from './types';
+import type { DataTableProps, SortDirection } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 

@@ -507,7 +507,7 @@ const Shipments: React.FC = () => {
           {error ? (
             <div className="shipments-error">{error}</div>
           ) : viewMode === "kanban" ? (
-            <ShipmentsKanban shipments={filteredShipments} isLoading={isLoading} />
+            <ShipmentsKanban />
           ) : isEmpty ? (
             <div className="shipments-empty">
               <h3>No shipments available</h3>

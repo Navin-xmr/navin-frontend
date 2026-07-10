@@ -93,15 +93,6 @@ const normalizeShipment = (shipment: BackendShipment): Shipment => {
   };
 };
 
-export type ShipmentWithGps = Shipment & {
-  lat?: number;
-  lng?: number;
-  trackingNumber?: string;
-  // Optional backend flags for coloring. These may be absent.
-  anomalyDetected?: boolean;
-  isDelayed?: boolean;
-};
-
 export type ShipmentRoute = Shipment & {
   originLat: number;
   originLng: number;
@@ -109,6 +100,12 @@ export type ShipmentRoute = Shipment & {
   destinationLng: number;
   isDelayed?: boolean;
   trackingNumber?: string;
+};
+
+export type ShipmentWithGps = ShipmentRoute & {
+  lat: number;
+  lng: number;
+  anomalyDetected?: boolean;
 };
 
 export type RouteDisplayStatus = 'IN_TRANSIT' | 'DELAYED' | 'DELIVERED';
