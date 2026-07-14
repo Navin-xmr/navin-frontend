@@ -44,7 +44,7 @@ const formatRelativeTime = (isoTs: string): string => {
     const absSeconds = Math.abs(diffSeconds);
 
     const rtf =
-        typeof Intl !== 'undefined' && (Intl as any).RelativeTimeFormat
+        typeof Intl !== 'undefined' && typeof Intl.RelativeTimeFormat !== 'undefined'
             ? new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
             : null;
 
@@ -154,7 +154,6 @@ const RecentActivityFeed: React.FC = () => {
     useEffect(() => {
         const timer = setTimeout(() => { void fetchPage({ reset: true }); }, 0);
         return () => clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Auto-refresh every 60 seconds.
@@ -168,7 +167,6 @@ const RecentActivityFeed: React.FC = () => {
         return () => {
             if (refreshIntervalRef.current) window.clearInterval(refreshIntervalRef.current);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Load-more on scroll (best-effort).
@@ -188,7 +186,6 @@ const RecentActivityFeed: React.FC = () => {
 
         observer.observe(el);
         return () => observer.disconnect();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasMore, isLoadingMore, isInitialLoading]);
 
     const grouped = useMemo(() => {

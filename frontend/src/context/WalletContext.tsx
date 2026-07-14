@@ -34,7 +34,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isConnecting, setIsConnecting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const lastAdapterId = useMemo(() => localStorage.getItem(LAST_ADAPTER_KEY), [publicKey]);
+  const lastAdapterId = useMemo(() => localStorage.getItem(LAST_ADAPTER_KEY), []);
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);

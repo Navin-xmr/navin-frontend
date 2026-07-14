@@ -15,6 +15,7 @@ interface UseVirtualShipmentsOptions {
 export function useVirtualShipments({ shipments, onLoadMore, hasMore }: UseVirtualShipmentsOptions) {
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: shipments.length,
     getScrollElement: () => parentRef.current,

@@ -60,8 +60,8 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
       try {
         const res = await axios.get<{ data: PublicShipment }>(`/api/public/shipments/${trackingNumber}`);
         if (isActive) setShipment(res.data.data);
-      } catch (err: any) {
-        if (isActive && err.response?.status === 404) setNotFound(true);
+      } catch (err: unknown) {
+        if (isActive && axios.isAxiosError(err) && err.response?.status === 404) setNotFound(true);
       } finally {
         if (isActive) setLoading(false);
       }

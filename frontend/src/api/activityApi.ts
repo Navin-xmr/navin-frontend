@@ -47,14 +47,15 @@ export const activityApi = {
         });
 
         const payload = (res.data ?? {}) as {
-            data?: any[];
-            meta?: any;
+            data?: unknown[];
+            meta?: Record<string, unknown>;
         };
 
-        const itemsRaw = Array.isArray(payload.data) ? payload.data : [];
+        const itemsRaw: unknown[] = Array.isArray(payload.data) ? payload.data : [];
 
         const items: ActivityEvent[] = itemsRaw
-            .map((e: any, idx: number) => {
+            .map((item: unknown, idx: number) => {
+                const e = item as Record<string, unknown>;
                 const id = e?.id ?? e?._id ?? e?.eventId ?? String(idx);
                 const createdAt = e?.createdAt ?? e?.timestamp ?? e?.time;
 
@@ -64,7 +65,7 @@ export const activityApi = {
                     event: e?.event,
                     description: e?.description,
                     message: e?.message,
-                    shipmentId: e?.shipmentId ?? e?.shipment?.id,
+                    shipmentId: e?.shipmentId ?? ((e?.shipment as Record<string, unknown>)?.id as string),
                     shipment: e?.shipment,
                     createdAt: String(createdAt ?? new Date().toISOString()),
                     ...e,

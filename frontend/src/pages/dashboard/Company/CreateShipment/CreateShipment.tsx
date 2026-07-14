@@ -136,6 +136,7 @@ useEffect(() => {
     }, 600);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [formData.origin, formData.destination, formData.weight]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
