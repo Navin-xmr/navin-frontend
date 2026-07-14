@@ -11,10 +11,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
-    "paths": {
-      "@playwright/test": ["./frontend/node_modules/@playwright/test"]
-    },
     "typeRoots": ["./frontend/node_modules/@types"]
   },
-  "include": ["playwright.config.ts", "e2e/**/*.ts"]
+  "include": []
 }
