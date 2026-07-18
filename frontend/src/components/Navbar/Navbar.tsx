@@ -6,7 +6,7 @@ import { useScrollSpy } from '../../hooks/useScrollSpy';
 const SECTION_IDS = ['home', 'why-navin', 'features', 'how-it-works', 'faq'] as const;
 
 const navLinks = [
-  { id: "home", key: "hero", href: "#home" },
+  { id: "home", key: "home", href: "#home" },
   { id: "why-navin", key: "whyNavin", href: "#why-navin" },
   { id: "features", key: "features", href: "#features" },
   { id: "how-it-works", key: "howItWorks", href: "#how-it-works" },
@@ -102,11 +102,14 @@ const { t, i18n } = useTranslation(["common"]);
               i18n.changeLanguage(lang);
               localStorage.setItem("language", lang);
             }}
-            className="bg-transparent text-white border border-white/30 rounded-md px-2 py-1"
+            className="bg-gradient-card backdrop-blur-md text-white border border-primary/30 rounded-lg px-4 py-2 font-medium cursor-pointer transition-all duration-300 hover:border-primary hover:shadow-glow-blue focus:outline-none focus:border-primary focus:shadow-glow-blue appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%2300d4c8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
+            style={{
+              colorScheme: 'dark',
+            }}
           >
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="es">Español</option>
+            <option value="en" className="bg-background text-white">English</option>
+            <option value="fr" className="bg-background text-white">Français</option>
+            <option value="es" className="bg-background text-white">Español</option>
           </select>
 
           <Link
