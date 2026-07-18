@@ -98,14 +98,17 @@ Once you've decided on an issue, leave a comment and wait to be assigned before 
 
 ## Making Contributions
 
+> [!IMPORTANT]
+> **All PRs must target the `dev` branch, not `main`.** The `main` branch is protected and only receives merges from `dev` after testing.
+
 ### Step 1: Create a Branch
 
-Never commit directly to your fork's `main`. Always work on a dedicated branch.
+Never commit directly to your fork's `main` or `dev`. Always work on a dedicated feature branch.
 Sync your fork first (via GitHub website or by pulling upstream), then:
 
 ```bash
-git checkout main
-git pull origin main    # or: git pull upstream main
+git checkout dev
+git pull origin dev    # or: git pull upstream dev
 
 git checkout -b issue#<number>
 ```
@@ -186,8 +189,12 @@ git push origin issue#<number>
 
 ### Step 2: Open a Pull Request
 
+> [!IMPORTANT]
+> **Ensure your PR targets the `dev` branch, not `main`.** GitHub will show the target branch in the PR creation interface.
+
 1. Go to your fork on GitHub and click **"Compare & pull request"**
-2. Fill out the PR description:
+2. **Verify the base branch is set to `dev`** (not `main`)
+3. Fill out the PR description:
    - **Title**: What you built (e.g., `feat: build notification dropdown`)
    - **Issue**: Reference the issue (e.g., `Closes #43`)
    - **Description**: Brief summary of your approach
@@ -210,13 +217,13 @@ Conflicts happen when other PRs are merged while you're working on your branch.
 Here's how to fix them: (This is just one way to do it, you can use the website to update your fork if that is the method you prefer)
 
 ```bash
-# Update your local main
-git checkout main
-git pull upstream main    # or: git pull origin main
+# Update your local dev
+git checkout dev
+git pull upstream dev    # or: git pull origin dev
 
-# Rebase your branch on top of updated main
+# Rebase your branch on top of updated dev
 git checkout issue#<number>
-git rebase main
+git rebase dev
 ```
 
 > [!IMPORTANT]
