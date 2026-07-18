@@ -15,9 +15,9 @@ const STRIP = [...LOGOS, ...LOGOS];
 const LogoStrip: React.FC = () => (
   <section
     aria-label="Technology and Partners"
-    className="w-full py-10 overflow-hidden border-y border-[rgba(0,180,160,0.12)] bg-[rgba(0,8,12,0.4)]"
+    className="w-full py-10 overflow-hidden border-y border-border-light bg-background-secondary"
   >
-    <p className="text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-6">
+    <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary mb-6">
       Powered by &amp; Trusted with
     </p>
 
@@ -26,10 +26,10 @@ const LogoStrip: React.FC = () => (
         {STRIP.map((logo, i) => (
           <div
             key={i}
-            className="flex items-center justify-center px-6 min-w-[140px] h-14 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.03)] select-none shrink-0"
+            className="group flex items-center justify-center px-6 min-w-[140px] h-14 rounded-xl border border-border-light bg-background-card/40 backdrop-blur-sm select-none shrink-0 transition-all duration-300 hover:border-primary-light hover:bg-background-card/60 hover:shadow-glow-blue hover:scale-105"
           >
             <span
-              className="text-lg font-bold tracking-tight"
+              className="text-lg font-bold tracking-tight transition-all duration-300 group-hover:scale-110"
               style={{
                 color: logo.color,
                 fontFamily: "'Bricolage Grotesque', sans-serif",

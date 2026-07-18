@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Hero: React.FC = () => {
+const Home: React.FC = () => {
   return (
     <section
       className="relative w-full min-h-screen flex items-center justify-center overflow-hidden"
@@ -95,4 +95,4 @@ const Hero: React.FC = () => {
   );
 };
 
-export default Hero;
+export default Home;

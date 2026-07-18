@@ -3,10 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import { useScrollSpy } from '../../hooks/useScrollSpy';
 
-const SECTION_IDS = ['hero', 'why-navin', 'features', 'how-it-works', 'faq'] as const;
+const SECTION_IDS = ['home', 'why-navin', 'features', 'how-it-works', 'faq'] as const;
 
 const navLinks = [
-  { id: "hero", key: "hero", href: "#hero" },
+  { id: "home", key: "hero", href: "#home" },
   { id: "why-navin", key: "whyNavin", href: "#why-navin" },
   { id: "features", key: "features", href: "#features" },
   { id: "how-it-works", key: "howItWorks", href: "#how-it-works" },

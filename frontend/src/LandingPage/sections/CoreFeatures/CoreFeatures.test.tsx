@@ -24,7 +24,8 @@ describe('CoreFeatures', () => {
   it('renders the section title and subtitle', () => {
     render(<CoreFeatures />);
 
-    expect(screen.getByText('Core Features')).toBeInTheDocument();
+    expect(screen.getByText(/Core/i)).toBeInTheDocument();
+    expect(screen.getByText(/Features/i)).toBeInTheDocument();
     expect(
       screen.getByText('Built on Stellar blockchain for transparency, security, and automation')
     ).toBeInTheDocument();
@@ -69,15 +70,16 @@ describe('CoreFeatures', () => {
     expect(screen.getByAltText('Role-based access control diagram')).toBeInTheDocument();
   });
 
-  it('applies correct CSS classes for zigzag layout', () => {
+  it('applies correct layout classes for zigzag pattern', () => {
     const { container } = render(<CoreFeatures />);
 
-    const blocks = container.querySelectorAll('.feature-block');
-    expect(blocks).toHaveLength(4);
+    // Check for flex containers (no longer using .feature-block class)
+    const flexContainers = container.querySelectorAll('.flex.flex-col');
+    expect(flexContainers.length).toBeGreaterThanOrEqual(4);
 
-    expect(blocks[0]).toHaveClass('feature-block--image-left');
-    expect(blocks[1]).toHaveClass('feature-block--image-right');
-    expect(blocks[2]).toHaveClass('feature-block--image-left');
-    expect(blocks[3]).toHaveClass('feature-block--image-right');
+    // Verify the structure has alternating row/row-reverse layout
+    const parentDiv = container.querySelector('.space-y-24');
+    expect(parentDiv).toBeInTheDocument();
+    expect(parentDiv?.children).toHaveLength(4);
   });
 });

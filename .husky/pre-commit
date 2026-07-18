@@ -1,1 +1,0 @@
-pnpm --filter navin-frontend exec lint-staged

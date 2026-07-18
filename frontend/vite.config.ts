@@ -110,7 +110,6 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     exclude: [
       ...configDefaults.exclude,
-      "src/LandingPage/sections/CoreFeatures/CoreFeatures.test.tsx",
     ],
   },
 });
