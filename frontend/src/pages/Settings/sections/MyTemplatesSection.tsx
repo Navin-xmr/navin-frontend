@@ -40,6 +40,7 @@ const MyTemplatesSection: React.FC = () => {
   const [editingTemplate, setEditingTemplate] = useState<ShipmentTemplate | null>(null);
   const [editName, setEditName] = useState('');
   const [editFields, setEditFields] = useState<ShipmentTemplateFields>(emptyFields);
+  const [editErrors, setEditErrors] = useState<Partial<Record<keyof ShipmentTemplateFields, string>>>({});
   const [deleteTarget, setDeleteTarget] = useState<ShipmentTemplate | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [order, setOrder] = useState<string[]>(loadStoredOrder);
@@ -95,10 +96,24 @@ const MyTemplatesSection: React.FC = () => {
     setEditingTemplate(template);
     setEditName(template.name);
     setEditFields({ ...template.fields });
+    setEditErrors({});
+  };
+
+  const validateEditFields = (): boolean => {
+    const newErrors: Partial<Record<keyof ShipmentTemplateFields, string>> = {};
+    if (!editFields.origin.trim()) newErrors.origin = 'Origin is required';
+    if (!editFields.destination.trim()) newErrors.destination = 'Destination is required';
+    if (!editFields.itemDescription.trim()) newErrors.itemDescription = 'Item description is required';
+    if (!editFields.weight || Number(editFields.weight) <= 0) newErrors.weight = 'Valid weight is required';
+    if (!editFields.recipientName.trim()) newErrors.recipientName = 'Recipient name is required';
+    if (!editFields.recipientContact.trim()) newErrors.recipientContact = 'Recipient contact is required';
+    setEditErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSaveEdit = async () => {
     if (!editingTemplate || !editName.trim()) return;
+    if (!validateEditFields()) return;
     setIsSaving(true);
     try {
       await updateTemplate(editingTemplate.id, {
@@ -280,21 +295,40 @@ const MyTemplatesSection: React.FC = () => {
             ] as const
           ).map(([key, label]) => (
             <div key={key} className={key === 'itemDescription' ? 'sm:col-span-2' : ''}>
-              <label className="mb-1 block text-sm font-medium text-white">{label}</label>
+              <label htmlFor={`edit-${key}`} className="mb-1 block text-sm font-medium text-white">
+                {label}
+              </label>
               {key === 'itemDescription' ? (
                 <textarea
+                  id={`edit-${key}`}
                   value={editFields[key]}
-                  onChange={(e) => setEditFields((prev) => ({ ...prev, [key]: e.target.value }))}
+                  onChange={(e) => {
+                    setEditFields((prev) => ({ ...prev, [key]: e.target.value }));
+                    setEditErrors((prev) => ({ ...prev, [key]: undefined }));
+                  }}
                   rows={3}
-                  className="w-full rounded-lg border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-sm text-white"
+                  aria-invalid={!!editErrors[key]}
+                  aria-describedby={editErrors[key] ? `edit-${key}-error` : undefined}
+                  className={`w-full rounded-lg border bg-[#0f172a] px-3 py-2 text-sm text-white ${editErrors[key] ? 'border-[#ef4444]' : 'border-[#1e293b]'}`}
                 />
               ) : (
                 <input
+                  id={`edit-${key}`}
                   type="text"
                   value={editFields[key]}
-                  onChange={(e) => setEditFields((prev) => ({ ...prev, [key]: e.target.value }))}
-                  className="w-full rounded-lg border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-sm text-white"
+                  onChange={(e) => {
+                    setEditFields((prev) => ({ ...prev, [key]: e.target.value }));
+                    setEditErrors((prev) => ({ ...prev, [key]: undefined }));
+                  }}
+                  aria-invalid={!!editErrors[key]}
+                  aria-describedby={editErrors[key] ? `edit-${key}-error` : undefined}
+                  className={`w-full rounded-lg border bg-[#0f172a] px-3 py-2 text-sm text-white ${editErrors[key] ? 'border-[#ef4444]' : 'border-[#1e293b]'}`}
                 />
+              )}
+              {editErrors[key] && (
+                <span id={`edit-${key}-error`} role="alert" className="mt-1 block text-xs text-[#fca5a5]">
+                  {editErrors[key]}
+                </span>
               )}
             </div>
           ))}
