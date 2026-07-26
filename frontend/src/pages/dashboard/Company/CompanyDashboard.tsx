@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Clock, CheckCircle2, Truck,
   ShieldCheck, AlertTriangle,
-  Rocket, Menu,
+  Rocket, Menu, RefreshCw,
 } from "lucide-react";
 
 import { QuickActionsCard } from './QuickActions';
@@ -69,6 +69,8 @@ const CompanyDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -76,14 +78,25 @@ const CompanyDashboard: React.FC = () => {
         setIsLoading(true);
         await new Promise((resolve) => setTimeout(resolve, 1200));
         setIsLoading(false);
+        setLastRefreshed(new Date());
         if (!isTourComplete()) setShowTour(true);
       } catch {
         setHasError(true);
         setIsLoading(false);
       }
     };
-    fetchDashboardData();
-  }, []);
+    void fetchDashboardData();
+  }, [refreshKey]);
+
+  const refreshedLabel = useMemo(() => {
+    if (!lastRefreshed) return 'Awaiting first refresh';
+    return `Last refreshed ${lastRefreshed.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+  }, [lastRefreshed]);
+
+  const handleRefresh = () => {
+    setLastRefreshed(new Date());
+    setRefreshKey((value) => value + 1);
+  };
 
   if (hasError) {
     return (
@@ -123,9 +136,21 @@ const CompanyDashboard: React.FC = () => {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1 max-md:text-[22px] max-md:font-bold">Logistics Overview</h1>
           <p className="text-[#94a3b8] text-sm m-0">Blockchain-synced real-time data</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[#64748b] mt-1">{refreshedLabel}</p>
         </div>
-        <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
-          Live: <span className="text-[#10b981]">Connected</span>
+        <div className="flex items-center gap-2">
+          <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
+            Live: <span className="text-[#10b981]">Connected</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            aria-label="Refresh dashboard"
+            className="inline-flex items-center gap-2 rounded-md border border-[#1e293b] bg-[#14171e] px-3 py-1.5 text-xs font-medium text-[#cbd5e1] transition-colors hover:border-[#3b82f6] hover:text-white"
+          >
+            <RefreshCw size={14} />
+            Refresh
+          </button>
         </div>
       </div>
 
