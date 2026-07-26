@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Key, Trash2, X } from 'lucide-react';
+import { Key, Trash2, X, Info } from 'lucide-react';
 import { apiClient } from '@services/api/client';
 import { ConfirmDialog } from '@components/ui/ConfirmDialog';
 import CopyToClipboard from '@components/ui/CopyToClipboard';
+import Tooltip from '@components/ui/Tooltip';
 
 interface ApiKey {
   id: string;
@@ -59,6 +60,9 @@ const ApiKeysSection: React.FC = () => {
       <div className="flex items-center gap-2">
         <Key size={18} className="text-[#62ffff]" />
         <h2 className="text-lg font-semibold">API Keys</h2>
+        <Tooltip content="API keys let external services authenticate as you. Treat them like passwords — anyone with a key can act on your account.">
+          <Info size={14} className="text-slate-400 hover:text-slate-300 cursor-help" aria-label="What are API keys?" />
+        </Tooltip>
       </div>
 
       {/* One-time secret modal */}
@@ -76,13 +80,17 @@ const ApiKeysSection: React.FC = () => {
       )}
 
       {/* Generate form */}
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
         <input
           value={newKeyName}
           onChange={(e) => setNewKeyName(e.target.value)}
           placeholder="Key name (e.g. CI/CD Pipeline)"
+          aria-label="Key name"
           className="flex-1 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#62ffff]"
         />
+        <Tooltip content="Use a name that identifies where this key will be used, so you can recognize and revoke it later.">
+          <Info size={14} className="text-slate-400 hover:text-slate-300 cursor-help" aria-label="Key naming help" />
+        </Tooltip>
         <button
           onClick={generate}
           disabled={generating || !newKeyName.trim()}
