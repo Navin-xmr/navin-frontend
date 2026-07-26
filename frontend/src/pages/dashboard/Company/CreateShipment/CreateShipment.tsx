@@ -154,17 +154,58 @@ useEffect(() => {
         }
     };
 
+    const FIELD_ORDER = [
+        'origin',
+        'destination',
+        'itemDescription',
+        'weight',
+        'expectedDeliveryDate',
+        'recipientName',
+        'recipientContact',
+    ] as const;
+
+    const validateField = (name: keyof FormData, data: FormData = formData): string => {
+        switch (name) {
+            case 'origin':
+                return data.origin.trim() ? '' : 'Origin address is required';
+            case 'destination':
+                return data.destination.trim() ? '' : 'Destination address is required';
+            case 'itemDescription':
+                return data.itemDescription.trim() ? '' : 'Item description is required';
+            case 'weight':
+                return data.weight && Number(data.weight) > 0 ? '' : 'Valid weight is required';
+            case 'recipientName':
+                return data.recipientName.trim() ? '' : 'Recipient name is required';
+            case 'recipientContact':
+                return data.recipientContact.trim() ? '' : 'Recipient contact is required';
+            case 'expectedDeliveryDate':
+                return data.expectedDeliveryDate ? '' : 'Expected delivery date is required';
+            default:
+                return '';
+        }
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name } = e.target;
+        const message = validateField(name as keyof FormData);
+        setErrors((prev: FormErrors) => ({ ...prev, [name]: message }));
+    };
+
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
-        if (!formData.origin.trim()) newErrors.origin = 'Origin address is required';
-        if (!formData.destination.trim()) newErrors.destination = 'Destination address is required';
-        if (!formData.itemDescription.trim()) newErrors.itemDescription = 'Item description is required';
-        if (!formData.weight || Number(formData.weight) <= 0) newErrors.weight = 'Valid weight is required';
-        if (!formData.recipientName.trim()) newErrors.recipientName = 'Recipient name is required';
-        if (!formData.recipientContact.trim()) newErrors.recipientContact = 'Recipient contact is required';
-        if (!formData.expectedDeliveryDate) newErrors.expectedDeliveryDate = 'Expected delivery date is required';
+        FIELD_ORDER.forEach((field) => {
+            const message = validateField(field);
+            if (message) newErrors[field] = message;
+        });
 
         setErrors(newErrors);
+
+        const firstInvalidField = FIELD_ORDER.find((field) => newErrors[field]);
+        if (firstInvalidField) {
+            document.getElementById(firstInvalidField)?.focus();
+            addToast('Please fix the highlighted fields before submitting.', 'error');
+        }
+
         return Object.keys(newErrors).length === 0;
     };
 
@@ -335,6 +376,7 @@ useEffect(() => {
                           name="origin"
                           value={formData.origin}
                           onChange={handleInputChange}
+                          onBlur={handleBlur}
                           aria-invalid={!!errors.origin}
                           aria-describedby={errors.origin ? "origin-error" : undefined}
                           className={errors.origin ? 'input-error' : ''}
@@ -357,6 +399,7 @@ useEffect(() => {
                           name="destination"
                           value={formData.destination}
                           onChange={handleInputChange}
+                          onBlur={handleBlur}
                           aria-invalid={!!errors.destination}
                           aria-describedby={errors.destination ? "destination-error" : undefined}
                           className={errors.destination ? 'input-error' : ''}
@@ -372,6 +415,7 @@ useEffect(() => {
                           name="itemDescription"
                           value={formData.itemDescription}
                           onChange={handleInputChange}
+                          onBlur={handleBlur}
                           aria-invalid={!!errors.itemDescription}
                           aria-describedby={errors.itemDescription ? "itemDescription-error" : undefined}
                           className={errors.itemDescription ? 'input-error' : ''}
@@ -390,6 +434,7 @@ useEffect(() => {
                               name="weight"
                               value={formData.weight}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
                               aria-invalid={!!errors.weight}
                               aria-describedby={errors.weight ? "weight-error" : undefined}
                               className={errors.weight ? 'input-error' : ''}
@@ -408,6 +453,7 @@ useEffect(() => {
                               name="expectedDeliveryDate"
                               value={formData.expectedDeliveryDate}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
                               aria-invalid={!!errors.expectedDeliveryDate}
                               aria-describedby={errors.expectedDeliveryDate ? "expectedDeliveryDate-error" : undefined}
                               className={errors.expectedDeliveryDate ? 'input-error' : ''}
@@ -425,6 +471,7 @@ useEffect(() => {
                               name="recipientName"
                               value={formData.recipientName}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
                               aria-invalid={!!errors.recipientName}
                               aria-describedby={errors.recipientName ? "recipientName-error" : undefined}
                               className={errors.recipientName ? 'input-error' : ''}
@@ -441,6 +488,7 @@ useEffect(() => {
                               name="recipientContact"
                               value={formData.recipientContact}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
                               aria-invalid={!!errors.recipientContact}
                               aria-describedby={errors.recipientContact ? "recipientContact-error" : undefined}
                               className={errors.recipientContact ? 'input-error' : ''}
