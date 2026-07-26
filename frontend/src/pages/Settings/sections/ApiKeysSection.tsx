@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Copy, Key, Trash2, X } from 'lucide-react';
+import { Key, Trash2, X } from 'lucide-react';
 import { apiClient } from '@services/api/client';
+import { ConfirmDialog } from '@components/ui/ConfirmDialog';
+import CopyToClipboard from '@components/ui/CopyToClipboard';
 
 interface ApiKey {
   id: string;
@@ -17,7 +19,7 @@ const ApiKeysSection: React.FC = () => {
   const [newKeyName, setNewKeyName] = useState('');
   const [generating, setGenerating] = useState(false);
   const [revoking, setRevoking] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [pendingRevokeId, setPendingRevokeId] = useState<string | null>(null);
 
   useEffect(() => {
     apiClient
@@ -40,22 +42,16 @@ const ApiKeysSection: React.FC = () => {
     }
   };
 
-  const revoke = async (id: string) => {
-    if (!window.confirm('Revoke this API key? This cannot be undone.')) return;
-    setRevoking(id);
+  const confirmRevoke = async () => {
+    if (!pendingRevokeId) return;
+    setRevoking(pendingRevokeId);
     try {
-      await apiClient.delete(`/api/company/api-keys/${id}`);
-      setKeys((prev) => prev.filter((k) => k.id !== id));
+      await apiClient.delete(`/api/company/api-keys/${pendingRevokeId}`);
+      setKeys((prev) => prev.filter((k) => k.id !== pendingRevokeId));
     } finally {
       setRevoking(null);
+      setPendingRevokeId(null);
     }
-  };
-
-  const copySecret = () => {
-    if (!newKeySecret) return;
-    void navigator.clipboard.writeText(newKeySecret);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -74,11 +70,8 @@ const ApiKeysSection: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <code className="flex-1 font-mono text-xs bg-black/30 px-3 py-2 rounded-lg break-all">{newKeySecret}</code>
-            <button onClick={copySecret} className="text-[#62ffff] hover:text-white" aria-label="Copy key">
-              <Copy size={16} />
-            </button>
+            <CopyToClipboard value={newKeySecret} label="Copy secret" size="sm" className="border-[#62ffff]/20 bg-black/20 text-[#62ffff] hover:text-white" />
           </div>
-          {copied && <p className="text-xs text-green-400">Copied!</p>}
         </div>
       )}
 
@@ -116,7 +109,7 @@ const ApiKeysSection: React.FC = () => {
                 </p>
               </div>
               <button
-                onClick={() => void revoke(k.id)}
+                onClick={() => setPendingRevokeId(k.id)}
                 disabled={revoking === k.id}
                 className="text-red-400 hover:text-red-300 disabled:opacity-50"
                 aria-label="Revoke key"
@@ -127,6 +120,17 @@ const ApiKeysSection: React.FC = () => {
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        isOpen={pendingRevokeId !== null}
+        onClose={() => setPendingRevokeId(null)}
+        onConfirm={() => { void confirmRevoke(); }}
+        title="Revoke API key?"
+        message="This action cannot be undone and the key will stop working immediately."
+        confirmLabel="Revoke Key"
+        variant="danger"
+        isLoading={revoking !== null}
+      />
     </div>
   );
 };

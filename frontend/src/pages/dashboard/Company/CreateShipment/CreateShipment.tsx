@@ -11,6 +11,7 @@ import { getTemplatePreview, toTemplateFields } from '../../../../types/shipment
 import type { AxiosError } from 'axios';
 import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
 import CostBreakdown from '@components/shipment/CostBreakdown/CostBreakdown';
+import { formatAddress as formatLocalizedAddress } from '@utils/localeFormat';
 import type { CostBreakdownData } from '@components/shipment/CostBreakdown/CostBreakdown';
 import './CreateShipment.css';
 
@@ -77,7 +78,13 @@ const CreateShipment: React.FC = () => {
     };
 
     const formatAddress = (addr: Address): string =>
-        `${addr.street}, ${addr.city}, ${addr.state} ${addr.postalCode}, ${addr.country}`;
+        formatLocalizedAddress({
+            street: addr.street,
+            city: addr.city,
+            state: addr.state,
+            postalCode: addr.postalCode,
+            country: addr.country,
+        });
 
     useEffect(() => {
         const templateId = searchParams.get('template');
