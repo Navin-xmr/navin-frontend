@@ -1,137 +1,138 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from "react-i18next";
+import { useScrollSpy } from '../../hooks/useScrollSpy';
+
+const SECTION_IDS = ['home', 'why-navin', 'features', 'how-it-works', 'faq'] as const;
+
+const navLinks = [
+  { id: "home", key: "home", href: "#home" },
+  { id: "why-navin", key: "whyNavin", href: "#why-navin" },
+  { id: "features", key: "features", href: "#features" },
+  { id: "how-it-works", key: "howItWorks", href: "#how-it-works" },
+  { id: "faq", key: "faq", href: "#faq" },
+];
 
 const Navbar: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("");
+  const [companyLogo] = React.useState<string | null>(() => {
+    try {
+      return window.localStorage.getItem('navin-company-logo');
+    } catch {
+      return null;
+    }
+  });
   const location = useLocation();
+const { t, i18n } = useTranslation(["common"]);
+  const isLandingPage = location.pathname === '/';
+  const activeSectionId = useScrollSpy(
+    isLandingPage ? [...SECTION_IDS] : [],
+  );
 
-  // Handle smooth scroll navigation
-  const handleNavClick = (sectionId: string) => {
-    setActiveSection(sectionId);
-    setIsMenuOpen(false);
-
-    // If on the home page, scroll to section
-    if (location.pathname === "/") {
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+  ) => {
+    if (isLandingPage) {
+      e.preventDefault();
       const element = document.getElementById(sectionId);
       if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+        element.scrollIntoView({ behavior: 'smooth' });
       }
     }
   };
 
-  const handleLogoClick = () => {
-    setIsMenuOpen(false);
-    setActiveSection("");
-  };
+ return (
+  <nav className="absolute top-0 left-0 w-full bg-transparent z-[1000] m-0 p-0">
+    <div className="max-w-[1480px] mx-auto px-8 py-3 flex justify-center items-center relative gap-12">
 
-  const navLinks = [
-    { id: "About", label: "About", href: "#about" },
-    { id: "Services", label: "Services", href: "#services" },
-    { id: "Pricing", label: "Pricing", href: "#pricing" },
-    { id: "FAQ", label: "FAQ", href: "#faq" },
-  ];
+      {/* Logo */}
+      <Link
+        to="/"
+        className="flex items-center gap-2 no-underline font-albert font-normal text-[30px] text-white transition-opacity duration-300 hover:opacity-80 absolute left-8"
+      >
+        {companyLogo ? (
+          <img
+            src={companyLogo}
+            alt="Company logo"
+            className="w-[56.44px] h-[55.19px] object-cover rounded-xl border border-white/10"
+          />
+        ) : (
+          <img
+            src="/images/logo.svg"
+            alt="Navin Logo"
+            className="w-[56.44px] h-[55.19px] object-contain"
+          />
+        )}
 
-  return (
-    <nav className="absolute top-0 left-0 w-full bg-transparent z-[1000] m-0 p-0">
-      <div className="max-w-[1480px] mx-auto px-8 py-3 flex justify-center items-center relative gap-12">
-        {/* Logo */}
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 no-underline font-albert font-normal text-[30px] text-white transition-opacity duration-300 hover:opacity-80 absolute left-8"
-          onClick={handleLogoClick}
-        >
-          <img src="/images/logo.svg" alt="Navin Logo" className="w-[56.44px] h-[55.19px] object-contain" />
-          <span className="bg-white bg-clip-text text-transparent">Navin</span>
-        </Link>
+        <span className="bg-white bg-clip-text text-transparent">
+          {t("appName")}
+        </span>
+      </Link>
 
-        {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-12">
-          {/* Nav Links */}
-          <div className="flex flex-row justify-center items-center px-6 py-3.5 gap-12 w-[479px] h-[55.19px] bg-gradient-card border-t border-[rgba(0,128,128,0.3)] rounded-[30px]">
-            {navLinks.map((link) => (
+      {/* Desktop Menu */}
+      <div className="hidden md:flex items-center gap-12">
+
+        <div className="flex flex-row justify-center items-center px-6 py-3.5 gap-12 h-[55.19px] bg-gradient-card border-t border-[rgba(0,128,128,0.3)] rounded-[30px]">
+          {navLinks.map((link) => {
+            const isActive = activeSectionId === link.id;
+
+            return (
               <a
                 key={link.id}
                 href={link.href}
-                className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-primary after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-gradient-primary after:transition-all after:duration-300 hover:after:w-full ${
-                  activeSection === link.id ? "text-primary after:w-full" : ""
+                className={`text-white no-underline text-base font-normal relative transition-colors duration-300 cursor-pointer hover:text-[#00d4c8] after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-0 after:h-0.5 after:bg-[#00d4c8] after:transition-all after:duration-300 hover:after:w-full${
+                  isActive ? " !text-[#00d4c8] after:!w-full" : ""
                 }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleNavClick(link.id);
-                }}
+                onClick={(e) => handleNavClick(e, link.id)}
+                aria-current={isActive ? "true" : undefined}
               >
-                {link.label}
+                {t(link.key)}
               </a>
-            ))}
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex gap-4 items-center absolute right-8">
-            <Link 
-              to="/" 
-              className="px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5"
-            >
-              Try now
-            </Link>
-            <Link 
-              to="/signup" 
-              className="font-display flex flex-row justify-center items-center px-8 py-3.5 gap-2 bg-[rgba(1,56,59)] backdrop-blur-xs text-[#E5FFFF] font-bold text-lg leading-[21px] tracking-[-0.32px] no-underline cursor-pointer transition-all duration-300 rounded-full border border-[#60C9CD] shadow-glow-blue shadow-inset-teal hover:-translate-y-0.5 hover:shadow-glow-blue-hover hover:shadow-inset-teal-hover"
-            >
-              Free Demo
-            </Link>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Hamburger Menu (Mobile) */}
-        <button
-          className="hidden max-md:block bg-transparent border-none text-primary cursor-pointer text-2xl p-2 transition-transform duration-300 hover:scale-110 absolute right-6 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {/* Right side */}
+        <div className="flex gap-4 items-center absolute right-8">
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 w-full bg-[rgba(10,22,40,0.98)] backdrop-blur-[10px] border-b border-border-light px-6 py-4 animate-[slideDown_0.3s_ease]">
-            <div className="flex flex-col gap-4 mb-6 border-b border-border-light pb-6">
-              {navLinks.map((link) => (
-                <a
-                  key={link.id}
-                  href={link.href}
-                  className={`text-[#E0E0E0] no-underline text-base font-medium transition-colors duration-300 cursor-pointer hover:text-primary ${
-                    activeSection === link.id ? "text-primary" : ""
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(link.id);
-                  }}
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-            <div className="flex flex-col gap-3">
-              <Link 
-                to="/login" 
-                className="w-full text-center px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5"
-              >
-                Login
-              </Link>
-              <Link 
-                to="/signup" 
-                className="w-full text-center font-display flex flex-row justify-center items-center px-8 py-3.5 gap-2 bg-[rgba(1,56,59)] backdrop-blur-xs text-[#E5FFFF] font-bold text-lg leading-[21px] tracking-[-0.32px] no-underline cursor-pointer transition-all duration-300 rounded-full border border-[#60C9CD] shadow-glow-blue shadow-inset-teal hover:-translate-y-0.5 hover:shadow-glow-blue-hover hover:shadow-inset-teal-hover"
-              >
-                Free Demo
-              </Link>
-            </div>
-          </div>
-        )}
+          <select
+            value={i18n.language}
+            onChange={(e) => {
+              const lang = e.target.value;
+              i18n.changeLanguage(lang);
+              localStorage.setItem("language", lang);
+            }}
+            className="bg-gradient-card backdrop-blur-md text-white border border-primary/30 rounded-lg px-4 py-2 font-medium cursor-pointer transition-all duration-300 hover:border-primary hover:shadow-glow-blue focus:outline-none focus:border-primary focus:shadow-glow-blue appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%2300d4c8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-10"
+            style={{
+              colorScheme: 'dark',
+            }}
+          >
+            <option value="en" className="bg-background text-white">English</option>
+            <option value="fr" className="bg-background text-white">Français</option>
+            <option value="es" className="bg-background text-white">Español</option>
+          </select>
+
+          <Link
+            to="/login"
+            className="px-5 py-2.5 rounded-full no-underline font-medium text-lg transition-all duration-300 text-white font-display bg-transparent hover:-translate-y-0.5"
+          >
+            {t("login")}
+          </Link>
+
+          <Link
+            to="/signup"
+            className="font-display flex flex-row justify-center items-center px-8 py-3.5 gap-2 bg-[rgba(1,56,59)] backdrop-blur-xs text-[#E5FFFF] font-bold text-lg leading-[21px] tracking-[-0.32px] no-underline cursor-pointer transition-all duration-300 rounded-full border border-[#60C9CD] shadow-glow-blue shadow-inset-teal hover:-translate-y-0.5 hover:shadow-glow-blue-hover hover:shadow-inset-teal-hover"
+          >
+            {t("freeDemo")}
+          </Link>
+
+        </div>
+
       </div>
-    </nav>
-  );
+
+    </div>
+  </nav>
+);
 };
 
 export default Navbar;

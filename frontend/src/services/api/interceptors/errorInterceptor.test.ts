@@ -9,8 +9,10 @@ vi.mock("react-hot-toast", () => ({
 }));
 
 describe("Error Interceptor Unit Tests", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let mockAxiosInstance: any;
     let mockNavigate: ReturnType<typeof vi.fn>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let responseErrorInterceptorCallback: (error: any) => Promise<any>;
 
     beforeEach(() => {
@@ -22,6 +24,7 @@ describe("Error Interceptor Unit Tests", () => {
         mockAxiosInstance = {
             interceptors: {
                 response: {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     use: vi.fn((_successCb: any, errorCb: any) => {
                         responseErrorInterceptorCallback = errorCb;
                     }),

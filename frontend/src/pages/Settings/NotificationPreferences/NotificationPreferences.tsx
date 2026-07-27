@@ -1,128 +1,281 @@
-import React, { useMemo, useState } from 'react';
-import { Bell, Loader2, Save, CheckCircle2 } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Bell, CheckCircle2, Loader2 } from 'lucide-react';
+import {
+  type NotificationChannel,
+  type NotificationEventType,
+  type PreferencesMap,
+  notificationPreferencesApi,
+} from '@services/api/endpoints/notifications';
 import './NotificationPreferences.css';
 
-type NotificationPreferenceKey =
-  | 'shipmentUpdates'
-  | 'paymentAlerts'
-  | 'deliveryConfirmations'
-  | 'systemAnnouncements';
+// ---------- Data ----------
 
-interface NotificationCategory {
-  key: NotificationPreferenceKey;
+interface EventDef {
+  event: NotificationEventType;
   label: string;
-  description: string;
 }
 
-const CATEGORIES: NotificationCategory[] = [
+interface CategoryDef {
+  label: string;
+  events: EventDef[];
+}
+
+const CATEGORIES: CategoryDef[] = [
   {
-    key: 'shipmentUpdates',
-    label: 'Shipment Updates',
-    description: 'Get notified when shipment status changes or milestones are reached.',
+    label: 'Shipments',
+    events: [
+      { event: 'shipment_created', label: 'Shipment Created' },
+      { event: 'status_changed', label: 'Status Changed' },
+      { event: 'delivery_confirmed', label: 'Delivery Confirmed' },
+    ],
   },
   {
-    key: 'paymentAlerts',
-    label: 'Payment Alerts',
-    description: 'Receive alerts for payment settlements and transaction events.',
+    label: 'Payments',
+    events: [{ event: 'payment_received', label: 'Payment Received' }],
   },
   {
-    key: 'deliveryConfirmations',
-    label: 'Delivery Confirmations',
-    description: 'Be notified when deliveries are confirmed on-chain.',
-  },
-  {
-    key: 'systemAnnouncements',
-    label: 'System Announcements',
-    description: 'Platform updates, maintenance notices, and feature announcements.',
+    label: 'Disputes',
+    events: [
+      { event: 'dispute_opened', label: 'Dispute Opened' },
+      { event: 'dispute_resolved', label: 'Dispute Resolved' },
+    ],
   },
 ];
 
-type Preferences = Record<NotificationPreferenceKey, boolean>;
+const ALL_EVENTS = CATEGORIES.flatMap((c) => c.events.map((e) => e.event));
 
-const initialPreferences: Preferences = {
-  shipmentUpdates: true,
-  paymentAlerts: true,
-  deliveryConfirmations: true,
-  systemAnnouncements: false,
-};
+const defaultPreferences = (): PreferencesMap =>
+  Object.fromEntries(ALL_EVENTS.map((e) => [e, { email: false, sms: false }])) as PreferencesMap;
+
+// ---------- Component ----------
 
 const NotificationPreferences: React.FC = () => {
-  const [preferences, setPreferences] = useState<Preferences>(initialPreferences);
-  const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [prefs, setPrefs] = useState<PreferencesMap>(defaultPreferences);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [savedEvent, setSavedEvent] = useState<NotificationEventType | null>(null);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const enabledCount = useMemo(() => Object.values(preferences).filter(Boolean).length, [preferences]);
+  // Phone verification state
+  const [phone, setPhone] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
 
-  const toggle = (key: NotificationPreferenceKey) => {
-    setPreferences(prev => ({ ...prev, [key]: !prev[key] }));
-    setSuccessMsg('');
+  useEffect(() => {
+    notificationPreferencesApi
+      .getPreferences()
+      .then((data) => setPrefs(data))
+      .catch(() => {/* keep defaults on error */})
+      .finally(() => setLoadingInitial(false));
+  }, []);
+
+  const showSaved = useCallback((event: NotificationEventType) => {
+    setSavedEvent(event);
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = setTimeout(() => setSavedEvent(null), 2500);
+  }, []);
+
+  const handleToggle = async (event: NotificationEventType, channel: NotificationChannel) => {
+    const prev = prefs[event][channel];
+    const next = !prev;
+
+    // Optimistic update
+    setPrefs((p) => ({ ...p, [event]: { ...p[event], [channel]: next } }));
+
+    try {
+      await notificationPreferencesApi.updatePreference(event, channel, next);
+      showSaved(event);
+    } catch {
+      // Roll back
+      setPrefs((p) => ({ ...p, [event]: { ...p[event], [channel]: prev } }));
+    }
   };
 
-  const handleSave = () => {
-    setLoading(true);
-    setSuccessMsg('');
-
-    setTimeout(() => {
-      setLoading(false);
-      setSuccessMsg('Preferences saved successfully!');
-      setTimeout(() => setSuccessMsg(''), 3000);
-    }, 1200);
+  const handleSendOtp = async () => {
+    setPhoneError('');
+    if (!phone.trim()) {
+      setPhoneError('Please enter a phone number.');
+      return;
+    }
+    setOtpLoading(true);
+    try {
+      await notificationPreferencesApi.sendOtp(phone.trim());
+      setOtpSent(true);
+    } catch {
+      setPhoneError('Failed to send OTP. Please try again.');
+    } finally {
+      setOtpLoading(false);
+    }
   };
+
+  const handleVerifyOtp = async () => {
+    setPhoneError('');
+    if (!otp.trim()) {
+      setPhoneError('Please enter the verification code.');
+      return;
+    }
+    setVerifyLoading(true);
+    try {
+      await notificationPreferencesApi.verifyOtp(phone.trim(), otp.trim());
+      setPhoneVerified(true);
+      setOtpSent(false);
+      setOtp('');
+    } catch {
+      setPhoneError('Verification failed. Please check the code and try again.');
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  if (loadingInitial) {
+    return (
+      <section className="notif-pref-container notif-pref-loading" aria-label="Loading notification preferences">
+        <Loader2 className="notif-spinner" size={24} />
+        <span>Loading preferences…</span>
+      </section>
+    );
+  }
 
   return (
     <section className="notif-pref-container" aria-labelledby="notification-preferences-title">
+      {/* Header */}
       <div className="notif-pref-header">
         <Bell className="notif-pref-icon" size={24} />
         <div>
           <h2 id="notification-preferences-title">Notification Preferences</h2>
-          <p>Choose which in-app notifications you want to receive.</p>
+          <p>Choose which events you want to be notified about, and through which channels.</p>
         </div>
       </div>
 
-      <div className="notif-pref-list">
-        {CATEGORIES.map(({ key, label, description }) => (
-          <div key={key} className="notif-pref-row">
-            <div className="notif-pref-info">
-              <span className="notif-pref-label">{label}</span>
-              <span className="notif-pref-desc">{description}</span>
-            </div>
-            <label className="notif-switch" htmlFor={key}>
-              <input
-                id={key}
-                type="checkbox"
-                checked={preferences[key]}
-                onChange={() => toggle(key)}
-                aria-label={`${label} in-app notifications`}
-              />
-              <span className="notif-slider round" />
-            </label>
-          </div>
-        ))}
-      </div>
+      {/* Phone verification */}
+      <div className="notif-phone-section">
+        <div className="notif-phone-header">
+          <span className="notif-phone-title">SMS Notifications</span>
+          {phoneVerified ? (
+            <span className="notif-phone-verified" aria-label="Phone verified">
+              <CheckCircle2 size={14} /> Verified
+            </span>
+          ) : (
+            <span className="notif-phone-unverified">Phone verification required to enable SMS</span>
+          )}
+        </div>
 
-      <div className="notif-pref-footer">
-        <span className="notif-selection-count" aria-live="polite">
-          {enabledCount} of {CATEGORIES.length} enabled
-        </span>
-        {successMsg && (
-          <div className="notif-success-toast" role="status">
-            <CheckCircle2 size={16} />
-            {successMsg}
+        {!phoneVerified && (
+          <div className="notif-phone-form">
+            <div className="notif-phone-row">
+              <input
+                type="tel"
+                className="notif-phone-input"
+                placeholder="+1 555 000 0000"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                aria-label="Phone number"
+                disabled={otpSent}
+              />
+              <button
+                className="notif-phone-btn"
+                onClick={handleSendOtp}
+                disabled={otpLoading || otpSent}
+                aria-label="Send OTP"
+              >
+                {otpLoading ? <Loader2 className="notif-spinner" size={14} /> : null}
+                {otpSent ? 'OTP Sent' : 'Send OTP'}
+              </button>
+            </div>
+
+            {otpSent && (
+              <div className="notif-phone-row">
+                <input
+                  type="text"
+                  className="notif-phone-input"
+                  placeholder="Enter verification code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  aria-label="Verification code"
+                  inputMode="numeric"
+                  maxLength={6}
+                />
+                <button
+                  className="notif-phone-btn notif-phone-btn--primary"
+                  onClick={handleVerifyOtp}
+                  disabled={verifyLoading}
+                  aria-label="Verify OTP"
+                >
+                  {verifyLoading ? <Loader2 className="notif-spinner" size={14} /> : null}
+                  Verify
+                </button>
+              </div>
+            )}
+
+            {phoneError && (
+              <p className="notif-phone-error" role="alert">
+                {phoneError}
+              </p>
+            )}
           </div>
         )}
-        <button className="notif-save-btn" onClick={handleSave} disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="notif-spinner" size={16} />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save size={16} />
-              Save Preferences
-            </>
-          )}
-        </button>
+      </div>
+
+      {/* Channel header */}
+      <div className="notif-channel-header" aria-hidden="true">
+        <span className="notif-channel-label">Email</span>
+        <span className="notif-channel-label">SMS</span>
+      </div>
+
+      {/* Categories */}
+      <div className="notif-pref-list">
+        {CATEGORIES.map((cat) => (
+          <div key={cat.label} className="notif-category">
+            <h3 className="notif-category-title">{cat.label}</h3>
+            {cat.events.map(({ event, label }) => (
+              <div key={event} className="notif-pref-row">
+                <span className="notif-pref-label">{label}</span>
+
+                <div className="notif-pref-toggles">
+                  {/* Email toggle */}
+                  <label className="notif-switch" htmlFor={`${event}-email`}>
+                    <input
+                      id={`${event}-email`}
+                      type="checkbox"
+                      checked={prefs[event]?.email ?? false}
+                      onChange={() => handleToggle(event, 'email')}
+                      aria-label={`${label} email notifications`}
+                    />
+                    <span className="notif-slider round" />
+                  </label>
+
+                  {/* SMS toggle */}
+                  <label
+                    className={`notif-switch ${!phoneVerified ? 'notif-switch--disabled' : ''}`}
+                    htmlFor={`${event}-sms`}
+                    title={!phoneVerified ? 'Verify your phone number to enable SMS' : undefined}
+                  >
+                    <input
+                      id={`${event}-sms`}
+                      type="checkbox"
+                      checked={prefs[event]?.sms ?? false}
+                      onChange={() => handleToggle(event, 'sms')}
+                      disabled={!phoneVerified}
+                      aria-label={`${label} SMS notifications`}
+                      aria-disabled={!phoneVerified}
+                    />
+                    <span className="notif-slider round" />
+                  </label>
+
+                  {/* Inline saved indicator */}
+                  {savedEvent === event && (
+                    <span className="notif-saved-indicator" role="status" aria-live="polite">
+                      <CheckCircle2 size={13} /> Saved
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   );

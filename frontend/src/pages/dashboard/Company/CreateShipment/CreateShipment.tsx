@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { CheckCircle2, Package, ArrowLeft, Loader2, Book } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
+import { addressesApi } from '@services/api/endpoints/addresses';
+import type { Address } from '@services/api/endpoints/addresses';
 import { useToast } from '@context/ToastContext';
+import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
+import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
+import { getTemplatePreview, toTemplateFields } from '../../../../types/shipmentTemplate';
 import type { AxiosError } from 'axios';
+import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
+import CostBreakdown from '@components/shipment/CostBreakdown/CostBreakdown';
+import { formatAddress as formatLocalizedAddress } from '@utils/localeFormat';
+import type { CostBreakdownData } from '@components/shipment/CostBreakdown/CostBreakdown';
 import './CreateShipment.css';
 
 interface FormData {
@@ -20,23 +29,122 @@ interface FormErrors {
     [key: string]: string;
 }
 
+const EMPTY_FORM: FormData = {
+    origin: '',
+    destination: '',
+    itemDescription: '',
+    weight: '',
+    recipientName: '',
+    recipientContact: '',
+    expectedDeliveryDate: '',
+};
+
 const CreateShipment: React.FC = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { addToast } = useToast();
-    const [formData, setFormData] = useState<FormData>({
-        origin: '',
-        destination: '',
-        itemDescription: '',
-        weight: '',
-        recipientName: '',
-        recipientContact: '',
-        expectedDeliveryDate: '',
-    });
-
+    const { templates, isLoading: templatesLoading, createTemplate } = useShipmentTemplates();
+    const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
     const [errors, setErrors] = useState<FormErrors>({});
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [shipmentId, setShipmentId] = useState('');
+    const [selectedTemplateId, setSelectedTemplateId] = useState('');
+    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [costEstimate, setCostEstimate] = useState<CostBreakdownData | null>(null);
+    const [isEstimating, setIsEstimating] = useState(false);
+
+    const templateOptions = useMemo(
+        () =>
+            templates.map((template) => ({
+                id: template.id,
+                label: `${template.name} — ${getTemplatePreview(template)}`,
+            })),
+        [templates],
+    );
+
+    const applyTemplate = (templateId: string) => {
+        const template = templates.find((item) => item.id === templateId);
+        if (!template) return;
+
+        setFormData((prev) => ({
+            ...prev,
+            ...template.fields,
+            expectedDeliveryDate: prev.expectedDeliveryDate,
+        }));
+        setSelectedTemplateId(templateId);
+        setErrors({});
+        addToast(`Loaded template "${template.name}"`, 'success');
+    };
+
+    const formatAddress = (addr: Address): string =>
+        formatLocalizedAddress({
+            street: addr.street,
+            city: addr.city,
+            state: addr.state,
+            postalCode: addr.postalCode,
+            country: addr.country,
+        });
+
+    useEffect(() => {
+        const templateId = searchParams.get('template');
+        if (!templateId || templatesLoading || templates.length === 0) return;
+        if (selectedTemplateId === templateId) return;
+        const timer = setTimeout(() => { applyTemplate(templateId); }, 0);
+        return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, templates, templatesLoading]);
+    const [pickerTarget, setPickerTarget] = useState<'origin' | 'destination' | null>(null);
+
+    useEffect(() => {
+        addressesApi.getAll().then((addrs) => {
+            const def = addrs.find((a) => a.isDefault);
+            if (def) {
+                setFormData((prev) => ({ ...prev, origin: formatAddress(def) }));
+            }
+        }).catch(() => {});
+    }, []);
+
+    const handleAddressSelect = (addr: Address) => {
+        const formatted = formatAddress(addr);
+        setFormData((prev) => ({ ...prev, [pickerTarget!]: formatted }));
+        setPickerTarget(null);
+    };
+
+    // Auto-fetch cost estimate when required fields are filled
+useEffect(() => {
+    const { origin, destination, weight } = formData;
+    const hasRequired = origin.trim() && destination.trim() && Number(weight) > 0;
+    if (!hasRequired) {
+        const timer = setTimeout(() => { setCostEstimate(null); }, 0);
+        return () => clearTimeout(timer);
+    }
+
+    const timer = setTimeout(() => {
+        setIsEstimating(true);
+        const weightKg = Number(weight);
+        const baseRate = 250 + weightKg * 8;
+        const weightSurcharge = weightKg > 50 ? weightKg * 1.5 : weightKg * 0.8;
+        const fuelSurcharge = baseRate * 0.075;
+        const insuranceFee = baseRate * 0.03;
+        const total = baseRate + weightSurcharge + fuelSurcharge + insuranceFee;
+
+        setTimeout(() => {
+            setCostEstimate({
+                baseRate: parseFloat(baseRate.toFixed(2)),
+                weightSurcharge: parseFloat(weightSurcharge.toFixed(2)),
+                fuelSurcharge: parseFloat(fuelSurcharge.toFixed(2)),
+                insuranceFee: parseFloat(insuranceFee.toFixed(2)),
+                total: parseFloat(total.toFixed(2)),
+                currency: 'USD',
+            });
+            setIsEstimating(false);
+        }, 900);
+    }, 600);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [formData.origin, formData.destination, formData.weight]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -46,7 +154,62 @@ const CreateShipment: React.FC = () => {
         }
     };
 
+    const FIELD_ORDER = [
+        'origin',
+        'destination',
+        'itemDescription',
+        'weight',
+        'expectedDeliveryDate',
+        'recipientName',
+        'recipientContact',
+    ] as const;
+
+    const validateField = (name: keyof FormData, data: FormData = formData): string => {
+        switch (name) {
+            case 'origin':
+                return data.origin.trim() ? '' : 'Origin address is required';
+            case 'destination':
+                return data.destination.trim() ? '' : 'Destination address is required';
+            case 'itemDescription':
+                return data.itemDescription.trim() ? '' : 'Item description is required';
+            case 'weight':
+                return data.weight && Number(data.weight) > 0 ? '' : 'Valid weight is required';
+            case 'recipientName':
+                return data.recipientName.trim() ? '' : 'Recipient name is required';
+            case 'recipientContact':
+                return data.recipientContact.trim() ? '' : 'Recipient contact is required';
+            case 'expectedDeliveryDate':
+                return data.expectedDeliveryDate ? '' : 'Expected delivery date is required';
+            default:
+                return '';
+        }
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name } = e.target;
+        const message = validateField(name as keyof FormData);
+        setErrors((prev: FormErrors) => ({ ...prev, [name]: message }));
+    };
+
     const validateForm = (): boolean => {
+        const newErrors: FormErrors = {};
+        FIELD_ORDER.forEach((field) => {
+            const message = validateField(field);
+            if (message) newErrors[field] = message;
+        });
+
+        setErrors(newErrors);
+
+        const firstInvalidField = FIELD_ORDER.find((field) => newErrors[field]);
+        if (firstInvalidField) {
+            document.getElementById(firstInvalidField)?.focus();
+            addToast('Please fix the highlighted fields before submitting.', 'error');
+        }
+
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const validateTemplateFields = (): boolean => {
         const newErrors: FormErrors = {};
         if (!formData.origin.trim()) newErrors.origin = 'Origin address is required';
         if (!formData.destination.trim()) newErrors.destination = 'Destination address is required';
@@ -54,8 +217,6 @@ const CreateShipment: React.FC = () => {
         if (!formData.weight || Number(formData.weight) <= 0) newErrors.weight = 'Valid weight is required';
         if (!formData.recipientName.trim()) newErrors.recipientName = 'Recipient name is required';
         if (!formData.recipientContact.trim()) newErrors.recipientContact = 'Recipient contact is required';
-        if (!formData.expectedDeliveryDate) newErrors.expectedDeliveryDate = 'Expected delivery date is required';
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -88,7 +249,7 @@ const CreateShipment: React.FC = () => {
             };
 
             const shipment = await shipmentApi.create(payload);
-            setShipmentId(shipment._id);
+            setShipmentId(shipment.id ?? shipment._id);
             setSuccess(true);
             addToast('Shipment created successfully!', 'success');
         } catch (err) {
@@ -97,6 +258,33 @@ const CreateShipment: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSaveTemplate = async (name: string) => {
+        if (!validateTemplateFields()) {
+            throw new Error('Fill in all reusable shipment fields before saving a template.');
+        }
+
+        const duplicate = templates.some(
+            (template) => template.name.toLowerCase() === name.trim().toLowerCase(),
+        );
+        if (duplicate) {
+            throw new Error('A template with this name already exists.');
+        }
+
+        await createTemplate({
+            name,
+            fields: toTemplateFields(formData),
+        });
+        addToast('Template saved successfully!', 'success');
+    };
+
+    const handleOpenSaveModal = () => {
+        if (!validateTemplateFields()) {
+            addToast('Fill in all reusable shipment fields before saving a template.', 'error');
+            return;
+        }
+        setIsSaveModalOpen(true);
     };
 
     if (success) {
@@ -116,15 +304,8 @@ const CreateShipment: React.FC = () => {
                         </button>
                         <button className="secondary-btn" onClick={() => {
                             setSuccess(false);
-                            setFormData({
-                                origin: '',
-                                destination: '',
-                                itemDescription: '',
-                                weight: '',
-                                recipientName: '',
-                                recipientContact: '',
-                                expectedDeliveryDate: '',
-                            });
+                            setFormData(EMPTY_FORM);
+                            setSelectedTemplateId('');
                         }}>
                             Create Another
                         </button>
@@ -150,33 +331,81 @@ const CreateShipment: React.FC = () => {
                   <p>Enter the shipment details to register it on the blockchain.</p>
               </div>
 
+              <div className="template-toolbar">
+                  <div className="form-group template-select-group">
+                      <label htmlFor="load-template">Load Template</label>
+                      <select
+                          id="load-template"
+                          value={selectedTemplateId}
+                          onChange={(e) => {
+                              const templateId = e.target.value;
+                              setSelectedTemplateId(templateId);
+                              if (templateId) applyTemplate(templateId);
+                          }}
+                          disabled={templatesLoading || templates.length === 0}
+                          className="template-select"
+                      >
+                          <option value="">
+                              {templatesLoading
+                                  ? 'Loading templates…'
+                                  : templates.length === 0
+                                    ? 'No saved templates'
+                                    : 'Select a template'}
+                          </option>
+                          {templateOptions.map((option) => (
+                              <option key={option.id} value={option.id}>
+                                  {option.label}
+                              </option>
+                          ))}
+                      </select>
+                  </div>
+              </div>
+
               <form onSubmit={handleSubmit} className="shipment-form">
                   <div className="form-group">
-                      <label htmlFor="origin">Origin Address</label>
+                      <div className="label-row">
+                          <label htmlFor="origin">Origin Address</label>
+                          <button type="button" className="address-book-btn" onClick={() => setPickerTarget('origin')}>
+                              <Book size={14} />
+                              Address Book
+                          </button>
+                      </div>
                       <input
                           type="text"
                           id="origin"
                           name="origin"
                           value={formData.origin}
                           onChange={handleInputChange}
+                          onBlur={handleBlur}
+                          aria-invalid={!!errors.origin}
+                          aria-describedby={errors.origin ? "origin-error" : undefined}
                           className={errors.origin ? 'input-error' : ''}
                           placeholder="e.g., Warehouse A, New York"
                       />
-                      {errors.origin && <span className="error-text">{errors.origin}</span>}
+                      {errors.origin && <span id="origin-error" className="error-text" role="alert">{errors.origin}</span>}
                   </div>
 
                   <div className="form-group">
-                      <label htmlFor="destination">Destination Address</label>
+                      <div className="label-row">
+                          <label htmlFor="destination">Destination Address</label>
+                          <button type="button" className="address-book-btn" onClick={() => setPickerTarget('destination')}>
+                              <Book size={14} />
+                              Address Book
+                          </button>
+                      </div>
                       <input
                           type="text"
                           id="destination"
                           name="destination"
                           value={formData.destination}
                           onChange={handleInputChange}
+                          onBlur={handleBlur}
+                          aria-invalid={!!errors.destination}
+                          aria-describedby={errors.destination ? "destination-error" : undefined}
                           className={errors.destination ? 'input-error' : ''}
                           placeholder="e.g., Store B, Los Angeles"
                       />
-                      {errors.destination && <span className="error-text">{errors.destination}</span>}
+                      {errors.destination && <span id="destination-error" className="error-text" role="alert">{errors.destination}</span>}
                   </div>
 
                   <div className="form-group">
@@ -186,11 +415,14 @@ const CreateShipment: React.FC = () => {
                           name="itemDescription"
                           value={formData.itemDescription}
                           onChange={handleInputChange}
+                          onBlur={handleBlur}
+                          aria-invalid={!!errors.itemDescription}
+                          aria-describedby={errors.itemDescription ? "itemDescription-error" : undefined}
                           className={errors.itemDescription ? 'input-error' : ''}
                           placeholder="Describe the items being shipped..."
                           rows={3}
                       />
-                      {errors.itemDescription && <span className="error-text">{errors.itemDescription}</span>}
+                      {errors.itemDescription && <span id="itemDescription-error" className="error-text" role="alert">{errors.itemDescription}</span>}
                   </div>
 
                   <div className="form-row">
@@ -202,12 +434,15 @@ const CreateShipment: React.FC = () => {
                               name="weight"
                               value={formData.weight}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
+                              aria-invalid={!!errors.weight}
+                              aria-describedby={errors.weight ? "weight-error" : undefined}
                               className={errors.weight ? 'input-error' : ''}
                               placeholder="0.00"
                               min="0"
                               step="0.01"
                           />
-                          {errors.weight && <span className="error-text">{errors.weight}</span>}
+                          {errors.weight && <span id="weight-error" className="error-text" role="alert">{errors.weight}</span>}
                       </div>
 
                       <div className="form-group half-width">
@@ -218,9 +453,12 @@ const CreateShipment: React.FC = () => {
                               name="expectedDeliveryDate"
                               value={formData.expectedDeliveryDate}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
+                              aria-invalid={!!errors.expectedDeliveryDate}
+                              aria-describedby={errors.expectedDeliveryDate ? "expectedDeliveryDate-error" : undefined}
                               className={errors.expectedDeliveryDate ? 'input-error' : ''}
                           />
-                          {errors.expectedDeliveryDate && <span className="error-text">{errors.expectedDeliveryDate}</span>}
+                          {errors.expectedDeliveryDate && <span id="expectedDeliveryDate-error" className="error-text" role="alert">{errors.expectedDeliveryDate}</span>}
                       </div>
                   </div>
 
@@ -233,10 +471,13 @@ const CreateShipment: React.FC = () => {
                               name="recipientName"
                               value={formData.recipientName}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
+                              aria-invalid={!!errors.recipientName}
+                              aria-describedby={errors.recipientName ? "recipientName-error" : undefined}
                               className={errors.recipientName ? 'input-error' : ''}
                               placeholder="John Doe"
                           />
-                          {errors.recipientName && <span className="error-text">{errors.recipientName}</span>}
+                          {errors.recipientName && <span id="recipientName-error" className="error-text" role="alert">{errors.recipientName}</span>}
                       </div>
 
                       <div className="form-group half-width">
@@ -247,16 +488,28 @@ const CreateShipment: React.FC = () => {
                               name="recipientContact"
                               value={formData.recipientContact}
                               onChange={handleInputChange}
+                              onBlur={handleBlur}
+                              aria-invalid={!!errors.recipientContact}
+                              aria-describedby={errors.recipientContact ? "recipientContact-error" : undefined}
                               className={errors.recipientContact ? 'input-error' : ''}
                               placeholder="Phone or Email"
                           />
-                          {errors.recipientContact && <span className="error-text">{errors.recipientContact}</span>}
+                          {errors.recipientContact && <span id="recipientContact-error" className="error-text" role="alert">{errors.recipientContact}</span>}
                       </div>
                   </div>
+
+                  <CostBreakdown
+                    data={costEstimate}
+                    isLoading={isEstimating}
+                    mode="estimate"
+                />
 
                   <div className="form-actions">
                       <button type="button" className="cancel-btn" onClick={() => navigate(-1)} disabled={loading}>
                           Cancel
+                      </button>
+                      <button type="button" className="template-btn" onClick={handleOpenSaveModal} disabled={loading}>
+                          Save as Template
                       </button>
                       <button type="submit" className="submit-btn" disabled={loading}>
                           {loading ? (
@@ -270,7 +523,19 @@ const CreateShipment: React.FC = () => {
                       </button>
                   </div>
               </form>
+
+              <AddressBookPickerModal
+                  isOpen={pickerTarget !== null}
+                  onClose={() => setPickerTarget(null)}
+                  onSelect={handleAddressSelect}
+              />
           </div>
+
+          <SaveTemplateModal
+              isOpen={isSaveModalOpen}
+              onClose={() => setIsSaveModalOpen(false)}
+              onSave={handleSaveTemplate}
+          />
     </div>
   );
 };

@@ -5,7 +5,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Receipt,
 } from "lucide-react";
+import EmptyState from "../../components/common/EmptyState/EmptyState";
 import { Link } from "react-router-dom";
 import {
   settlementsApi,
@@ -14,7 +16,10 @@ import {
   SettlementDetail,
 } from "@services/api/endpoints/settlements";
 import { PaymentDetailModal } from "./components";
-
+import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
+import { can } from "../../utils/rbac";
+import { useAuthContext } from "../../context/AuthContext";
+import { useLiveRegion } from "../../context/LiveRegionContext";
 
 // Local lightweight table formatting (kept inline to avoid coupling)
 const truncateHash = (hash?: string) => {
@@ -51,21 +56,16 @@ const LoadingState: React.FC = () => (
   </div>
 );
 
-const EmptyState: React.FC = () => (
-  <div className="p-6 md:p-4">
-    <div className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl px-10 py-20 text-center">
-      <div className="text-[64px] mb-4">🧾</div>
-      <h2 className="text-xl font-bold mb-2 text-[#62ffff]">No Settlements Found</h2>
-      <p className="text-text-secondary text-sm">No settlement records match your criteria.</p>
-    </div>
-  </div>
-);
-
 export default function Settlements() {
+  const { role } = useAuthContext();
+  const { announce } = useLiveRegion();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const realtimeEvents = useRealtimeEvents(["settlement:status"]);
 
-  const [filterStatus, setFilterStatus] = useState<SettlementStatus | "ALL">("ALL");
+  const [filterStatus, setFilterStatus] = useState<SettlementStatus | "ALL">(
+    "ALL",
+  );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,7 +76,9 @@ export default function Settlements() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selected, setSelected] = useState<Settlement | null>(null);
-  const [selectedDetail, setSelectedDetail] = useState<SettlementDetail | null>(null);
+  const [selectedDetail, setSelectedDetail] = useState<SettlementDetail | null>(
+    null,
+  );
   const [isModalLoading, setIsModalLoading] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -104,9 +106,36 @@ export default function Settlements() {
   };
 
   useEffect(() => {
-    void load();
+    Promise.resolve().then(() => {
+      void load();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterStatus, sortOrder]);
+
+  // Apply realtime settlement status updates
+  useEffect(() => {
+    const event = realtimeEvents["settlement:status"];
+    if (!event) return;
+    Promise.resolve().then(() => {
+      setSettlements((prev) =>
+        prev.map((s) =>
+          s._id === event.settlementId
+            ? {
+                ...s,
+                status: event.newStatus,
+                stellarTxHash: event.txHash ?? s.stellarTxHash,
+              }
+            : s,
+        ),
+      );
+      const isError =
+        event.newStatus === "FAILED" || event.newStatus === "DISPUTED";
+      announce(
+        `Settlement status updated to ${event.newStatus}`,
+        isError ? "assertive" : "polite",
+      );
+    });
+  }, [realtimeEvents, announce]);
 
   const summary = useMemo(() => {
     // Aggregate from current page (fallback). If backend summary is desired, extend endpoint.
@@ -114,8 +143,12 @@ export default function Settlements() {
       .filter((s) => s.status === "RELEASED")
       .reduce((sum, s) => sum + (s.amount ?? 0), 0);
 
-    const pendingCount = settlements.filter((s) => s.status === "PENDING").length;
-    const disputedCount = settlements.filter((s) => s.status === "DISPUTED").length;
+    const pendingCount = settlements.filter(
+      (s) => s.status === "PENDING",
+    ).length;
+    const disputedCount = settlements.filter(
+      (s) => s.status === "DISPUTED",
+    ).length;
 
     return {
       totalSettledAmount,
@@ -171,7 +204,9 @@ export default function Settlements() {
       {/* Header */}
       <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1 max-md:text-xl max-md:font-semibold">Settlements</h1>
+          <h1 className="text-2xl font-bold mb-1 max-md:text-xl max-md:font-semibold">
+            Settlements
+          </h1>
           <p className="text-text-secondary text-sm max-md:text-xs">
             Track escrow releases and settlement outcomes
           </p>
@@ -185,6 +220,7 @@ export default function Settlements() {
                 setFilterStatus(e.target.value as SettlementStatus | "ALL");
                 setCurrentPage(1);
               }}
+              aria-label="Filter by settlement status"
               className="appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full"
             >
               <option value="ALL">All Status</option>
@@ -199,42 +235,69 @@ export default function Settlements() {
               className="absolute right-3 pointer-events-none text-text-secondary rotate-90"
             />
           </div>
-          <span
+          <button
+            type="button"
             className="inline-flex items-center gap-2 appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
-            onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+            onClick={() =>
+              setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
+            }
+            aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
+            aria-pressed={sortOrder === "desc"}
           >
             Date <ArrowUpDown size={14} />
             <span className="text-text-secondary max-md:hidden">
               {sortOrder === "desc" ? "Newest" : "Oldest"}
             </span>
-          </span>
+          </button>
         </div>
       </div>
 
       {/* Summary cards (simple; designed to be replaced with PaymentSummaryCards integration) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">Total settled</div>
+          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+            Total settled
+          </div>
           <div className="text-[32px] font-bold leading-none max-md:text-2xl">
-            {summary.totalSettledAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            {summary.totalSettledAmount.toLocaleString(undefined, {
+              maximumFractionDigits: 2,
+            })}
           </div>
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">Pending</div>
-          <div className="text-[32px] font-bold leading-none max-md:text-2xl">{summary.pendingCount}</div>
+          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+            Pending
+          </div>
+          <div className="text-[32px] font-bold leading-none max-md:text-2xl">
+            {summary.pendingCount}
+          </div>
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">Disputed</div>
-          <div className="text-[32px] font-bold leading-none max-md:text-2xl">{summary.disputedCount}</div>
+          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+            Disputed
+          </div>
+          <div className="text-[32px] font-bold leading-none max-md:text-2xl">
+            {summary.disputedCount}
+          </div>
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">Total records</div>
-          <div className="text-[32px] font-bold leading-none max-md:text-2xl">{total}</div>
+          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+            Total records
+          </div>
+          <div className="text-[32px] font-bold leading-none max-md:text-2xl">
+            {total}
+          </div>
         </div>
       </div>
 
       {settlements.length === 0 ? (
-        <EmptyState />
+        <div className="p-6 md:p-4">
+          <EmptyState
+            icon={<Receipt size={28} />}
+            title="No Settlements Found"
+            description="No settlement records match your criteria. Settlements will appear here once escrow contracts are triggered on the Stellar blockchain."
+          />
+        </div>
       ) : (
         <>
           <div className={`${tableContainerClass} md:overflow-x-auto`}>
@@ -243,14 +306,25 @@ export default function Settlements() {
                 <tr>
                   <th
                     className={`${thClass} cursor-pointer select-none`}
-                    onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                    onClick={() =>
+                      setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
+                    }
+                    aria-sort={
+                      sortOrder === "desc" ? "descending" : "ascending"
+                    }
                   >
-                    <span className="inline-flex items-center gap-2">Date <ArrowUpDown size={14} /></span>
+                    <span className="inline-flex items-center gap-2">
+                      Date <ArrowUpDown size={14} aria-hidden="true" />
+                    </span>
                   </th>
                   <th className={thClass}>Shipment ID</th>
                   <th className={thClass}>Amount</th>
                   <th className={thClass}>Status</th>
                   <th className={thClass}>Stellar Tx</th>
+                  {(can(role, "settlement:release-payment") ||
+                    can(role, "settlement:dispute")) && (
+                    <th className={thClass}>Actions</th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -262,7 +336,9 @@ export default function Settlements() {
                       className="hover:bg-[rgba(98,255,255,0.05)] transition-colors last:border-b-0 cursor-pointer"
                       onClick={() => void onOpen(s)}
                     >
-                      <td className={`${tdClass} font-medium text-text-secondary`}>
+                      <td
+                        className={`${tdClass} font-medium text-text-secondary`}
+                      >
                         {new Date(s.createdAt).toLocaleDateString(undefined, {
                           year: "numeric",
                           month: "short",
@@ -280,8 +356,12 @@ export default function Settlements() {
                       </td>
                       <td className={tdClass}>
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-sm">{s.amount.toLocaleString()}</span>
-                          <span className="text-[11px] text-text-secondary uppercase">{s.token}</span>
+                          <span className="font-semibold text-sm">
+                            {s.amount.toLocaleString()}
+                          </span>
+                          <span className="text-[11px] text-text-secondary uppercase">
+                            {s.token}
+                          </span>
                         </div>
                       </td>
                       <td className={tdClass}>
@@ -301,12 +381,37 @@ export default function Settlements() {
                             className="text-text-secondary no-underline flex items-center gap-1.5 transition-colors hover:text-[#62ffff]"
                           >
                             {truncateHash(s.stellarTxHash)}
-                            <ExternalLink size={12} className="text-[#62ffff]" />
+                            <ExternalLink
+                              size={12}
+                              className="text-[#62ffff]"
+                            />
                           </a>
                         ) : (
                           <span className="text-text-secondary">-</span>
                         )}
                       </td>
+                      {(can(role, "settlement:release-payment") ||
+                        can(role, "settlement:dispute")) && (
+                        <td
+                          className={tdClass}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex gap-2">
+                            {can(role, "settlement:release-payment") &&
+                              s.status === "ESCROWED" && (
+                                <button className="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30">
+                                  Release
+                                </button>
+                              )}
+                            {can(role, "settlement:dispute") &&
+                              s.status !== "DISPUTED" && (
+                                <button className="px-2 py-1 text-xs font-semibold rounded bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30">
+                                  Dispute
+                                </button>
+                              )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -322,6 +427,7 @@ export default function Settlements() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
+                aria-label="Previous page"
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={16} />
@@ -330,17 +436,21 @@ export default function Settlements() {
                 <button
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`border px-3 py-2 rounded-md text-sm font-semibold cursor-pointer min-w-9 transition-all ${currentPage === i + 1
-                    ? "bg-[#62ffff] border-[#62ffff] text-black"
-                    : "bg-transparent border-[rgba(98,255,255,0.2)] text-text-primary hover:bg-[rgba(98,255,255,0.1)] hover:border-[#62ffff] hover:text-[#62ffff]"
-                    }`}
+                  className={`border px-3 py-2 rounded-md text-sm font-semibold cursor-pointer min-w-9 transition-all ${
+                    currentPage === i + 1
+                      ? "bg-[#62ffff] border-[#62ffff] text-black"
+                      : "bg-transparent border-[rgba(98,255,255,0.2)] text-text-primary hover:bg-[rgba(98,255,255,0.1)] hover:border-[#62ffff] hover:text-[#62ffff]"
+                  }`}
                 >
                   {i + 1}
                 </button>
               ))}
               <button
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
                 disabled={currentPage === totalPages}
+                aria-label="Next page"
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={16} />
@@ -360,4 +470,3 @@ export default function Settlements() {
     </div>
   );
 }
-

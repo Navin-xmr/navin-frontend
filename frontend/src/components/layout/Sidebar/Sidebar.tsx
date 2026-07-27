@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Rocket,
@@ -8,7 +8,12 @@ import {
   BarChart2,
   Settings,
   HelpCircle,
+  AlertTriangle,
+  Calendar,
 } from "lucide-react";
+import { anomalyApi } from "@services/api/endpoints/anomalies";
+import Avatar from "../../ui/Avatar";
+import { useAuthContext } from "../../../context/AuthContext";
 
 export interface SidebarProps {
   isOpen: boolean;
@@ -25,6 +30,16 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = useAuthContext();
+  const [openAnomalyCount, setOpenAnomalyCount] = useState(0);
+
+  useEffect(() => {
+    anomalyApi.getAll({ status: "OPEN" }).then((result) => {
+      setOpenAnomalyCount(result.data.length);
+    }).catch(() => {
+      // non-critical; badge just won't show
+    });
+  }, []);
 
   const mainNav = [
     {
@@ -36,6 +51,17 @@ const Sidebar: React.FC<SidebarProps> = ({
       name: "Shipments",
       icon: <Truck size={22} className="nav-icon-svg" />,
       path: "/dashboard/shipments",
+    },
+    {
+      name: "Calendar",
+      icon: <Calendar size={22} className="nav-icon-svg" />,
+      path: "/dashboard/calendar",
+    },
+    {
+      name: "Anomalies",
+      icon: <AlertTriangle size={22} className="nav-icon-svg" />,
+      path: "/dashboard/anomalies",
+      badge: openAnomalyCount > 0 ? openAnomalyCount : undefined,
     },
     {
       name: "Team",
@@ -86,7 +112,17 @@ const Sidebar: React.FC<SidebarProps> = ({
               }}
               title={item.name}
             >
-              <div className="nav-icon-wrapper">{item.icon}</div>
+              <div className="nav-icon-wrapper" style={{ position: 'relative' }}>
+                {item.icon}
+                {'badge' in item && item.badge !== undefined && (
+                  <span
+                    className="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full bg-[#ef4444] text-white text-[9px] font-bold leading-none"
+                    aria-label={`${item.badge} open anomalies`}
+                  >
+                    {item.badge > 99 ? '99+' : item.badge}
+                  </span>
+                )}
+              </div>
               {!isCollapsed && <span className="nav-label">{item.name}</span>}
             </button>
           );
@@ -116,11 +152,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             onClose();
           }}
         >
-          <img
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alex&backgroundColor=ffcba4"
-            alt="User Profile"
-            className="user-avatar-img"
-          />
+          <Avatar name={role ?? 'User'} size="sm" />
           {!isCollapsed && <span className="nav-label">Profile</span>}
         </button>
       </div>

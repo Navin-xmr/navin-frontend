@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ledgerApi } from '@services/api/endpoints/ledger';
 import type { LedgerBlock, MilestoneEvent, GetLedgerBlocksParams } from '@services/api/endpoints/ledger';
+import CopyToClipboard from '../../components/ui/CopyToClipboard';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -274,21 +275,24 @@ function LedgerTable({ blocks, loading }: LedgerTableProps) {
 
                   {/* Tx hash */}
                   <td className={tdClass}>
-                    <a
-                      href={explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      id={`tx-link-${block.transactionHash.slice(0, 8)}`}
-                      className="inline-flex items-center gap-1.5 font-mono text-xs text-primary/80 hover:text-primary transition-colors group/link"
-                      aria-label={`View transaction ${block.transactionHash} on Stellar Expert`}
-                      title={block.transactionHash}
-                    >
-                      {truncateHash(block.transactionHash)}
-                      <ExternalLink
-                        size={11}
-                        className="opacity-0 group-hover/link:opacity-100 transition-opacity flex-shrink-0"
-                      />
-                    </a>
+                    <div className="flex items-center gap-1.5">
+                      <a
+                        href={explorerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        id={`tx-link-${block.transactionHash.slice(0, 8)}`}
+                        className="inline-flex items-center gap-1.5 font-mono text-xs text-primary/80 hover:text-primary transition-colors group/link"
+                        aria-label={`View transaction ${block.transactionHash} on Stellar Expert`}
+                        title={block.transactionHash}
+                      >
+                        {truncateHash(block.transactionHash)}
+                        <ExternalLink
+                          size={11}
+                          className="opacity-0 group-hover/link:opacity-100 transition-opacity flex-shrink-0"
+                        />
+                      </a>
+                      <CopyToClipboard value={block.transactionHash} size="sm" />
+                    </div>
                   </td>
 
                   {/* Verification status */}
@@ -421,7 +425,9 @@ const BlockchainLedger: React.FC = () => {
 
   // Re-fetch whenever cursor or filter changes
   useEffect(() => {
-    void fetchBlocks(currentCursor, filter);
+    Promise.resolve().then(() => {
+      void fetchBlocks(currentCursor, filter);
+    });
   }, [currentCursor, filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterChange = (value: MilestoneEvent | '') => {

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { WalletConnectButton } from "../../../components/auth/WalletConnectButton/WalletConnectButton";
 import { authApi } from "../../../services/api";
+import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
 
 interface FormErrors {
   fullName?: string;
@@ -25,21 +26,8 @@ const Signup: React.FC = () => {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState<"none" | "weak" | "fair" | "strong">("none");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const calculatePasswordStrength = (pass: string): "none" | "weak" | "fair" | "strong" => {
-    if (!pass) return "none";
-    let strength = 0;
-    if (pass.length >= 8) strength++;
-    if (/[A-Z]/.test(pass)) strength++;
-    if (/[0-9]/.test(pass)) strength++;
-    if (/[^A-Za-z0-9]/.test(pass)) strength++;
-    if (strength <= 1) return "weak";
-    if (strength <= 3) return "fair";
-    return "strong";
-  };
 
   const validate = () => {
     const newErrors: FormErrors = {};
@@ -57,7 +45,6 @@ const Signup: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
-    if (name === "password") setPasswordStrength(calculatePasswordStrength(value));
     if (errors[name as keyof FormErrors]) setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
@@ -78,10 +65,6 @@ const Signup: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const strengthBarWidth = { none: "0%", weak: "33.33%", fair: "66.66%", strong: "100%" }[passwordStrength];
-  const strengthBarColor = { none: "transparent", weak: "#FF4D4D", fair: "#FFAB00", strong: "#00E676" }[passwordStrength];
-  const strengthLabel = { none: null, weak: <span className="text-[#FF4D4D] font-semibold">Weak</span>, fair: <span className="text-[#FFAB00] font-semibold">Fair</span>, strong: <span className="text-[#00E676] font-semibold">Strong</span> }[passwordStrength];
 
   const inputBase = "w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-xl px-4 py-3.5 pr-12 text-white text-base transition-all box-border focus:outline-none focus:border-[#00DAC1] focus:bg-[rgba(255,255,255,0.08)] focus:shadow-[0_0_0_4px_rgba(0,218,193,0.1)]";
 
@@ -118,9 +101,11 @@ const Signup: React.FC = () => {
             <input
               type="text" id="fullName" name="fullName" placeholder="John Doe"
               value={formData.fullName} onChange={handleChange}
+              aria-invalid={!!errors.fullName}
+              aria-describedby={errors.fullName ? "fullName-error" : undefined}
               className={`${inputBase} ${errors.fullName ? 'border-[#FF4D4D]' : ''}`}
             />
-            {errors.fullName && <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">{errors.fullName}</span>}
+            {errors.fullName && <span id="fullName-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">{errors.fullName}</span>}
           </div>
 
           {/* Email */}
@@ -129,9 +114,11 @@ const Signup: React.FC = () => {
             <input
               type="email" id="email" name="email" placeholder="name@company.com"
               value={formData.email} onChange={handleChange}
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "email-error" : undefined}
               className={`${inputBase} ${errors.email ? 'border-[#FF4D4D]' : ''}`}
             />
-            {errors.email && <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">{errors.email}</span>}
+            {errors.email && <span id="email-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">{errors.email}</span>}
           </div>
 
           {/* Password */}
@@ -141,6 +128,8 @@ const Signup: React.FC = () => {
               <input
                 type={showPassword ? "text" : "password"} id="password" name="password" placeholder="••••••••"
                 value={formData.password} onChange={handleChange}
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? "password-error" : undefined}
                 className={`${inputBase} ${errors.password ? 'border-[#FF4D4D]' : ''}`}
               />
               <button
@@ -153,14 +142,9 @@ const Signup: React.FC = () => {
               </button>
             </div>
             {formData.password && (
-              <div className="mt-2">
-                <div className="h-1 w-full bg-[rgba(255,255,255,0.1)] rounded-sm overflow-hidden mb-1.5">
-                  <div className="h-full transition-all duration-400" style={{ width: strengthBarWidth, backgroundColor: strengthBarColor }} />
-                </div>
-                <div className="text-[0.75rem] text-[rgba(255,255,255,0.6)]">Strength: {strengthLabel ?? "None"}</div>
-              </div>
+              <PasswordStrengthMeter password={formData.password} />
             )}
-            {errors.password && <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">{errors.password}</span>}
+            {errors.password && <span id="password-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">{errors.password}</span>}
           </div>
 
           {/* Confirm Password */}
@@ -170,6 +154,8 @@ const Signup: React.FC = () => {
               <input
                 type={showConfirmPassword ? "text" : "password"} id="confirmPassword" name="confirmPassword" placeholder="••••••••"
                 value={formData.confirmPassword} onChange={handleChange}
+                aria-invalid={!!errors.confirmPassword}
+                aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
                 className={`${inputBase} ${errors.confirmPassword ? 'border-[#FF4D4D]' : ''}`}
               />
               <button
@@ -181,7 +167,7 @@ const Signup: React.FC = () => {
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            {errors.confirmPassword && <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">{errors.confirmPassword}</span>}
+            {errors.confirmPassword && <span id="confirmPassword-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">{errors.confirmPassword}</span>}
           </div>
 
           {/* Terms Checkbox */}
@@ -189,7 +175,9 @@ const Signup: React.FC = () => {
             <label className="flex items-start gap-3 cursor-pointer text-[0.85rem] text-[rgba(255,255,255,0.6)] select-none">
               <div className="relative mt-0.5 shrink-0">
                 <input
-                  type="checkbox" name="terms" checked={formData.terms} onChange={handleChange}
+                  type="checkbox" id="terms" name="terms" checked={formData.terms} onChange={handleChange}
+                  aria-invalid={!!errors.terms}
+                  aria-describedby={errors.terms ? "terms-error" : undefined}
                   className="sr-only peer"
                 />
                 <div className="w-[18px] h-[18px] bg-[rgba(255,255,255,0.1)] border border-[rgba(255,255,255,0.1)] rounded peer-checked:bg-[#00DAC1] peer-checked:border-[#00DAC1] transition-all" />
@@ -205,7 +193,7 @@ const Signup: React.FC = () => {
                 <a href="#" className="text-[#00DAC1] no-underline hover:underline">Terms and Conditions</a>
               </span>
             </label>
-            {errors.terms && <span className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1">{errors.terms}</span>}
+            {errors.terms && <span id="terms-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">{errors.terms}</span>}
           </div>
 
           {/* Submit */}

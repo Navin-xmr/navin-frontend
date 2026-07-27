@@ -15,7 +15,7 @@ describe('NotificationDropdown', () => {
 
     renderWithRouter(<NotificationDropdown />);
 
-    const bell = screen.getByLabelText('Notifications');
+    const bell = screen.getByLabelText(/^Notifications/);
     await user.click(bell);
 
     expect(screen.getByText('Notifications')).toBeInTheDocument();
@@ -34,7 +34,7 @@ describe('NotificationDropdown', () => {
 
   it('renders the bell icon with unread badge', () => {
     renderWithRouter(<NotificationDropdown />);
-    const bellButton = screen.getByLabelText('Notifications');
+    const bellButton = screen.getByLabelText(/^Notifications/);
     expect(bellButton).toBeInTheDocument();
 
     const badge = screen.getByText('3');
@@ -44,7 +44,7 @@ describe('NotificationDropdown', () => {
   it('renders the bell icon with unread badge', () => {
     renderWithRouter(<NotificationDropdown />);
     
-    const bellButton = screen.getByLabelText('Notifications');
+    const bellButton = screen.getByLabelText(/^Notifications/);
     expect(bellButton).toBeInTheDocument();
     
     const badge = screen.getByText('3');
@@ -54,7 +54,7 @@ describe('NotificationDropdown', () => {
   it('opens dropdown when bell icon is clicked', () => {
     renderWithRouter(<NotificationDropdown />);
     
-    const bellButton = screen.getByLabelText('Notifications');
+    const bellButton = screen.getByLabelText(/^Notifications/);
     fireEvent.click(bellButton);
     
     expect(screen.getByText('Notifications')).toBeInTheDocument();
@@ -64,7 +64,7 @@ describe('NotificationDropdown', () => {
   it('displays 5 notifications in the dropdown', () => {
     renderWithRouter(<NotificationDropdown />);
     
-    const bellButton = screen.getByLabelText('Notifications');
+    const bellButton = screen.getByLabelText(/^Notifications/);
     fireEvent.click(bellButton);
     
     expect(screen.getByText(/Shipment #SH-2024-001 has been delivered successfully/)).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe('NotificationDropdown', () => {
   it('closes dropdown when close button is clicked', () => {
     renderWithRouter(<NotificationDropdown />);
     
-    const bellButton = screen.getByLabelText('Notifications');
+    const bellButton = screen.getByLabelText(/^Notifications/);
     fireEvent.click(bellButton);
     
     const closeButton = screen.getByLabelText('Close notifications');
@@ -87,7 +87,7 @@ describe('NotificationDropdown', () => {
   it('closes dropdown when ESC key is pressed', () => {
     renderWithRouter(<NotificationDropdown />);
     
-    const bellButton = screen.getByLabelText('Notifications');
+    const bellButton = screen.getByLabelText(/^Notifications/);
     fireEvent.click(bellButton);
     
     expect(screen.getByText('View All Notifications')).toBeInTheDocument();

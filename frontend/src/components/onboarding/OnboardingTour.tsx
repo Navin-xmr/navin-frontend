@@ -109,8 +109,6 @@ const Popover: React.FC<PopoverProps> = ({
   onNext,
   onSkip,
 }) => {
-  // onNext is reserved for the Next button (to be added in a follow-up)
-  void onNext;
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
     position: 'fixed',
     zIndex: 9999,
@@ -168,95 +166,46 @@ const Popover: React.FC<PopoverProps> = ({
   return (
     <div style={popoverStyle}>
       <div
-        style={{
-          background: '#1a1f2e',
-          border: '1px solid rgba(98,255,255,0.25)',
-          borderRadius: '14px',
-          padding: '20px 24px',
-          color: '#e2e8f0',
-          fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-          boxShadow: '0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(98,255,255,0.1)',
-        }}
+        className="rounded-[14px] px-6 py-5 font-[Inter,system-ui,-apple-system,sans-serif] bg-white dark:bg-[#1a1f2e] border border-teal-200 dark:border-[rgba(98,255,255,0.25)] text-gray-700 dark:text-[#e2e8f0] shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(98,255,255,0.1)]"
       >
         {/* Header row */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: 8,
-          }}
-        >
-          <h3
-            style={{
-              margin: 0,
-              fontSize: 16,
-              fontWeight: 600,
-              color: '#ffffff',
-              lineHeight: 1.3,
-            }}
-          >
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="m-0 text-base font-semibold leading-tight text-gray-900 dark:text-white">
             {step.heading}
           </h3>
           <button
             onClick={onSkip}
             aria-label="Close tour"
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#64748b',
-              cursor: 'pointer',
-              padding: 2,
-              marginLeft: 8,
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
+            className="bg-transparent border-none text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 cursor-pointer p-0.5 ml-2 rounded-md flex items-center justify-center"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Body */}
-        <p
-          style={{
-            margin: '0 0 16px',
-            fontSize: 13,
-            lineHeight: 1.55,
-            color: '#94a3b8',
-          }}
-        >
+        <p className="m-0 mb-4 text-[13px] leading-[1.55] text-gray-600 dark:text-slate-400">
           {step.body}
         </p>
 
         {/* Footer */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+        <div className="flex justify-between items-center">
           {/* Step counter */}
-          <span style={{ fontSize: 12, color: '#64748b' }}>
+          <span className="text-xs text-gray-500 dark:text-slate-500">
             {stepIndex + 1} of {totalSteps}
           </span>
 
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="flex gap-2 items-center">
             <button
               onClick={onSkip}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#64748b',
-                fontSize: 12,
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                padding: '6px 8px',
-              }}
+              className="bg-transparent border-none text-gray-500 dark:text-slate-500 text-xs cursor-pointer underline px-2 py-1.5"
             >
               Skip
+            </button>
+            <button
+              onClick={onNext}
+              className="bg-gradient-to-br from-[#13baba] to-[#0d9488] border-none text-white text-[13px] font-semibold cursor-pointer px-[18px] py-[7px] rounded-lg"
+            >
+              {stepIndex + 1 === totalSteps ? 'Done' : 'Next →'}
             </button>
           </div>
         </div>
