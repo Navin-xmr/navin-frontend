@@ -20,3 +20,10 @@ Closes #
 - [ ] I followed the code standards in CONTRIBUTING.md
 - [ ] I added/updated tests if needed
 - [ ] All CI checks pass
+
+## Accessibility Review
+- [ ] Interactive controls have clear labels and visible focus states
+- [ ] Keyboard users can reach and operate new UI without a mouse
+- [ ] Loading, error, empty, and success states are announced or understandable
+- [ ] Text, icons, and status indicators do not rely on color alone
+- [ ] Responsive layouts preserve reading order and touch target usability

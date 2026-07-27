@@ -50,9 +50,11 @@
 
 .shipments-table th,
 .shipments-table td {
-  padding: 16px 12px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border-color);
   text-align: left;
+  line-height: 1.35;
+  vertical-align: middle;
 }
 
 .shipments-table th {
@@ -60,6 +62,11 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   font-size: 12px;
+  white-space: nowrap;
+}
+
+.shipments-table td {
+  overflow-wrap: anywhere;
 }
 
 .shipments-empty,

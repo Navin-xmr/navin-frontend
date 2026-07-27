@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { CheckCircle2, Circle, Package, Truck, MapPin, Flag } from 'lucide-react';
+import { CheckCircle2, Circle, Package, Truck, MapPin, Flag, Share2, Copy, AlertTriangle } from 'lucide-react';
 
 interface PublicMilestone {
   id: string;
@@ -51,6 +51,9 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
   const [shipment, setShipment] = useState<PublicShipment | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const canUseNativeShare = 'share' in navigator;
 
   useEffect(() => {
     if (!trackingNumber) return;
@@ -58,10 +61,17 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
 
     const fetchShipment = async () => {
       try {
+        setNotFound(false);
+        setError(null);
         const res = await axios.get<{ data: PublicShipment }>(`/api/public/shipments/${trackingNumber}`);
         if (isActive) setShipment(res.data.data);
       } catch (err: unknown) {
-        if (isActive && axios.isAxiosError(err) && err.response?.status === 404) setNotFound(true);
+        if (!isActive) return;
+        if (axios.isAxiosError(err) && err.response?.status === 404) {
+          setNotFound(true);
+          return;
+        }
+        setError('We could not load this public tracking summary. Check your connection and try again.');
       } finally {
         if (isActive) setLoading(false);
       }
@@ -76,6 +86,25 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
       isActive = false;
     };
   }, [trackingNumber]);
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (canUseNativeShare) {
+        await navigator.share({
+          title: `Navin shipment ${trackingNumber}`,
+          text: 'View this public shipment summary.',
+          url,
+        });
+        setShareStatus('Share sheet opened.');
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareStatus('Public tracking link copied.');
+    } catch {
+      setShareStatus('Copy the page URL from your browser to share this tracking summary.');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0d1117] text-white flex flex-col">
@@ -111,6 +140,23 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
           </div>
         )}
 
+        {!loading && error && (
+          <div className="max-w-md w-full text-center mt-20" role="alert">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-amber-400" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Tracking Summary Unavailable</h1>
+            <p className="text-slate-400 mb-6">{error}</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-block px-5 py-2.5 bg-cyan-400 text-black font-semibold rounded-lg hover:bg-cyan-300 transition-colors text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {!loading && shipment && (
           <div className="max-w-2xl w-full space-y-8">
             {/* Status Banner */}
@@ -123,6 +169,30 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
                 <span className={`self-start sm:self-center px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${STATUS_COLORS[shipment.status] ?? 'bg-white/5 text-slate-300'}`}>
                   {STATUS_LABELS[shipment.status] ?? shipment.status}
                 </span>
+              </div>
+
+              <div className="mt-5 rounded-xl border border-cyan-400/10 bg-cyan-400/5 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs text-cyan-300 uppercase tracking-widest mb-1">Public Summary</p>
+                    <p className="text-sm text-slate-300">
+                      Share this read-only page with customers or partners for status, route, ETA, and milestone updates.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleShare()}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-cyan-400/30 px-4 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:bg-cyan-400/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
+                  >
+                    {canUseNativeShare ? <Share2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    Share link
+                  </button>
+                </div>
+                {shareStatus && (
+                  <p className="mt-3 text-xs text-cyan-200" role="status">
+                    {shareStatus}
+                  </p>
+                )}
               </div>
 
               <div className="mt-5 grid grid-cols-3 gap-4 text-sm">

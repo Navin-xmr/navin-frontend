@@ -77,6 +77,9 @@ export default {
         'slide-in-right': {
           '0%': { transform: 'translateX(100%)', opacity: '0' },
           '100%': { transform: 'translateX(0)', opacity: '1' },
+        'shimmer': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
         },
       },
       animation: {
@@ -86,6 +89,7 @@ export default {
         'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
         'slide-in-left': 'slide-in-left 250ms ease-out forwards',
         'slide-in-right': 'slide-in-right 250ms ease-out forwards',
+        'shimmer': 'shimmer 1.5s infinite',
       },
     },
   },
