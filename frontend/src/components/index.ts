@@ -63,6 +63,10 @@ export { default as CostPerRouteWidget } from './dashboard/CostPerRouteWidget';
 // Shipment
 export { default as TrackingTimeline } from './shipment/TrackingTimeline';
 export type { TrackingTimelineProps, Milestone } from './shipment/TrackingTimeline';
+export { default as MilestoneTimeline } from './shipment/MilestoneTimeline';
+export type { MilestoneDetail, MilestoneTimelineProps } from './shipment/MilestoneTimeline';
+export { default as EventAnnotation } from './shipment/EventAnnotation';
+export type { EventAnnotationProps, Annotation } from './shipment/EventAnnotation';
 export { default as StatusUpdate } from './shipment/StatusUpdate';
 export type { StatusUpdateProps, ShipmentMilestone } from './shipment/StatusUpdate';
 export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation/DeliveryConfirmation';
@@ -72,3 +76,19 @@ export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/
 export { OnboardingTour } from './onboarding';
 export type { OnboardingTourProps, TourStep } from './onboarding';
 export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';
+
+// UI — Autosave Banner (#529)
+export { AutosaveBanner } from './ui/AutosaveBanner';
+export type { AutosaveBannerProps } from './ui/AutosaveBanner';
+
+// UI — Chip & ChipGroup (#530)
+export { Chip, ChipGroup } from './ui/Chip';
+export type { ChipProps, ChipVariant, ChipSize, ChipGroupProps, ChipOption } from './ui/Chip';
+
+// Dashboard — Widget Refresh Indicator (#531)
+export { WidgetRefreshIndicator } from './dashboard/WidgetRefreshIndicator';
+export type { WidgetRefreshIndicatorProps } from './dashboard/WidgetRefreshIndicator';
+
+// Shipment — Summary Print View (#532)
+export { ShipmentSummaryPrint } from './shipment/ShipmentSummaryPrint';
+export type { ShipmentSummaryPrintProps, ShipmentSummaryPrintData, PrintMilestone, PrintCostItem, PrintPaymentInfo, PrintSensorSnapshot } from './shipment/ShipmentSummaryPrint';
