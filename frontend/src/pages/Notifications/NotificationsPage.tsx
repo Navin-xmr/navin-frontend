@@ -348,12 +348,20 @@ const NotificationsPage = () => {
     notification: NotificationType;
   }) => (
     <div
-      className={`border rounded-xl p-5 flex gap-4 transition-all cursor-pointer ${
+      role="article"
+      tabIndex={0}
+      className={`border rounded-xl p-5 flex gap-4 transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#101922] ${
         notification.isRead
           ? "bg-[#1a1f28] border-[#374151]"
           : "bg-[#1f2937] border-[#374151] hover:bg-[#283039] hover:border-[#4b5563]"
       }`}
       onClick={() => handleNotificationClick(notification.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleNotificationClick(notification.id);
+        }
+      }}
     >
       <div
         className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative ${iconStyles[notification.icon]}`}
@@ -402,7 +410,7 @@ const NotificationsPage = () => {
       <div className="flex items-center gap-2 shrink-0">
         {!notification.isRead && (
           <button
-            className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white"
+            className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white focus-visible:outline-2 focus-visible:outline-[#3b82f6]"
             aria-label="Mark as read"
             onClick={(e) => {
               e.stopPropagation();
@@ -413,7 +421,7 @@ const NotificationsPage = () => {
           </button>
         )}
         <button
-          className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white"
+          className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white focus-visible:outline-2 focus-visible:outline-[#3b82f6]"
           aria-label="Delete notification"
           onClick={(e) => {
             e.stopPropagation();
@@ -579,8 +587,9 @@ const NotificationsPage = () => {
                       >
                         <button
                           type="button"
-                          className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left"
+                          className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left focus-visible:outline-2 focus-visible:outline-[#3b82f6] focus-visible:outline-offset-[-2px]"
                           onClick={() => toggleGroupExpansion(group.shipmentId)}
+                          aria-expanded={expanded}
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 flex-wrap">
