@@ -1,24 +1,29 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useOptimisticUpdate } from "../../../hooks/useOptimisticUpdate";
+import { useToast } from "../../../context/ToastContext";
 
 export type ShipmentMilestone =
-  | 'Picked Up'
-  | 'In Transit'
-  | 'At Checkpoint'
-  | 'Out for Delivery'
-  | 'Delivered';
+  | "Picked Up"
+  | "In Transit"
+  | "At Checkpoint"
+  | "Out for Delivery"
+  | "Delivered";
 
 export interface StatusUpdateProps {
   shipmentId: string;
   currentStatus?: ShipmentMilestone;
-  onStatusUpdate?: (shipmentId: string, nextStatus: ShipmentMilestone) => Promise<void>;
+  onStatusUpdate?: (
+    shipmentId: string,
+    nextStatus: ShipmentMilestone,
+  ) => Promise<void>;
 }
 
 const MILESTONE_OPTIONS: ShipmentMilestone[] = [
-  'Picked Up',
-  'In Transit',
-  'At Checkpoint',
-  'Out for Delivery',
-  'Delivered',
+  "Picked Up",
+  "In Transit",
+  "At Checkpoint",
+  "Out for Delivery",
+  "Delivered",
 ];
 
 const StatusUpdate: React.FC<StatusUpdateProps> = ({
@@ -28,38 +33,46 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<ShipmentMilestone | null>(null);
-  const [activeStatus, setActiveStatus] = useState<ShipmentMilestone | undefined>(currentStatus);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [pendingStatus, setPendingStatus] = useState<ShipmentMilestone | null>(
+    null,
+  );
+  const [activeStatus, setActiveStatus] = useState<
+    ShipmentMilestone | undefined
+  >(currentStatus);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  useEffect(() => { Promise.resolve().then(() => { setActiveStatus(currentStatus); }); }, [currentStatus]);
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      setActiveStatus(currentStatus);
+    });
+  }, [currentStatus]);
 
   useEffect(() => {
     if (!isMenuOpen) return;
     const handleOutsideClick = (event: MouseEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) setIsMenuOpen(false);
+      if (!containerRef.current?.contains(event.target as Node))
+        setIsMenuOpen(false);
     };
-    document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [isMenuOpen]);
 
   useEffect(() => {
     if (!successMessage) return;
-    const timer = window.setTimeout(() => setSuccessMessage(''), 3000);
+    const timer = window.setTimeout(() => setSuccessMessage(""), 3000);
     return () => window.clearTimeout(timer);
   }, [successMessage]);
 
   const dialogMessage = useMemo(() => {
-    if (!pendingStatus) return '';
+    if (!pendingStatus) return "";
     return `Update shipment #${shipmentId} to ${pendingStatus}?`;
   }, [pendingStatus, shipmentId]);
 
   const openConfirmation = (status: ShipmentMilestone) => {
-    setErrorMessage('');
+    setErrorMessage("");
     setIsMenuOpen(false);
     setPendingStatus(status);
     setIsDialogOpen(true);
@@ -71,23 +84,34 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
     triggerRef.current?.focus();
   };
 
+  const { addToast } = useToast();
+  const { mutate: optimisticUpdate, isMutating: isUpdating } =
+    useOptimisticUpdate<ShipmentMilestone | undefined>({
+      onMutate: async () => {
+        if (!pendingStatus || !onStatusUpdate) return;
+        await onStatusUpdate(shipmentId, pendingStatus);
+      },
+      onRollback: (prevStatus: ShipmentMilestone | undefined) => {
+        setActiveStatus(prevStatus);
+      },
+      successMessage: `Shipment #${shipmentId} updated to ${pendingStatus}.`,
+      errorMessage:
+        "Failed to update shipment status. Changes have been reverted.",
+    });
+
   const handleConfirm = async () => {
     if (!pendingStatus) return;
-    setIsUpdating(true);
-    setErrorMessage('');
-    try {
-      if (onStatusUpdate) await onStatusUpdate(shipmentId, pendingStatus);
-      setActiveStatus(pendingStatus);
-      setSuccessMessage(`Shipment #${shipmentId} updated to ${pendingStatus}.`);
-      setIsDialogOpen(false);
-      setPendingStatus(null);
-      triggerRef.current?.focus();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update shipment status.';
-      setErrorMessage(message);
-    } finally {
-      setIsUpdating(false);
-    }
+    setErrorMessage("");
+    const prevStatus = activeStatus;
+
+    // Optimistically update the UI
+    setActiveStatus(pendingStatus);
+    setIsDialogOpen(false);
+    setPendingStatus(null);
+    triggerRef.current?.focus();
+
+    // Use optimistic update with rollback
+    await optimisticUpdate(prevStatus);
   };
 
   return (
@@ -95,13 +119,13 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
       <button
         type="button"
         className="border border-border bg-background-elevated text-text-primary rounded-lg px-3 py-2 text-[13px] font-semibold cursor-pointer min-w-[180px] text-left hover:border-accent-blue transition-colors"
-        onClick={() => setIsMenuOpen(prev => !prev)}
+        onClick={() => setIsMenuOpen((prev) => !prev)}
         aria-expanded={isMenuOpen}
         aria-haspopup="listbox"
         aria-label={`Update status for shipment ${shipmentId}`}
         ref={triggerRef}
       >
-        {activeStatus ? `Status: ${activeStatus}` : 'Update Status'}
+        {activeStatus ? `Status: ${activeStatus}` : "Update Status"}
       </button>
 
       {isMenuOpen && (
@@ -110,7 +134,7 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
           role="listbox"
           aria-label="Shipment milestones"
         >
-          {MILESTONE_OPTIONS.map(status => (
+          {MILESTONE_OPTIONS.map((status) => (
             <li key={status}>
               <button
                 type="button"
@@ -133,10 +157,16 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
             aria-labelledby={`status-update-title-${shipmentId}`}
             aria-describedby={`status-update-message-${shipmentId}`}
           >
-            <h3 id={`status-update-title-${shipmentId}`} className="m-0 mb-2 text-[17px] font-semibold">
+            <h3
+              id={`status-update-title-${shipmentId}`}
+              className="m-0 mb-2 text-[17px] font-semibold"
+            >
               Confirm status update
             </h3>
-            <p id={`status-update-message-${shipmentId}`} className="m-0 text-text-secondary text-sm">
+            <p
+              id={`status-update-message-${shipmentId}`}
+              className="m-0 text-text-secondary text-sm"
+            >
               {dialogMessage}
             </p>
             <div className="mt-4 flex justify-end gap-2.5">
@@ -154,7 +184,7 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
                 onClick={handleConfirm}
                 disabled={isUpdating}
               >
-                {isUpdating ? 'Updating...' : 'Confirm'}
+                {isUpdating ? "Updating..." : "Confirm"}
               </button>
             </div>
           </div>
@@ -162,7 +192,11 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
       )}
 
       {successMessage && (
-        <p className="m-0 text-xs font-semibold text-accent-green" role="status" aria-live="polite">
+        <p
+          className="m-0 text-xs font-semibold text-accent-green"
+          role="status"
+          aria-live="polite"
+        >
           {successMessage}
         </p>
       )}

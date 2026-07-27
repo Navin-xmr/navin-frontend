@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -42,6 +42,9 @@ const DashboardLayout: React.FC = () => {
     'Main Menu': true,
     'System': false,
   });
+  const sidebarRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const lastFocusedElement = useRef<HTMLElement | null>(null);
 
   const navGroups: NavGroup[] = [
     {
@@ -68,6 +71,12 @@ const DashboardLayout: React.FC = () => {
   ];
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
+  const toggleSidebar = () => {
+    if (!isSidebarOpen) {
+      lastFocusedElement.current = document.activeElement as HTMLElement;
+    }
+    setIsSidebarOpen((prev) => !prev);
+  };
   const closeSidebar = () => setIsSidebarOpen(false);
   const toggleCollapse = () => setIsCollapsed(prev => !prev);
 
@@ -82,6 +91,41 @@ const DashboardLayout: React.FC = () => {
     navigate(path);
     closeSidebar();
   };
+
+  useEffect(() => {
+    if (!isSidebarOpen) return;
+
+    document.body.style.overflow = 'hidden';
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeSidebar();
+        return;
+      }
+      if (e.key !== 'Tab' || !sidebarRef.current) return;
+      const focusable = sidebarRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+      lastFocusedElement.current?.focus();
+    };
+  }, [isSidebarOpen]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#07090d] text-gray-900 dark:text-white font-sans flex">
@@ -102,6 +146,10 @@ const DashboardLayout: React.FC = () => {
 
       {/* Sidebar */}
       <aside
+        ref={sidebarRef}
+        role={isSidebarOpen ? 'dialog' : undefined}
+        aria-modal={isSidebarOpen || undefined}
+        aria-label="Main navigation"
         className={`
           bg-white dark:bg-[#0b0e14] border-r border-gray-200 dark:border-[#1e2433]
           flex flex-col shrink-0 transition-all duration-300 ease-in-out
@@ -120,6 +168,18 @@ const DashboardLayout: React.FC = () => {
               <span>NAVIN</span>
             </div>
           )}
+        <div className="flex items-center gap-3 text-xl font-bold mb-12 text-teal-600 dark:text-[#62ffff]">
+          <img src="/images/logo.svg" alt="Navin Logo" className="w-8 h-8" />
+          <span>NAVIN</span>
+          <button
+            ref={closeButtonRef}
+            className="ml-auto flex lg:hidden bg-transparent border-none text-slate-400 cursor-pointer"
+            onClick={closeSidebar}
+            aria-label="Close sidebar"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
           {isCollapsed && (
             <img src="/images/logo.svg" alt="Navin Logo" className="w-8 h-8" />

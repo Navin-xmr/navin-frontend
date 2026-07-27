@@ -4,12 +4,13 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Loader2,
   Calendar,
 } from "lucide-react";
 import StatCard, { type StatCardProps } from "../../components/dashboard/StatCard/StatCard";
 import ShipmentVolumeChart from "../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart";
 import DeliverySuccessChart from "../../components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart";
+import Skeleton from "../../components/ui/Skeleton/Skeleton";
+import DashboardWidgetSkeleton from "../../components/ui/Skeleton/DashboardWidgetSkeleton";
 import { analyticsApi } from "../../services/api/endpoints/analytics";
 import { shipmentApi } from "../../services/api/endpoints/shipments";
 import { anomalyApi } from "../../services/api/endpoints/anomalies";
@@ -170,9 +171,46 @@ const Analytics: React.FC = () => {
           </button>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center p-24 gap-4">
-          <Loader2 className="animate-spin" size={32} />
-          <p className="text-[#94a3b8] text-sm">Loading analytics data...</p>
+        <div className="flex flex-col gap-6" aria-busy="true" aria-live="polite">
+          <span className="sr-only">Loading analytics data…</span>
+          <div className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-sm:grid-cols-1">
+            {Array.from({ length: 4 }, (_, i) => (
+              <div key={i} className="bg-background-card border border-border rounded-2xl p-5">
+                <div className="flex justify-between items-start mb-5">
+                  <Skeleton width={40} height={40} rounded="lg" />
+                  <Skeleton width={48} height={14} />
+                </div>
+                <Skeleton width={90} height={12} className="mb-2" />
+                <Skeleton width={70} height={28} />
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
+            <DashboardWidgetSkeleton />
+            <DashboardWidgetSkeleton />
+          </div>
+
+          <div className="bg-[#14171e] border border-[#1e293b] rounded-2xl overflow-hidden">
+            <div className="px-6 py-5 border-b border-[#1e293b]">
+              <Skeleton width={160} height={18} />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <tbody>
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <tr key={i}>
+                      {Array.from({ length: 5 }, (_, j) => (
+                        <td key={j} className="px-6 py-4 border-b border-[rgba(30,41,59,0.5)]">
+                          <Skeleton width={j === 3 ? 70 : 100} height={j === 3 ? 22 : 16} rounded={j === 3 ? 'full' : 'md'} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-6">

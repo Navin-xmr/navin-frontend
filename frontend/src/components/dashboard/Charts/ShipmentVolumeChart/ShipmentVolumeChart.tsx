@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -28,9 +28,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   );
 }
 
-export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: ShipmentVolumeChartProps) {
+function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: ShipmentVolumeChartProps) {
   const [activeRange, setActiveRange] = useState<Range>(30);
-  const chartData = data.slice(-activeRange);
+  const chartData = useMemo(() => data.slice(-activeRange), [data, activeRange]);
   const ranges: { value: Range; label: string }[] = [
     { value: 7, label: '7D' },
     { value: 30, label: '30D' },
@@ -93,3 +93,5 @@ export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: Shipmen
     </div>
   );
 }
+
+export default memo(ShipmentVolumeChart);
