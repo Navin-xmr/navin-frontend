@@ -23,9 +23,11 @@ describe('Tag', () => {
 
   it('renders dot indicator when dot is true', () => {
     render(<Tag label="Active" variant="success" size="sm" dot />);
-    const tag = screen.getByText('Active').closest('span')!;
-    const dot = tag.querySelector('[aria-hidden="true"]');
-    expect(dot).toBeInTheDocument();
+    const labelEl = screen.getByText('Active');
+    const tagEl = labelEl.parentElement!;
+    // The dot is the first child span of the tag
+    const dot = tagEl.querySelector('span[aria-hidden="true"]');
+    expect(dot).not.toBeNull();
     expect(dot).toHaveClass('bg-emerald-400');
   });
 
