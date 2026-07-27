@@ -12,9 +12,14 @@ import {
 import { TrendingUp, TrendingDown, Minus, LineChart } from 'lucide-react';
 import { MOCK_TREND_DATA } from './mockTrendData';
 import type { TimeRange, Granularity, TrendDataPoint } from './mockTrendData';
+import { ChartLoading } from '../../ui/ChartLoading';
+import { ChartError } from '../../ui/ChartError';
 
 export interface ShipmentVolumeTrendWidgetProps {
   data?: Record<TimeRange, Record<Granularity, TrendDataPoint[]>>;
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 interface CustomTooltipProps {
@@ -87,6 +92,9 @@ function calculatePercentageChange(
 
 export default function ShipmentVolumeTrendWidget({
   data = MOCK_TREND_DATA,
+  loading,
+  error,
+  onRetry,
 }: ShipmentVolumeTrendWidgetProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [granularity, setGranularity] = useState<Granularity>('daily');
@@ -111,6 +119,14 @@ export default function ShipmentVolumeTrendWidget({
   const TrendIcon =
     trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
 
+  if (loading) {
+    return <ChartLoading rows={6} height={520} label="Loading shipment volume trend…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={520} />;
+  }
+
   return (
     <div className="bg-background-card border border-border rounded-2xl overflow-hidden">
       {/* Header */}
@@ -123,7 +139,6 @@ export default function ShipmentVolumeTrendWidget({
               <TrendIcon size={14} />
               <span>{percentage.toFixed(1)}%</span>
             </div>
-          </div>
 
           {/* Time Range Selector */}
           <select
@@ -161,7 +176,6 @@ export default function ShipmentVolumeTrendWidget({
             </button>
           ))}
         </div>
-      </div>
 
       {/* Chart body */}
       <div className="pt-5 pr-4 pb-3 pl-0 h-[400px] md:h-[300px] md:pt-4 md:pr-2 md:pb-2">
@@ -241,6 +255,5 @@ export default function ShipmentVolumeTrendWidget({
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
   );
 }

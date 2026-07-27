@@ -8,6 +8,7 @@ import {
   Map,
   Package,
   SearchX,
+  ArrowUpDown,
 } from "lucide-react";
 import EmptyState from "../../components/common/EmptyState/EmptyState";
 import { shipmentApi, type Shipment } from "../../api/shipmentApi";
@@ -135,6 +136,7 @@ const Shipments: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<
     "ALL" | ShipmentPriority
   >("ALL");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>(
     {
       status: [],
@@ -184,6 +186,24 @@ const Shipments: React.FC = () => {
       );
     }
 
+    // Wire dropdown status filter into the logic
+    if (statusFilter !== "ALL") {
+      result = result.filter((s) => s.status === statusFilter);
+    }
+
+    // Wire dropdown priority filter
+    if (priorityFilter !== "ALL") {
+      result = result.filter((s) => s.priority === priorityFilter);
+    }
+
+    // Wire timeframe filter
+    if (timeframeFilter !== "ALL") {
+      const daysAgo = parseInt(timeframeFilter, 10);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - daysAgo);
+      result = result.filter((s) => new Date(s.createdAt) >= cutoff);
+    }
+
     const { status, dateFrom, dateTo, origin, destination, priority } =
       advancedFilters;
 
@@ -217,8 +237,16 @@ const Shipments: React.FC = () => {
       const d = destination.toLowerCase();
       result = result.filter((s) => s.destination.toLowerCase().includes(d));
     }
+
+    // Apply date sorting
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+
     return result;
-  }, [shipments, searchQuery, advancedFilters]);
+  }, [shipments, searchQuery, statusFilter, priorityFilter, timeframeFilter, advancedFilters, sortOrder]);
 
   const visibleIds = useMemo(
     () => filteredShipments.map((s) => s.id),
@@ -388,6 +416,9 @@ const Shipments: React.FC = () => {
 
   const isAnyFilterActive =
     searchQuery !== "" ||
+    statusFilter !== "ALL" ||
+    priorityFilter !== "ALL" ||
+    timeframeFilter !== "ALL" ||
     advancedFilters.status.length > 0 ||
     advancedFilters.dateFrom !== "" ||
     advancedFilters.dateTo !== "" ||
@@ -473,7 +504,6 @@ const Shipments: React.FC = () => {
             {isExporting ? "Exporting…" : "Export CSV"}
           </button>
         </div>
-      </div>
 
       {view === "kanban" ? (
         <ShipmentsKanban />
@@ -593,6 +623,18 @@ const Shipments: React.FC = () => {
                 Economy
               </option>
             </select>
+
+            {/* Sort Order Toggle */}
+            <button
+              type="button"
+              onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg text-sm text-white hover:border-[#62ffff] transition-colors cursor-pointer"
+              aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
+            >
+              <ArrowUpDown size={14} />
+              <span className="text-text-secondary">{sortOrder === "desc" ? "Newest" : "Oldest"}</span>
+            </button>
+
             <ShipmentFilters onFilterChange={setAdvancedFilters} />
 
             {/* Save Current Filters Button / Inline Form */}
@@ -661,6 +703,9 @@ const Shipments: React.FC = () => {
                 label: "Clear Filters",
                 onClick: () => {
                   setSearchQuery("");
+                  setStatusFilter("ALL");
+                  setPriorityFilter("ALL");
+                  setTimeframeFilter("ALL");
                   setAdvancedFilters({
                     status: [],
                     dateFrom: "",
@@ -683,6 +728,7 @@ const Shipments: React.FC = () => {
                   ? ` of ${shipments.length} loaded`
                   : ` of ${total}`}{" "}
                 shipments
+                {sortOrder === "desc" ? " (newest first)" : " (oldest first)"}
               </div>
 
               {/* Sticky table header */}
@@ -710,7 +756,16 @@ const Shipments: React.FC = () => {
                     <th>Destination</th>
                     <th>Status</th>
                     <th>Priority</th>
-                    <th>Created Date</th>
+                    <th>
+                      <button
+                        type="button"
+                        onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                        className="inline-flex items-center gap-1 bg-transparent border-none text-inherit font-inherit cursor-pointer hover:text-[#62ffff]"
+                      >
+                        Created Date
+                        <ArrowUpDown size={12} />
+                      </button>
+                    </th>
                     <th>Actions</th>
                   </tr>
                 </thead>

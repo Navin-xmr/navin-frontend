@@ -11,6 +11,7 @@ import {
   DollarSign,
   Trash2,
   BellOff,
+  ArrowUpDown,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SearchInput from "../../components/ui/SearchInput";
@@ -40,6 +41,8 @@ const iconStyles: Record<string, string> = {
 };
 
 const itemsPerPage = 20;
+
+type SortMode = "newest" | "oldest" | "unreadFirst";
 
 const NotificationsPage = () => {
   const navigate = useNavigate();
@@ -73,14 +76,40 @@ const NotificationsPage = () => {
     return window.localStorage.getItem("notificationsGrouped") === "true";
   });
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
 
   const realtimeEvents = useRealtimeEvents(["notification:new"]);
 
+  // Sort notifications based on selected sort mode
+  const sortNotifications = useCallback(
+    (list: NotificationType[]): NotificationType[] => {
+      const sorted = [...list];
+      if (sortMode === "unreadFirst") {
+        sorted.sort((a, b) => {
+          if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
+          return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        });
+      } else if (sortMode === "oldest") {
+        sorted.sort(
+          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+        );
+      } else {
+        // newest first (default)
+        sorted.sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        );
+      }
+      return sorted;
+    },
+    [sortMode],
+  );
+
   const groupedNotifications = useMemo(() => {
+    const sortedList = sortNotifications(notificationsList);
     const rawGroups = new Map<string, NotificationType[]>();
     const standalone: NotificationType[] = [];
 
-    notificationsList.forEach((notification) => {
+    sortedList.forEach((notification) => {
       if (notification.shipmentId) {
         const group = rawGroups.get(notification.shipmentId) ?? [];
         group.push(notification);
@@ -126,7 +155,17 @@ const NotificationsPage = () => {
       shipmentGroups: sortedGroups,
       standaloneNotifications: sortedStandalone,
     };
-  }, [notificationsList]);
+  }, [notificationsList, sortNotifications]);
+
+  const sortedUnreadNotifications = useMemo(
+    () => sortNotifications(unreadNotifications),
+    [unreadNotifications, sortNotifications],
+  );
+
+  const sortedReadNotifications = useMemo(
+    () => sortNotifications(readNotifications),
+    [readNotifications, sortNotifications],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -423,8 +462,13 @@ const NotificationsPage = () => {
           <Trash2 size={16} />
         </button>
       </div>
-    </div>
   );
+
+  const sortOptions: { value: SortMode; label: string }[] = [
+    { value: "newest", label: "Newest First" },
+    { value: "oldest", label: "Oldest First" },
+    { value: "unreadFirst", label: "Unread First" },
+  ];
 
   return (
     <div className="bg-[#101922] min-h-screen text-white">
@@ -469,7 +513,6 @@ const NotificationsPage = () => {
               </button>
             ))}
           </div>
-        </div>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-8 py-12">
@@ -509,6 +552,25 @@ const NotificationsPage = () => {
                 </span>
               </button>
             ))}
+            <div className="w-px h-6 bg-[#283039]" aria-hidden="true" />
+            {/* Sort Controls */}
+            <div className="flex gap-1 bg-[#1a1f2e] rounded-lg p-[3px]" role="group" aria-label="Sort notifications">
+              {sortOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`border-none text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1 ${
+                    sortMode === opt.value
+                      ? "bg-[#2563eb] text-white"
+                      : "bg-transparent text-[#9ca3af] hover:text-white"
+                  }`}
+                  onClick={() => setSortMode(opt.value)}
+                >
+                  <ArrowUpDown size={12} />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               className={`px-4 py-2.5 border-none rounded-[20px] text-sm cursor-pointer transition-all ${
@@ -549,12 +611,10 @@ const NotificationsPage = () => {
                     <div className="h-4 rounded-lg bg-[#283039] w-full" />
                     <div className="h-4 rounded-lg bg-[#283039] w-5/6" />
                   </div>
-                </div>
                 <div className="flex justify-end gap-3">
                   <div className="h-9 w-20 rounded-md bg-[#283039]" />
                   <div className="h-9 w-9 rounded-md bg-[#283039]" />
                 </div>
-              </div>
             ))
           ) : notificationsList.length === 0 ? (
             <EmptyState
@@ -641,12 +701,12 @@ const NotificationsPage = () => {
             </>
           ) : (
             <>
-              {unreadNotifications.length > 0 && (
+              {sortedUnreadNotifications.length > 0 && (
                 <>
                   <div className="text-xs font-semibold text-[#6b7280] tracking-[0.5px] mt-4 mb-2">
                     TODAY
                   </div>
-                  {unreadNotifications.map((notification) => (
+                  {sortedUnreadNotifications.map((notification) => (
                     <NotificationCard
                       key={notification.id}
                       notification={notification}
@@ -654,12 +714,12 @@ const NotificationsPage = () => {
                   ))}
                 </>
               )}
-              {readNotifications.length > 0 && (
+              {sortedReadNotifications.length > 0 && (
                 <>
                   <div className="text-xs font-semibold text-[#6b7280] tracking-[0.5px] mt-4 mb-2">
                     EARLIER
                   </div>
-                  {readNotifications.map((notification) => (
+                  {sortedReadNotifications.map((notification) => (
                     <NotificationCard
                       key={notification.id}
                       notification={notification}
@@ -686,7 +746,6 @@ const NotificationsPage = () => {
           </div>
         )}
       </div>
-    </div>
   );
 };
 
