@@ -29,6 +29,8 @@ export { default as Tag } from './ui/Tag';
 export type { TagProps } from './ui/Tag';
 export { default as MultiSelect } from './ui/MultiSelect';
 export type { MultiSelectOption, MultiSelectProps } from './ui/MultiSelect';
+export { default as StaleDataBanner } from './ui/StaleDataBanner';
+export type { StaleDataBannerProps } from './ui/StaleDataBanner';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 
 export { default as Card, CardHeader, CardBody, CardFooter } from './Card';
