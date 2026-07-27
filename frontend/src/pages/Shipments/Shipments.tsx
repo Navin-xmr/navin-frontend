@@ -20,6 +20,11 @@ import { BulkStatusModal } from "../../components/shipment/BulkStatusModal";
 import { useBulkSelection } from "../../hooks/useBulkSelection";
 import { useToast } from "../../context/ToastContext";
 import { safeFormatDate } from "../../utils/safeFormat";
+import {
+  getShipmentRiskLevel,
+  getShipmentRiskStyle,
+} from "../../utils/shipmentRisk";
+import OverdueShipmentBadge from "../../components/shipment/OverdueShipmentBadge/OverdueShipmentBadge";
 import { useVirtualShipments } from "./hooks/useVirtualShipments";
 import ShipmentsKanban from "./KanbanView/ShipmentsKanban";
 import RouteMap from "./RouteMap/RouteMap";
@@ -874,12 +879,15 @@ const Shipments: React.FC = () => {
                       const shipment = filteredShipments[virtualRow.index];
                       if (!shipment) return null;
                       const selected = isSelected(shipment.id);
+                      const riskInfo = getShipmentRiskLevel(shipment);
+                      const riskStyle = getShipmentRiskStyle(riskInfo.level);
                       return (
                         <tr
                           key={virtualRow.key}
                           data-index={virtualRow.index}
                           ref={virtualizer.measureElement}
                           aria-selected={selected}
+                          className={riskStyle}
                           style={{
                             position: "absolute",
                             top: 0,
@@ -904,7 +912,17 @@ const Shipments: React.FC = () => {
                               className="cursor-pointer accent-[#62ffff] w-4 h-4"
                             />
                           </td>
-                          <td>{shipment.id}</td>
+                          <td>
+                            <span className="inline-flex items-center gap-1.5 flex-wrap">
+                              {shipment.id}
+                              {riskInfo.level !== "normal" && (
+                                <OverdueShipmentBadge
+                                  level={riskInfo.level}
+                                  daysOverdue={riskInfo.daysOverdue}
+                                />
+                              )}
+                            </span>
+                          </td>
                           <td>{shipment.origin}</td>
                           <td>{shipment.destination}</td>
                           <td>
