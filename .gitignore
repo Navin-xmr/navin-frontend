@@ -2,9 +2,15 @@
 test-results/
 playwright-report/
 
+# OS
 # Test snapshots
 **/__snapshots__/
 *.snap
+
+# Misc docs not needed in repo
+somzilla.md
+frontend-alignment-report.md
+SHIPMENT_VOLUME_TREND_WIDGET_SUMMARY.md
 
 # OS artifacts
 .DS_Store
