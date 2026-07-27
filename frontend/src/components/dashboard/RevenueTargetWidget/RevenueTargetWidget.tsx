@@ -12,13 +12,21 @@ import {
   getGaugeColor,
   getProjectedEndOfMonthRevenue,
 } from './revenueTargetUtils';
+import { ChartLoading } from '../../ui/ChartLoading';
+import { ChartError } from '../../ui/ChartError';
 
 interface RevenueTargetWidgetProps {
   data?: RevenueTargetData;
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
   data = buildRevenueTargetData(),
+  loading,
+  error,
+  onRetry,
 }) => {
   const achievementPercent = useMemo(() => getAchievementPercent(data.actual, data.target), [data.actual, data.target]);
   const gaugeColor = useMemo(() => getGaugeColor(achievementPercent), [achievementPercent]);
@@ -32,6 +40,14 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
       fill: gaugeColor,
     },
   ], [achievementPercent, gaugeColor]);
+
+  if (loading) {
+    return <ChartLoading rows={3} height={560} label="Loading revenue target…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={560} />;
+  }
 
   return (
     <section className="rounded-2xl border border-[#1e293b] bg-[#14171e] p-6 shadow-sm h-full">
@@ -71,7 +87,6 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
             {achievementPercent.toFixed(1)}% of target
           </p>
         </div>
-      </div>
 
       <div className="mt-2 grid gap-2 text-sm text-[#cbd5e1]">
         <div className="flex items-center justify-between">
@@ -86,7 +101,6 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
           <span className="text-[#94a3b8]">Projected EOM</span>
           <span className="font-semibold text-[#60a5fa]">{formatCurrency(projectedRevenue)}</span>
         </div>
-      </div>
 
       <div className="mt-5 rounded-xl border border-[#1e293b] bg-[#0f172a] p-4">
         <div className="mb-2 flex items-center justify-between">

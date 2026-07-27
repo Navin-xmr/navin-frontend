@@ -3,9 +3,14 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { MOCK_DELIVERY_DATA, calculateSuccessRate } from './mockDeliveryData';
 import type { DeliveryOutcome } from './mockDeliveryData';
+import { ChartLoading } from '../../../ui/ChartLoading';
+import { ChartError } from '../../../ui/ChartError';
 
 interface DeliverySuccessChartProps {
   data?: DeliveryOutcome[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 interface CustomTooltipProps {
@@ -19,13 +24,20 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     <div className="bg-[#1a1f2e] border border-border rounded-lg px-3.5 py-2.5">
       <div className="text-text-secondary text-[11px] font-semibold uppercase mb-1">{payload[0].name}</div>
       <div className="text-white text-sm font-bold">{payload[0].value} shipments</div>
-    </div>
   );
 }
 
-function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: DeliverySuccessChartProps) {
+function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA, loading, error, onRetry }: DeliverySuccessChartProps) {
   const successRate = useMemo(() => calculateSuccessRate(data), [data]);
   const total = useMemo(() => data.reduce((sum, item) => sum + item.count, 0), [data]);
+
+  if (loading) {
+    return <ChartLoading rows={4} height={480} label="Loading delivery success chart…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={480} />;
+  }
 
   return (
     <div className="p-0">
@@ -63,7 +75,6 @@ function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: DeliverySuccessChar
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
           <div className="text-[32px] md:text-[28px] font-bold text-white leading-none">{successRate}%</div>
           <div className="text-xs font-semibold text-text-secondary uppercase mt-1">Success</div>
-        </div>
       </div>
 
       {/* Legend */}
@@ -75,13 +86,11 @@ function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: DeliverySuccessChar
               <span className="text-[13px] text-text-secondary font-medium">{item.status}</span>
               <span className="text-sm text-white font-semibold">{item.count}</span>
             </div>
-          </div>
         ))}
         <div className="flex justify-between items-center pt-3 mt-1 border-t border-border">
           <span className="text-[13px] text-text-secondary font-semibold uppercase">Total</span>
           <span className="text-base text-white font-bold">{total}</span>
         </div>
-      </div>
     </div>
   );
 }
