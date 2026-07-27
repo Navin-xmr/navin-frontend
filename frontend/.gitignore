@@ -35,4 +35,12 @@ dist-ssr
 vite.config.js
 vite.config.ts.timestamp-*
 
+# Test snapshots and coverage
+**/__snapshots__/
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+html/
+
 # Somzilla issues document (root-level .gitignore handles this)

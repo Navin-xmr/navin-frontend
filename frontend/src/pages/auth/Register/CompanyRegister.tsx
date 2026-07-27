@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ChevronLeft, Check, Pencil } from "lucide-react";
+import { Eye, EyeOff, ChevronLeft, Pencil } from "lucide-react";
 import { authApi } from "../../../services/api";
 import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import { ProgressStepper, type StepDef } from "../../../components/ui/ProgressStepper";
 
 const INDUSTRIES = [
   "Agriculture",
@@ -96,7 +97,12 @@ const selectBase =
 const labelClass = "text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1";
 const errorClass = "text-[#FF4D4D] text-[0.75rem] mt-1 ml-1";
 
-const STEP_LABELS = ["Company", "Admin", "Review"];
+const REGISTER_STEPS: StepDef[] = [
+  { label: 'Company', description: 'Tell us about your company' },
+  { label: 'Admin', description: 'Set up your admin credentials' },
+  { label: 'Review', description: 'Confirm your details' },
+];
+
 const STEP_TITLES = ["Company Info", "Admin Account", "Review & Submit"];
 const STEP_DESCRIPTIONS = [
   "Tell us about your company",
@@ -193,42 +199,6 @@ const CompanyRegister: React.FC = () => {
 
 
 
-  const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8" aria-label="Registration steps">
-      {[1, 2, 3].map((s, i) => (
-        <React.Fragment key={s}>
-          <div className="flex flex-col items-center gap-1.5">
-            <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                step === s
-                  ? "bg-[#00DAC1] text-black"
-                  : step > s
-                  ? "bg-[rgba(0,218,193,0.15)] border-2 border-[#00DAC1] text-[#00DAC1]"
-                  : "bg-[rgba(255,255,255,0.05)] border-2 border-[rgba(255,255,255,0.2)] text-[rgba(255,255,255,0.4)]"
-              }`}
-              aria-current={step === s ? "step" : undefined}
-            >
-              {step > s ? <Check size={16} /> : s}
-            </div>
-            <span
-              className={`text-[0.7rem] font-medium ${
-                step >= s ? "text-[#00DAC1]" : "text-[rgba(255,255,255,0.3)]"
-              }`}
-            >
-              {STEP_LABELS[i]}
-            </span>
-          </div>
-          {i < 2 && (
-            <div
-              className={`h-px flex-1 mx-2 mb-4 transition-all ${
-                step > s ? "bg-[#00DAC1]" : "bg-[rgba(255,255,255,0.1)]"
-              }`}
-            />
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
 
 
 
@@ -592,7 +562,7 @@ const CompanyRegister: React.FC = () => {
           </p>
         </div>
 
-        {renderStepIndicator()}
+        <ProgressStepper steps={REGISTER_STEPS} currentStep={step} className="mb-8" />
 
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
