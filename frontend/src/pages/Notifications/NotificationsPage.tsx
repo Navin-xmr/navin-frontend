@@ -21,14 +21,22 @@ import {
 } from "../../services/api/endpoints/notifications";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import EmptyState from "../../components/common/EmptyState/EmptyState";
+import { useBulkSelection } from "../../hooks/useBulkSelection";
+import { useToast } from "../../context/ToastContext";
+import NotificationBulkActionBar from "../../components/notifications/NotificationBulkActionBar/NotificationBulkActionBar";
+import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
 
 type NotificationFilterType = "all" | "shipments" | "settlements" | "system";
+type ReadStateFilter = "all" | "unread" | "read";
 
 const isValidFilter = (value: string | null): value is NotificationFilterType =>
   value === "all" ||
   value === "shipments" ||
   value === "settlements" ||
   value === "system";
+
+const isValidReadState = (value: string | null): value is ReadStateFilter =>
+  value === "all" || value === "unread" || value === "read";
 
 const iconStyles: Record<string, string> = {
   shipment: "bg-[rgba(37,99,235,0.1)] text-[#3b82f6]",
@@ -53,6 +61,12 @@ const NotificationsPage = () => {
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get("q") || "",
   );
+  const [readStateFilter, setReadStateFilter] = useState<ReadStateFilter>(
+    () => {
+      const initialReadState = searchParams.get("read");
+      return isValidReadState(initialReadState) ? initialReadState : "all";
+    },
+  );
   const [notificationsList, setNotificationsList] = useState<
     NotificationType[]
   >([]);
@@ -73,14 +87,36 @@ const NotificationsPage = () => {
     return window.localStorage.getItem("notificationsGrouped") === "true";
   });
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  const { addToast } = useToast();
+  const {
+    selectedIds,
+    isSelected,
+    toggleOne,
+    toggleAll,
+    clearSelection,
+    selectedCount,
+  } = useBulkSelection("notifications-bulk-selection");
 
   const realtimeEvents = useRealtimeEvents(["notification:new"]);
+
+  const readStateFilteredNotifications = useMemo(() => {
+    if (readStateFilter === "unread") {
+      return notificationsList.filter((notification) => !notification.isRead);
+    }
+    if (readStateFilter === "read") {
+      return notificationsList.filter((notification) => notification.isRead);
+    }
+    return notificationsList;
+  }, [notificationsList, readStateFilter]);
 
   const groupedNotifications = useMemo(() => {
     const rawGroups = new Map<string, NotificationType[]>();
     const standalone: NotificationType[] = [];
 
-    notificationsList.forEach((notification) => {
+    readStateFilteredNotifications.forEach((notification) => {
       if (notification.shipmentId) {
         const group = rawGroups.get(notification.shipmentId) ?? [];
         group.push(notification);
@@ -126,7 +162,7 @@ const NotificationsPage = () => {
       shipmentGroups: sortedGroups,
       standaloneNotifications: sortedStandalone,
     };
-  }, [notificationsList]);
+  }, [readStateFilteredNotifications]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -208,6 +244,19 @@ const NotificationsPage = () => {
     });
   }, [activeFilter, searchQuery, fetchNotifications, setSearchParams]);
 
+  // Sync read-state filter to the URL without re-fetching (it's applied client-side).
+  useEffect(() => {
+    setSearchParams((prevParams) => {
+      const nextParams = new URLSearchParams(prevParams);
+      if (readStateFilter !== "all") {
+        nextParams.set("read", readStateFilter);
+      } else {
+        nextParams.delete("read");
+      }
+      return nextParams;
+    });
+  }, [readStateFilter, setSearchParams]);
+
   // Prepend new notification from realtime stream
   useEffect(() => {
     const event = realtimeEvents["notification:new"];
@@ -287,9 +336,115 @@ const NotificationsPage = () => {
       setNotificationsList((prev) =>
         prev.filter((notification) => notification.id !== id),
       );
+      if (isSelected(id)) {
+        toggleOne(id);
+      }
     } catch {
       setError("Unable to delete notification. Please try again.");
     }
+  };
+
+  const visibleIds = useMemo(
+    () => readStateFilteredNotifications.map((notification) => notification.id),
+    [readStateFilteredNotifications],
+  );
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
+  const someVisibleSelected =
+    !allVisibleSelected && visibleIds.some((id) => isSelected(id));
+
+  const handleToggleSelectAll = () => {
+    toggleAll(visibleIds);
+  };
+
+  const handleBulkMarkAsRead = async () => {
+    const ids = [...selectedIds].filter((id) => {
+      const notification = notificationsList.find((item) => item.id === id);
+      return notification && !notification.isRead;
+    });
+    if (ids.length === 0) {
+      clearSelection();
+      return;
+    }
+
+    setIsBulkProcessing(true);
+    const results = await Promise.allSettled(
+      ids.map((id) => notificationsApi.markAsRead(id)),
+    );
+    const succeededIds = ids.filter(
+      (_, index) => results[index].status === "fulfilled",
+    );
+    const failedCount = results.length - succeededIds.length;
+
+    if (succeededIds.length > 0) {
+      setNotificationsList((prev) =>
+        prev.map((notification) =>
+          succeededIds.includes(notification.id)
+            ? { ...notification, isRead: true }
+            : notification,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - succeededIds.length));
+    }
+
+    if (failedCount === 0) {
+      addToast(
+        `Marked ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"} as read.`,
+        "success",
+      );
+      clearSelection();
+    } else if (succeededIds.length > 0) {
+      addToast(
+        `Marked ${succeededIds.length} as read, ${failedCount} failed. Please try again.`,
+        "warning",
+      );
+      succeededIds.forEach((id) => {
+        if (isSelected(id)) toggleOne(id);
+      });
+    } else {
+      addToast("Unable to mark notifications as read. Please try again.", "error");
+    }
+
+    setIsBulkProcessing(false);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    const ids = [...selectedIds];
+    setIsBulkProcessing(true);
+    const results = await Promise.allSettled(
+      ids.map((id) => notificationsApi.deleteOne(id)),
+    );
+    const succeededIds = ids.filter(
+      (_, index) => results[index].status === "fulfilled",
+    );
+    const failedCount = results.length - succeededIds.length;
+
+    if (succeededIds.length > 0) {
+      setNotificationsList((prev) =>
+        prev.filter((notification) => !succeededIds.includes(notification.id)),
+      );
+    }
+
+    if (failedCount === 0) {
+      addToast(
+        `Deleted ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"}.`,
+        "success",
+      );
+      clearSelection();
+    } else if (succeededIds.length > 0) {
+      addToast(
+        `Deleted ${succeededIds.length}, ${failedCount} failed. Please try again.`,
+        "warning",
+      );
+      succeededIds.forEach((id) => {
+        if (isSelected(id)) toggleOne(id);
+      });
+    } else {
+      addToast("Unable to delete notifications. Please try again.", "error");
+    }
+
+    setIsBulkProcessing(false);
+    setIsBulkDeleteOpen(false);
   };
 
   const filterCounts = useMemo(
@@ -308,13 +463,32 @@ const NotificationsPage = () => {
     [notificationsList],
   );
 
-  const unreadNotifications = notificationsList.filter(
+  const readStateCounts = useMemo(
+    () => ({
+      all: notificationsList.length,
+      unread: notificationsList.filter((notification) => !notification.isRead)
+        .length,
+      read: notificationsList.filter((notification) => notification.isRead)
+        .length,
+    }),
+    [notificationsList],
+  );
+
+  const unreadNotifications = readStateFilteredNotifications.filter(
     (notification) => !notification.isRead,
   );
-  const readNotifications = notificationsList.filter(
+  const readNotifications = readStateFilteredNotifications.filter(
     (notification) => notification.isRead,
   );
-  const currentUnreadCount = unreadNotifications.length || unreadCount;
+  const currentUnreadCount =
+    notificationsList.filter((notification) => !notification.isRead).length ||
+    unreadCount;
+
+  const readStateFilters: { key: ReadStateFilter; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "unread", label: "Unread" },
+    { key: "read", label: "Read" },
+  ];
 
   const filters: { key: NotificationFilterType; label: string }[] = [
     { key: "all", label: "All" },
@@ -363,6 +537,16 @@ const NotificationsPage = () => {
         }
       }}
     >
+      <div className="flex items-center shrink-0 self-start pt-1">
+        <input
+          type="checkbox"
+          aria-label={`Select notification: ${notification.title}`}
+          checked={isSelected(notification.id)}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => toggleOne(notification.id)}
+          className="w-4 h-4 rounded border-[#374151] bg-transparent text-[#2563eb] focus:ring-2 focus:ring-[#2563eb] cursor-pointer"
+        />
+      </div>
       <div
         className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative ${iconStyles[notification.icon]}`}
       >
@@ -537,6 +721,56 @@ const NotificationsPage = () => {
           />
         </div>
 
+        <div
+          role="tablist"
+          aria-label="Filter by read state"
+          className="flex gap-2 mb-6"
+        >
+          {readStateFilters.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={readStateFilter === key}
+              className={`px-3.5 py-2 rounded-lg text-sm cursor-pointer transition-all flex items-center gap-2 border ${
+                readStateFilter === key
+                  ? "bg-[rgba(37,99,235,0.15)] border-[#2563eb] text-white"
+                  : "bg-transparent border-[#283039] text-[#9ca3af] hover:border-[#4b5563] hover:text-white"
+              }`}
+              onClick={() => setReadStateFilter(key)}
+            >
+              {label}
+              <span className="bg-[rgba(255,255,255,0.1)] px-2 py-0.5 rounded-xl text-xs font-semibold">
+                {readStateCounts[key]}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {!isLoading && readStateFilteredNotifications.length > 0 && (
+          <div className="flex items-center gap-3 mb-4">
+            <input
+              type="checkbox"
+              id="select-all-notifications"
+              aria-label="Select all visible notifications"
+              checked={allVisibleSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = someVisibleSelected;
+              }}
+              onChange={handleToggleSelectAll}
+              className="w-4 h-4 rounded border-[#374151] bg-transparent text-[#2563eb] focus:ring-2 focus:ring-[#2563eb] cursor-pointer"
+            />
+            <label
+              htmlFor="select-all-notifications"
+              className="text-sm text-[#9ca3af] cursor-pointer select-none"
+            >
+              {selectedCount > 0
+                ? `${selectedCount} selected`
+                : "Select all"}
+            </label>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 rounded-2xl border border-[#7f1d1d] bg-[#1f1f22] px-5 py-4 text-sm text-[#fca5a5]">
             {error}
@@ -564,14 +798,18 @@ const NotificationsPage = () => {
                 </div>
               </div>
             ))
-          ) : notificationsList.length === 0 ? (
+          ) : readStateFilteredNotifications.length === 0 ? (
             <EmptyState
               icon={<BellOff size={28} />}
               title="No notifications found"
               description={
                 searchQuery
                   ? "Try adjusting your search terms"
-                  : "You're all caught up! No notifications in this category."
+                  : readStateFilter === "unread"
+                    ? "You're all caught up! No unread notifications."
+                    : readStateFilter === "read"
+                      ? "No read notifications yet."
+                      : "You're all caught up! No notifications in this category."
               }
             />
           ) : isGrouped ? (
@@ -695,6 +933,25 @@ const NotificationsPage = () => {
           </div>
         )}
       </div>
+
+      <NotificationBulkActionBar
+        count={selectedCount}
+        onMarkRead={handleBulkMarkAsRead}
+        onDelete={() => setIsBulkDeleteOpen(true)}
+        onClear={clearSelection}
+        isProcessing={isBulkProcessing}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        title="Delete selected notifications?"
+        message={`This will permanently delete ${selectedCount} notification${selectedCount === 1 ? "" : "s"}. This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isLoading={isBulkProcessing}
+      />
     </div>
   );
 };

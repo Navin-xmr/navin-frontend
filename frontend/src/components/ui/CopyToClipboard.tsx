@@ -63,15 +63,18 @@ const CopyToClipboard: React.FC<CopyToClipboardProps> = ({
   };
 
   const handleCopy = async () => {
+    const copiedMessage = label ? `${label} copied to clipboard` : 'Copied to clipboard';
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(value);
         flagCopied();
+        addToast(copiedMessage, 'success');
         return;
       }
       // Clipboard API unavailable — try the legacy path before giving up.
       if (legacyCopy(value)) {
         flagCopied();
+        addToast(copiedMessage, 'success');
         return;
       }
       addToast('Clipboard is not available in this browser', 'error');
@@ -79,6 +82,7 @@ const CopyToClipboard: React.FC<CopyToClipboardProps> = ({
       // writeText rejected (e.g. permissions) — attempt the fallback once more.
       if (legacyCopy(value)) {
         flagCopied();
+        addToast(copiedMessage, 'success');
         return;
       }
       addToast('Failed to copy to clipboard', 'error');
