@@ -16,8 +16,8 @@ import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { useAuthContext } from "../../context/AuthContext";
 import { can } from "../../utils/rbac";
 import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
-import ShipmentPrintView from "../Shipment/sections/PrintView/ShipmentPrintView";
-import type { ShipmentPrintData } from "../Shipment/sections/PrintView/ShipmentPrintView";
+import ShipmentSummaryPrint from "../../components/shipment/ShipmentSummaryPrint/ShipmentSummaryPrint";
+import type { ShipmentSummaryPrintData } from "../../components/shipment/ShipmentSummaryPrint/ShipmentSummaryPrint";
 import DisputeForm from "../Shipment/sections/DisputeForm/DisputeForm";
 import type { DisputeData } from "../Shipment/sections/DisputeForm/DisputeForm";
 import { useLiveRegion } from "../../context/LiveRegionContext";
@@ -134,10 +134,11 @@ const ShipmentDetail: React.FC = () => {
     currency: "USD",
   };
 
-  const printData: ShipmentPrintData = {
+  const summaryPrintData: ShipmentSummaryPrintData = {
     shipmentId: id ? `#${id}` : "#SHP-992834",
     trackingNumber: id ?? "SHP-992834",
     status: currentStatus,
+    priority: shipmentHeaderData.priority,
     sender: { name: "Navin Logistics", address: shipmentHeaderData.originAddress },
     receiver: { name: "Customer", address: shipmentHeaderData.destinationAddress },
     createdAt: "2026-06-20",
@@ -147,7 +148,38 @@ const ShipmentDetail: React.FC = () => {
       timestamp: m.timestamp,
       location: m.location,
       status: m.status,
+      blockchainAddress: m.blockchainAddress,
     })),
+    costItems: [
+      { label: "Base Rate", amount: mockCostBreakdown.baseRate },
+      { label: "Weight Surcharge", amount: mockCostBreakdown.weightSurcharge },
+      { label: "Fuel Surcharge", amount: mockCostBreakdown.fuelSurcharge },
+      { label: "Insurance Fee", amount: mockCostBreakdown.insuranceFee },
+      { label: "Customs Duty", amount: mockCostBreakdown.customsDuty },
+      { label: "Discount", amount: mockCostBreakdown.discount, isDiscount: true },
+    ],
+    totalCost: { amount: mockCostBreakdown.total, currency: mockCostBreakdown.currency },
+    payment: mockPaymentData
+      ? {
+          amount: mockPaymentData.amount,
+          tokenSymbol: mockPaymentData.tokenSymbol,
+          status: mockPaymentData.status,
+          transactionHash: mockPaymentData.transactionHash,
+        }
+      : undefined,
+    sensorSnapshot: mockSensorData
+      ? {
+          temperature: mockSensorData.temperature
+            ? { value: mockSensorData.temperature.value, unit: mockSensorData.temperature.unit }
+            : undefined,
+          humidity: mockSensorData.humidity
+            ? { value: mockSensorData.humidity.value, unit: mockSensorData.humidity.unit }
+            : undefined,
+          location: mockSensorData.gps
+            ? { latitude: mockSensorData.gps.latitude, longitude: mockSensorData.gps.longitude }
+            : undefined,
+        }
+      : undefined,
     stellarTxHash: mockPaymentData?.transactionHash,
   };
 
@@ -241,7 +273,7 @@ const ShipmentDetail: React.FC = () => {
 
         <NotesSection shipmentId={id ?? shipmentHeaderData.shipmentId} userRole={shipmentHeaderData.userRole} />
 
-        {isPrinting && <ShipmentPrintView data={printData} onClose={() => setIsPrinting(false)} />}
+        {isPrinting && <ShipmentSummaryPrint data={summaryPrintData} onClose={() => setIsPrinting(false)} />}
       </div>
     </div>
   );

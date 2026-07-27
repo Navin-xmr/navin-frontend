@@ -11,6 +11,7 @@ function DataTable<T extends Record<string, unknown>>({
   onRowClick,
   pagination,
   className = '',
+  density = 'comfortable',
 }: DataTableProps<T>): React.ReactElement {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>(null);
@@ -40,10 +41,27 @@ function DataTable<T extends Record<string, unknown>>({
 
   const containerClass =
     'bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl overflow-hidden shadow-[inset_0_0_20px_0px_rgba(0,128,128,0.3)]';
+  const densityClasses = {
+    compact: {
+      th: 'px-4 py-2.5',
+      td: 'px-4 py-2.5',
+      text: 'text-xs',
+    },
+    comfortable: {
+      th: 'px-6 py-4',
+      td: 'px-6 py-4',
+      text: 'text-sm',
+    },
+    spacious: {
+      th: 'px-6 py-5',
+      td: 'px-6 py-5',
+      text: 'text-sm',
+    },
+  }[density];
   const thClass =
-    'text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]';
+    `text-left ${densityClasses.th} text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]`;
   const tdClass =
-    'px-6 py-4 text-sm text-text-primary border-b border-[rgba(98,255,255,0.2)]';
+    `${densityClasses.td} ${densityClasses.text} text-text-primary border-b border-[rgba(98,255,255,0.2)]`;
 
   const SortIcon = ({ colKey }: { colKey: string }) => {
     if (sortKey !== colKey) return <ArrowUpDown size={13} className="text-text-secondary" />;

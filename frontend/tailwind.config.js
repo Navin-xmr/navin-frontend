@@ -70,12 +70,17 @@ export default {
           '0%, 100%': { opacity: '0.5' },
           '50%': { opacity: '1' },
         },
+        'shimmer': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
       },
       animation: {
         'fade-in-up': 'fade-in-up 200ms ease-out forwards',
         'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
         'float': 'float 3s ease-in-out infinite',
         'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+        'shimmer': 'shimmer 1.5s infinite',
       },
     },
   },

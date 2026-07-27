@@ -22,6 +22,11 @@ import { BulkStatusModal } from "../../components/shipment/BulkStatusModal";
 import { useBulkSelection } from "../../hooks/useBulkSelection";
 import { useToast } from "../../context/ToastContext";
 import { safeFormatDate } from "../../utils/safeFormat";
+import {
+  getShipmentRiskLevel,
+  getShipmentRiskStyle,
+} from "../../utils/shipmentRisk";
+import OverdueShipmentBadge from "../../components/shipment/OverdueShipmentBadge/OverdueShipmentBadge";
 import { useVirtualShipments } from "./hooks/useVirtualShipments";
 import ShipmentsKanban from "./KanbanView/ShipmentsKanban";
 import RouteMap from "./RouteMap/RouteMap";
@@ -32,7 +37,9 @@ import ShipmentFilters, {
 } from "./ShipmentFilters";
 import "./Shipments.css";
 
-type ViewMode = "list" | "kanban";
+type ListMode = "table" | "grid";
+
+const LIST_MODE_KEY = "shipments-list-mode";
 
 function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
   const headers = [
@@ -125,14 +132,22 @@ const Shipments: React.FC = () => {
   const [timeframeFilter, setTimeframeFilter] = useState<"ALL" | "30" | "90">(
     "ALL",
   );
-  const [viewMode] = useState<ViewMode>(() => {
+  const [listMode, setListMode] = useState<ListMode>(() => {
     try {
-      const saved = localStorage.getItem("navin_shipments_view");
-      return saved === "kanban" ? "kanban" : "list";
+      const saved = localStorage.getItem(LIST_MODE_KEY);
+      return saved === "grid" ? "grid" : "table";
     } catch {
-      return "list";
+      return "table";
     }
   });
+  const handleListModeChange = (mode: ListMode) => {
+    setListMode(mode);
+    try {
+      localStorage.setItem(LIST_MODE_KEY, mode);
+    } catch {
+      // ignore
+    }
+  };
   const [priorityFilter, setPriorityFilter] = useState<
     "ALL" | ShipmentPriority
   >("ALL");
@@ -436,6 +451,44 @@ const Shipments: React.FC = () => {
       <div className="shipments-header">
         <h1>Shipments</h1>
         <div className="flex items-center gap-3">
+          {/* List / Grid sub-toggle (only visible in list view) */}
+          {view === "list" && (
+            <div
+              className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.15)] bg-[rgba(19,186,186,0.04)] p-0.5"
+              role="group"
+              aria-label="Toggle list or grid layout"
+            >
+              <button
+                type="button"
+                onClick={() => handleListModeChange("table")}
+                aria-pressed={listMode === "table"}
+                title="Table view"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                  listMode === "table"
+                    ? "bg-[#62ffff] text-black"
+                    : "text-[#94a3b8] hover:text-white"
+                }`}
+              >
+                <List size={14} />
+                Table
+              </button>
+              <button
+                type="button"
+                onClick={() => handleListModeChange("grid")}
+                aria-pressed={listMode === "grid"}
+                title="Grid view"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                  listMode === "grid"
+                    ? "bg-[#62ffff] text-black"
+                    : "text-[#94a3b8] hover:text-white"
+                }`}
+              >
+                <LayoutGrid size={14} />
+                Grid
+              </button>
+            </div>
+          )}
+
           {/* View toggle */}
           <div
             className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
@@ -698,6 +751,7 @@ const Shipments: React.FC = () => {
             </div>
           ) : viewMode === "kanban" ? (
             <ShipmentsKanban />
+            <div className="shipments-error">{error}</div>
           ) : isEmpty ? (
             <EmptyState
               icon={<Package size={28} />}
@@ -741,7 +795,96 @@ const Shipments: React.FC = () => {
                 shipments
               </div>
 
-              {/* Sticky table header */}
+              {listMode === "grid" ? (
+                /* ── Grid card view ── */
+                <>
+                  <div
+                    className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4"
+                    aria-label="Shipments grid"
+                  >
+                    {filteredShipments.map((shipment) => {
+                      const selected = isSelected(shipment.id);
+                      return (
+                        <div
+                          key={shipment.id}
+                          onClick={() =>
+                            navigate(`/dashboard/shipments/${shipment.id}`)
+                          }
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ")
+                              navigate(`/dashboard/shipments/${shipment.id}`);
+                          }}
+                          aria-label={`View shipment ${shipment.id}`}
+                          className={`relative flex flex-col gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-200 outline-none
+                            focus-visible:ring-2 focus-visible:ring-[#62ffff]/50
+                            ${
+                              selected
+                                ? "bg-[rgba(98,255,255,0.08)] border-[rgba(98,255,255,0.4)]"
+                                : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.07)] hover:bg-[rgba(98,255,255,0.04)] hover:border-[rgba(98,255,255,0.25)]"
+                            }`}
+                        >
+                          {/* Select checkbox */}
+                          <input
+                            type="checkbox"
+                            aria-label={`Select shipment ${shipment.id}`}
+                            checked={selected}
+                            onChange={() => toggleOne(shipment.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-3 right-3 cursor-pointer accent-[#62ffff] w-4 h-4"
+                          />
+
+                          {/* Shipment ID */}
+                          <div className="flex items-center gap-2 pr-6">
+                            <Package size={14} className="text-[#62ffff] flex-shrink-0" />
+                            <span className="text-[0.75rem] font-mono text-[#62ffff] truncate">
+                              {shipment.id}
+                            </span>
+                          </div>
+
+                          {/* Route */}
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                              <span className="font-medium text-slate-300 truncate">{shipment.origin}</span>
+                              <span className="text-slate-600">→</span>
+                              <span className="font-medium text-slate-300 truncate">{shipment.destination}</span>
+                            </div>
+                          </div>
+
+                          {/* Badges */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <StatusBadge status={shipment.status} />
+                            {shipment.priority && (
+                              <PriorityBadge priority={shipment.priority as ShipmentPriority} />
+                            )}
+                          </div>
+
+                          {/* Date */}
+                          <div className="text-[0.7rem] text-slate-600 mt-auto">
+                            {safeFormatDate(shipment.createdAt)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {isLoading && (
+                    <div className="shipments-loading" aria-live="polite">
+                      Loading more shipments…
+                    </div>
+                  )}
+                  {!hasMore && filteredShipments.length > 0 && (
+                    <div className="shipments-summary" style={{ marginTop: "0.5rem" }}>
+                      {isAnyFilterActive
+                        ? `${filteredShipments.length} matching shipments`
+                        : `All ${total} shipments loaded`}
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* ── Table view ── */
+                <>
               <table
                 className="shipments-table"
                 style={{ tableLayout: "fixed", width: "100%" }}
@@ -798,12 +941,15 @@ const Shipments: React.FC = () => {
                       const shipment = filteredShipments[virtualRow.index];
                       if (!shipment) return null;
                       const selected = isSelected(shipment.id);
+                      const riskInfo = getShipmentRiskLevel(shipment);
+                      const riskStyle = getShipmentRiskStyle(riskInfo.level);
                       return (
                         <tr
                           key={virtualRow.key}
                           data-index={virtualRow.index}
                           ref={virtualizer.measureElement}
                           aria-selected={selected}
+                          className={riskStyle}
                           style={{
                             position: "absolute",
                             top: 0,
@@ -828,7 +974,17 @@ const Shipments: React.FC = () => {
                               className="cursor-pointer accent-[#62ffff] w-4 h-4"
                             />
                           </td>
-                          <td>{shipment.id}</td>
+                          <td>
+                            <span className="inline-flex items-center gap-1.5 flex-wrap">
+                              {shipment.id}
+                              {riskInfo.level !== "normal" && (
+                                <OverdueShipmentBadge
+                                  level={riskInfo.level}
+                                  daysOverdue={riskInfo.daysOverdue}
+                                />
+                              )}
+                            </span>
+                          </td>
                           <td>{shipment.origin}</td>
                           <td>{shipment.destination}</td>
                           <td>
@@ -873,6 +1029,8 @@ const Shipments: React.FC = () => {
                     ? `${filteredShipments.length} matching shipments`
                     : `All ${total} shipments loaded`}
                 </div>
+              )}
+                </>
               )}
             </>
           )}
