@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, Loader2, LayoutGrid, List, Map } from "lucide-react";
+import {
+  Download,
+  Loader2,
+  LayoutGrid,
+  List,
+  Map,
+  Package,
+  SearchX,
+} from "lucide-react";
+import EmptyState from "../../components/common/EmptyState/EmptyState";
 import { shipmentApi, type Shipment } from "../../api/shipmentApi";
 import type { ShipmentPriority } from "../../api/shipmentApi";
 import SearchInput from "../../components/ui/SearchInput";
@@ -14,17 +23,40 @@ import { safeFormatDate } from "../../utils/safeFormat";
 import { useVirtualShipments } from "./hooks/useVirtualShipments";
 import ShipmentsKanban from "./KanbanView/ShipmentsKanban";
 import RouteMap from "./RouteMap/RouteMap";
-import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus, type Priority } from "./ShipmentFilters";
+import ShipmentFilters, {
+  type ShipmentFiltersValues,
+  type ShipmentStatus,
+  type Priority,
+} from "./ShipmentFilters";
 import "./Shipments.css";
 
 type ViewMode = "list" | "kanban";
 
 function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
-  const headers = ["Tracking Number", "Origin", "Destination", "Status", "Created At", "Expected Delivery", "Carrier"];
-  const rows = shipments.map((s) => [s.id, s.origin, s.destination, s.status, safeFormatDate(s.createdAt), "N/A", "N/A"]);
+  const headers = [
+    "Tracking Number",
+    "Origin",
+    "Destination",
+    "Status",
+    "Created At",
+    "Expected Delivery",
+    "Carrier",
+  ];
+  const rows = shipments.map((s) => [
+    s.id,
+    s.origin,
+    s.destination,
+    s.status,
+    safeFormatDate(s.createdAt),
+    "N/A",
+    "N/A",
+  ]);
 
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  const csv = [headers.map(escape).join(","), ...rows.map((r) => r.map(escape).join(","))].join("\n");
+  const csv = [
+    headers.map(escape).join(","),
+    ...rows.map((r) => r.map(escape).join(",")),
+  ].join("\n");
 
   const today = new Date().toISOString().slice(0, 10);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -53,9 +85,18 @@ const Shipments: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [pendingBulkStatus, setPendingBulkStatus] =
+    useState<ShipmentStatus | null>(null);
   const loadingRef = useRef(false);
 
-  const { selectedIds, isSelected, toggleOne, toggleAll, clearSelection, selectedCount } = useBulkSelection();
+  const {
+    selectedIds,
+    isSelected,
+    toggleOne,
+    toggleAll,
+    clearSelection,
+    selectedCount,
+  } = useBulkSelection();
 
   const [view, setView] = useState<ShipmentsView>(() => {
     try {
@@ -77,8 +118,12 @@ const Shipments: React.FC = () => {
   };
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED">("ALL");
-  const [timeframeFilter, setTimeframeFilter] = useState<"ALL" | "30" | "90">("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED"
+  >("ALL");
+  const [timeframeFilter, setTimeframeFilter] = useState<"ALL" | "30" | "90">(
+    "ALL",
+  );
   const [viewMode] = useState<ViewMode>(() => {
     try {
       const saved = localStorage.getItem("navin_shipments_view");
@@ -87,24 +132,33 @@ const Shipments: React.FC = () => {
       return "list";
     }
   });
-  const [priorityFilter, setPriorityFilter] = useState<"ALL" | ShipmentPriority>("ALL");
-  const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>({
-    status: [],
-    dateFrom: "",
-    dateTo: "",
-    carrier: "",
-    origin: "",
-    destination: "",
-    weightMin: "",
-    weightMax: "",
-    priority: [],
-  });
+  const [priorityFilter, setPriorityFilter] = useState<
+    "ALL" | ShipmentPriority
+  >("ALL");
+  const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>(
+    {
+      status: [],
+      dateFrom: "",
+      dateTo: "",
+      carrier: "",
+      origin: "",
+      destination: "",
+      weightMin: "",
+      weightMax: "",
+      priority: [],
+    },
+  );
   const [isSavingFilter, setIsSavingFilter] = useState(false);
   const [newFilterName, setNewFilterName] = useState("");
   const [savedFilters, setSavedFilters] = useState<
     {
       name: string;
-      filters: { search: string; status: string; priority: string; timeframe: string };
+      filters: {
+        search: string;
+        status: string;
+        priority: string;
+        timeframe: string;
+      };
     }[]
   >(() => {
     try {
@@ -122,10 +176,16 @@ const Shipments: React.FC = () => {
     let result = shipments;
 
     if (q) {
-      result = result.filter((s) => s.id.toLowerCase().includes(q) || s.origin.toLowerCase().includes(q) || s.destination.toLowerCase().includes(q));
+      result = result.filter(
+        (s) =>
+          s.id.toLowerCase().includes(q) ||
+          s.origin.toLowerCase().includes(q) ||
+          s.destination.toLowerCase().includes(q),
+      );
     }
 
-    const { status, dateFrom, dateTo, origin, destination, priority } = advancedFilters;
+    const { status, dateFrom, dateTo, origin, destination, priority } =
+      advancedFilters;
 
     if (status.length > 0) {
       result = result.filter((s) => status.includes(s.status));
@@ -143,7 +203,9 @@ const Shipments: React.FC = () => {
     }
 
     if (priority.length > 0) {
-      result = result.filter((s) => s.priority && priority.includes(s.priority));
+      result = result.filter(
+        (s) => s.priority && priority.includes(s.priority),
+      );
     }
 
     if (origin) {
@@ -158,9 +220,14 @@ const Shipments: React.FC = () => {
     return result;
   }, [shipments, searchQuery, advancedFilters]);
 
-  const visibleIds = useMemo(() => filteredShipments.map((s) => s.id), [filteredShipments]);
-  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
-  const someVisibleSelected = !allVisibleSelected && visibleIds.some((id) => isSelected(id));
+  const visibleIds = useMemo(
+    () => filteredShipments.map((s) => s.id),
+    [filteredShipments],
+  );
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
+  const someVisibleSelected =
+    !allVisibleSelected && visibleIds.some((id) => isSelected(id));
 
   const handleSaveFilter = (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,8 +239,12 @@ const Shipments: React.FC = () => {
       return;
     }
 
-    const savedStatus = advancedFilters.status.length === 1 ? advancedFilters.status[0] : "ALL";
-    const savedPriority = advancedFilters.priority.length === 1 ? advancedFilters.priority[0] : "ALL";
+    const savedStatus =
+      advancedFilters.status.length === 1 ? advancedFilters.status[0] : "ALL";
+    const savedPriority =
+      advancedFilters.priority.length === 1
+        ? advancedFilters.priority[0]
+        : "ALL";
 
     const newFilter = {
       name,
@@ -192,7 +263,12 @@ const Shipments: React.FC = () => {
     setIsSavingFilter(false);
   };
 
-  const handleApplyFilter = (saved: { search: string; status: string; priority: string; timeframe: string }) => {
+  const handleApplyFilter = (saved: {
+    search: string;
+    status: string;
+    priority: string;
+    timeframe: string;
+  }) => {
     setSearchQuery(saved.search || "");
     setAdvancedFilters({
       status: saved.status !== "ALL" ? [saved.status as ShipmentStatus] : [],
@@ -214,11 +290,12 @@ const Shipments: React.FC = () => {
     localStorage.setItem("navin_saved_filters", JSON.stringify(updated));
   };
 
-  const { parentRef, virtualizer, handleScroll, scrollToIndex } = useVirtualShipments({
-    shipments: filteredShipments,
-    onLoadMore: () => setCurrentPage((p) => p + 1),
-    hasMore,
-  });
+  const { parentRef, virtualizer, handleScroll, scrollToIndex } =
+    useVirtualShipments({
+      shipments: filteredShipments,
+      onLoadMore: () => setCurrentPage((p) => p + 1),
+      hasMore,
+    });
 
   useEffect(() => {
     if (loadingRef.current) return;
@@ -229,7 +306,9 @@ const Shipments: React.FC = () => {
     shipmentApi
       .getAll({ limit: PAGE_SIZE, page: currentPage })
       .then((response) => {
-        setShipments((prev) => (currentPage === 1 ? response.data : [...prev, ...response.data]));
+        setShipments((prev) =>
+          currentPage === 1 ? response.data : [...prev, ...response.data],
+        );
         setTotal(response.meta.total);
       })
       .catch((err: Error) => {
@@ -272,20 +351,35 @@ const Shipments: React.FC = () => {
   const handleExportSelected = () => {
     const selectedShipments = shipments.filter((s) => isSelected(s.id));
     if (selectedShipments.length > 0) {
-      exportShipmentsToCSV(selectedShipments, `navin-selected-shipments-${new Date().toISOString().slice(0, 10)}.csv`);
+      exportShipmentsToCSV(
+        selectedShipments,
+        `navin-selected-shipments-${new Date().toISOString().slice(0, 10)}.csv`,
+      );
     }
   };
 
   const handleBulkStatusConfirm = async (newStatus: ShipmentStatus) => {
     if (selectedIds.size === 0) return;
+    setPendingBulkStatus(newStatus);
+
+    // Optimistically update UI
+    const prevShipments = shipments;
+    setShipments((prev) =>
+      prev.map((s) =>
+        selectedIds.has(s.id) ? ({ ...s, status: newStatus } as Shipment) : s,
+      ),
+    );
+    clearSelection();
+    setIsBulkModalOpen(false);
+
+    // Apply optimistic update with rollback on failure
     setIsBulkUpdating(true);
     try {
       await shipmentApi.bulkUpdateStatus(Array.from(selectedIds), newStatus);
-      setShipments((prev) => prev.map((s) => (selectedIds.has(s.id) ? ({ ...s, status: newStatus } as Shipment) : s)));
       addToast("Status updated successfully", "success");
-      clearSelection();
-      setIsBulkModalOpen(false);
     } catch {
+      // Rollback on failure
+      setShipments(prevShipments);
       addToast("Failed to update status", "error");
     } finally {
       setIsBulkUpdating(false);
@@ -304,7 +398,11 @@ const Shipments: React.FC = () => {
     advancedFilters.weightMax !== "" ||
     advancedFilters.priority.length > 0;
   const isEmpty = !isLoading && !error && shipments.length === 0;
-  const isFilterEmpty = !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
+  const isFilterEmpty =
+    !isLoading &&
+    !error &&
+    shipments.length > 0 &&
+    filteredShipments.length === 0;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
 
@@ -324,7 +422,9 @@ const Shipments: React.FC = () => {
               onClick={() => handleViewChange("list")}
               aria-pressed={view === "list"}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                view === "list" ? "bg-[#62ffff] text-black" : "text-[#94a3b8] hover:text-white"
+                view === "list"
+                  ? "bg-[#62ffff] text-black"
+                  : "text-[#94a3b8] hover:text-white"
               }`}
             >
               <List size={14} />
@@ -335,7 +435,9 @@ const Shipments: React.FC = () => {
               onClick={() => handleViewChange("kanban")}
               aria-pressed={view === "kanban"}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                view === "kanban" ? "bg-[#62ffff] text-black" : "text-[#94a3b8] hover:text-white"
+                view === "kanban"
+                  ? "bg-[#62ffff] text-black"
+                  : "text-[#94a3b8] hover:text-white"
               }`}
             >
               <LayoutGrid size={14} />
@@ -346,7 +448,9 @@ const Shipments: React.FC = () => {
               onClick={() => handleViewChange("routeMap")}
               aria-pressed={view === "routeMap"}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                view === "routeMap" ? "bg-[#62ffff] text-black" : "text-[#94a3b8] hover:text-white"
+                view === "routeMap"
+                  ? "bg-[#62ffff] text-black"
+                  : "text-[#94a3b8] hover:text-white"
               }`}
             >
               <Map size={14} />
@@ -361,7 +465,11 @@ const Shipments: React.FC = () => {
             disabled={isExporting || shipments.length === 0}
             aria-label="Export shipments to CSV"
           >
-            {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+            {isExporting ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Download size={16} />
+            )}
             {isExporting ? "Exporting…" : "Export CSV"}
           </button>
         </div>
@@ -375,7 +483,10 @@ const Shipments: React.FC = () => {
         <>
           {/* Saved filter chips */}
           {savedFilters.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4" aria-label="Saved filters">
+            <div
+              className="flex flex-wrap gap-2 mb-4"
+              aria-label="Saved filters"
+            >
               {savedFilters.map((sf) => (
                 <button
                   key={sf.name}
@@ -400,13 +511,26 @@ const Shipments: React.FC = () => {
           {/* Filter and Search Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-6 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
             <div className="flex-1 min-w-[280px]">
-              <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Search by ID, origin, or destination..." />
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search by ID, origin, or destination..."
+              />
             </div>
 
             {/* Status Filter */}
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "ALL" | "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED")}
+              onChange={(e) =>
+                setStatusFilter(
+                  e.target.value as
+                    | "ALL"
+                    | "CREATED"
+                    | "IN_TRANSIT"
+                    | "DELIVERED"
+                    | "CANCELLED",
+                )
+              }
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
               aria-label="Filter by Status"
             >
@@ -430,7 +554,9 @@ const Shipments: React.FC = () => {
             {/* Timeframe Filter */}
             <select
               value={timeframeFilter}
-              onChange={(e) => setTimeframeFilter(e.target.value as "ALL" | "30" | "90")}
+              onChange={(e) =>
+                setTimeframeFilter(e.target.value as "ALL" | "30" | "90")
+              }
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
               aria-label="Filter by Timeframe"
             >
@@ -448,7 +574,9 @@ const Shipments: React.FC = () => {
             {/* Priority Filter */}
             <select
               value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value as "ALL" | ShipmentPriority)}
+              onChange={(e) =>
+                setPriorityFilter(e.target.value as "ALL" | ShipmentPriority)
+              }
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
               aria-label="Filter by Priority"
             >
@@ -477,7 +605,10 @@ const Shipments: React.FC = () => {
                 Save current filters
               </button>
             ) : (
-              <form onSubmit={handleSaveFilter} className="flex items-center gap-2">
+              <form
+                onSubmit={handleSaveFilter}
+                className="flex items-center gap-2"
+              >
                 <input
                   type="text"
                   required
@@ -487,7 +618,10 @@ const Shipments: React.FC = () => {
                   className="bg-[rgba(19,186,186,0.05)] border border-[#62ffff] rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
                   autoFocus
                 />
-                <button type="submit" className="px-3 py-2 bg-[#62ffff] text-black font-semibold text-sm rounded-lg hover:bg-[#4ae8e8] transition-colors cursor-pointer">
+                <button
+                  type="submit"
+                  className="px-3 py-2 bg-[#62ffff] text-black font-semibold text-sm rounded-lg hover:bg-[#4ae8e8] transition-colors cursor-pointer"
+                >
                   Save
                 </button>
                 <button
@@ -509,24 +643,53 @@ const Shipments: React.FC = () => {
           ) : viewMode === "kanban" ? (
             <ShipmentsKanban />
           ) : isEmpty ? (
-            <div className="shipments-empty">
-              <h3>No shipments available</h3>
-              <p>There are no shipments to show.</p>
-            </div>
+            <EmptyState
+              icon={<Package size={28} />}
+              title="No shipments available"
+              description="There are no shipments to show yet. Create your first shipment to get started."
+              cta={{
+                label: "Create Shipment",
+                onClick: () => navigate("/dashboard/shipments/create"),
+              }}
+            />
           ) : isFilterEmpty ? (
-            <div className="shipments-empty">
-              <h3>No results found</h3>
-              <p>No shipments match the selected filters.</p>
-            </div>
+            <EmptyState
+              icon={<SearchX size={28} />}
+              title="No results found"
+              description="No shipments match the selected filters. Try adjusting your search or filter criteria."
+              cta={{
+                label: "Clear Filters",
+                onClick: () => {
+                  setSearchQuery("");
+                  setAdvancedFilters({
+                    status: [],
+                    dateFrom: "",
+                    dateTo: "",
+                    carrier: "",
+                    origin: "",
+                    destination: "",
+                    weightMin: "",
+                    weightMax: "",
+                    priority: [],
+                  });
+                },
+              }}
+            />
           ) : (
             <>
               <div className="shipments-summary">
                 Showing {filteredShipments.length}
-                {isAnyFilterActive ? ` of ${shipments.length} loaded` : ` of ${total}`} shipments
+                {isAnyFilterActive
+                  ? ` of ${shipments.length} loaded`
+                  : ` of ${total}`}{" "}
+                shipments
               </div>
 
               {/* Sticky table header */}
-              <table className="shipments-table" style={{ tableLayout: "fixed", width: "100%" }}>
+              <table
+                className="shipments-table"
+                style={{ tableLayout: "fixed", width: "100%" }}
+              >
                 <thead>
                   <tr>
                     {/* Header checkbox — selects/deselects all visible rows */}
@@ -554,9 +717,27 @@ const Shipments: React.FC = () => {
               </table>
 
               {/* Virtualised scrollable body */}
-              <div ref={parentRef} onScroll={handleScroll} style={{ height: "500px", overflowY: "auto", position: "relative" }}>
-                <table className="shipments-table" style={{ tableLayout: "fixed", width: "100%" }} aria-label="Shipments list">
-                  <tbody style={{ display: "block", height: `${totalSize}px`, position: "relative" }}>
+              <div
+                ref={parentRef}
+                onScroll={handleScroll}
+                style={{
+                  height: "500px",
+                  overflowY: "auto",
+                  position: "relative",
+                }}
+              >
+                <table
+                  className="shipments-table"
+                  style={{ tableLayout: "fixed", width: "100%" }}
+                  aria-label="Shipments list"
+                >
+                  <tbody
+                    style={{
+                      display: "block",
+                      height: `${totalSize}px`,
+                      position: "relative",
+                    }}
+                  >
                     {virtualItems.map((virtualRow) => {
                       const shipment = filteredShipments[virtualRow.index];
                       if (!shipment) return null;
@@ -575,7 +756,9 @@ const Shipments: React.FC = () => {
                             transform: `translateY(${virtualRow.start}px)`,
                             display: "table",
                             tableLayout: "fixed",
-                            background: selected ? "rgba(98,255,255,0.06)" : undefined,
+                            background: selected
+                              ? "rgba(98,255,255,0.06)"
+                              : undefined,
                           }}
                         >
                           {/* Row checkbox */}
@@ -596,11 +779,19 @@ const Shipments: React.FC = () => {
                             <StatusBadge status={shipment.status} />
                           </td>
                           <td>
-                            <PriorityBadge priority={shipment.priority as ShipmentPriority} />
+                            <PriorityBadge
+                              priority={shipment.priority as ShipmentPriority}
+                            />
                           </td>
                           <td>{safeFormatDate(shipment.createdAt)}</td>
                           <td>
-                            <button type="button" className="verify-button" onClick={() => handleRowClick(shipment.id, virtualRow.index)}>
+                            <button
+                              type="button"
+                              className="verify-button"
+                              onClick={() =>
+                                handleRowClick(shipment.id, virtualRow.index)
+                              }
+                            >
                               View
                             </button>
                           </td>
@@ -618,8 +809,13 @@ const Shipments: React.FC = () => {
               )}
 
               {!hasMore && filteredShipments.length > 0 && (
-                <div className="shipments-summary" style={{ marginTop: "0.5rem" }}>
-                  {isAnyFilterActive ? `${filteredShipments.length} matching shipments` : `All ${total} shipments loaded`}
+                <div
+                  className="shipments-summary"
+                  style={{ marginTop: "0.5rem" }}
+                >
+                  {isAnyFilterActive
+                    ? `${filteredShipments.length} matching shipments`
+                    : `All ${total} shipments loaded`}
                 </div>
               )}
             </>
@@ -628,7 +824,12 @@ const Shipments: React.FC = () => {
       )}
 
       {/* Floating bulk action bar */}
-      <BulkActionBar count={selectedCount} onUpdateStatus={() => setIsBulkModalOpen(true)} onExport={handleExportSelected} onClear={clearSelection} />
+      <BulkActionBar
+        count={selectedCount}
+        onUpdateStatus={() => setIsBulkModalOpen(true)}
+        onExport={handleExportSelected}
+        onClear={clearSelection}
+      />
 
       {/* Bulk status update modal */}
       <BulkStatusModal
