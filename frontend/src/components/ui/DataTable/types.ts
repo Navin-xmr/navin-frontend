@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 
 export type SortDirection = 'asc' | 'desc' | null;
+export type DataTableDensity = 'compact' | 'comfortable' | 'spacious';
 
 export interface ColumnDef<T> {
   key: keyof T & string;
@@ -16,4 +17,5 @@ export interface DataTableProps<T extends object> {
   pageSize?: number;
   onRowClick?: (row: T) => void;
   isLoading?: boolean;
+  density?: DataTableDensity;
 }

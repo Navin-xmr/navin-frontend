@@ -1,5 +1,8 @@
 # Navin Frontend
 
+> 🚨 **Contributors:** All PRs must target the `dev` branch, not `main`.  
+> See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
 **Navin** is a blockchain-powered logistics platform that improves supply chain visibility for enterprises through tokenized shipments, immutable milestone tracking, and automated settlements.
 By creating a zero-trust interface between logistics providers and their clients, Navin ensures both parties access identical real-time data — removing information asymmetry and enabling seamless, dispute-free operations.
 
@@ -119,6 +122,13 @@ pnpm run test:watch   # Run tests in watch mode
 
 ## Contributing
 
+> 🌿 **Git Flow Workflow**  
+> We use a `dev` → `main` workflow:
+> - **`dev`** = Active development (all PRs go here)
+> - **`main`** = Production-ready code (Vercel deploys from here)
+> 
+> **Never submit PRs to `main` directly.** All feature work goes to `dev` first.
+
 We welcome contributors of all experience levels — whether you're building your first open-source component or you're a seasoned TypeScript developer.
 
 Read our [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide on branching, commits, PRs, and our review process.
@@ -126,7 +136,8 @@ Read our [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide on branching, com
 Quick overview:
 - Browse open issues on the [Issues page](https://github.com/Navin-xmr/navin-frontend/issues)
 - Comment on an issue and wait to be assigned before starting
-- Create a branch and implement the feature
+- **Create your branch from `dev`** (not `main`)
+- Implement the feature and **ensure your PR targets `dev`**
 - All frontend PRs **must include a screenshot** of the UI change
 - Use **pnpm** for all package management commands (not npm or yarn)
 - Use **Tailwind CSS utility classes** for styling (no vanilla CSS files for new components)
