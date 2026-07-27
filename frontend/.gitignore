@@ -55,3 +55,15 @@ workbox-*.js
 
 # Lighthouse CI
 .lighthouseci/
+# Test snapshots and artifacts
+**/__snapshots__/
+*.snap
+test-results/
+playwright-report/
+coverage/
+
+# Lint output
+lint-output.txt
+
+# Misc JSON artifacts
+vt.json
