@@ -26,6 +26,7 @@ import OnboardingTour, {
   isTourComplete,
 } from "@components/onboarding/OnboardingTour";
 import type { TourStep } from "@components/onboarding/OnboardingTour";
+import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
 
 const TOUR_STEPS: TourStep[] = [
   {
@@ -286,6 +287,8 @@ const CompanyDashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {!isLoading && <OnboardingChecklist />}
 
       {/* Stats + Quick Actions: two-column on desktop */}
       <div className="grid grid-cols-[1fr_300px] gap-6 items-start max-md:grid-cols-1 max-md:gap-3">
