@@ -11,10 +11,10 @@ export interface UseBulkSelectionReturn {
   selectedCount: number;
 }
 
-export function useBulkSelection(): UseBulkSelectionReturn {
+export function useBulkSelection(sessionKey: string = SESSION_KEY): UseBulkSelectionReturn {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => {
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
+      const raw = sessionStorage.getItem(sessionKey);
       return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
     } catch {
       return new Set<string>();
@@ -24,11 +24,11 @@ export function useBulkSelection(): UseBulkSelectionReturn {
   // Persist to sessionStorage on change
   useEffect(() => {
     try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify([...selectedIds]));
+      sessionStorage.setItem(sessionKey, JSON.stringify([...selectedIds]));
     } catch {
       // ignore
     }
-  }, [selectedIds]);
+  }, [selectedIds, sessionKey]);
 
   const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
 

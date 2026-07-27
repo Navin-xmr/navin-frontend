@@ -21,6 +21,10 @@ import {
 } from "../../services/api/endpoints/notifications";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import EmptyState from "../../components/common/EmptyState/EmptyState";
+import { useBulkSelection } from "../../hooks/useBulkSelection";
+import { useToast } from "../../context/ToastContext";
+import NotificationBulkActionBar from "../../components/notifications/NotificationBulkActionBar/NotificationBulkActionBar";
+import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
 
 type NotificationFilterType = "all" | "shipments" | "settlements" | "system";
 
@@ -73,6 +77,18 @@ const NotificationsPage = () => {
     return window.localStorage.getItem("notificationsGrouped") === "true";
   });
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  const { addToast } = useToast();
+  const {
+    selectedIds,
+    isSelected,
+    toggleOne,
+    toggleAll,
+    clearSelection,
+    selectedCount,
+  } = useBulkSelection("notifications-bulk-selection");
 
   const realtimeEvents = useRealtimeEvents(["notification:new"]);
 
@@ -287,9 +303,115 @@ const NotificationsPage = () => {
       setNotificationsList((prev) =>
         prev.filter((notification) => notification.id !== id),
       );
+      if (isSelected(id)) {
+        toggleOne(id);
+      }
     } catch {
       setError("Unable to delete notification. Please try again.");
     }
+  };
+
+  const visibleIds = useMemo(
+    () => notificationsList.map((notification) => notification.id),
+    [notificationsList],
+  );
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
+  const someVisibleSelected =
+    !allVisibleSelected && visibleIds.some((id) => isSelected(id));
+
+  const handleToggleSelectAll = () => {
+    toggleAll(visibleIds);
+  };
+
+  const handleBulkMarkAsRead = async () => {
+    const ids = [...selectedIds].filter((id) => {
+      const notification = notificationsList.find((item) => item.id === id);
+      return notification && !notification.isRead;
+    });
+    if (ids.length === 0) {
+      clearSelection();
+      return;
+    }
+
+    setIsBulkProcessing(true);
+    const results = await Promise.allSettled(
+      ids.map((id) => notificationsApi.markAsRead(id)),
+    );
+    const succeededIds = ids.filter(
+      (_, index) => results[index].status === "fulfilled",
+    );
+    const failedCount = results.length - succeededIds.length;
+
+    if (succeededIds.length > 0) {
+      setNotificationsList((prev) =>
+        prev.map((notification) =>
+          succeededIds.includes(notification.id)
+            ? { ...notification, isRead: true }
+            : notification,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - succeededIds.length));
+    }
+
+    if (failedCount === 0) {
+      addToast(
+        `Marked ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"} as read.`,
+        "success",
+      );
+      clearSelection();
+    } else if (succeededIds.length > 0) {
+      addToast(
+        `Marked ${succeededIds.length} as read, ${failedCount} failed. Please try again.`,
+        "warning",
+      );
+      succeededIds.forEach((id) => {
+        if (isSelected(id)) toggleOne(id);
+      });
+    } else {
+      addToast("Unable to mark notifications as read. Please try again.", "error");
+    }
+
+    setIsBulkProcessing(false);
+  };
+
+  const handleBulkDeleteConfirm = async () => {
+    const ids = [...selectedIds];
+    setIsBulkProcessing(true);
+    const results = await Promise.allSettled(
+      ids.map((id) => notificationsApi.deleteOne(id)),
+    );
+    const succeededIds = ids.filter(
+      (_, index) => results[index].status === "fulfilled",
+    );
+    const failedCount = results.length - succeededIds.length;
+
+    if (succeededIds.length > 0) {
+      setNotificationsList((prev) =>
+        prev.filter((notification) => !succeededIds.includes(notification.id)),
+      );
+    }
+
+    if (failedCount === 0) {
+      addToast(
+        `Deleted ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"}.`,
+        "success",
+      );
+      clearSelection();
+    } else if (succeededIds.length > 0) {
+      addToast(
+        `Deleted ${succeededIds.length}, ${failedCount} failed. Please try again.`,
+        "warning",
+      );
+      succeededIds.forEach((id) => {
+        if (isSelected(id)) toggleOne(id);
+      });
+    } else {
+      addToast("Unable to delete notifications. Please try again.", "error");
+    }
+
+    setIsBulkProcessing(false);
+    setIsBulkDeleteOpen(false);
   };
 
   const filterCounts = useMemo(
@@ -355,6 +477,16 @@ const NotificationsPage = () => {
       }`}
       onClick={() => handleNotificationClick(notification.id)}
     >
+      <div className="flex items-center shrink-0 self-start pt-1">
+        <input
+          type="checkbox"
+          aria-label={`Select notification: ${notification.title}`}
+          checked={isSelected(notification.id)}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => toggleOne(notification.id)}
+          className="w-4 h-4 rounded border-[#374151] bg-transparent text-[#2563eb] focus:ring-2 focus:ring-[#2563eb] cursor-pointer"
+        />
+      </div>
       <div
         className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative ${iconStyles[notification.icon]}`}
       >
@@ -529,6 +661,30 @@ const NotificationsPage = () => {
           />
         </div>
 
+        {!isLoading && notificationsList.length > 0 && (
+          <div className="flex items-center gap-3 mb-4">
+            <input
+              type="checkbox"
+              id="select-all-notifications"
+              aria-label="Select all visible notifications"
+              checked={allVisibleSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = someVisibleSelected;
+              }}
+              onChange={handleToggleSelectAll}
+              className="w-4 h-4 rounded border-[#374151] bg-transparent text-[#2563eb] focus:ring-2 focus:ring-[#2563eb] cursor-pointer"
+            />
+            <label
+              htmlFor="select-all-notifications"
+              className="text-sm text-[#9ca3af] cursor-pointer select-none"
+            >
+              {selectedCount > 0
+                ? `${selectedCount} selected`
+                : "Select all"}
+            </label>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 rounded-2xl border border-[#7f1d1d] bg-[#1f1f22] px-5 py-4 text-sm text-[#fca5a5]">
             {error}
@@ -686,6 +842,25 @@ const NotificationsPage = () => {
           </div>
         )}
       </div>
+
+      <NotificationBulkActionBar
+        count={selectedCount}
+        onMarkRead={handleBulkMarkAsRead}
+        onDelete={() => setIsBulkDeleteOpen(true)}
+        onClear={clearSelection}
+        isProcessing={isBulkProcessing}
+      />
+
+      <ConfirmDialog
+        isOpen={isBulkDeleteOpen}
+        onClose={() => setIsBulkDeleteOpen(false)}
+        onConfirm={handleBulkDeleteConfirm}
+        title="Delete selected notifications?"
+        message={`This will permanently delete ${selectedCount} notification${selectedCount === 1 ? "" : "s"}. This action cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isLoading={isBulkProcessing}
+      />
     </div>
   );
 };
