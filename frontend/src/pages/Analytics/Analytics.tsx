@@ -1,41 +1,43 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Package,
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Calendar,
 } from "lucide-react";
 import StatCard, { type StatCardProps } from "../../components/dashboard/StatCard/StatCard";
 import ShipmentVolumeChart from "../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart";
 import DeliverySuccessChart from "../../components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart";
 import Skeleton from "../../components/ui/Skeleton/Skeleton";
 import DashboardWidgetSkeleton from "../../components/ui/Skeleton/DashboardWidgetSkeleton";
+import AnalyticsFilters, { type AnalyticsFiltersValues } from "./AnalyticsFilters";
 import { analyticsApi } from "../../services/api/endpoints/analytics";
 import { shipmentApi } from "../../services/api/endpoints/shipments";
 import { anomalyApi } from "../../services/api/endpoints/anomalies";
 import type { Shipment } from "../../services/api/endpoints/shipments";
+import { useLiveRegion } from "../../context/LiveRegionContext";
 
 interface AnalyticsMetrics {
-  totalShipments: number;
   onTimeRate: number;
   avgTransitDays: number;
   activeAnomalies: number;
 }
 
-const defaultDateRange = () => {
+const defaultFilters = (): AnalyticsFiltersValues => {
   const end = new Date();
   const start = new Date();
   start.setMonth(start.getMonth() - 1);
   return {
     startDate: start.toISOString().split("T")[0],
     endDate: end.toISOString().split("T")[0],
+    regions: [],
+    shipmentTypes: [],
   };
 };
 
 const Analytics: React.FC = () => {
+  const { announce } = useLiveRegion();
   const [metrics, setMetrics] = useState<AnalyticsMetrics>({
-    totalShipments: 0,
     onTimeRate: 0,
     avgTransitDays: 0,
     activeAnomalies: 0,
@@ -43,16 +45,19 @@ const Analytics: React.FC = () => {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState(defaultDateRange);
+  const [filters, setFilters] = useState<AnalyticsFiltersValues>(defaultFilters);
+
+  const dateRangeInvalid =
+    !!filters.startDate && !!filters.endDate && filters.startDate > filters.endDate;
 
   const fetchData = useCallback(async () => {
+    if (dateRangeInvalid) return;
     try {
       setLoading(true);
       setError(null);
 
-      const [perfData, shipData, anomData] = await Promise.all([
-        analyticsApi.getPerformance(dateRange.startDate, dateRange.endDate),
-        shipmentApi.getAll({ limit: 1 }),
+      const [perfData, anomData] = await Promise.all([
+        analyticsApi.getPerformance(filters.startDate, filters.endDate),
         anomalyApi.getAll({ limit: 1 }),
       ]);
 
@@ -68,7 +73,6 @@ const Analytics: React.FC = () => {
         ) || 1;
 
       setMetrics({
-        totalShipments: shipData.data.length,
         onTimeRate: Math.round(
           (1 - perfData.totalDelayedShipments / total) * 100,
         ),
@@ -83,7 +87,7 @@ const Analytics: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [dateRange]);
+  }, [filters.startDate, filters.endDate, dateRangeInvalid]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -91,12 +95,47 @@ const Analytics: React.FC = () => {
     });
   }, [fetchData]);
 
+  // Region and shipment type aren't tracked as dedicated fields on the shipment
+  // record today, so "Region" filters by origin city and "Shipment Type" filters
+  // by the existing priority tier (URGENT/STANDARD/ECONOMY) — the closest
+  // categorical attributes available. Both apply client-side to the shipments
+  // already loaded for the selected date range; the performance/anomaly stat
+  // cards are date-range scoped only, since the backend has no region/type
+  // breakdown for those endpoints.
+  const regionOptions = useMemo(
+    () => Array.from(new Set(shipments.map((s) => s.origin))).sort(),
+    [shipments],
+  );
+
+  const filteredShipments = useMemo(() => {
+    return shipments.filter((s) => {
+      const matchesRegion =
+        filters.regions.length === 0 || filters.regions.includes(s.origin);
+      const matchesType =
+        filters.shipmentTypes.length === 0 ||
+        (s.priority ? filters.shipmentTypes.includes(s.priority) : false);
+      return matchesRegion && matchesType;
+    });
+  }, [shipments, filters.regions, filters.shipmentTypes]);
+
+  const filtersActive = filters.regions.length > 0 || filters.shipmentTypes.length > 0;
+
+  const handleFiltersChange = (next: AnalyticsFiltersValues) => {
+    setFilters(next);
+    const nextActive = next.regions.length > 0 || next.shipmentTypes.length > 0;
+    if (nextActive) {
+      announce("Analytics filters updated.");
+    } else if (filtersActive) {
+      announce("Filters cleared.");
+    }
+  };
+
   const statCards: StatCardProps[] = [
     {
       label: "Total Shipments",
-      value: metrics.totalShipments.toLocaleString(),
-      trend: `${metrics.totalShipments > 0 ? "+" : ""}${metrics.totalShipments}`,
-      trendType: metrics.totalShipments > 0 ? "up" : "neutral",
+      value: filteredShipments.length.toLocaleString(),
+      trend: `${filteredShipments.length > 0 ? "+" : ""}${filteredShipments.length}`,
+      trendType: filteredShipments.length > 0 ? "up" : "neutral",
       icon: <Package size={18} />,
     },
     {
@@ -134,28 +173,12 @@ const Analytics: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-[#14171e] border border-[#1e293b] rounded-lg px-3 py-2">
-            <Calendar size={14} className="text-[#64748b]" />
-            <input
-              type="date"
-              value={dateRange.startDate}
-              onChange={(e) =>
-                setDateRange((prev) => ({ ...prev, startDate: e.target.value }))
-              }
-              className="bg-transparent border-none text-white text-sm outline-none w-[130px] [color-scheme:dark]"
-            />
-            <span className="text-[#64748b]">—</span>
-            <input
-              type="date"
-              value={dateRange.endDate}
-              onChange={(e) =>
-                setDateRange((prev) => ({ ...prev, endDate: e.target.value }))
-              }
-              className="bg-transparent border-none text-white text-sm outline-none w-[130px] [color-scheme:dark]"
-            />
-          </div>
-        </div>
+        <AnalyticsFilters
+          values={filters}
+          onChange={handleFiltersChange}
+          regionOptions={regionOptions}
+          disabled={loading}
+        />
       </div>
 
       {error ? (
@@ -257,8 +280,8 @@ const Analytics: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {shipments.length > 0 ? (
-                    shipments.slice(0, 10).map((s) => (
+                  {filteredShipments.length > 0 ? (
+                    filteredShipments.slice(0, 10).map((s) => (
                       <tr key={s._id} className="group hover:bg-[rgba(255,255,255,0.02)]">
                         <td className="px-6 py-4 text-sm text-[#94a3b8] font-mono border-b border-[rgba(30,41,59,0.5)]">
                           {s.trackingNumber}
@@ -291,11 +314,25 @@ const Analytics: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td
-                        colSpan={5}
-                        className="text-center px-6 py-12 text-[#64748b]"
-                      >
-                        No shipment data found for the selected period
+                      <td colSpan={5} className="px-6 py-12">
+                        <div className="flex flex-col items-center gap-2 text-center">
+                          <p className="text-[#64748b] text-sm">
+                            {filtersActive
+                              ? "No shipments match the selected filters."
+                              : "No shipment data found for the selected period."}
+                          </p>
+                          {filtersActive && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleFiltersChange({ ...filters, regions: [], shipmentTypes: [] })
+                              }
+                              className="text-xs text-[#3b82f6] hover:underline cursor-pointer"
+                            >
+                              Clear filters
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )}
