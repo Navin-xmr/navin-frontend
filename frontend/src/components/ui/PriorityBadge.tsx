@@ -1,5 +1,5 @@
 import React from 'react';
-import Tag, { TagVariant } from '../ui/Tag';
+import Tag, { TagVariant } from './Tag';
 
 export interface PriorityBadgeProps {
   priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';

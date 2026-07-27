@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, AlertTriangle, Inbox } from 'lucide-react';
+import { AlertTriangle, Inbox } from 'lucide-react';
 
 export interface CardProps {
   children: React.ReactNode;
@@ -140,7 +140,6 @@ export const CardError: React.FC<CardErrorProps> = ({
           onClick={onRetry}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent-blue text-white text-sm font-semibold hover:bg-blue-600 transition-colors min-h-[44px]"
         >
-          <Loader2 size={14} className="hidden group-loading:animate-spin" />
           Try again
         </button>
       )}

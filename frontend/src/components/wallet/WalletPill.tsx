@@ -17,8 +17,8 @@ const WalletPill: React.FC = () => {
         aria-label="Connect wallet"
       >
         <Wallet size={16} className="shrink-0" />
-        <span className="max-xs:hidden">Connect Wallet</span>
-        <span className="xs:hidden">Connect</span>
+        <span className="hidden sm:inline">Connect Wallet</span>
+        <span className="sm:hidden">Connect</span>
       </button>
     );
   }
@@ -31,7 +31,7 @@ const WalletPill: React.FC = () => {
         aria-label={`Wallet connected: ${publicKey}`}
       >
         <Wallet size={16} className="shrink-0 text-emerald-500" />
-        <span className="font-mono max-xs:hidden">{truncate(publicKey)}</span>
+        <span className="font-mono hidden sm:inline">{truncate(publicKey)}</span>
       </button>
       <button
         onClick={disconnect}
