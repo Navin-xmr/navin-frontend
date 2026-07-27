@@ -8,6 +8,8 @@ import {
   Map,
   Package,
   SearchX,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import EmptyState from "../../components/common/EmptyState/EmptyState";
 import { shipmentApi, type Shipment } from "../../api/shipmentApi";
@@ -86,6 +88,7 @@ const Shipments: React.FC = () => {
   const { addToast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [retryKey, setRetryKey] = useState(0);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -202,6 +205,8 @@ const Shipments: React.FC = () => {
 
     if (status.length > 0) {
       result = result.filter((s) => status.includes(s.status));
+    } else if (statusFilter !== "ALL") {
+      result = result.filter((s) => s.status === statusFilter);
     }
 
     if (dateFrom) {
@@ -219,6 +224,8 @@ const Shipments: React.FC = () => {
       result = result.filter(
         (s) => s.priority && priority.includes(s.priority),
       );
+    } else if (priorityFilter !== "ALL") {
+      result = result.filter((s) => s.priority === priorityFilter);
     }
 
     if (origin) {
@@ -230,8 +237,21 @@ const Shipments: React.FC = () => {
       const d = destination.toLowerCase();
       result = result.filter((s) => s.destination.toLowerCase().includes(d));
     }
+    if (timeframeFilter !== "ALL") {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - Number(timeframeFilter));
+      result = result.filter((s) => new Date(s.createdAt) >= cutoff);
+    }
+
     return result;
-  }, [shipments, searchQuery, advancedFilters]);
+  }, [
+    shipments,
+    searchQuery,
+    advancedFilters,
+    statusFilter,
+    priorityFilter,
+    timeframeFilter,
+  ]);
 
   const visibleIds = useMemo(
     () => filteredShipments.map((s) => s.id),
@@ -331,7 +351,7 @@ const Shipments: React.FC = () => {
         setIsLoading(false);
         loadingRef.current = false;
       });
-  }, [currentPage]);
+  }, [currentPage, retryKey]);
 
   // Restore scroll position on mount
   useEffect(() => {
@@ -396,6 +416,14 @@ const Shipments: React.FC = () => {
     } finally {
       setIsBulkUpdating(false);
     }
+  };
+
+  const handleRetry = () => {
+    loadingRef.current = false;
+    setShipments([]);
+    setTotal(0);
+    setCurrentPage(1);
+    setRetryKey((value) => value + 1);
   };
 
   const isAnyFilterActive =
@@ -689,6 +717,40 @@ const Shipments: React.FC = () => {
           </div>
 
           {error ? (
+            <div
+              className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-left"
+              role="alert"
+              aria-live="assertive"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex gap-3">
+                  <AlertTriangle
+                    size={22}
+                    className="mt-0.5 shrink-0 text-red-300"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <h2 className="m-0 text-base font-semibold text-red-100">
+                      Shipments could not be loaded
+                    </h2>
+                    <p className="mt-1 text-sm text-red-100/80">{error}</p>
+                    <p className="mt-2 text-xs text-red-100/60">
+                      Check your connection or API configuration, then retry. Existing filters are preserved.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-100 transition-colors hover:bg-red-300/10 focus:outline-none focus:ring-2 focus:ring-red-300/40"
+                >
+                  <RefreshCw size={14} />
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : viewMode === "kanban" ? (
+            <ShipmentsKanban />
             <div className="shipments-error">{error}</div>
           ) : isEmpty ? (
             <EmptyState
