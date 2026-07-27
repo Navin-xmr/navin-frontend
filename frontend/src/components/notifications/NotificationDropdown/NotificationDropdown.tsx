@@ -89,7 +89,6 @@ export const NotificationDropdown: React.FC = () => {
         case " ":
           if (focusIndex >= 0 && focusIndex < visibleNotifications.length) {
             e.preventDefault();
-            const n = visibleNotifications[focusIndex];
             setIsOpen(false);
             setFocusIndex(-1);
             toggleRef.current?.focus();
@@ -196,7 +195,7 @@ export const NotificationDropdown: React.FC = () => {
             role="list"
             className="overflow-y-auto max-h-[360px] py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e2433] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb:hover]:bg-[#334155]"
           >
-            {visibleNotifications.map((n, index) => (
+            {visibleNotifications.map((n, _index) => (
               <div
                 role="listitem"
                 tabIndex={0}

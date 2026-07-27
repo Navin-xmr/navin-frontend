@@ -24,8 +24,9 @@ describe('Tag', () => {
   it('renders dot indicator when dot is true', () => {
     render(<Tag label="Active" variant="success" size="sm" dot />);
     const tag = screen.getByText('Active').closest('span')!;
-    const dot = tag.querySelector('.rounded-full.w-1\\.5');
+    const dot = tag.querySelector('[aria-hidden="true"]');
     expect(dot).toBeInTheDocument();
+    expect(dot).toHaveClass('bg-emerald-400');
   });
 
   it('renders all variant classes correctly', () => {
