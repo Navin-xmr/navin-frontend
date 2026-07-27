@@ -45,6 +45,14 @@ const statusClasses: Record<SettlementStatus, string> = {
     "bg-[rgba(239,68,68,0.15)] text-[#f87171] border border-[rgba(239,68,68,0.3)]",
 };
 
+const statusDotClasses: Record<SettlementStatus, string> = {
+  PENDING: "bg-[#fbbf24]",
+  ESCROWED: "bg-[#62ffff]",
+  RELEASED: "bg-[#34d399]",
+  DISPUTED: "bg-[#f87171]",
+  FAILED: "bg-[#f87171]",
+};
+
 const toStatusLabel = (s: SettlementStatus) => s;
 
 const LoadingState: React.FC = () => (
@@ -253,38 +261,38 @@ export default function Settlements() {
       </div>
 
       {/* Summary cards (simple; designed to be replaced with PaymentSummaryCards integration) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
+          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
             Total settled
           </div>
-          <div className="text-[32px] font-bold leading-none max-md:text-2xl">
+          <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {summary.totalSettledAmount.toLocaleString(undefined, {
               maximumFractionDigits: 2,
             })}
           </div>
         </div>
-        <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
+          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
             Pending
           </div>
-          <div className="text-[32px] font-bold leading-none max-md:text-2xl">
+          <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {summary.pendingCount}
           </div>
         </div>
-        <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
+          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
             Disputed
           </div>
-          <div className="text-[32px] font-bold leading-none max-md:text-2xl">
+          <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {summary.disputedCount}
           </div>
         </div>
-        <div className="relative bg-background-card border border-border rounded-2xl p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-xs font-semibold uppercase mb-2">
+        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
+          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
             Total records
           </div>
-          <div className="text-[32px] font-bold leading-none max-md:text-2xl">
+          <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {total}
           </div>
         </div>
@@ -300,8 +308,9 @@ export default function Settlements() {
         </div>
       ) : (
         <>
-          <div className={`${tableContainerClass} md:overflow-x-auto`}>
-            <table className="w-full border-collapse md:min-w-200">
+          {/* Desktop table view */}
+          <div className={`${tableContainerClass} hidden md:block overflow-x-auto`}>
+            <table className="w-full border-collapse min-w-200">
               <thead className="bg-[rgba(19,186,186,0.1)]">
                 <tr>
                   <th
@@ -419,16 +428,112 @@ export default function Settlements() {
             </table>
           </div>
 
-          <div className="flex justify-between items-center px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] md:flex-col md:gap-4">
+          {/* Mobile card view */}
+          <div className="md:hidden flex flex-col gap-3">
+            {settlements.map((s) => {
+              const url = getStellarExplorerUrl(s.stellarTxHash);
+              const hasActions =
+                can(role, "settlement:release-payment") ||
+                can(role, "settlement:dispute");
+              return (
+                <button
+                  key={s._id}
+                  type="button"
+                  onClick={() => void onOpen(s)}
+                  className="w-full text-left bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-4 shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] transition-all active:bg-[rgba(19,186,186,0.1)]"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase ${statusClasses[s.status]}`}
+                    >
+                      <span
+                        className={`inline-block w-1.5 h-1.5 rounded-full ${statusDotClasses[s.status]}`}
+                      />
+                      {toStatusLabel(s.status)}
+                    </span>
+                    <span className="text-xs text-text-secondary">
+                      {new Date(s.createdAt).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-text-secondary uppercase">Shipment</span>
+                      <Link
+                        to={`/dashboard/shipments/${s.shipmentId}`}
+                        className="text-[#62ffff] font-semibold text-sm no-underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {s.shipmentId}
+                      </Link>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-text-secondary uppercase">Amount</span>
+                      <span className="font-semibold text-sm">
+                        {s.amount.toLocaleString()}{" "}
+                        <span className="text-[11px] text-text-secondary uppercase">{s.token}</span>
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-text-secondary uppercase">Tx</span>
+                      {url ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[#62ffff] text-sm no-underline flex items-center gap-1"
+                        >
+                          {truncateHash(s.stellarTxHash)}
+                          <ExternalLink size={12} />
+                        </a>
+                      ) : (
+                        <span className="text-text-secondary text-sm">-</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {hasActions && (
+                    <div className="flex gap-2 mt-3 pt-3 border-t border-[rgba(98,255,255,0.15)]">
+                      {can(role, "settlement:release-payment") &&
+                        s.status === "ESCROWED" && (
+                          <button
+                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 active:bg-green-500/30 min-h-[40px]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Release Payment
+                          </button>
+                        )}
+                      {can(role, "settlement:dispute") &&
+                        s.status !== "DISPUTED" && (
+                          <button
+                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 active:bg-red-500/30 min-h-[40px]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Dispute
+                          </button>
+                        )}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 px-4 sm:px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)]">
             <div className="text-sm text-text-secondary">
               Page {currentPage} of {totalPages}
             </div>
-            <div className="flex gap-2 md:w-full md:justify-center">
+            <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto justify-center flex-wrap">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 aria-label="Previous page"
-                className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -436,7 +541,7 @@ export default function Settlements() {
                 <button
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`border px-3 py-2 rounded-md text-sm font-semibold cursor-pointer min-w-9 transition-all ${
+                  className={`border px-3 py-2 rounded-md text-sm font-semibold cursor-pointer min-w-[36px] min-h-[36px] transition-all ${
                     currentPage === i + 1
                       ? "bg-[#62ffff] border-[#62ffff] text-black"
                       : "bg-transparent border-[rgba(98,255,255,0.2)] text-text-primary hover:bg-[rgba(98,255,255,0.1)] hover:border-[#62ffff] hover:text-[#62ffff]"
@@ -451,7 +556,7 @@ export default function Settlements() {
                 }
                 disabled={currentPage === totalPages}
                 aria-label="Next page"
-                className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={16} />
               </button>

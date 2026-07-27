@@ -108,6 +108,14 @@ const CostBreakdown: React.FC<CostBreakdownProps> = ({
         { key: "discount", label: "Discount", amount: data.discount ?? 0, currency: data.currency, isDiscount: true, hideIfZero: true },
       ]
     : [];
+  const subtotal = data
+    ? data.baseRate +
+      data.weightSurcharge +
+      data.fuelSurcharge +
+      data.insuranceFee +
+      (data.customsDuty ?? 0)
+    : 0;
+  const discount = data?.discount ?? 0;
 
   return (
     <div
@@ -158,11 +166,33 @@ const CostBreakdown: React.FC<CostBreakdownProps> = ({
                 />
               ))}
 
+            <div className="mt-4 rounded-xl border border-[rgba(0,212,200,0.16)] bg-[rgba(0,212,200,0.05)] p-4">
+              <div className="flex items-center justify-between gap-4 text-sm">
+                <span className="text-[rgba(255,255,255,0.6)]">Subtotal before discounts</span>
+                <span className="font-semibold tabular-nums text-[rgba(255,255,255,0.9)]">
+                  {formatLocalizedCurrency(subtotal, data.currency)}
+                </span>
+              </div>
+              {discount > 0 && (
+                <div className="mt-2 flex items-center justify-between gap-4 text-sm">
+                  <span className="text-[rgba(255,255,255,0.6)]">Applied discount</span>
+                  <span className="font-semibold tabular-nums text-green-400">
+                    -{formatLocalizedCurrency(discount, data.currency)}
+                  </span>
+                </div>
+              )}
+            </div>
+
             {/* Total row — visually distinct */}
             <div className="flex items-center justify-between pt-5 mt-3">
-              <span className="text-[rgba(255,255,255,0.6)] text-sm uppercase tracking-widest font-semibold">
-                Total
-              </span>
+              <div>
+                <span className="text-[rgba(255,255,255,0.6)] text-sm uppercase tracking-widest font-semibold">
+                  Settlement total
+                </span>
+                <p className="m-0 mt-1 text-xs text-[rgba(255,255,255,0.35)]">
+                  Amount used for escrow and release calculations.
+                </p>
+              </div>
               <div className="bg-[rgba(0,212,200,0.12)] border border-[rgba(0,212,200,0.35)] rounded-xl px-5 py-2">
                 <span className="text-[#00d4c8] text-xl font-bold tabular-nums">
                   {formatLocalizedCurrency(data.total, data.currency)}

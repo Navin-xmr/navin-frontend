@@ -1,4 +1,5 @@
 import React from 'react';
+import Tag, { TagVariant } from './Tag';
 
 export interface PriorityBadgeProps {
   priority?: 'URGENT' | 'STANDARD' | 'ECONOMY';
@@ -6,10 +7,10 @@ export interface PriorityBadgeProps {
   onClick?: () => void;
 }
 
-const PRIORITY_CLASSES: Record<NonNullable<PriorityBadgeProps['priority']>, string> = {
-  URGENT: 'bg-red-500/15 text-red-400 border border-red-500/30',
-  STANDARD: 'bg-blue-500/15 text-blue-400 border border-blue-500/30',
-  ECONOMY: 'bg-gray-500/15 text-gray-400 border border-gray-500/30',
+const PRIORITY_VARIANT: Record<NonNullable<PriorityBadgeProps['priority']>, TagVariant> = {
+  URGENT: 'danger',
+  STANDARD: 'info',
+  ECONOMY: 'neutral',
 };
 
 const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, className = '', onClick }) => {
@@ -19,13 +20,13 @@ const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, className = '',
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${PRIORITY_CLASSES[priority]} ${className} ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+      className={onClick ? 'cursor-pointer' : ''}
     >
-      {label}
+      <Tag label={label} variant={PRIORITY_VARIANT[priority]} size="sm" dot className={className} />
     </span>
   );
 };

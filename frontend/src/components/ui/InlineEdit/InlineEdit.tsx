@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Check, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect, KeyboardEvent, useId } from 'react';
+import { Check, Loader2, AlertCircle, X } from 'lucide-react';
 
 export interface InlineEditProps {
   value: string;
@@ -21,6 +21,8 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const helpId = useId();
+  const errorId = useId();
 
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
@@ -82,6 +84,8 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
     }
   };
 
+  const hasChanges = currentValue !== value;
+
   if (isEditing) {
     return (
       <div className="flex flex-col gap-1 items-start w-full relative">
@@ -96,6 +100,8 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
               }}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorId : helpId}
               className={`w-full min-h-[80px] px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-y text-sm transition-colors ${
                 error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
               }`}
@@ -111,6 +117,8 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
               }}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? errorId : helpId}
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-sm transition-colors ${
                 error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
               }`}
@@ -118,17 +126,35 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
           )}
           
           <button
+            type="button"
             onClick={handleSave}
-            disabled={isLoading}
+            disabled={isLoading || !hasChanges}
             className="flex-shrink-0 p-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
             title="Save"
-            aria-label="Save"
+            aria-label="Save inline edit"
           >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={isLoading}
+            className="flex-shrink-0 p-2 text-slate-600 bg-white border border-gray-300 rounded-md hover:bg-slate-50 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+            title="Cancel"
+            aria-label="Cancel inline edit"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
+        <p id={helpId} className="text-xs text-slate-500">
+          Press Enter to save or Escape to cancel.
+        </p>
         {error && (
-          <div className="flex items-center gap-1 text-sm text-red-600 mt-1 animate-in fade-in slide-in-from-top-1">
+          <div
+            id={errorId}
+            className="flex items-center gap-1 text-sm text-red-600 mt-1 animate-in fade-in slide-in-from-top-1"
+            role="alert"
+          >
             <AlertCircle className="w-4 h-4" />
             <span>{error}</span>
           </div>
@@ -148,11 +174,16 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
       }}
       role="button"
       tabIndex={0}
-      aria-label="Click to edit"
+      aria-label={`Edit ${value || placeholder}`}
       className={`px-3 py-2 -mx-3 -my-2 rounded-md cursor-text focus:outline-none focus:bg-slate-100 hover:bg-slate-100 transition-colors duration-300 group ${
         isSuccess ? 'bg-green-100 text-green-800' : 'text-slate-900'
       }`}
     >
+      {isSuccess && (
+        <span className="sr-only" role="status">
+          Inline edit saved successfully.
+        </span>
+      )}
       {value ? (
         <span className={`${type === 'textarea' ? 'whitespace-pre-wrap block' : 'block break-words'} ${isSuccess ? 'font-medium' : ''}`}>
           {value}
