@@ -70,3 +70,23 @@ export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/
 export { OnboardingTour } from './onboarding';
 export type { OnboardingTourProps, TourStep } from './onboarding';
 export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';
+
+// Skeletons
+export {
+  Skeleton,
+  ShipmentCardSkeleton,
+  TableRowSkeleton,
+  DashboardWidgetSkeleton,
+  ProfileSkeleton,
+  CardSkeleton,
+  TableSkeleton,
+} from './ui/Skeleton';
+export type {
+  SkeletonProps,
+  ShipmentCardSkeletonProps,
+  TableRowSkeletonProps,
+  DashboardWidgetSkeletonProps,
+  ProfileSkeletonProps,
+  CardSkeletonProps,
+  TableSkeletonProps,
+} from './ui/Skeleton';
