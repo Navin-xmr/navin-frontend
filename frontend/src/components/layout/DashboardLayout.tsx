@@ -14,6 +14,7 @@ import {
   Bell,
   User,
   History,
+  Star,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -28,6 +29,7 @@ interface NavItem {
   path: string;
 }
 
+const FAVORITES_STORAGE_KEY = 'navin_dashboard_favorites';
 interface NavGroup {
   label: string;
   items: NavItem[];
@@ -37,6 +39,14 @@ const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [favoritePaths, setFavoritePaths] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      const parsed = saved ? (JSON.parse(saved) as unknown) : [];
+      return Array.isArray(parsed) && parsed.every((item) => typeof item === 'string') ? parsed : [];
+    } catch {
+      return [];
+    }
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     'Main Menu': true,
@@ -45,6 +55,42 @@ const DashboardLayout: React.FC = () => {
   const sidebarRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
+
+  const mainMenu: NavItem[] = [
+    { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
+    { name: 'Shipments', icon: <Package size={18} />, path: '/dashboard/shipments' },
+    { name: 'Shipment History', icon: <History size={18} />, path: '/dashboard/shipments/history' },
+    { name: 'Blockchain Ledger', icon: <Database size={18} />, path: '/dashboard/blockchain-ledger' },
+    { name: 'Settlements', icon: <Wallet size={18} />, path: '/dashboard/settlements' },
+    { name: 'Payments', icon: <CreditCard size={18} />, path: '/dashboard/payments' },
+    { name: 'Analytics', icon: <BarChart3 size={18} />, path: '/dashboard/analytics' },
+    { name: 'Notifications', icon: <Bell size={18} />, path: '/dashboard/notifications' },
+  ];
+
+  const systemMenu: NavItem[] = [
+    { name: 'Profile', icon: <User size={18} />, path: '/dashboard/profile' },
+    { name: 'Settings', icon: <Settings size={18} />, path: '/dashboard/settings' },
+    { name: 'Help Center', icon: <HelpCircle size={18} />, path: '/dashboard/help-center' },
+  ];
+
+  const allMenuItems = [...mainMenu, ...systemMenu];
+  const favoriteItems = favoritePaths
+    .map((path) => allMenuItems.find((item) => item.path === path))
+    .filter((item): item is NavItem => Boolean(item));
+
+  const toggleFavorite = (path: string) => {
+    setFavoritePaths((current) => {
+      const next = current.includes(path)
+        ? current.filter((itemPath) => itemPath !== path)
+        : [...current, path];
+      try {
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Keep the in-memory preference if persistence is unavailable.
+      }
+      return next;
+    });
+  };
 
   const navGroups: NavGroup[] = [
     {
@@ -90,6 +136,48 @@ const DashboardLayout: React.FC = () => {
   const handleNavClick = (path: string) => {
     navigate(path);
     closeSidebar();
+  };
+
+  const renderNavItem = (item: NavItem, allowFavorite = true) => {
+    const isActive = location.pathname === item.path;
+    const isFavorite = favoritePaths.includes(item.path);
+
+    return (
+      <div key={item.path} className="group flex items-center gap-1">
+        <button
+          data-tour-id={
+            item.path === '/dashboard/shipments' ? 'tour-shipments-link' :
+            item.path === '/dashboard/settlements' ? 'tour-settlements-link' :
+            undefined
+          }
+          className={`flex min-w-0 flex-1 items-center gap-3 rounded-lg border-none px-3 py-2.5 text-left text-sm font-medium transition-all cursor-pointer
+            ${isActive
+              ? 'bg-teal-50 dark:bg-[rgba(19,186,186,0.15)] text-teal-700 dark:text-white border-l-[3px] border-l-teal-500 dark:border-l-[#62ffff] pl-2.25 [&_svg]:text-teal-500 dark:[&_svg]:text-[#62ffff]'
+              : 'bg-transparent text-gray-600 dark:text-[#8a8f9d] hover:bg-gray-100 dark:hover:bg-[rgba(19,186,186,0.1)] hover:text-gray-900 dark:hover:text-white'
+            }`}
+          onClick={() => { navigate(item.path); closeSidebar(); }}
+        >
+          {item.icon}
+          <span className="truncate">{item.name}</span>
+        </button>
+        {allowFavorite && (
+          <button
+            type="button"
+            onClick={() => toggleFavorite(item.path)}
+            className={`rounded-md p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-[#62ffff] ${
+              isFavorite
+                ? 'text-amber-500 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-300/10'
+                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-[#8a8f9d] dark:hover:bg-[rgba(19,186,186,0.1)] dark:hover:text-white'
+            }`}
+            aria-pressed={isFavorite}
+            aria-label={`${isFavorite ? 'Remove' : 'Add'} ${item.name} ${isFavorite ? 'from' : 'to'} dashboard favorites`}
+            title={`${isFavorite ? 'Remove from' : 'Add to'} favorites`}
+          >
+            <Star size={15} fill={isFavorite ? 'currentColor' : 'none'} />
+          </button>
+        )}
+      </div>
+    );
   };
 
   useEffect(() => {
@@ -181,6 +269,28 @@ const DashboardLayout: React.FC = () => {
           </button>
         </div>
 
+        {favoriteItems.length > 0 && (
+          <div className="mb-8" aria-label="Dashboard favorites">
+            <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">Favorites</h3>
+            <div className="flex flex-col gap-1">
+              {favoriteItems.map((item) => renderNavItem(item, false))}
+            </div>
+          </div>
+        )}
+
+        <div className="mb-8">
+          <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">Main Menu</h3>
+          <div className="flex flex-col gap-1">
+            {mainMenu.map((item) => renderNavItem(item))}
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">System</h3>
+          <div className="flex flex-col gap-1">
+            {systemMenu.map((item) => renderNavItem(item))}
+          </div>
+        </div>
           {isCollapsed && (
             <img src="/images/logo.svg" alt="Navin Logo" className="w-8 h-8" />
           )}
