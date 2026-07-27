@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -12,6 +12,8 @@ import {
 import { TrendingUp, TrendingDown, Minus, LineChart } from 'lucide-react';
 import { MOCK_TREND_DATA } from './mockTrendData';
 import type { TimeRange, Granularity, TrendDataPoint } from './mockTrendData';
+import { WidgetRefreshIndicator } from '@components/dashboard/WidgetRefreshIndicator';
+import useWidgetRefresh from '@hooks/useWidgetRefresh';
 
 export interface ShipmentVolumeTrendWidgetProps {
   data?: Record<TimeRange, Record<Granularity, TrendDataPoint[]>>;
@@ -91,6 +93,15 @@ export default function ShipmentVolumeTrendWidget({
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [granularity, setGranularity] = useState<Granularity>('daily');
 
+  const handleRefresh = useCallback(async () => {
+    await new Promise<void>((resolve) => setTimeout(resolve, 800));
+  }, []);
+
+  const { status: refreshStatus, lastRefreshedAt, refresh } = useWidgetRefresh({
+    onRefresh: handleRefresh,
+    intervalMs: 60_000,
+  });
+
   const chartData = useMemo(
     () => data[timeRange][granularity],
     [data, timeRange, granularity],
@@ -125,19 +136,26 @@ export default function ShipmentVolumeTrendWidget({
             </div>
           </div>
 
-          {/* Time Range Selector */}
-          <select
-            value={timeRange}
-            onChange={e => setTimeRange(e.target.value as TimeRange)}
-            aria-label="Time range"
-            className="appearance-none bg-[#1a1f2e] border border-border text-text-primary text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer focus:outline-none focus:border-accent-blue"
-          >
-            {TIME_RANGE_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <WidgetRefreshIndicator
+              status={refreshStatus}
+              lastRefreshedAt={lastRefreshedAt}
+              onRefresh={refresh}
+            />
+            {/* Time Range Selector */}
+            <select
+              value={timeRange}
+              onChange={e => setTimeRange(e.target.value as TimeRange)}
+              aria-label="Time range"
+              className="appearance-none bg-[#1a1f2e] border border-border text-text-primary text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer focus:outline-none focus:border-accent-blue"
+            >
+              {TIME_RANGE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Granularity Toggle */}

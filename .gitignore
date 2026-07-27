@@ -4,3 +4,12 @@ somzilla.md
 # Playwright
 test-results/
 playwright-report/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
