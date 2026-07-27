@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -22,6 +22,7 @@ import {
 import TopHeader from './TopHeader/TopHeader';
 import AnimatedPage from './AnimatedPage';
 import { SessionTimeoutModal } from '../auth/SessionTimeoutModal';
+import { useFocusTrap } from '../../hooks/useFocusTrap';
 
 interface NavItem {
   name: string;
@@ -53,6 +54,7 @@ const DashboardLayout: React.FC = () => {
     'System': false,
   });
   const sidebarRef = useRef<HTMLElement>(null);
+  const mainMenu = [
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
 
@@ -118,9 +120,6 @@ const DashboardLayout: React.FC = () => {
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const toggleSidebar = () => {
-    if (!isSidebarOpen) {
-      lastFocusedElement.current = document.activeElement as HTMLElement;
-    }
     setIsSidebarOpen((prev) => !prev);
   };
   const closeSidebar = () => setIsSidebarOpen(false);
@@ -180,41 +179,8 @@ const DashboardLayout: React.FC = () => {
     );
   };
 
-  useEffect(() => {
-    if (!isSidebarOpen) return;
-
-    document.body.style.overflow = 'hidden';
-    closeButtonRef.current?.focus();
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        closeSidebar();
-        return;
-      }
-      if (e.key !== 'Tab' || !sidebarRef.current) return;
-      const focusable = sidebarRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.body.style.overflow = '';
-      document.removeEventListener('keydown', handleKeyDown);
-      lastFocusedElement.current?.focus();
-    };
-  }, [isSidebarOpen]);
-
+  // Use the shared focus-trap hook for the mobile sidebar drawer
+  useFocusTrap(sidebarRef, isSidebarOpen, closeSidebar);
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#07090d] text-gray-900 dark:text-white font-sans flex">
       <a
@@ -260,7 +226,6 @@ const DashboardLayout: React.FC = () => {
           <img src="/images/logo.svg" alt="Navin Logo" className="w-8 h-8" />
           <span>NAVIN</span>
           <button
-            ref={closeButtonRef}
             className="ml-auto flex lg:hidden bg-transparent border-none text-slate-400 cursor-pointer"
             onClick={closeSidebar}
             aria-label="Close sidebar"
