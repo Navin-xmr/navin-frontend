@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Target } from 'lucide-react';
 import { RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
 import {
@@ -20,18 +20,18 @@ interface RevenueTargetWidgetProps {
 const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
   data = buildRevenueTargetData(),
 }) => {
-  const achievementPercent = getAchievementPercent(data.actual, data.target);
-  const gaugeColor = getGaugeColor(achievementPercent);
-  const projectedRevenue = getProjectedEndOfMonthRevenue(data.actual);
-  const sparklinePath = buildSparklinePath(data.dailyRevenue.map((entry) => entry.amount));
+  const achievementPercent = useMemo(() => getAchievementPercent(data.actual, data.target), [data.actual, data.target]);
+  const gaugeColor = useMemo(() => getGaugeColor(achievementPercent), [achievementPercent]);
+  const projectedRevenue = useMemo(() => getProjectedEndOfMonthRevenue(data.actual), [data.actual]);
+  const sparklinePath = useMemo(() => buildSparklinePath(data.dailyRevenue.map((entry) => entry.amount)), [data.dailyRevenue]);
 
-  const gaugeData = [
+  const gaugeData = useMemo(() => [
     {
       name: 'Achievement',
       value: Math.min(achievementPercent, 100),
       fill: gaugeColor,
     },
-  ];
+  ], [achievementPercent, gaugeColor]);
 
   return (
     <section className="rounded-2xl border border-[#1e293b] bg-[#14171e] p-6 shadow-sm h-full">
@@ -108,4 +108,4 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
   );
 };
 
-export default RevenueTargetWidget;
+export default memo(RevenueTargetWidget);
