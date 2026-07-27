@@ -85,8 +85,6 @@ const Shipments: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  const [pendingBulkStatus, setPendingBulkStatus] =
-    useState<ShipmentStatus | null>(null);
   const loadingRef = useRef(false);
 
   const {
@@ -360,7 +358,6 @@ const Shipments: React.FC = () => {
 
   const handleBulkStatusConfirm = async (newStatus: ShipmentStatus) => {
     if (selectedIds.size === 0) return;
-    setPendingBulkStatus(newStatus);
 
     // Optimistically update UI
     const prevShipments = shipments;
