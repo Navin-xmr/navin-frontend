@@ -1,12 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-hot-toast';
 
 const OfflineBanner: React.FC = () => {
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const [dismissed, setDismissed] = useState(false);
+  // Only announce "back online" once we've actually observed an offline
+  // stretch in this session, so the toast doesn't fire on initial mount.
+  const wasOffline = useRef(false);
 
   useEffect(() => {
-    const handleOnline = () => { setIsOnline(true); setDismissed(false); };
-    const handleOffline = () => { setIsOnline(false); setDismissed(false); };
+    const handleOnline = () => {
+      setIsOnline(true);
+      setDismissed(false);
+      if (wasOffline.current) {
+        toast.success("You're back online.", { id: 'connection-restored' });
+        wasOffline.current = false;
+      }
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setDismissed(false);
+      wasOffline.current = true;
+    };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     return () => {

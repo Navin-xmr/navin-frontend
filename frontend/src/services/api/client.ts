@@ -10,6 +10,9 @@ export const apiClient = axios.create({
         "Content-Type": "application/json",
     },
     withCredentials: true,
+    // Safety net so a stalled connection fails with a recoverable error
+    // instead of hanging the UI in a loading state indefinitely.
+    timeout: 30000,
 });
 
 // Intercept requests to guard against missing base URL at runtime

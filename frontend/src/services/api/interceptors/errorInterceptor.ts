@@ -10,6 +10,23 @@ export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path:
         (error: AxiosError) => {
             const status = error.response?.status;
 
+            // Requests that never got a response (offline, DNS/connection failure,
+            // or our own client-side timeout) don't have a status code. Surface
+            // those distinctly instead of silently failing with only a console log.
+            // The shared toast `id` collapses repeat failures (e.g. several
+            // in-flight requests dropping at once) into a single toast instead of
+            // stacking one per request.
+            if (!error.response) {
+                const message =
+                    error.code === "ECONNABORTED"
+                        ? "Request timed out. Check your connection and try again."
+                        : typeof navigator !== "undefined" && !navigator.onLine
+                            ? "You're offline. This action didn't go through."
+                            : "Network error — please check your connection and try again.";
+                toast.error(message, { id: "network-error" });
+                return Promise.reject(error);
+            }
+
             switch (status) {
                 case 401:
                     if (!isRedirecting) {
