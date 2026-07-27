@@ -27,6 +27,12 @@ export { default as Tag } from './ui/Tag';
 export type { TagProps } from './ui/Tag';
 export { default as MultiSelect } from './ui/MultiSelect';
 export type { MultiSelectOption, MultiSelectProps } from './ui/MultiSelect';
+export { default as Combobox } from './ui/Combobox';
+export type { ComboboxOption, ComboboxProps } from './ui/Combobox';
+export { default as ExportDropdown } from './ui/ExportDropdown';
+export type { ExportDropdownProps, ExportFormat } from './ui/ExportDropdown';
+export { default as Drawer } from './ui/Drawer';
+export type { DrawerProps, DrawerPlacement } from './ui/Drawer';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 
 export { default as Card, CardHeader, CardBody, CardFooter } from './Card';

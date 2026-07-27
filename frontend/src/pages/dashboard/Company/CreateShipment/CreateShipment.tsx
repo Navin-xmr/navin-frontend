@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Package, ArrowLeft, Loader2, Book } from 'lucide-react';
+import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
 import { addressesApi } from '@services/api/endpoints/addresses';
 import type { Address } from '@services/api/endpoints/addresses';
@@ -9,7 +9,8 @@ import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
 import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
 import { getTemplatePreview, toTemplateFields } from '../../../../types/shipmentTemplate';
 import type { AxiosError } from 'axios';
-import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
+import Combobox from '@components/ui/Combobox';
+import type { ComboboxOption } from '@components/ui/Combobox';
 import CostBreakdown from '@components/shipment/CostBreakdown/CostBreakdown';
 import { formatAddress as formatLocalizedAddress } from '@utils/localeFormat';
 import type { CostBreakdownData } from '@components/shipment/CostBreakdown/CostBreakdown';
@@ -94,21 +95,40 @@ const CreateShipment: React.FC = () => {
         return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, templates, templatesLoading]);
-    const [pickerTarget, setPickerTarget] = useState<'origin' | 'destination' | null>(null);
+    const [addressOptions, setAddressOptions] = useState<ComboboxOption[]>([]);
+    const [addressesLoading, setAddressesLoading] = useState(false);
 
+    // Load addresses for typeahead suggestions
     useEffect(() => {
+        let cancelled = false;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag for async fetch
+        setAddressesLoading(true);
         addressesApi.getAll().then((addrs) => {
+            if (cancelled) return;
+            const opts: ComboboxOption[] = addrs.map((addr) => ({
+                value: addr._id,
+                label: addr.label,
+                sublabel: `${addr.street}, ${addr.city}, ${addr.state} ${addr.postalCode}`,
+                metadata: { address: addr },
+            }));
+            setAddressOptions(opts);
+
             const def = addrs.find((a) => a.isDefault);
             if (def) {
                 setFormData((prev) => ({ ...prev, origin: formatAddress(def) }));
             }
-        }).catch(() => {});
+        }).catch(() => {}).finally(() => {
+            if (!cancelled) setAddressesLoading(false);
+        });
+        return () => { cancelled = true; };
     }, []);
 
-    const handleAddressSelect = (addr: Address) => {
-        const formatted = formatAddress(addr);
-        setFormData((prev) => ({ ...prev, [pickerTarget!]: formatted }));
-        setPickerTarget(null);
+    const handleAddressSelect = (field: 'origin' | 'destination') => (option: ComboboxOption) => {
+        const addr = option.metadata?.address as Address | undefined;
+        if (addr) {
+            const formatted = formatAddress(addr);
+            setFormData((prev) => ({ ...prev, [field]: formatted }));
+        }
     };
 
     // Auto-fetch cost estimate when required fields are filled
@@ -363,47 +383,53 @@ useEffect(() => {
 
               <form onSubmit={handleSubmit} className="shipment-form">
                   <div className="form-group">
-                      <div className="label-row">
-                          <label htmlFor="origin">Origin Address</label>
-                          <button type="button" className="address-book-btn" onClick={() => setPickerTarget('origin')}>
-                              <Book size={14} />
-                              Address Book
-                          </button>
-                      </div>
-                      <input
-                          type="text"
+                      <label htmlFor="origin">Origin Address</label>
+                      <Combobox
                           id="origin"
                           name="origin"
                           value={formData.origin}
-                          onChange={handleInputChange}
-                          onBlur={handleBlur}
-                          aria-invalid={!!errors.origin}
-                          aria-describedby={errors.origin ? "origin-error" : undefined}
-                          className={errors.origin ? 'input-error' : ''}
-                          placeholder="e.g., Warehouse A, New York"
+                          onChange={(v) => {
+                              setFormData((prev: FormData) => ({ ...prev, origin: v }));
+                              if (errors.origin) setErrors((prev: FormErrors) => ({ ...prev, origin: '' }));
+                          }}
+                          onSelectOption={handleAddressSelect('origin')}
+                          onBlur={() => {
+                              const msg = validateField('origin');
+                              setErrors((prev: FormErrors) => ({ ...prev, origin: msg }));
+                          }}
+                          options={addressOptions}
+                          placeholder="Search or type an address..."
+                          ariaLabel="Origin address"
+                          isLoading={addressesLoading}
+                          noResultsMessage="No matching addresses. Keep typing or enter a new one."
+                          loadingMessage="Loading your saved addresses…"
+                          className={errors.origin ? '[&_input]:border-red-500 [&_input]:focus:border-red-400' : ''}
                       />
                       {errors.origin && <span id="origin-error" className="error-text" role="alert">{errors.origin}</span>}
                   </div>
 
                   <div className="form-group">
-                      <div className="label-row">
-                          <label htmlFor="destination">Destination Address</label>
-                          <button type="button" className="address-book-btn" onClick={() => setPickerTarget('destination')}>
-                              <Book size={14} />
-                              Address Book
-                          </button>
-                      </div>
-                      <input
-                          type="text"
+                      <label htmlFor="destination">Destination Address</label>
+                      <Combobox
                           id="destination"
                           name="destination"
                           value={formData.destination}
-                          onChange={handleInputChange}
-                          onBlur={handleBlur}
-                          aria-invalid={!!errors.destination}
-                          aria-describedby={errors.destination ? "destination-error" : undefined}
-                          className={errors.destination ? 'input-error' : ''}
-                          placeholder="e.g., Store B, Los Angeles"
+                          onChange={(v) => {
+                              setFormData((prev: FormData) => ({ ...prev, destination: v }));
+                              if (errors.destination) setErrors((prev: FormErrors) => ({ ...prev, destination: '' }));
+                          }}
+                          onSelectOption={handleAddressSelect('destination')}
+                          onBlur={() => {
+                              const msg = validateField('destination');
+                              setErrors((prev: FormErrors) => ({ ...prev, destination: msg }));
+                          }}
+                          options={addressOptions}
+                          placeholder="Search or type an address..."
+                          ariaLabel="Destination address"
+                          isLoading={addressesLoading}
+                          noResultsMessage="No matching addresses. Keep typing or enter a new one."
+                          loadingMessage="Loading your saved addresses…"
+                          className={errors.destination ? '[&_input]:border-red-500 [&_input]:focus:border-red-400' : ''}
                       />
                       {errors.destination && <span id="destination-error" className="error-text" role="alert">{errors.destination}</span>}
                   </div>
@@ -524,11 +550,7 @@ useEffect(() => {
                   </div>
               </form>
 
-              <AddressBookPickerModal
-                  isOpen={pickerTarget !== null}
-                  onClose={() => setPickerTarget(null)}
-                  onSelect={handleAddressSelect}
-              />
+
           </div>
 
           <SaveTemplateModal
