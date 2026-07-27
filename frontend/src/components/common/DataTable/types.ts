@@ -1,6 +1,7 @@
 import React from 'react';
 
 export type SortDirection = 'asc' | 'desc' | null;
+export type DataTableDensity = 'compact' | 'comfortable' | 'spacious';
 
 export interface ColumnDef<T> {
   key: string;
@@ -34,4 +35,5 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   onRowClick?: (row: T) => void;
   pagination?: PaginationConfig;
   className?: string;
+  density?: DataTableDensity;
 }
