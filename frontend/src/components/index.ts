@@ -65,6 +65,8 @@ export { default as StatusUpdate } from './shipment/StatusUpdate';
 export type { StatusUpdateProps, ShipmentMilestone } from './shipment/StatusUpdate';
 export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation/DeliveryConfirmation';
 export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/DeliveryConfirmation';
+export { default as OverdueShipmentBadge } from './shipment/OverdueShipmentBadge';
+export type { OverdueShipmentBadgeProps } from './shipment/OverdueShipmentBadge';
 
 // Onboarding
 export { OnboardingTour } from './onboarding';
