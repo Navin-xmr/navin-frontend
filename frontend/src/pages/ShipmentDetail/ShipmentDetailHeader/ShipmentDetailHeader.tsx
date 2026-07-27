@@ -3,6 +3,7 @@ import { Package, ArrowRight, QrCode, Printer, AlertTriangle, ChevronDown } from
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
 import PriorityBadge from "../../../components/ui/PriorityBadge";
+import CopyToClipboard from "../../../components/ui/CopyToClipboard";
 import ETACountdown from "../../../components/shipment/ETACountdown";
 import type { ShipmentStatus } from "../../../services/api/endpoints/shipments";
 
@@ -58,9 +59,12 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
         <div className="flex flex-col gap-2">
           {/* Title + Status + Priority */}
           <div className="flex items-center gap-4 flex-wrap">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
-              {shipmentId}
-            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                {shipmentId}
+              </h1>
+              <CopyToClipboard value={shipmentId} label="Copy ID" size="sm" className="border-border/50 text-text-secondary hover:text-text-primary" />
+            </div>
 
             <span
               className={`inline-flex items-center px-4 gap-1.5 py-2 w-24 h-6 text-center justify-center rounded-full text-sm font-semibold whitespace-nowrap shrink-0 ${getStatusBadgeClass(status)}`}
@@ -108,6 +112,11 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
             return <ETACountdown expectedDelivery={expectedDeliveryDate} status={shipmentStatus} />;
           })()}
 
+          <div className="flex flex-wrap items-center gap-2 text-xs md:text-sm text-text-secondary">
+            <span className="font-medium uppercase tracking-[0.2em] text-text-secondary/70">Tracking</span>
+            <span className="font-mono text-white">{trackingNumber}</span>
+            <CopyToClipboard value={trackingNumber} label="Copy tracking" size="sm" className="border-border/50 text-text-secondary hover:text-text-primary" />
+          </div>
 
           {/* Origin to Destination */}
           {originAddress && destinationAddress && (

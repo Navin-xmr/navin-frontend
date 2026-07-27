@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { MOCK_DELIVERY_DATA, calculateSuccessRate } from './mockDeliveryData';
@@ -22,9 +23,9 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   );
 }
 
-export default function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: DeliverySuccessChartProps) {
-  const successRate = calculateSuccessRate(data);
-  const total = data.reduce((sum, item) => sum + item.count, 0);
+function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: DeliverySuccessChartProps) {
+  const successRate = useMemo(() => calculateSuccessRate(data), [data]);
+  const total = useMemo(() => data.reduce((sum, item) => sum + item.count, 0), [data]);
 
   return (
     <div className="p-0">
@@ -84,3 +85,5 @@ export default function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA }: Deli
     </div>
   );
 }
+
+export default memo(DeliverySuccessChart);

@@ -1,5 +1,6 @@
 import React from "react";
 import { Receipt, TrendingDown, Globe, Package, Shield, FileText, Zap } from "lucide-react";
+import { formatCurrency as formatLocalizedCurrency } from '@utils/localeFormat';
 
 export interface CostBreakdownData {
   baseRate: number;
@@ -16,16 +17,6 @@ export interface CostBreakdownProps {
   data?: CostBreakdownData | null;
   isLoading?: boolean;
   mode?: "estimate" | "confirmed";
-}
-
-// ─── Currency formatter ───────────────────────────────────────────────────────
-function formatCurrency(amount: number, currency: string): string {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
 }
 
 // ─── Skeleton shown while loading ─────────────────────────────────────────────
@@ -89,7 +80,7 @@ const LineRow: React.FC<LineRowProps> = ({ label, amount, currency, isDiscount }
           isDiscount ? "text-green-400" : "text-[rgba(255,255,255,0.9)]"
         }`}
       >
-        {formatCurrency(displayAmount, currency)}
+        {formatLocalizedCurrency(displayAmount, currency)}
       </span>
     </div>
   );
@@ -174,7 +165,7 @@ const CostBreakdown: React.FC<CostBreakdownProps> = ({
               </span>
               <div className="bg-[rgba(0,212,200,0.12)] border border-[rgba(0,212,200,0.35)] rounded-xl px-5 py-2">
                 <span className="text-[#00d4c8] text-xl font-bold tabular-nums">
-                  {formatCurrency(data.total, data.currency)}
+                  {formatLocalizedCurrency(data.total, data.currency)}
                 </span>
               </div>
             </div>

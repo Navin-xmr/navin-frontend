@@ -7,6 +7,7 @@ import App from "./App.tsx";
 import { ToastProvider } from "./context/ToastContext.tsx";
 import { LiveRegionProvider } from "./context/LiveRegionContext.tsx";
 import { WalletProvider } from "./context/WalletContext.tsx";
+import { ThemeProvider } from "./hooks/useTheme.ts";
 
 if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
   Sentry.init({
@@ -31,7 +32,9 @@ createRoot(document.getElementById("root")!).render(
     <LiveRegionProvider>
       <ToastProvider>
         <WalletProvider>
-          <App />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </WalletProvider>
       </ToastProvider>
     </LiveRegionProvider>

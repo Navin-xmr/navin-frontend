@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from "react";
 
-export type ModalSize = 'sm' | 'md' | 'lg';
+export type ModalSize = "sm" | "md" | "lg";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -14,9 +14,9 @@ export interface ModalProps {
 }
 
 const sizeClasses: Record<ModalSize, string> = {
-  sm: 'max-w-sm',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
+  sm: "max-w-sm",
+  md: "max-w-lg",
+  lg: "max-w-2xl",
 };
 
 const Modal: React.FC<ModalProps> = ({
@@ -25,7 +25,7 @@ const Modal: React.FC<ModalProps> = ({
   title,
   children,
   footer,
-  size = 'md',
+  size = "md",
   closeOnOverlayClick = true,
   closeOnEsc = true,
 }) => {
@@ -37,19 +37,19 @@ const Modal: React.FC<ModalProps> = ({
     if (!dialogRef.current) return [];
     return Array.from(
       dialogRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-      )
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+      ),
     );
   }, []);
 
   // Handle Tab / Shift+Tab to trap focus
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && closeOnEsc) {
+      if (e.key === "Escape" && closeOnEsc) {
         onClose();
         return;
       }
-      if (e.key === 'Tab') {
+      if (e.key === "Tab") {
         const focusable = getFocusableElements();
         if (focusable.length === 0) return;
         const first = focusable[0];
@@ -67,13 +67,13 @@ const Modal: React.FC<ModalProps> = ({
         }
       }
     },
-    [closeOnEsc, onClose, getFocusableElements]
+    [closeOnEsc, onClose, getFocusableElements],
   );
 
   useEffect(() => {
     if (isOpen) {
       previousFocusRef.current = document.activeElement as HTMLElement;
-      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
       // Move focus into dialog on next tick so the element is rendered
       const raf = requestAnimationFrame(() => {
         const focusable = getFocusableElements();
@@ -82,7 +82,7 @@ const Modal: React.FC<ModalProps> = ({
       });
       return () => {
         cancelAnimationFrame(raf);
-        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener("keydown", handleKeyDown);
         previousFocusRef.current?.focus();
       };
     }
@@ -93,7 +93,7 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-modal-overlay"
-      aria-hidden="true"
+      role="presentation"
     >
       {/* Overlay */}
       <div
