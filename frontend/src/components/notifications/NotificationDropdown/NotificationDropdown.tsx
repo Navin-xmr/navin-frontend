@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Bell, Package, DollarSign, AlertTriangle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { notificationsApi } from "../../../services/api/endpoints/notifications";
@@ -35,7 +35,12 @@ export const NotificationDropdown: React.FC = () => {
   const [notifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
   const [unreadCount, setUnreadCount] = useState(() => notifications.filter((n) => !n.read).length);
   const [now] = useState(() => Date.now());
+  const [focusIndex, setFocusIndex] = useState<number>(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  const visibleNotifications = notifications.slice(0, 5);
 
   const getNotificationIcon = (type: NotificationItem["type"]) => {
     const base = "shrink-0";
@@ -60,11 +65,89 @@ export const NotificationDropdown: React.FC = () => {
     fetchUnreadCount();
   }, []);
 
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!isOpen) return;
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setFocusIndex((prev) => {
+            const next = prev + 1;
+            return next >= visibleNotifications.length ? 0 : next;
+          });
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setFocusIndex((prev) => {
+            const next = prev - 1;
+            return next < 0 ? visibleNotifications.length - 1 : next;
+          });
+          break;
+        case "Enter":
+        case " ":
+          if (focusIndex >= 0 && focusIndex < visibleNotifications.length) {
+            e.preventDefault();
+            const n = visibleNotifications[focusIndex];
+            setIsOpen(false);
+            setFocusIndex(-1);
+            toggleRef.current?.focus();
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          setIsOpen(false);
+          setFocusIndex(-1);
+          toggleRef.current?.focus();
+          break;
+        case "Tab":
+          // Allow tab to close and move focus naturally
+          setIsOpen(false);
+          setFocusIndex(-1);
+          break;
+        default:
+          break;
+      }
+    },
+    [isOpen, focusIndex, visibleNotifications],
+  );
+
+  // Focus the currently indexed item
+  useEffect(() => {
+    if (!isOpen || !listRef.current || focusIndex < 0) return;
+    const items = listRef.current.querySelectorAll<HTMLElement>('[role="listitem"]');
+    if (items[focusIndex]) {
+      items[focusIndex].focus();
+    }
+  }, [focusIndex, isOpen]);
+
+  // Focus first item when dropdown opens
+  useEffect(() => {
+    if (isOpen) {
+      setFocusIndex(-1);
+      // Small delay to allow the dropdown to render
+      const timer = setTimeout(() => {
+        listRef.current?.querySelector<HTMLElement>('[role="listitem"]')?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setIsOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+        setFocusIndex(-1);
+      }
     };
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    const handleEsc = (e: KeyboardEvent) => { 
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        setFocusIndex(-1);
+        toggleRef.current?.focus();
+      }
+    };
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleEsc);
@@ -76,9 +159,10 @@ export const NotificationDropdown: React.FC = () => {
   }, [isOpen]);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
       <button
-        className="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-[#07090d] text-white border-none cursor-pointer transition-all hover:bg-[#1e2433]"
+        ref={toggleRef}
+        className="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-[#07090d] text-white border-none cursor-pointer transition-all hover:bg-[#1e2433] focus-visible:outline-2 focus-visible:outline-blue-500"
         onClick={() => setIsOpen(!isOpen)}
         aria-label={unreadCount > 0 ? `Notifications — ${unreadCount} unread` : "Notifications"}
         aria-haspopup="true"
@@ -98,8 +182,8 @@ export const NotificationDropdown: React.FC = () => {
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#1e2433] max-md:px-4 max-md:py-3.5">
             <h3 className="text-base font-semibold text-white m-0">Notifications</h3>
             <button
-              className="flex items-center justify-center w-6 h-6 bg-transparent border-none text-slate-400 cursor-pointer rounded hover:bg-[#1a1f2e] hover:text-white transition-all"
-              onClick={() => setIsOpen(false)}
+              className="flex items-center justify-center w-6 h-6 bg-transparent border-none text-slate-400 cursor-pointer rounded hover:bg-[#1a1f2e] hover:text-white transition-all focus-visible:outline-2 focus-visible:outline-blue-500"
+              onClick={() => { setIsOpen(false); setFocusIndex(-1); toggleRef.current?.focus(); }}
               aria-label="Close notifications"
             >
               <X size={16} />
@@ -107,16 +191,29 @@ export const NotificationDropdown: React.FC = () => {
           </div>
 
           {/* List */}
-          <div role="list" className="overflow-y-auto max-h-[360px] py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e2433] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb:hover]:bg-[#334155]">
-            {notifications.slice(0, 5).map((n) => (
+          <div
+            ref={listRef}
+            role="list"
+            className="overflow-y-auto max-h-[360px] py-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e2433] [&::-webkit-scrollbar-thumb]:rounded-[3px] [&::-webkit-scrollbar-thumb:hover]:bg-[#334155]"
+          >
+            {visibleNotifications.map((n, index) => (
               <div
                 role="listitem"
+                tabIndex={0}
                 key={n.id}
-                className={`flex gap-3 px-5 py-3 cursor-pointer transition-colors border-l-[3px] hover:bg-[#1a1f2e] max-md:px-4 max-md:py-2.5 ${
+                className={`flex gap-3 px-5 py-3 cursor-pointer transition-colors border-l-[3px] outline-none focus-visible:bg-[#1a1f2e] focus-visible:border-l-blue-500 ${
                   !n.read
                     ? "bg-blue-500/5 border-l-blue-500"
-                    : "border-l-transparent"
-                }`}
+                    : "border-l-transparent hover:bg-[#1a1f2e]"
+                } max-md:px-4 max-md:py-2.5`}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setIsOpen(false);
+                    setFocusIndex(-1);
+                    toggleRef.current?.focus();
+                  }
+                }}
               >
                 <div className="flex items-start justify-center shrink-0 w-8 h-8 rounded-lg bg-[#1e2433] p-2">
                   {getNotificationIcon(n.type)}
@@ -129,12 +226,17 @@ export const NotificationDropdown: React.FC = () => {
                 </div>
               </div>
             ))}
+            {visibleNotifications.length === 0 && (
+              <div className="px-5 py-8 text-center text-sm text-slate-500">
+                No notifications
+              </div>
+            )}
           </div>
 
           {/* Footer */}
           <div className="px-5 py-3 border-t border-[#1e2433] max-md:px-4 max-md:py-2.5">
             <button
-              className="w-full py-2.5 bg-transparent border-none text-blue-500 text-[13px] font-semibold cursor-pointer rounded-md transition-all text-center hover:bg-blue-500/10 hover:text-blue-400"
+              className="w-full py-2.5 bg-transparent border-none text-blue-500 text-[13px] font-semibold cursor-pointer rounded-md transition-all text-center hover:bg-blue-500/10 hover:text-blue-400 focus-visible:outline-2 focus-visible:outline-blue-500"
               onClick={() => { setIsOpen(false); navigate("/dashboard/notifications"); }}
             >
               View All Notifications
