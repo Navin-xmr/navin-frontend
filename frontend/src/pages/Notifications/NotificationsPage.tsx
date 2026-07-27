@@ -27,12 +27,16 @@ import NotificationBulkActionBar from "../../components/notifications/Notificati
 import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
 
 type NotificationFilterType = "all" | "shipments" | "settlements" | "system";
+type ReadStateFilter = "all" | "unread" | "read";
 
 const isValidFilter = (value: string | null): value is NotificationFilterType =>
   value === "all" ||
   value === "shipments" ||
   value === "settlements" ||
   value === "system";
+
+const isValidReadState = (value: string | null): value is ReadStateFilter =>
+  value === "all" || value === "unread" || value === "read";
 
 const iconStyles: Record<string, string> = {
   shipment: "bg-[rgba(37,99,235,0.1)] text-[#3b82f6]",
@@ -56,6 +60,12 @@ const NotificationsPage = () => {
   );
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get("q") || "",
+  );
+  const [readStateFilter, setReadStateFilter] = useState<ReadStateFilter>(
+    () => {
+      const initialReadState = searchParams.get("read");
+      return isValidReadState(initialReadState) ? initialReadState : "all";
+    },
   );
   const [notificationsList, setNotificationsList] = useState<
     NotificationType[]
@@ -92,11 +102,21 @@ const NotificationsPage = () => {
 
   const realtimeEvents = useRealtimeEvents(["notification:new"]);
 
+  const readStateFilteredNotifications = useMemo(() => {
+    if (readStateFilter === "unread") {
+      return notificationsList.filter((notification) => !notification.isRead);
+    }
+    if (readStateFilter === "read") {
+      return notificationsList.filter((notification) => notification.isRead);
+    }
+    return notificationsList;
+  }, [notificationsList, readStateFilter]);
+
   const groupedNotifications = useMemo(() => {
     const rawGroups = new Map<string, NotificationType[]>();
     const standalone: NotificationType[] = [];
 
-    notificationsList.forEach((notification) => {
+    readStateFilteredNotifications.forEach((notification) => {
       if (notification.shipmentId) {
         const group = rawGroups.get(notification.shipmentId) ?? [];
         group.push(notification);
@@ -142,7 +162,7 @@ const NotificationsPage = () => {
       shipmentGroups: sortedGroups,
       standaloneNotifications: sortedStandalone,
     };
-  }, [notificationsList]);
+  }, [readStateFilteredNotifications]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -223,6 +243,19 @@ const NotificationsPage = () => {
       });
     });
   }, [activeFilter, searchQuery, fetchNotifications, setSearchParams]);
+
+  // Sync read-state filter to the URL without re-fetching (it's applied client-side).
+  useEffect(() => {
+    setSearchParams((prevParams) => {
+      const nextParams = new URLSearchParams(prevParams);
+      if (readStateFilter !== "all") {
+        nextParams.set("read", readStateFilter);
+      } else {
+        nextParams.delete("read");
+      }
+      return nextParams;
+    });
+  }, [readStateFilter, setSearchParams]);
 
   // Prepend new notification from realtime stream
   useEffect(() => {
@@ -312,8 +345,8 @@ const NotificationsPage = () => {
   };
 
   const visibleIds = useMemo(
-    () => notificationsList.map((notification) => notification.id),
-    [notificationsList],
+    () => readStateFilteredNotifications.map((notification) => notification.id),
+    [readStateFilteredNotifications],
   );
   const allVisibleSelected =
     visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
@@ -430,13 +463,32 @@ const NotificationsPage = () => {
     [notificationsList],
   );
 
-  const unreadNotifications = notificationsList.filter(
+  const readStateCounts = useMemo(
+    () => ({
+      all: notificationsList.length,
+      unread: notificationsList.filter((notification) => !notification.isRead)
+        .length,
+      read: notificationsList.filter((notification) => notification.isRead)
+        .length,
+    }),
+    [notificationsList],
+  );
+
+  const unreadNotifications = readStateFilteredNotifications.filter(
     (notification) => !notification.isRead,
   );
-  const readNotifications = notificationsList.filter(
+  const readNotifications = readStateFilteredNotifications.filter(
     (notification) => notification.isRead,
   );
-  const currentUnreadCount = unreadNotifications.length || unreadCount;
+  const currentUnreadCount =
+    notificationsList.filter((notification) => !notification.isRead).length ||
+    unreadCount;
+
+  const readStateFilters: { key: ReadStateFilter; label: string }[] = [
+    { key: "all", label: "All" },
+    { key: "unread", label: "Unread" },
+    { key: "read", label: "Read" },
+  ];
 
   const filters: { key: NotificationFilterType; label: string }[] = [
     { key: "all", label: "All" },
@@ -661,7 +713,33 @@ const NotificationsPage = () => {
           />
         </div>
 
-        {!isLoading && notificationsList.length > 0 && (
+        <div
+          role="tablist"
+          aria-label="Filter by read state"
+          className="flex gap-2 mb-6"
+        >
+          {readStateFilters.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={readStateFilter === key}
+              className={`px-3.5 py-2 rounded-lg text-sm cursor-pointer transition-all flex items-center gap-2 border ${
+                readStateFilter === key
+                  ? "bg-[rgba(37,99,235,0.15)] border-[#2563eb] text-white"
+                  : "bg-transparent border-[#283039] text-[#9ca3af] hover:border-[#4b5563] hover:text-white"
+              }`}
+              onClick={() => setReadStateFilter(key)}
+            >
+              {label}
+              <span className="bg-[rgba(255,255,255,0.1)] px-2 py-0.5 rounded-xl text-xs font-semibold">
+                {readStateCounts[key]}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {!isLoading && readStateFilteredNotifications.length > 0 && (
           <div className="flex items-center gap-3 mb-4">
             <input
               type="checkbox"
@@ -712,14 +790,18 @@ const NotificationsPage = () => {
                 </div>
               </div>
             ))
-          ) : notificationsList.length === 0 ? (
+          ) : readStateFilteredNotifications.length === 0 ? (
             <EmptyState
               icon={<BellOff size={28} />}
               title="No notifications found"
               description={
                 searchQuery
                   ? "Try adjusting your search terms"
-                  : "You're all caught up! No notifications in this category."
+                  : readStateFilter === "unread"
+                    ? "You're all caught up! No unread notifications."
+                    : readStateFilter === "read"
+                      ? "No read notifications yet."
+                      : "You're all caught up! No notifications in this category."
               }
             />
           ) : isGrouped ? (
