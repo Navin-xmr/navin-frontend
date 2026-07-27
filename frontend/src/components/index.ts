@@ -17,6 +17,8 @@ export type { ColumnDef as DataTableUIColumnDef, DataTableProps as DataTableUIPr
 // UI
 export { ProgressBar } from './ui/ProgressBar';
 export type { ProgressBarProps, ProgressBarColor, ProgressBarSize } from './ui/ProgressBar';
+export { ProgressStepper } from './ui/ProgressStepper';
+export type { ProgressStepperProps, StepDef } from './ui/ProgressStepper';
 export { CircularProgress } from './ui/CircularProgress';
 export type { CircularProgressProps } from './ui/CircularProgress';
 export { default as Avatar } from './ui/Avatar';
