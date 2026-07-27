@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react';
-import Button from '@components/Button';
+import EmptyState from '@components/ui/EmptyState';
 import type { DataTableProps, SortDirection } from './types';
 
 function DataTable<T extends Record<string, unknown>>({
@@ -85,20 +85,16 @@ function DataTable<T extends Record<string, unknown>>({
   if (sortedData.length === 0) {
     return (
       <div className={`${containerClass} ${className}`}>
-        <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 text-center">
-          <div className="text-5xl">📭</div>
-          <div className="flex flex-col gap-2 max-w-sm">
-            <h3 className="text-lg font-semibold text-text-primary">{emptyState.message}</h3>
-            {emptyState.description && (
-              <p className="text-sm text-text-secondary">{emptyState.description}</p>
-            )}
-          </div>
-          {emptyState.cta && (
-            <Button variant="primary" size="md" onClick={emptyState.cta.onClick}>
-              {emptyState.cta.label}
-            </Button>
-          )}
-        </div>
+        <EmptyState
+          icon={emptyState.icon}
+          title={emptyState.message}
+          description={emptyState.description}
+          action={
+            emptyState.cta
+              ? { label: emptyState.cta.label, onClick: emptyState.cta.onClick }
+              : undefined
+          }
+        />
       </div>
     );
   }

@@ -70,3 +70,15 @@ export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/
 export { OnboardingTour } from './onboarding';
 export type { OnboardingTourProps, TourStep } from './onboarding';
 export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';
+
+// UI — EmptyState (#526)
+export { default as EmptyStateUI } from './ui/EmptyState';
+export type { EmptyStateProps as EmptyStateUIProps, EmptyStateAction } from './ui/EmptyState';
+
+// Shipment — ShipmentActionMenu (#527)
+export { default as ShipmentActionMenu } from './shipment/ShipmentActionMenu';
+export type { ShipmentActionMenuProps, ShipmentActionItem, ShipmentActionMenuStatus } from './shipment/ShipmentActionMenu';
+
+// Common — GlobalSearch (#528)
+export { default as GlobalSearch } from './common/GlobalSearch';
+export type { GlobalSearchProps, SearchResult, SearchResultType } from './common/GlobalSearch';

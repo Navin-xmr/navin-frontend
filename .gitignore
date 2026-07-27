@@ -1,6 +1,20 @@
-# Somzilla issues document
-somzilla.md
-
-# Playwright
+# Playwright / test artifacts
 test-results/
 playwright-report/
+
+# Test snapshots
+**/__snapshots__/
+*.snap
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Misc docs not needed in repo
+frontend-alignment-report.md
+SHIPMENT_VOLUME_TREND_WIDGET_SUMMARY.md
