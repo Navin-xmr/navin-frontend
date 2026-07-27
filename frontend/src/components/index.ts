@@ -74,3 +74,19 @@ export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/
 export { OnboardingTour } from './onboarding';
 export type { OnboardingTourProps, TourStep } from './onboarding';
 export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';
+
+// UI — Autosave Banner (#529)
+export { AutosaveBanner } from './ui/AutosaveBanner';
+export type { AutosaveBannerProps } from './ui/AutosaveBanner';
+
+// UI — Chip & ChipGroup (#530)
+export { Chip, ChipGroup } from './ui/Chip';
+export type { ChipProps, ChipVariant, ChipSize, ChipGroupProps, ChipOption } from './ui/Chip';
+
+// Dashboard — Widget Refresh Indicator (#531)
+export { WidgetRefreshIndicator } from './dashboard/WidgetRefreshIndicator';
+export type { WidgetRefreshIndicatorProps } from './dashboard/WidgetRefreshIndicator';
+
+// Shipment — Summary Print View (#532)
+export { ShipmentSummaryPrint } from './shipment/ShipmentSummaryPrint';
+export type { ShipmentSummaryPrintProps, ShipmentSummaryPrintData, PrintMilestone, PrintCostItem, PrintPaymentInfo, PrintSensorSnapshot } from './shipment/ShipmentSummaryPrint';

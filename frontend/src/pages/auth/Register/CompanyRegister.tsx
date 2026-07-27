@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ChevronLeft, Check, Pencil } from "lucide-react";
 import { authApi } from "../../../services/api";
 import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import useFormAutosave from "../../../hooks/useFormAutosave";
+import { AutosaveBanner } from "../../../components/ui/AutosaveBanner";
 
 const INDUSTRIES = [
   "Agriculture",
@@ -140,6 +142,12 @@ const CompanyRegister: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Autosave form data across steps so users never lose progress
+  const { status: autosaveStatus, lastSavedAt, clearDraft } = useFormAutosave({
+    storageKey: 'navin-company-register',
+    data: { step1, step2: { ...step2, password: '', confirmPassword: '' } },
+  });
+
   const validateStep1 = (): boolean => {
     const errs: Step1Errors = {};
     if (!step1.companyName.trim()) errs.companyName = "Company name is required";
@@ -183,6 +191,7 @@ const CompanyRegister: React.FC = () => {
         email: step2.email,
         password: step2.password,
       });
+      clearDraft();
       navigate("/register/verify-email", { state: { email: step2.email } });
     } catch {
       setGeneralError("Registration failed. Please try again.");
@@ -590,6 +599,11 @@ const CompanyRegister: React.FC = () => {
           <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem]">
             {STEP_DESCRIPTIONS[step - 1]}
           </p>
+          {step < 3 && (
+            <div className="mt-2 flex justify-center">
+              <AutosaveBanner status={autosaveStatus} lastSavedAt={lastSavedAt} />
+            </div>
+          )}
         </div>
 
         {renderStepIndicator()}

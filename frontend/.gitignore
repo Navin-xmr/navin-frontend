@@ -38,6 +38,23 @@ dist-ssr
 vite.config.js
 vite.config.ts.timestamp-*
 
+# Test snapshots and coverage
+__snapshots__/
+*.snap
+coverage/
+.nyc_output/
+
+# Playwright / E2E
+test-results/
+playwright-report/
+e2e/
+
+# PWA generated files
+sw.js
+workbox-*.js
+
+# Lighthouse CI
+.lighthouseci/
 # Test snapshots and artifacts
 **/__snapshots__/
 *.snap
