@@ -61,6 +61,10 @@ export { default as CostPerRouteWidget } from './dashboard/CostPerRouteWidget';
 // Shipment
 export { default as TrackingTimeline } from './shipment/TrackingTimeline';
 export type { TrackingTimelineProps, Milestone } from './shipment/TrackingTimeline';
+export { default as MilestoneTimeline } from './shipment/MilestoneTimeline';
+export type { MilestoneDetail, MilestoneTimelineProps } from './shipment/MilestoneTimeline';
+export { default as EventAnnotation } from './shipment/EventAnnotation';
+export type { EventAnnotationProps, Annotation } from './shipment/EventAnnotation';
 export { default as StatusUpdate } from './shipment/StatusUpdate';
 export type { StatusUpdateProps, ShipmentMilestone } from './shipment/StatusUpdate';
 export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation/DeliveryConfirmation';

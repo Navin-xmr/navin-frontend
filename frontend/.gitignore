@@ -7,7 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
 *.local
@@ -35,4 +38,15 @@ dist-ssr
 vite.config.js
 vite.config.ts.timestamp-*
 
-# Somzilla issues document (root-level .gitignore handles this)
+# Test snapshots and artifacts
+**/__snapshots__/
+*.snap
+test-results/
+playwright-report/
+coverage/
+
+# Lint output
+lint-output.txt
+
+# Misc JSON artifacts
+vt.json
