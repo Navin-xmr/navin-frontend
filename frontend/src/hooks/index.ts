@@ -7,6 +7,8 @@ export { useBulkSelection } from './useBulkSelection';
 export { useFormDraft } from './useFormDraft';
 export type { FormDraft, UseFormDraftReturn } from './useFormDraft';
 export type { UseBulkSelectionReturn } from './useBulkSelection';
+export { usePagination } from './usePagination';
+export type { UsePaginationOptions, UsePaginationReturn } from './usePagination';
 export { useReturningVisitor } from './useReturningVisitor';
 export type { ReturningVisitorState } from './useReturningVisitor';
 export { default as useWidgetCache } from './useWidgetCache';

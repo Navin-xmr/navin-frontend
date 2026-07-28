@@ -1,7 +1,8 @@
 import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
-import Breadcrumb from "../../components/ui/Breadcrumb";
+import Breadcrumb from "@components/common/Breadcrumb";
 import MilestoneTimeline, { MilestoneDetail } from "../../components/shipment/MilestoneTimeline/MilestoneTimeline";
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
 import ShipmentMap from "./ShipmentMap/ShipmentMap";
@@ -29,6 +30,7 @@ import ShipmentStickyBar from "./ShipmentStickyBar";
 import { Zap } from "lucide-react";
 
 const ShipmentDetail: React.FC = () => {
+  const { t } = useTranslation("shipments");
   const { id } = useParams<{ id: string }>();
   const { role } = useAuthContext();
   const isOnline = useOnlineStatus();
@@ -50,10 +52,10 @@ const ShipmentDetail: React.FC = () => {
     if (statusEvent && statusEvent.shipmentId === id) {
       Promise.resolve().then(() => {
         setCurrentStatus(statusEvent.newStatus);
-        announce(`Shipment status updated to ${statusEvent.newStatus}`);
+        announce(t("shipmentDetail.statusUpdated", { status: statusEvent.newStatus }));
       });
     }
-  }, [statusEvent, id, announce]);
+  }, [statusEvent, id, announce, t]);
 
   const shipmentHeaderData = {
     shipmentId: id ? `#${id}` : "#SHP-992834",
@@ -84,7 +86,7 @@ const ShipmentDetail: React.FC = () => {
   const handleDisputeSuccess = (dispute: DisputeData) => {
     setExistingDispute(dispute);
     setIsDisputeOpen(false);
-    announce(`Dispute submitted. Reference number: ${dispute.referenceNumber}`);
+    announce(t("shipmentDetail.disputeSubmitted", { ref: dispute.referenceNumber }));
   };
 
   const mockPaymentData: PaymentData | null = {
@@ -241,16 +243,17 @@ const ShipmentDetail: React.FC = () => {
 
       <div className="max-w-300 mx-auto relative z-10">
         <Breadcrumb
-          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Shipments", href: "/dashboard/shipments" }, { label: id ? `#${id}` : "#SHP-992834" }]}
+          items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Shipments", href: "/dashboard/shipments" }]}
+          current={id ? `#${id}` : "#SHP-992834"}
         />
 
         {/* Hero heading — sentinel for sticky bar */}
         <div ref={heroSentinelRef} className="text-center mb-16 md:mb-10">
           <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(2.5rem,7vw,5rem)] font-normal tracking-[0.04em] leading-[1.1] text-white m-0 mb-4">
-            SHIPMENT <span className="text-[#00d4c8]">DETAILS</span>
+            {t("shipmentDetail.titlePart1")} <span className="text-[#00d4c8]">{t("shipmentDetail.titlePart2")}</span>
           </h1>
           <p className="text-[clamp(0.95rem,2vw,1.1rem)] font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-150 mx-auto">
-            Track your shipment's journey with blockchain-verified milestones
+            {t("shipmentDetail.subtitle")}
           </p>
           {(role === 'company') && (
             <button
@@ -307,7 +310,7 @@ const ShipmentDetail: React.FC = () => {
 
           <div className="h-px bg-[rgba(0,212,200,0.2)] my-8" />
           <h2 className="font-['Bebas_Neue',sans-serif] text-[clamp(1.75rem,4vw,2.5rem)] font-normal tracking-[0.04em] leading-[1.2] text-white mt-10 mb-0 text-center md:mb-8">
-            MILESTONE <span className="text-[#00d4c8]">TIMELINE</span>
+            {t("shipmentDetail.milestoneTitlePart1")} <span className="text-[#00d4c8]">{t("shipmentDetail.milestoneTitlePart2")}</span>
           </h2>
           <MilestoneTimeline milestones={mockMilestones} />
         </div>
@@ -333,7 +336,7 @@ const ShipmentDetail: React.FC = () => {
           />
         )}
 
-        {!isOnline && <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">Upload Proof requires an internet connection.</div>}
+        {!isOnline && <div className="p-4 rounded-xl border border-border text-text-secondary text-sm text-center">{t("shipmentDetail.offlineBanner")}</div>}
 
         <NotesSection shipmentId={id ?? shipmentHeaderData.shipmentId} userRole={shipmentHeaderData.userRole} />
 

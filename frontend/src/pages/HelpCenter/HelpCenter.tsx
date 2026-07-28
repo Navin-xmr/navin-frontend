@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resetTourFlag } from '@components/onboarding/OnboardingTour';
+import { HelpCircle, RotateCcw } from 'lucide-react';
+import Breadcrumb from '@components/common/Breadcrumb';
 import { resetChecklist } from '@components/onboarding/OnboardingChecklist';
 import EmptyState from '@components/ui/EmptyState/EmptyState';
 import { useToast } from '@context/ToastContext';
@@ -112,6 +114,9 @@ const HelpCenter: React.FC = () => {
   };
 
   return (
+    <div className="w-full max-w-3xl mx-auto px-6 py-8">
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Help Center" />
+      <div className="flex items-center gap-3 mb-8">
     <div className="w-full max-w-3xl mx-auto px-6 py-8 max-md:px-4">
       <div className="flex items-center gap-3 mb-2">
         <HelpCircle size={28} className="text-[#62ffff]" />

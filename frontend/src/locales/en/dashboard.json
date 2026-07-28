@@ -1,5 +1,138 @@
 {
   "title": "Dashboard",
   "welcome": "Welcome",
-  "overview": "Overview"
+  "overview": "Overview",
+  "companyDashboard": {
+    "tour": {
+      "welcome": {
+        "heading": "Welcome to Navin 🎉",
+        "body": "This is your logistics command center. Monitor shipments, track performance, and manage your team — all in one place."
+      },
+      "createShipment": {
+        "heading": "Create Your First Shipment",
+        "body": "Click here to create a new shipment, assign routes, set milestones, and configure automated settlements."
+      },
+      "trackShipments": {
+        "heading": "Track Shipments",
+        "body": "View all active and historical shipments with real-time on-chain milestone updates and IoT sensor data."
+      },
+      "settlements": {
+        "heading": "Automated Settlements",
+        "body": "Settlements trigger automatically when delivery milestones are verified on the Stellar blockchain."
+      },
+      "wallet": {
+        "heading": "Connect Your Stellar Wallet",
+        "body": "Connect your Stellar wallet to sign settlement transactions and interact with Soroban smart contracts."
+      }
+    },
+    "stats": {
+      "active": "Active",
+      "delivered": "Delivered",
+      "delayed": "Delayed",
+      "verified": "Verified"
+    },
+    "errorTitle": "Failed to load dashboard",
+    "errorBody": "There was a problem connecting to the logistics network.",
+    "retry": "Retry Connection",
+    "menuAriaLabel": "Menu",
+    "title": "Logistics Overview",
+    "subtitle": "Blockchain-synced real-time data",
+    "live": "Live:",
+    "connected": "Connected",
+    "recentShipments": "Recent Shipments",
+    "viewAll": "View All",
+    "activeFleetRoutes": "Active Fleet Routes",
+    "driversActive_one": "{{count}} driver currently active",
+    "driversActive_other": "{{count}} drivers currently active",
+    "driverAlt": "Driver"
+  },
+  "customerDashboard": {
+    "errorTitle": "Failed to load dashboard",
+    "errorBody": "There was a problem loading your shipments.",
+    "retry": "Retry",
+    "title": "My Shipments",
+    "subtitle": "Track your active and past deliveries",
+    "stats": {
+      "totalShipments": "Total Shipments",
+      "inTransit": "In Transit",
+      "deliveredThisMonth": "Delivered This Month"
+    },
+    "activeShipments": "Active Shipments",
+    "shipmentCount_one": "{{count}} shipment",
+    "shipmentCount_other": "{{count}} shipments",
+    "noActiveShipments": "No active shipments",
+    "estDelivery": "Est. Delivery",
+    "milestoneProgress": "Milestone Progress",
+    "pastShipments": "Past Shipments",
+    "noPastShipments": "No past shipments yet",
+    "tableHeaders": {
+      "trackingNumber": "Tracking #",
+      "route": "Route",
+      "status": "Status",
+      "deliveryDate": "Delivery Date",
+      "proof": "Proof"
+    },
+    "download": "Download",
+    "notAvailable": "N/A",
+    "notifications": "Notifications",
+    "newCount_one": "{{count}} new",
+    "newCount_other": "{{count}} new",
+    "allCaughtUp": "All caught up!",
+    "viewAllNotifications": "View All Notifications",
+    "timeAgo": {
+      "minutes": "{{count}}m ago",
+      "hours": "{{count}}h ago",
+      "days": "{{count}}d ago"
+    }
+  },
+  "recentActivity": {
+    "groupToday": "Today",
+    "groupYesterday": "Yesterday",
+    "groupEarlier": "Earlier",
+    "heading": "Recent Activity",
+    "liveUpdates": "Live updates",
+    "loadingAriaLabel": "Recent activity loading",
+    "errorTitle": "Failed to load activity",
+    "errorBody": "Please try again shortly.",
+    "retry": "Retry",
+    "emptyTitle": "No recent activity",
+    "emptyBody": "When shipments update, you'll see events here.",
+    "eventFallback": "Event: {{type}}",
+    "shipmentUpdateFallback": "Shipment update",
+    "shipmentLink": "Shipment #{{id}}",
+    "shipmentUnavailable": "Shipment details unavailable",
+    "loading": "Loading…",
+    "loadMore": "Load more",
+    "caughtUp": "You're all caught up"
+  },
+  "anomalyPanel": {
+    "title": "Anomaly Alerts",
+    "subtitle": "Active anomalies sorted by severity — acknowledge to triage",
+    "refresh": "Refresh",
+    "refreshAriaLabel": "Refresh anomalies",
+    "noOpenAnomalies": "No open anomalies",
+    "openAnomalies_one": "{{count}} open anomaly",
+    "openAnomalies_other": "{{count}} open anomalies",
+    "loadingAriaLabel": "Loading anomalies",
+    "retry": "Retry",
+    "errorBody": "Failed to load anomalies. Please try again.",
+    "allClear": "All clear!",
+    "allClearBody": "No open anomalies at this time.",
+    "detected": "Detected: {{date}}",
+    "shipmentPrefix": "Shipment:",
+    "viewShipmentAriaLabel": "View shipment {{id}}",
+    "viewShipment": "View Shipment",
+    "acknowledgeAriaLabel": "Acknowledge anomaly {{id}}",
+    "acknowledge": "Acknowledge",
+    "acknowledging": "Acknowledging…",
+    "listAriaLabel": "Anomaly alerts",
+    "severityAriaLabel": "Severity: {{severity}}",
+    "types": {
+      "temperatureExceeded": "Temperature Exceeded",
+      "temperatureBelowMin": "Temperature Below Min",
+      "humidityExceeded": "Humidity Exceeded",
+      "humidityBelowMin": "Humidity Below Min",
+      "batteryLow": "Battery Low"
+    }
+  }
 }
