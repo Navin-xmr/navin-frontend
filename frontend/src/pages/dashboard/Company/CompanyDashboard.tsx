@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Clock, CheckCircle2, Truck,
   ShieldCheck, AlertTriangle,
@@ -17,39 +18,6 @@ import PerformanceScorecardWidget from './Scorecard/PerformanceScorecardWidget';
 import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
 import type { TourStep } from '@components/onboarding/OnboardingTour';
 
-const TOUR_STEPS: TourStep[] = [
-  {
-    targetId: 'tour-welcome',
-    heading: 'Welcome to Navin 🎉',
-    body: 'This is your logistics command center. Monitor shipments, track performance, and manage your team — all in one place.',
-    placement: 'bottom',
-  },
-  {
-    targetId: 'tour-create-shipment',
-    heading: 'Create Your First Shipment',
-    body: 'Click here to create a new shipment, assign routes, set milestones, and configure automated settlements.',
-    placement: 'bottom',
-  },
-  {
-    targetId: 'tour-shipments-link',
-    heading: 'Track Shipments',
-    body: 'View all active and historical shipments with real-time on-chain milestone updates and IoT sensor data.',
-    placement: 'right',
-  },
-  {
-    targetId: 'tour-settlements-link',
-    heading: 'Automated Settlements',
-    body: 'Settlements trigger automatically when delivery milestones are verified on the Stellar blockchain.',
-    placement: 'right',
-  },
-  {
-    targetId: 'tour-wallet',
-    heading: 'Connect Your Stellar Wallet',
-    body: 'Connect your Stellar wallet to sign settlement transactions and interact with Soroban smart contracts.',
-    placement: 'bottom',
-  },
-];
-
 const TrendIcon = ({ up }: { up: boolean }) => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {up
@@ -59,16 +27,50 @@ const TrendIcon = ({ up }: { up: boolean }) => (
 );
 
 const stats = [
-  { id: "active", label: "Active", value: "128", trend: "12%", trendType: "positive", icon: <Truck size={18} /> },
-  { id: "delivered", label: "Delivered", value: "1,420", trend: "5%", trendType: "positive", icon: <CheckCircle2 size={18} /> },
-  { id: "delayed", label: "Delayed", value: "12", trend: "2%", trendType: "negative", icon: <Clock size={18} /> },
-  { id: "verified", label: "Verified", value: "45", trend: "0%", trendType: "neutral", icon: <ShieldCheck size={18} /> },
+  { id: "active", value: "128", trend: "12%", trendType: "positive", icon: <Truck size={18} /> },
+  { id: "delivered", value: "1,420", trend: "5%", trendType: "positive", icon: <CheckCircle2 size={18} /> },
+  { id: "delayed", value: "12", trend: "2%", trendType: "negative", icon: <Clock size={18} /> },
+  { id: "verified", value: "45", trend: "0%", trendType: "neutral", icon: <ShieldCheck size={18} /> },
 ];
 
 const CompanyDashboard: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showTour, setShowTour] = useState(false);
+
+  const TOUR_STEPS: TourStep[] = [
+    {
+      targetId: 'tour-welcome',
+      heading: t('companyDashboard.tour.welcome.heading'),
+      body: t('companyDashboard.tour.welcome.body'),
+      placement: 'bottom',
+    },
+    {
+      targetId: 'tour-create-shipment',
+      heading: t('companyDashboard.tour.createShipment.heading'),
+      body: t('companyDashboard.tour.createShipment.body'),
+      placement: 'bottom',
+    },
+    {
+      targetId: 'tour-shipments-link',
+      heading: t('companyDashboard.tour.trackShipments.heading'),
+      body: t('companyDashboard.tour.trackShipments.body'),
+      placement: 'right',
+    },
+    {
+      targetId: 'tour-settlements-link',
+      heading: t('companyDashboard.tour.settlements.heading'),
+      body: t('companyDashboard.tour.settlements.body'),
+      placement: 'right',
+    },
+    {
+      targetId: 'tour-wallet',
+      heading: t('companyDashboard.tour.wallet.heading'),
+      body: t('companyDashboard.tour.wallet.body'),
+      placement: 'bottom',
+    },
+  ];
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -90,10 +92,10 @@ const CompanyDashboard: React.FC = () => {
       <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6">
         <div className="flex flex-col items-center justify-center p-12 bg-[#14171e] border border-dashed border-[#ef4444] rounded-xl text-center">
           <AlertTriangle size={48} className="text-[#ef4444] mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Failed to load dashboard</h3>
-          <p className="text-[#94a3b8] text-sm mb-4">There was a problem connecting to the logistics network.</p>
+          <h3 className="text-lg font-semibold mb-2">{t('companyDashboard.errorTitle')}</h3>
+          <p className="text-[#94a3b8] text-sm mb-4">{t('companyDashboard.errorBody')}</p>
           <button className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer" onClick={() => window.location.reload()}>
-            Retry Connection
+            {t('companyDashboard.retry')}
           </button>
         </div>
       </div>
@@ -113,7 +115,7 @@ const CompanyDashboard: React.FC = () => {
           </div>
           <span className="text-lg font-extrabold text-white tracking-widest">NAVIN</span>
         </div>
-        <button className="bg-transparent border-none cursor-pointer p-1 flex items-center" aria-label="Menu">
+        <button className="bg-transparent border-none cursor-pointer p-1 flex items-center" aria-label={t('companyDashboard.menuAriaLabel')}>
           <Menu size={22} color="#fff" />
         </button>
       </div>
@@ -121,11 +123,11 @@ const CompanyDashboard: React.FC = () => {
       {/* Title */}
       <div className="flex justify-between items-end max-md:flex-col max-md:items-start max-md:gap-1" data-tour-id="tour-welcome">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1 max-md:text-[22px] max-md:font-bold">Logistics Overview</h1>
-          <p className="text-[#94a3b8] text-sm m-0">Blockchain-synced real-time data</p>
+          <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1 max-md:text-[22px] max-md:font-bold">{t('companyDashboard.title')}</h1>
+          <p className="text-[#94a3b8] text-sm m-0">{t('companyDashboard.subtitle')}</p>
         </div>
         <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
-          Live: <span className="text-[#10b981]">Connected</span>
+          {t('companyDashboard.live')} <span className="text-[#10b981]">{t('companyDashboard.connected')}</span>
         </div>
       </div>
 
@@ -138,7 +140,7 @@ const CompanyDashboard: React.FC = () => {
             : stats.map((stat) => (
               <div key={stat.id} className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#334155] max-md:p-4">
                 <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
-                  {stat.icon}{stat.label}
+                  {stat.icon}{t(`companyDashboard.stats.${stat.id}`)}
                 </div>
                 <div className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}>
                   {stat.value}
@@ -177,10 +179,10 @@ const CompanyDashboard: React.FC = () => {
       <div className="flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-[0.05em] m-0 max-md:text-lg max-md:font-bold max-md:text-white max-md:normal-case max-md:tracking-normal">
-            Recent Shipments
+            {t('companyDashboard.recentShipments')}
           </h2>
           <a href="#" className="text-[13px] font-medium text-[#94a3b8] no-underline transition-colors hover:text-white max-md:text-[#3b82f6] max-md:font-semibold">
-            View All
+            {t('companyDashboard.viewAll')}
           </a>
         </div>
 
@@ -206,8 +208,8 @@ const CompanyDashboard: React.FC = () => {
               </svg>
             </div>
             <div>
-              <h3 className="m-0 mb-0.5 text-sm font-semibold">Active Fleet Routes</h3>
-              <p className="m-0 text-xs text-[#94a3b8]">12 drivers currently active</p>
+              <h3 className="m-0 mb-0.5 text-sm font-semibold">{t('companyDashboard.activeFleetRoutes')}</h3>
+              <p className="m-0 text-xs text-[#94a3b8]">{t('companyDashboard.driversActive', { count: 12 })}</p>
             </div>
           </div>
           <div className="flex items-center">
@@ -217,7 +219,7 @@ const CompanyDashboard: React.FC = () => {
               { seed: "Jack", bg: "ffdfbf" },
             ].map((a, i) => (
               <div key={i} className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 first:ml-0 bg-[#334155] overflow-hidden">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${a.seed}&backgroundColor=${a.bg}`} alt="Driver" className="w-full h-full object-cover" />
+                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${a.seed}&backgroundColor=${a.bg}`} alt={t('companyDashboard.driverAlt')} className="w-full h-full object-cover" />
               </div>
             ))}
             <div className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 bg-[#334155] flex items-center justify-center text-[11px] font-semibold text-white">

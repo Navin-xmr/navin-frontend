@@ -6,7 +6,6 @@ import {
   type PreferencesMap,
   notificationPreferencesApi,
 } from '@services/api/endpoints/notifications';
-import './NotificationPreferences.css';
 
 // ---------- Data ----------
 
@@ -130,45 +129,60 @@ const NotificationPreferences: React.FC = () => {
     }
   };
 
+  const sliderTrackCls =
+    'absolute inset-0 rounded-full bg-slate-800 border border-slate-700 transition-colors duration-300 peer-checked:bg-blue-500/10 peer-checked:border-blue-500';
+  const sliderThumbCls =
+    'absolute h-[18px] w-[18px] left-0.5 bottom-0.5 rounded-full bg-slate-400 transition-transform duration-300 peer-checked:bg-blue-500 peer-checked:translate-x-5 pointer-events-none';
+
   if (loadingInitial) {
     return (
-      <section className="notif-pref-container notif-pref-loading" aria-label="Loading notification preferences">
-        <Loader2 className="notif-spinner" size={24} />
+      <section
+        className="flex items-center justify-center gap-2.5 py-12 px-6 bg-[#14171e] border border-slate-800 rounded-xl overflow-hidden w-full text-slate-500 text-sm"
+        aria-label="Loading notification preferences"
+      >
+        <Loader2 className="animate-spin" size={24} />
         <span>Loading preferences…</span>
       </section>
     );
   }
 
   return (
-    <section className="notif-pref-container" aria-labelledby="notification-preferences-title">
+    <section
+      className="bg-[#14171e] border border-slate-800 rounded-xl overflow-hidden w-full"
+      aria-labelledby="notification-preferences-title"
+    >
       {/* Header */}
-      <div className="notif-pref-header">
-        <Bell className="notif-pref-icon" size={24} />
+      <div className="flex items-center gap-3 px-4 py-6 sm:px-6 border-b border-slate-800">
+        <Bell className="text-blue-500 bg-blue-500/10 p-1.5 rounded-lg shrink-0" size={24} />
         <div>
-          <h2 id="notification-preferences-title">Notification Preferences</h2>
-          <p>Choose which events you want to be notified about, and through which channels.</p>
+          <h2 id="notification-preferences-title" className="text-lg font-semibold text-slate-100 mb-1">
+            Notification Preferences
+          </h2>
+          <p className="text-[13px] text-slate-500">
+            Choose which events you want to be notified about, and through which channels.
+          </p>
         </div>
       </div>
 
       {/* Phone verification */}
-      <div className="notif-phone-section">
-        <div className="notif-phone-header">
-          <span className="notif-phone-title">SMS Notifications</span>
+      <div className="px-4 py-4 sm:px-6 border-b border-slate-800 bg-slate-800/30">
+        <div className="flex items-center gap-2.5 mb-3">
+          <span className="text-sm font-semibold text-slate-200">SMS Notifications</span>
           {phoneVerified ? (
-            <span className="notif-phone-verified" aria-label="Phone verified">
+            <span className="flex items-center gap-1 text-emerald-500 text-xs font-medium" aria-label="Phone verified">
               <CheckCircle2 size={14} /> Verified
             </span>
           ) : (
-            <span className="notif-phone-unverified">Phone verification required to enable SMS</span>
+            <span className="text-xs text-amber-500">Phone verification required to enable SMS</span>
           )}
         </div>
 
         {!phoneVerified && (
-          <div className="notif-phone-form">
-            <div className="notif-phone-row">
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
               <input
                 type="tel"
-                className="notif-phone-input"
+                className="flex-1 min-w-0 bg-[#0f1117] border border-slate-700 rounded-lg px-3 py-2 text-slate-200 text-sm outline-none transition-colors focus:border-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
                 placeholder="+1 555 000 0000"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -176,21 +190,21 @@ const NotificationPreferences: React.FC = () => {
                 disabled={otpSent}
               />
               <button
-                className="notif-phone-btn"
+                className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 text-[13px] font-medium cursor-pointer whitespace-nowrap transition-colors hover:enabled:bg-slate-700 hover:enabled:border-slate-600 disabled:opacity-60 disabled:cursor-not-allowed"
                 onClick={handleSendOtp}
                 disabled={otpLoading || otpSent}
                 aria-label="Send OTP"
               >
-                {otpLoading ? <Loader2 className="notif-spinner" size={14} /> : null}
+                {otpLoading ? <Loader2 className="animate-spin" size={14} /> : null}
                 {otpSent ? 'OTP Sent' : 'Send OTP'}
               </button>
             </div>
 
             {otpSent && (
-              <div className="notif-phone-row">
+              <div className="flex gap-2">
                 <input
                   type="text"
-                  className="notif-phone-input"
+                  className="flex-1 min-w-0 bg-[#0f1117] border border-slate-700 rounded-lg px-3 py-2 text-slate-200 text-sm outline-none transition-colors focus:border-blue-500"
                   placeholder="Enter verification code"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
@@ -199,19 +213,19 @@ const NotificationPreferences: React.FC = () => {
                   maxLength={6}
                 />
                 <button
-                  className="notif-phone-btn notif-phone-btn--primary"
+                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-500/15 border border-blue-500 rounded-lg text-blue-400 text-[13px] font-medium cursor-pointer whitespace-nowrap transition-colors hover:enabled:bg-blue-500/25 disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={handleVerifyOtp}
                   disabled={verifyLoading}
                   aria-label="Verify OTP"
                 >
-                  {verifyLoading ? <Loader2 className="notif-spinner" size={14} /> : null}
+                  {verifyLoading ? <Loader2 className="animate-spin" size={14} /> : null}
                   Verify
                 </button>
               </div>
             )}
 
             {phoneError && (
-              <p className="notif-phone-error" role="alert">
+              <p className="text-xs text-red-400 mt-0.5" role="alert">
                 {phoneError}
               </p>
             )}
@@ -220,54 +234,73 @@ const NotificationPreferences: React.FC = () => {
       </div>
 
       {/* Channel header */}
-      <div className="notif-channel-header" aria-hidden="true">
-        <span className="notif-channel-label">Email</span>
-        <span className="notif-channel-label">SMS</span>
+      <div className="flex justify-end gap-5 px-4 pt-2 sm:px-6" aria-hidden="true">
+        <span className="w-11 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Email</span>
+        <span className="w-11 text-center text-[11px] font-semibold text-slate-500 uppercase tracking-wide">SMS</span>
       </div>
 
       {/* Categories */}
-      <div className="notif-pref-list">
-        {CATEGORIES.map((cat) => (
-          <div key={cat.label} className="notif-category">
-            <h3 className="notif-category-title">{cat.label}</h3>
+      <div className="px-4 pb-2 sm:px-6 flex flex-col">
+        {CATEGORIES.map((cat, catIndex) => (
+          <div
+            key={cat.label}
+            className={`py-4 pb-1 ${catIndex > 0 ? 'border-t border-slate-800/60' : ''}`}
+          >
+            <h3 className="text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">{cat.label}</h3>
             {cat.events.map(({ event, label }) => (
-              <div key={event} className="notif-pref-row">
-                <span className="notif-pref-label">{label}</span>
+              <div
+                key={event}
+                className="flex items-center justify-between py-3 border-b border-slate-800/40 gap-4 last:border-b-0"
+              >
+                <span className="flex-1 text-[13px] sm:text-sm font-medium text-slate-200">{label}</span>
 
-                <div className="notif-pref-toggles">
+                <div className="flex items-center gap-5 shrink-0">
                   {/* Email toggle */}
-                  <label className="notif-switch" htmlFor={`${event}-email`}>
+                  <label
+                    className="relative inline-block w-11 h-6 shrink-0 cursor-pointer"
+                    htmlFor={`${event}-email`}
+                  >
                     <input
                       id={`${event}-email`}
                       type="checkbox"
+                      className="sr-only peer"
                       checked={prefs[event]?.email ?? false}
                       onChange={() => handleToggle(event, 'email')}
                       aria-label={`${label} email notifications`}
                     />
-                    <span className="notif-slider round" />
+                    <span className={sliderTrackCls} />
+                    <span className={sliderThumbCls} />
                   </label>
 
                   {/* SMS toggle */}
                   <label
-                    className={`notif-switch ${!phoneVerified ? 'notif-switch--disabled' : ''}`}
+                    className={`relative inline-block w-11 h-6 shrink-0 cursor-pointer ${
+                      !phoneVerified ? 'opacity-40 cursor-not-allowed' : ''
+                    }`}
                     htmlFor={`${event}-sms`}
                     title={!phoneVerified ? 'Verify your phone number to enable SMS' : undefined}
                   >
                     <input
                       id={`${event}-sms`}
                       type="checkbox"
+                      className="sr-only peer"
                       checked={prefs[event]?.sms ?? false}
                       onChange={() => handleToggle(event, 'sms')}
                       disabled={!phoneVerified}
                       aria-label={`${label} SMS notifications`}
                       aria-disabled={!phoneVerified}
                     />
-                    <span className="notif-slider round" />
+                    <span className={sliderTrackCls} />
+                    <span className={sliderThumbCls} />
                   </label>
 
                   {/* Inline saved indicator */}
                   {savedEvent === event && (
-                    <span className="notif-saved-indicator" role="status" aria-live="polite">
+                    <span
+                      className="flex items-center gap-1 text-xs text-emerald-500 font-medium whitespace-nowrap animate-notif-fade-in"
+                      role="status"
+                      aria-live="polite"
+                    >
                       <CheckCircle2 size={13} /> Saved
                     </span>
                   )}

@@ -70,12 +70,17 @@ export default {
           '0%, 100%': { opacity: '0.5' },
           '50%': { opacity: '1' },
         },
+        'notif-fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(3px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'fade-in-up': 'fade-in-up 200ms ease-out forwards',
         'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
         'float': 'float 3s ease-in-out infinite',
         'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+        'notif-fade-in': 'notif-fade-in 0.25s ease-out',
       },
     },
   },

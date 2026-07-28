@@ -7,7 +7,9 @@ import { usersApi, invitationsApi } from '@services/api';
 import type { User as ApiUser, UserRole, Invitation } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
+import { usePagination } from '../../../../hooks/usePagination';
 import Avatar from '../../../../components/ui/Avatar';
+import Breadcrumb from '@components/common/Breadcrumb';
 import './UserManagement.css';
 
 interface MappedUser {
@@ -39,7 +41,7 @@ const UserManagement: React.FC = () => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('All');
-  const [currentPage, setCurrentPage] = useState(1);
+  const { currentPage, pageSize: itemsPerPage, setPage: setCurrentPage, reset: resetPage } = usePagination({ pageSize: 8 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<ActionMenuState>(null);
   const [loading, setLoading] = useState(true);
@@ -63,8 +65,6 @@ const UserManagement: React.FC = () => {
 
   const inviteModalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(inviteModalRef, isModalOpen, closeModal);
-
-  const itemsPerPage = 8;
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -208,6 +208,7 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="user-management-container">
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Team" />
       <div className="um-header">
         <div className="um-title">
           <h1>Team Management</h1>
@@ -276,12 +277,12 @@ const UserManagement: React.FC = () => {
             type="text"
             placeholder="Search by name or email..."
             value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
           />
         </div>
         <div className="filter-dropdown">
           <Filter className="filter-icon" size={18} />
-          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }}>
+          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); resetPage(); }}>
             <option value="All">All Roles</option>
             <option value="Admin">Admin</option>
             <option value="Manager">Manager</option>
@@ -359,12 +360,12 @@ const UserManagement: React.FC = () => {
           </span>
           <div className="page-controls">
             <button className="page-btn" disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}>
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
               <ChevronLeft size={16} />
             </button>
             <span className="current-page">{currentPage}</span>
             <button className="page-btn" disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}>
+              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
               <ChevronRight size={16} />
             </button>
           </div>

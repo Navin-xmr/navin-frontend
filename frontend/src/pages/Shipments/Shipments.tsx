@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Download, Loader2, LayoutGrid, List, Map } from "lucide-react";
 import { shipmentApi, type Shipment } from "../../api/shipmentApi";
 import type { ShipmentPriority } from "../../api/shipmentApi";
@@ -44,6 +45,7 @@ type ShipmentsView = "list" | "kanban" | "routeMap";
 
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation("shipments");
   const { addToast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -168,7 +170,7 @@ const Shipments: React.FC = () => {
     const name = newFilterName.trim();
 
     if (savedFilters.some((f) => f.name.toLowerCase() === name.toLowerCase())) {
-      alert("A filter with this name already exists.");
+      alert(t("shipmentsList.filterNameExists"));
       return;
     }
 
@@ -233,7 +235,7 @@ const Shipments: React.FC = () => {
         setTotal(response.meta.total);
       })
       .catch((err: Error) => {
-        setError(err.message || "Unable to load shipments.");
+        setError(err.message || t("shipmentsList.unableToLoad"));
       })
       .finally(() => {
         setIsLoading(false);
@@ -311,13 +313,13 @@ const Shipments: React.FC = () => {
   return (
     <div className="shipments-page">
       <div className="shipments-header">
-        <h1>Shipments</h1>
+        <h1>{t("shipmentsList.title")}</h1>
         <div className="flex items-center gap-3">
           {/* View toggle */}
           <div
             className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
             role="group"
-            aria-label="Toggle shipments view"
+            aria-label={t("shipmentsList.viewToggleAriaLabel")}
           >
             <button
               type="button"
@@ -328,7 +330,7 @@ const Shipments: React.FC = () => {
               }`}
             >
               <List size={14} />
-              List
+              {t("shipmentsList.listView")}
             </button>
             <button
               type="button"
@@ -339,7 +341,7 @@ const Shipments: React.FC = () => {
               }`}
             >
               <LayoutGrid size={14} />
-              Kanban
+              {t("shipmentsList.kanbanView")}
             </button>
             <button
               type="button"
@@ -350,7 +352,7 @@ const Shipments: React.FC = () => {
               }`}
             >
               <Map size={14} />
-              Map
+              {t("shipmentsList.mapView")}
             </button>
           </div>
 
@@ -359,10 +361,10 @@ const Shipments: React.FC = () => {
             className="export-csv-btn"
             onClick={handleExportCSV}
             disabled={isExporting || shipments.length === 0}
-            aria-label="Export shipments to CSV"
+            aria-label={t("shipmentsList.exportAriaLabel")}
           >
             {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-            {isExporting ? "Exporting…" : "Export CSV"}
+            {isExporting ? t("shipmentsList.exporting") : t("shipmentsList.exportCsv")}
           </button>
         </div>
       </div>
@@ -388,7 +390,7 @@ const Shipments: React.FC = () => {
                     onClick={(e) => handleDeleteFilter(sf.name, e)}
                     className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.15)] text-[#62ffff] font-bold text-xs"
                     role="button"
-                    aria-label={`Delete ${sf.name} filter`}
+                    aria-label={t("shipmentsList.deleteFilterAriaLabel", { name: sf.name })}
                   >
                     ×
                   </span>
@@ -400,7 +402,7 @@ const Shipments: React.FC = () => {
           {/* Filter and Search Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-6 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
             <div className="flex-1 min-w-[280px]">
-              <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder="Search by ID, origin, or destination..." />
+              <SearchInput value={searchQuery} onChange={setSearchQuery} placeholder={t("shipmentsList.searchPlaceholder")} />
             </div>
 
             {/* Status Filter */}
@@ -408,22 +410,22 @@ const Shipments: React.FC = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as "ALL" | "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED")}
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-              aria-label="Filter by Status"
+              aria-label={t("shipmentsList.statusFilterAriaLabel")}
             >
               <option value="ALL" className="bg-[#121620]">
-                All Statuses
+                {t("shipmentsList.statusAll")}
               </option>
               <option value="CREATED" className="bg-[#121620]">
-                Created
+                {t("shipmentsList.statusCreated")}
               </option>
               <option value="IN_TRANSIT" className="bg-[#121620]">
-                In Transit
+                {t("shipmentsList.statusInTransit")}
               </option>
               <option value="DELIVERED" className="bg-[#121620]">
-                Delivered
+                {t("shipmentsList.statusDelivered")}
               </option>
               <option value="CANCELLED" className="bg-[#121620]">
-                Cancelled
+                {t("shipmentsList.statusCancelled")}
               </option>
             </select>
 
@@ -432,16 +434,16 @@ const Shipments: React.FC = () => {
               value={timeframeFilter}
               onChange={(e) => setTimeframeFilter(e.target.value as "ALL" | "30" | "90")}
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-              aria-label="Filter by Timeframe"
+              aria-label={t("shipmentsList.timeframeFilterAriaLabel")}
             >
               <option value="ALL" className="bg-[#121620]">
-                All Time
+                {t("shipmentsList.timeframeAll")}
               </option>
               <option value="30" className="bg-[#121620]">
-                Last 30 Days
+                {t("shipmentsList.timeframe30")}
               </option>
               <option value="90" className="bg-[#121620]">
-                Last 90 Days
+                {t("shipmentsList.timeframe90")}
               </option>
             </select>
 
@@ -450,19 +452,19 @@ const Shipments: React.FC = () => {
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as "ALL" | ShipmentPriority)}
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
-              aria-label="Filter by Priority"
+              aria-label={t("shipmentsList.priorityFilterAriaLabel")}
             >
               <option value="ALL" className="bg-[#121620]">
-                All Priorities
+                {t("shipmentsList.priorityAll")}
               </option>
               <option value="URGENT" className="bg-[#121620]">
-                Urgent
+                {t("shipmentsList.priorityUrgent")}
               </option>
               <option value="STANDARD" className="bg-[#121620]">
-                Standard
+                {t("shipmentsList.priorityStandard")}
               </option>
               <option value="ECONOMY" className="bg-[#121620]">
-                Economy
+                {t("shipmentsList.priorityEconomy")}
               </option>
             </select>
             <ShipmentFilters onFilterChange={setAdvancedFilters} />
@@ -474,21 +476,21 @@ const Shipments: React.FC = () => {
                 onClick={() => setIsSavingFilter(true)}
                 className="px-4 py-2 bg-transparent border border-[rgba(98,255,255,0.3)] hover:bg-[rgba(98,255,255,0.08)] rounded-lg text-sm text-[#62ffff] font-medium transition-colors cursor-pointer"
               >
-                Save current filters
+                {t("shipmentsList.saveCurrentFilters")}
               </button>
             ) : (
               <form onSubmit={handleSaveFilter} className="flex items-center gap-2">
                 <input
                   type="text"
                   required
-                  placeholder="Filter name..."
+                  placeholder={t("shipmentsList.filterNamePlaceholder")}
                   value={newFilterName}
                   onChange={(e) => setNewFilterName(e.target.value)}
                   className="bg-[rgba(19,186,186,0.05)] border border-[#62ffff] rounded-lg px-3 py-2 text-sm text-white focus:outline-none"
                   autoFocus
                 />
                 <button type="submit" className="px-3 py-2 bg-[#62ffff] text-black font-semibold text-sm rounded-lg hover:bg-[#4ae8e8] transition-colors cursor-pointer">
-                  Save
+                  {t("shipmentsList.save")}
                 </button>
                 <button
                   type="button"
@@ -498,7 +500,7 @@ const Shipments: React.FC = () => {
                   }}
                   className="px-3 py-2 bg-transparent text-slate-400 hover:text-white text-sm rounded-lg transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t("shipmentsList.cancel")}
                 </button>
               </form>
             )}
@@ -510,19 +512,20 @@ const Shipments: React.FC = () => {
             <ShipmentsKanban />
           ) : isEmpty ? (
             <div className="shipments-empty">
-              <h3>No shipments available</h3>
-              <p>There are no shipments to show.</p>
+              <h3>{t("shipmentsList.noShipmentsTitle")}</h3>
+              <p>{t("shipmentsList.noShipmentsBody")}</p>
             </div>
           ) : isFilterEmpty ? (
             <div className="shipments-empty">
-              <h3>No results found</h3>
-              <p>No shipments match the selected filters.</p>
+              <h3>{t("shipmentsList.noResultsTitle")}</h3>
+              <p>{t("shipmentsList.noResultsBody")}</p>
             </div>
           ) : (
             <>
               <div className="shipments-summary">
-                Showing {filteredShipments.length}
-                {isAnyFilterActive ? ` of ${shipments.length} loaded` : ` of ${total}`} shipments
+                {isAnyFilterActive
+                  ? t("shipmentsList.summaryLoaded", { count: filteredShipments.length, loaded: shipments.length })
+                  : t("shipmentsList.summaryTotal", { count: filteredShipments.length, total })}
               </div>
 
               {/* Sticky table header */}
@@ -533,7 +536,7 @@ const Shipments: React.FC = () => {
                     <th style={{ width: "40px" }}>
                       <input
                         type="checkbox"
-                        aria-label="Select all visible shipments"
+                        aria-label={t("shipmentsList.tableHeaders.selectAll")}
                         checked={allVisibleSelected}
                         ref={(el) => {
                           if (el) el.indeterminate = someVisibleSelected;
@@ -542,13 +545,13 @@ const Shipments: React.FC = () => {
                         className="cursor-pointer accent-[#62ffff] w-4 h-4"
                       />
                     </th>
-                    <th>Shipment ID</th>
-                    <th>Origin</th>
-                    <th>Destination</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
+                    <th>{t("shipmentsList.tableHeaders.shipmentId")}</th>
+                    <th>{t("shipmentsList.tableHeaders.origin")}</th>
+                    <th>{t("shipmentsList.tableHeaders.destination")}</th>
+                    <th>{t("shipmentsList.tableHeaders.status")}</th>
+                    <th>{t("shipmentsList.tableHeaders.priority")}</th>
+                    <th>{t("shipmentsList.tableHeaders.createdDate")}</th>
+                    <th>{t("shipmentsList.tableHeaders.actions")}</th>
                   </tr>
                 </thead>
               </table>
@@ -582,7 +585,7 @@ const Shipments: React.FC = () => {
                           <td style={{ width: "40px" }}>
                             <input
                               type="checkbox"
-                              aria-label={`Select shipment ${shipment.id}`}
+                              aria-label={t("shipmentsList.selectShipmentAriaLabel", { id: shipment.id })}
                               checked={selected}
                               onChange={() => toggleOne(shipment.id)}
                               onClick={(e) => e.stopPropagation()}
@@ -601,7 +604,7 @@ const Shipments: React.FC = () => {
                           <td>{safeFormatDate(shipment.createdAt)}</td>
                           <td>
                             <button type="button" className="verify-button" onClick={() => handleRowClick(shipment.id, virtualRow.index)}>
-                              View
+                              {t("shipmentsList.view")}
                             </button>
                           </td>
                         </tr>
@@ -613,13 +616,15 @@ const Shipments: React.FC = () => {
 
               {isLoading && (
                 <div className="shipments-loading" aria-live="polite">
-                  Loading more shipments…
+                  {t("shipmentsList.loadingMore")}
                 </div>
               )}
 
               {!hasMore && filteredShipments.length > 0 && (
                 <div className="shipments-summary" style={{ marginTop: "0.5rem" }}>
-                  {isAnyFilterActive ? `${filteredShipments.length} matching shipments` : `All ${total} shipments loaded`}
+                  {isAnyFilterActive
+                    ? t("shipmentsList.matchingShipments", { count: filteredShipments.length })
+                    : t("shipmentsList.allLoaded", { count: total })}
                 </div>
               )}
             </>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { resetTourFlag } from '@components/onboarding/OnboardingTour';
 import { HelpCircle, RotateCcw } from 'lucide-react';
+import Breadcrumb from '@components/common/Breadcrumb';
 
 const HelpCenter: React.FC = () => {
   const handleRestartTour = () => {
@@ -11,6 +12,7 @@ const HelpCenter: React.FC = () => {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-6 py-8">
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Help Center" />
       <div className="flex items-center gap-3 mb-8">
         <HelpCircle size={28} className="text-[#62ffff]" />
         <h1 className="text-2xl font-bold text-white m-0">Help Center</h1>

@@ -18,6 +18,7 @@ import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { can } from "../../utils/rbac";
 import { useAuthContext } from "../../context/AuthContext";
 import { useLiveRegion } from "../../context/LiveRegionContext";
+import Breadcrumb from "@components/common/Breadcrumb";
 
 
 // Local lightweight table formatting (kept inline to avoid coupling)
@@ -195,6 +196,7 @@ export default function Settlements() {
 
   return (
     <div className="p-6 md:p-4">
+      <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }]} current="Settlements" />
       {/* Header */}
       <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-4">
         <div>
