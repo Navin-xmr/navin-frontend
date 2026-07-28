@@ -52,6 +52,7 @@ const ShipmentHistory = lazy(() => import('./pages/dashboard/Customer/ShipmentHi
 const UserManagement = lazy(() => import('./pages/dashboard/Company/UserManagement/UserManagement'));
 const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/AcceptInvitation'));
 const CalendarView = lazy(() => import('./pages/dashboard/Company/CalendarView/CalendarView'));
+const WhatsNewPage = lazy(() => import('./pages/WhatsNew/WhatsNewPage'));
 
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
@@ -109,6 +110,7 @@ const router = createBrowserRouter([
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
           { path: '/dashboard/profile', element: <CustomerProfile /> },
+          { path: '/dashboard/whats-new', element: S(<WhatsNewPage />) },
         ],
       },
     ],
