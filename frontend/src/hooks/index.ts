@@ -5,3 +5,5 @@ export { useFocusTrap } from './useFocusTrap';
 export { useScrollSpy } from './useScrollSpy';
 export { useBulkSelection } from './useBulkSelection';
 export type { UseBulkSelectionReturn } from './useBulkSelection';
+export { useShipmentDetail } from './useShipmentDetail';
+export type { UseShipmentDetailReturn } from './useShipmentDetail';

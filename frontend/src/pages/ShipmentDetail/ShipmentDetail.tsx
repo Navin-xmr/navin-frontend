@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Loader2, AlertTriangle } from "lucide-react";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import { useShipmentDetail } from "../../hooks/useShipmentDetail";
 import Breadcrumb from "../../components/ui/Breadcrumb";
 import MilestoneTimeline, { MilestoneDetail } from "../../components/shipment/MilestoneTimeline/MilestoneTimeline";
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
@@ -23,38 +25,40 @@ import type { DisputeData } from "../Shipment/sections/DisputeForm/DisputeForm";
 import { useLiveRegion } from "../../context/LiveRegionContext";
 import CostBreakdown from "../../components/shipment/CostBreakdown/CostBreakdown";
 import type { CostBreakdownData } from "../../components/shipment/CostBreakdown/CostBreakdown";
+import { useToast } from "../../context/ToastContext";
+import { exportShipmentPdf } from "../../utils/exportShipmentPdf";
 
 const ShipmentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { role } = useAuthContext();
   const isOnline = useOnlineStatus();
   const { announce } = useLiveRegion();
+  const { addToast } = useToast();
 
-  const [currentStatus, setCurrentStatus] = useState("IN_TRANSIT");
+  const { shipment, isLoading, error } = useShipmentDetail(id);
   const [isPrinting, setIsPrinting] = useState(false);
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
   const [existingDispute, setExistingDispute] = useState<DisputeData | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const events = useRealtimeEvents(["shipment:status", "shipment:milestone"]);
+  const events = useRealtimeEvents(["shipment:status"]);
   const statusEvent = events["shipment:status"];
   React.useEffect(() => {
     if (statusEvent && statusEvent.shipmentId === id) {
-      Promise.resolve().then(() => {
-        setCurrentStatus(statusEvent.newStatus);
-        announce(`Shipment status updated to ${statusEvent.newStatus}`);
-      });
+      announce(`Shipment status updated to ${statusEvent.newStatus}`);
     }
   }, [statusEvent, id, announce]);
 
   const shipmentHeaderData = {
     shipmentId: id ? `#${id}` : "#SHP-992834",
-    trackingNumber: id ?? "SHP-992834", // TODO: swap for real public tracking token once backend exposes one
-    status: currentStatus,
-    originAddress: "New York Distribution Center, NY 10001",
-    destinationAddress: "123 Main Street, Boston, MA 02101",
+    trackingNumber: shipment?.trackingNumber ?? id ?? "SHP-992834", // TODO: swap for real public tracking token once backend exposes one
+    status: shipment?.status ?? "IN_TRANSIT",
+    originAddress: shipment?.origin ?? "New York Distribution Center, NY 10001",
+    destinationAddress: shipment?.destination ?? "123 Main Street, Boston, MA 02101",
     expectedDeliveryDate: "Oct 24, 2026 by 5:00 PM EST",
     userRole: (role ?? "customer") as "company" | "customer",
-    priority: "STANDARD" as const,
+    priority: shipment?.priority ?? "STANDARD",
   };
 
   const handleUpdateStatus = () => {
@@ -68,6 +72,16 @@ const ShipmentDetail: React.FC = () => {
   };
   const handlePrint = () => {
     setIsPrinting(true);
+  };
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportShipmentPdf(shipmentHeaderData.trackingNumber, contentRef);
+    } catch (err) {
+      addToast(err instanceof Error ? err.message : "Failed to export PDF.", "error");
+    } finally {
+      setIsExporting(false);
+    }
   };
   const handleRaiseDispute = () => {
     setIsDisputeOpen(true);
@@ -136,8 +150,8 @@ const ShipmentDetail: React.FC = () => {
 
   const printData: ShipmentPrintData = {
     shipmentId: id ? `#${id}` : "#SHP-992834",
-    trackingNumber: id ?? "SHP-992834",
-    status: currentStatus,
+    trackingNumber: shipmentHeaderData.trackingNumber,
+    status: shipmentHeaderData.status,
     sender: { name: "Navin Logistics", address: shipmentHeaderData.originAddress },
     receiver: { name: "Customer", address: shipmentHeaderData.destinationAddress },
     createdAt: "2026-06-20",
@@ -151,9 +165,28 @@ const ShipmentDetail: React.FC = () => {
     stellarTxHash: mockPaymentData?.transactionHash,
   };
 
+  if (isLoading && !shipment) {
+    return (
+      <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] flex flex-col items-center justify-center gap-4 font-sans">
+        <Loader2 className="animate-spin text-[#00d4c8]" size={32} />
+        <p className="text-[rgba(200,230,240,0.75)] text-sm">Loading shipment details...</p>
+      </div>
+    );
+  }
+
+  if (error && !shipment) {
+    return (
+      <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] flex flex-col items-center justify-center gap-4 font-sans px-4 text-center">
+        <AlertTriangle className="text-[#ef4444]" size={40} />
+        <p className="text-white font-semibold">Failed to load shipment</p>
+        <p className="text-[rgba(200,230,240,0.75)] text-sm">{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
-      <div className="max-w-300 mx-auto relative z-10">
+      <div ref={contentRef} className="max-w-300 mx-auto relative z-10">
         <Breadcrumb
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Shipments", href: "/dashboard/shipments" }, { label: id ? `#${id}` : "#SHP-992834" }]}
         />
@@ -191,6 +224,8 @@ const ShipmentDetail: React.FC = () => {
             onTrack={handleTrack}
             onPrint={handlePrint}
             onRaiseDispute={handleRaiseDispute}
+            onExport={handleExport}
+            isExporting={isExporting}
           />
           {isDisputeOpen && (
             <div className="mt-8">
