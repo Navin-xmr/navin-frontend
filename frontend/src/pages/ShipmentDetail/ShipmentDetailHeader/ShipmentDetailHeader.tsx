@@ -5,6 +5,9 @@ import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
 import PriorityBadge from "../../../components/ui/PriorityBadge";
 import CopyToClipboard from "../../../components/ui/CopyToClipboard";
 import ETACountdown from "../../../components/shipment/ETACountdown";
+import InlineEditField from "../../../components/ui/InlineEditField";
+import RoleAccessInfo from "../../../components/ui/RoleAccessInfo";
+import AccessRestrictedBadge from "../../../components/ui/AccessRestrictedBadge";
 import type { ShipmentStatus } from "../../../services/api/endpoints/shipments";
 
 export type UserRole = "company" | "customer";
@@ -42,6 +45,8 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
 }) => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
+  const [editOrigin, setEditOrigin] = useState(originAddress || '');
+  const [editDestination, setEditDestination] = useState(destinationAddress || '');
 
   const formatStatus = (status: string): string => getStatusDisplayLabel(status);
   const isCompanyUser = userRole === "company";
@@ -118,40 +123,80 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
             <CopyToClipboard value={trackingNumber} label="Copy tracking" size="sm" className="border-border/50 text-text-secondary hover:text-text-primary" />
           </div>
 
-          {/* Origin to Destination */}
+          {/* Origin to Destination - with inline editing for company users */}
           {originAddress && destinationAddress && (
-            <div className="flex items-center text-white/70 gap-2 mt-2 flex-wrap">
-              <span className="text-xs md:text-sm text-text-secondary">
-                {originAddress}
-              </span>
-              <ArrowRight className="w-4 h-4 text-primary shrink-0" />
-              <span className="text-xs md:text-sm text-text-secondary">
-                {destinationAddress}
-              </span>
+            <div className="mt-3 space-y-2">
+              {isCompanyUser ? (
+                <div className="space-y-2">
+                  <InlineEditField
+                    value={editOrigin}
+                    onSave={async (newValue) => {
+                      setEditOrigin(newValue);
+                      console.log('Origin updated to:', newValue);
+                    }}
+                    label="Origin Address"
+                    isEditable={true}
+                    validation={(val) => (!val.trim() ? 'Origin address cannot be empty' : null)}
+                  />
+                  <div className="flex items-center gap-2 py-2">
+                    <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+                    <span className="text-xs text-text-secondary/50">Route</span>
+                  </div>
+                  <InlineEditField
+                    value={editDestination}
+                    onSave={async (newValue) => {
+                      setEditDestination(newValue);
+                      console.log('Destination updated to:', newValue);
+                    }}
+                    label="Destination Address"
+                    isEditable={true}
+                    validation={(val) => (!val.trim() ? 'Destination address cannot be empty' : null)}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center text-white/70 gap-2 flex-wrap">
+                  <span className="text-xs md:text-sm text-text-secondary">
+                    {originAddress}
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs md:text-sm text-text-secondary">
+                    {destinationAddress}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {/* Right Section - Actions */}
-      <div className="flex gap-3 w-full text-lg md:w-auto">
+      <div className="flex gap-3 w-full flex-col md:flex-row md:w-auto">
         {userRole === "company" && (
           <button
             onClick={onUpdateStatus}
-            className="px-6 py-3 rounded-lg bg-emerald-400/50 hover:bg-emerald-500 text-white font-semibold transition-colors duration-200 w-40 h-12"
+            className="px-6 py-3 rounded-lg bg-emerald-400/50 hover:bg-emerald-500 text-white font-semibold transition-colors duration-200 w-full md:w-40 h-12"
           >
             Update Status
           </button>
         )}
 
         {userRole === "customer" && (
-          <button
-            onClick={onTrack}
-            aria-label="Track shipment"
-            className="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors duration-200 w-10 md:w-auto"
-          >
-            Track
-          </button>
+          <>
+            <button
+              onClick={onTrack}
+              aria-label="Track shipment"
+              className="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors duration-200 flex-1 md:flex-none"
+            >
+              Track
+            </button>
+            <RoleAccessInfo
+              hasAccess={false}
+              action="Status updates"
+              requiredRole="Company Account"
+              userRole="Customer"
+              className="md:hidden text-xs"
+            />
+          </>
         )}
 
         {status === "DELIVERED" && onRaiseDispute && (
