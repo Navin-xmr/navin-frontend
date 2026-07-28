@@ -22,6 +22,8 @@ import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmD
 import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
+import { RouteTransitionProvider } from './context/RouteTransitionContext';
+import RouteTransition from './components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
 import './App.css';
@@ -125,16 +127,19 @@ function RealtimeManager() {
 function App() {
   return (
     <AuthProvider>
-      <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
-        <ErrorBoundary>
-          <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
-          <OfflineBanner />
-          <SlowConnectionBanner />
-          <RealtimeManager />
-          <RouterProvider router={router} />
-          <PWAInstallPrompt />
-        </ErrorBoundary>
-      </Sentry.ErrorBoundary>
+      <RouteTransitionProvider>
+        <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
+          <ErrorBoundary>
+            <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
+            <RouteTransition />
+            <OfflineBanner />
+            <SlowConnectionBanner />
+            <RealtimeManager />
+            <RouterProvider router={router} />
+            <PWAInstallPrompt />
+          </ErrorBoundary>
+        </Sentry.ErrorBoundary>
+      </RouteTransitionProvider>
     </AuthProvider>
   );
 }

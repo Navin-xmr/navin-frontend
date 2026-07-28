@@ -23,6 +23,9 @@ import type { DisputeData } from "../Shipment/sections/DisputeForm/DisputeForm";
 import { useLiveRegion } from "../../context/LiveRegionContext";
 import CostBreakdown from "../../components/shipment/CostBreakdown/CostBreakdown";
 import type { CostBreakdownData } from "../../components/shipment/CostBreakdown/CostBreakdown";
+import ShipmentComparison from "../../components/shipment/ShipmentComparison/ShipmentComparison";
+import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison/ShipmentComparison";
+import { Zap } from "lucide-react";
 
 const ShipmentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +37,7 @@ const ShipmentDetail: React.FC = () => {
   const [isPrinting, setIsPrinting] = useState(false);
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
   const [existingDispute, setExistingDispute] = useState<DisputeData | null>(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
 
   const events = useRealtimeEvents(["shipment:status", "shipment:milestone"]);
   const statusEvent = events["shipment:status"];
@@ -183,6 +187,40 @@ const ShipmentDetail: React.FC = () => {
     stellarTxHash: mockPaymentData?.transactionHash,
   };
 
+  // Mock comparison shipments for #508
+  const comparisonShipments: ShipmentForComparison[] = [
+    {
+      id: "1",
+      shipmentId: "#SHP-992834",
+      origin: shipmentHeaderData.originAddress,
+      destination: shipmentHeaderData.destinationAddress,
+      status: currentStatus,
+      milestones: mockMilestones,
+      expectedDelivery: shipmentHeaderData.expectedDeliveryDate,
+      createdAt: "2026-06-20",
+    },
+    {
+      id: "2",
+      shipmentId: "#SHP-992835",
+      origin: "Los Angeles, CA 90001",
+      destination: "San Francisco, CA 94101",
+      status: "IN_TRANSIT",
+      milestones: mockMilestones.slice(0, 3),
+      expectedDelivery: "Oct 25, 2026 by 3:00 PM PST",
+      createdAt: "2026-06-21",
+    },
+    {
+      id: "3",
+      shipmentId: "#SHP-992836",
+      origin: "Chicago, IL 60601",
+      destination: "Miami, FL 33101",
+      status: "DELIVERED",
+      milestones: mockMilestones,
+      expectedDelivery: "Oct 20, 2026 by 2:00 PM EST",
+      createdAt: "2026-06-19",
+    },
+  ];
+
   return (
     <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
       <div className="max-w-300 mx-auto relative z-10">
@@ -197,6 +235,15 @@ const ShipmentDetail: React.FC = () => {
           <p className="text-[clamp(0.95rem,2vw,1.1rem)] font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-150 mx-auto">
             Track your shipment's journey with blockchain-verified milestones
           </p>
+          {(role === 'company') && (
+            <button
+              onClick={() => setIsComparisonOpen(true)}
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary font-medium text-sm transition-colors"
+            >
+              <Zap className="w-4 h-4" />
+              Compare Shipments
+            </button>
+          )}
         </div>
 
         <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl p-8 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] md:p-5 md:rounded-2xl sm:p-4">
@@ -275,6 +322,13 @@ const ShipmentDetail: React.FC = () => {
 
         {isPrinting && <ShipmentSummaryPrint data={summaryPrintData} onClose={() => setIsPrinting(false)} />}
       </div>
+
+      {/* Shipment Comparison Modal (#508) */}
+      <ShipmentComparison
+        shipments={comparisonShipments}
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+      />
     </div>
   );
 };
