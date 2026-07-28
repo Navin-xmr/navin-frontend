@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Camera, Save, CheckCircle2, Loader2, Link as LinkIcon, Building2 } from 'lucide-react';
+import { Camera, Save, Loader2, Link as LinkIcon, Building2 } from 'lucide-react';
+import { useToast } from '@context/ToastContext';
 import { WalletConnectButton } from '../../../../components/auth/WalletConnectButton/WalletConnectButton';
 import NotificationPreferences from '../../../Settings/NotificationPreferences/NotificationPreferences';
 import MyTemplatesSection from '../../../Settings/sections/MyTemplatesSection';
@@ -15,8 +16,8 @@ const CompanySettings: React.FC = () => {
 
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-    const [loading, setLoading] = useState(false);
-    const [successMsg, setSuccessMsg] = useState('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const { addToast } = useToast();
 
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -33,11 +34,9 @@ const CompanySettings: React.FC = () => {
 
     const handleSave = () => {
         setLoading(true);
-        setSuccessMsg('');
         setTimeout(() => {
             setLoading(false);
-            setSuccessMsg('Settings saved successfully!');
-            setTimeout(() => setSuccessMsg(''), 3000);
+            addToast('Settings saved successfully!', 'success');
         }, 1500);
     };
 
@@ -148,12 +147,6 @@ const CompanySettings: React.FC = () => {
           </div>
 
           <div className="settings-footer">
-              {successMsg && (
-                  <div className="success-toast">
-                      <CheckCircle2 size={18} />
-                      {successMsg}
-                  </div>
-              )}
               <button
                   className="save-btn"
                   onClick={handleSave}
