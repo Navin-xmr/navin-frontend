@@ -31,7 +31,7 @@ export function useAuth(): AuthState {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    function checkToken() {
       const token = localStorage.getItem(AUTH_STORAGE_KEY);
 
       if (!token) {
@@ -52,10 +52,21 @@ export function useAuth(): AuthState {
       }
 
       setIsLoading(false);
-    }, AUTH_CHECK_DELAY_MS);
+    }
+
+    const timer = window.setTimeout(checkToken, AUTH_CHECK_DELAY_MS);
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        checkToken();
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
