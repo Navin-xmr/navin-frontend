@@ -18,8 +18,8 @@ import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { useAuthContext } from "../../context/AuthContext";
 import { can } from "../../utils/rbac";
 import NotesSection from "../Shipment/sections/NotesSection/NotesSection";
-import ShipmentPrintView from "../Shipment/sections/PrintView/ShipmentPrintView";
-import type { ShipmentPrintData } from "../Shipment/sections/PrintView/ShipmentPrintView";
+import ShipmentSummaryPrint from "../../components/shipment/ShipmentSummaryPrint/ShipmentSummaryPrint";
+import type { ShipmentSummaryPrintData } from "../../components/shipment/ShipmentSummaryPrint/ShipmentSummaryPrint";
 import DisputeForm from "../Shipment/sections/DisputeForm/DisputeForm";
 import type { DisputeData } from "../Shipment/sections/DisputeForm/DisputeForm";
 import { useLiveRegion } from "../../context/LiveRegionContext";
@@ -27,6 +27,10 @@ import CostBreakdown from "../../components/shipment/CostBreakdown/CostBreakdown
 import type { CostBreakdownData } from "../../components/shipment/CostBreakdown/CostBreakdown";
 import { useToast } from "../../context/ToastContext";
 import { exportShipmentPdf } from "../../utils/exportShipmentPdf";
+import ShipmentComparison from "../../components/shipment/ShipmentComparison/ShipmentComparison";
+import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison/ShipmentComparison";
+import ShipmentStickyBar from "./ShipmentStickyBar";
+import { Zap } from "lucide-react";
 
 const ShipmentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +45,11 @@ const ShipmentDetail: React.FC = () => {
   const [existingDispute, setExistingDispute] = useState<DisputeData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
+  // Ref attached to the hero heading — IntersectionObserver in ShipmentStickyBar
+  // watches this element and shows the bar once it scrolls out of the viewport.
+  const heroSentinelRef = useRef<HTMLDivElement>(null);
 
   const events = useRealtimeEvents(["shipment:status"]);
   const statusEvent = events["shipment:status"];
@@ -148,10 +157,13 @@ const ShipmentDetail: React.FC = () => {
     currency: "USD",
   };
 
-  const printData: ShipmentPrintData = {
+  const summaryPrintData: ShipmentSummaryPrintData = {
     shipmentId: id ? `#${id}` : "#SHP-992834",
     trackingNumber: shipmentHeaderData.trackingNumber,
     status: shipmentHeaderData.status,
+    trackingNumber: id ?? "SHP-992834",
+    status: currentStatus,
+    priority: shipmentHeaderData.priority,
     sender: { name: "Navin Logistics", address: shipmentHeaderData.originAddress },
     receiver: { name: "Customer", address: shipmentHeaderData.destinationAddress },
     createdAt: "2026-06-20",
@@ -161,7 +173,38 @@ const ShipmentDetail: React.FC = () => {
       timestamp: m.timestamp,
       location: m.location,
       status: m.status,
+      blockchainAddress: m.blockchainAddress,
     })),
+    costItems: [
+      { label: "Base Rate", amount: mockCostBreakdown.baseRate },
+      { label: "Weight Surcharge", amount: mockCostBreakdown.weightSurcharge },
+      { label: "Fuel Surcharge", amount: mockCostBreakdown.fuelSurcharge },
+      { label: "Insurance Fee", amount: mockCostBreakdown.insuranceFee },
+      { label: "Customs Duty", amount: mockCostBreakdown.customsDuty },
+      { label: "Discount", amount: mockCostBreakdown.discount, isDiscount: true },
+    ],
+    totalCost: { amount: mockCostBreakdown.total, currency: mockCostBreakdown.currency },
+    payment: mockPaymentData
+      ? {
+          amount: mockPaymentData.amount,
+          tokenSymbol: mockPaymentData.tokenSymbol,
+          status: mockPaymentData.status,
+          transactionHash: mockPaymentData.transactionHash,
+        }
+      : undefined,
+    sensorSnapshot: mockSensorData
+      ? {
+          temperature: mockSensorData.temperature
+            ? { value: mockSensorData.temperature.value, unit: mockSensorData.temperature.unit }
+            : undefined,
+          humidity: mockSensorData.humidity
+            ? { value: mockSensorData.humidity.value, unit: mockSensorData.humidity.unit }
+            : undefined,
+          location: mockSensorData.gps
+            ? { latitude: mockSensorData.gps.latitude, longitude: mockSensorData.gps.longitude }
+            : undefined,
+        }
+      : undefined,
     stellarTxHash: mockPaymentData?.transactionHash,
   };
 
@@ -187,17 +230,75 @@ const ShipmentDetail: React.FC = () => {
   return (
     <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
       <div ref={contentRef} className="max-w-300 mx-auto relative z-10">
+  // Mock comparison shipments for #508
+  const comparisonShipments: ShipmentForComparison[] = [
+    {
+      id: "1",
+      shipmentId: "#SHP-992834",
+      origin: shipmentHeaderData.originAddress,
+      destination: shipmentHeaderData.destinationAddress,
+      status: currentStatus,
+      milestones: mockMilestones,
+      expectedDelivery: shipmentHeaderData.expectedDeliveryDate,
+      createdAt: "2026-06-20",
+    },
+    {
+      id: "2",
+      shipmentId: "#SHP-992835",
+      origin: "Los Angeles, CA 90001",
+      destination: "San Francisco, CA 94101",
+      status: "IN_TRANSIT",
+      milestones: mockMilestones.slice(0, 3),
+      expectedDelivery: "Oct 25, 2026 by 3:00 PM PST",
+      createdAt: "2026-06-21",
+    },
+    {
+      id: "3",
+      shipmentId: "#SHP-992836",
+      origin: "Chicago, IL 60601",
+      destination: "Miami, FL 33101",
+      status: "DELIVERED",
+      milestones: mockMilestones,
+      expectedDelivery: "Oct 20, 2026 by 2:00 PM EST",
+      createdAt: "2026-06-19",
+    },
+  ];
+
+  return (
+    <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
+      {/* Sticky summary bar — appears when the hero section scrolls out of view */}
+      <ShipmentStickyBar
+        sentinelRef={heroSentinelRef}
+        shipmentId={shipmentHeaderData.shipmentId}
+        status={currentStatus}
+        originAddress={shipmentHeaderData.originAddress}
+        destinationAddress={shipmentHeaderData.destinationAddress}
+        expectedDeliveryDate={shipmentHeaderData.expectedDeliveryDate}
+        priority={shipmentHeaderData.priority}
+      />
+
+      <div className="max-w-300 mx-auto relative z-10">
         <Breadcrumb
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Shipments", href: "/dashboard/shipments" }, { label: id ? `#${id}` : "#SHP-992834" }]}
         />
 
-        <div className="text-center mb-16 md:mb-10">
+        {/* Hero heading — sentinel for sticky bar */}
+        <div ref={heroSentinelRef} className="text-center mb-16 md:mb-10">
           <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(2.5rem,7vw,5rem)] font-normal tracking-[0.04em] leading-[1.1] text-white m-0 mb-4">
             SHIPMENT <span className="text-[#00d4c8]">DETAILS</span>
           </h1>
           <p className="text-[clamp(0.95rem,2vw,1.1rem)] font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-150 mx-auto">
             Track your shipment's journey with blockchain-verified milestones
           </p>
+          {(role === 'company') && (
+            <button
+              onClick={() => setIsComparisonOpen(true)}
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary font-medium text-sm transition-colors"
+            >
+              <Zap className="w-4 h-4" />
+              Compare Shipments
+            </button>
+          )}
         </div>
 
         <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl p-8 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] md:p-5 md:rounded-2xl sm:p-4">
@@ -276,8 +377,15 @@ const ShipmentDetail: React.FC = () => {
 
         <NotesSection shipmentId={id ?? shipmentHeaderData.shipmentId} userRole={shipmentHeaderData.userRole} />
 
-        {isPrinting && <ShipmentPrintView data={printData} onClose={() => setIsPrinting(false)} />}
+        {isPrinting && <ShipmentSummaryPrint data={summaryPrintData} onClose={() => setIsPrinting(false)} />}
       </div>
+
+      {/* Shipment Comparison Modal (#508) */}
+      <ShipmentComparison
+        shipments={comparisonShipments}
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+      />
     </div>
   );
 };

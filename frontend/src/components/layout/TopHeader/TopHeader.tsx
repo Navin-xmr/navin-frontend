@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, Search, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { NotificationDropdown } from "../../notifications/NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../../ThemeToggle/ThemeToggle";
 import ConnectionStatusDot from "../../ui/ConnectionStatusDot";
@@ -9,6 +9,7 @@ import WalletPill from "../../wallet/WalletPill";
 import NetworkBadge from "../../wallet/NetworkBadge";
 import WalletModal from "../../wallet/WalletModal";
 import Tooltip from "../../ui/Tooltip";
+import GlobalSearch from "../../common/GlobalSearch/GlobalSearch";
 
 export interface TopHeaderProps {
   toggleSidebar: () => void;
@@ -39,17 +40,12 @@ const TopHeader: React.FC<TopHeaderProps> = ({ toggleSidebar }) => {
           </Tooltip>
         </div>
 
-        {/* Center */}
+        {/* Center — GlobalSearch */}
         <div className="flex-1 flex justify-center">
-          <label className="flex items-center gap-3 w-120 max-w-full h-10 px-4 rounded-[10px] bg-gray-100 dark:bg-[#111624] border border-gray-200 dark:border-slate-800 transition-colors focus-within:border-indigo-500 cursor-text">
-            <Search size={16} className="text-gray-400 dark:text-slate-500 shrink-0" />
-            <input
-              type="text"
-              className="w-full border-none outline-none bg-transparent text-gray-900 dark:text-white text-sm placeholder:text-gray-400 dark:placeholder:text-slate-500"
-              placeholder="Search shipment ID..."
-              aria-label="Search shipment ID"
-            />
-          </label>
+          <GlobalSearch
+            placeholder="Search shipments… (Ctrl+K)"
+            className="w-120 max-w-full"
+          />
         </div>
 
         {/* Right */}

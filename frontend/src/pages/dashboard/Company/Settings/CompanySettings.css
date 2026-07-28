@@ -267,19 +267,6 @@ input:checked + .slider:before {
   border-top: 1px solid #1E293B;
 }
 
-.success-toast {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #10B981;
-  background-color: rgba(16, 185, 129, 0.1);
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  animation: slideIn 0.3s ease-out;
-}
-
 .save-btn {
   display: flex;
   align-items: center;

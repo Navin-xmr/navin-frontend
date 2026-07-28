@@ -1,15 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ArrowUpDown } from 'lucide-react';
+import EmptyState from '@components/ui/EmptyState';
 import type { DataTableProps, SortDirection } from './types';
 
 const DEFAULT_PAGE_SIZE = 10;
 
 const containerClass =
   'bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl overflow-hidden shadow-[inset_0_0_20px_0px_rgba(0,128,128,0.3)]';
-const thClass =
-  'text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]';
-const tdClass =
-  'px-6 py-4 text-sm text-text-primary border-b border-[rgba(98,255,255,0.2)] last:border-b-0';
 
 function SortIcon({ colKey, sortKey, sortDir }: { colKey: string; sortKey: string | null; sortDir: SortDirection }) {
   if (sortKey !== colKey) return <ArrowUpDown size={13} className="text-text-secondary" />;
@@ -23,6 +20,7 @@ function DataTable<T extends object>({
   pageSize = DEFAULT_PAGE_SIZE,
   onRowClick,
   isLoading = false,
+  density = 'comfortable',
 }: DataTableProps<T>): React.ReactElement {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>(null);
@@ -56,6 +54,27 @@ function DataTable<T extends object>({
   const safePage = Math.min(currentPage, totalPages);
   const pageStart = (safePage - 1) * pageSize;
   const pagedData = sortedData.slice(pageStart, pageStart + pageSize);
+  const densityClasses = {
+    compact: {
+      th: 'px-4 py-2.5',
+      td: 'px-4 py-2.5',
+      text: 'text-xs',
+    },
+    comfortable: {
+      th: 'px-6 py-4',
+      td: 'px-6 py-4',
+      text: 'text-sm',
+    },
+    spacious: {
+      th: 'px-6 py-5',
+      td: 'px-6 py-5',
+      text: 'text-sm',
+    },
+  }[density];
+  const thClass =
+    `text-left ${densityClasses.th} text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]`;
+  const tdClass =
+    `${densityClasses.td} ${densityClasses.text} text-text-primary border-b border-[rgba(98,255,255,0.2)] last:border-b-0`;
 
   if (isLoading) {
     return (

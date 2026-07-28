@@ -1,23 +1,45 @@
+import {
+  formatAddress as formatLocalizedAddress,
+  formatCurrency as formatLocalizedCurrency,
+  formatDate as formatLocalizedDate,
+} from './localeFormat';
+
+const DEFAULT_LOCALE = 'en-US';
+
 /**
  * Safely formats a date string, returning "N/A" for null/undefined/invalid dates
  * Prevents crashes when backend returns null for optional date fields
  */
 export const safeFormatDate = (
-  dateString: string | null | undefined,
+  dateString: string | null | undefined | Date,
   options: Intl.DateTimeFormatOptions = {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  }
+  },
+  locale = DEFAULT_LOCALE,
 ): string => {
-  if (!dateString || typeof dateString !== 'string') return 'N/A';
+  if (!dateString) return 'N/A';
+  if (typeof dateString !== 'string' && !(dateString instanceof Date)) return 'N/A';
+
   try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return new Intl.DateTimeFormat('en-US', options).format(date);
+    return formatLocalizedDate(dateString, options, locale);
   } catch {
     return 'N/A';
   }
+};
+
+export const safeFormatCurrency = (
+  value: number,
+  currency: string,
+  locale = DEFAULT_LOCALE,
+): string => {
+  if (typeof value !== 'number' || Number.isNaN(value)) return 'N/A';
+  return formatLocalizedCurrency(value, currency, locale);
+};
+
+export const safeFormatAddress = (address: Record<string, string | undefined>, locale = DEFAULT_LOCALE): string => {
+  return formatLocalizedAddress(address, locale);
 };
 
 /**
