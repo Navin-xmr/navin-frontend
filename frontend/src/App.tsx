@@ -22,6 +22,7 @@ import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
+import NotFoundPage from '@pages/NotFound/NotFoundPage';
 import './App.css';
 
 // Eagerly loaded (critical path)
@@ -105,10 +106,12 @@ const router = createBrowserRouter([
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
           { path: '/dashboard/profile', element: <CustomerProfile /> },
+          { path: '/dashboard/*', element: <NotFoundPage /> },
         ],
       },
     ],
   },
+  { path: '*', element: <NotFoundPage /> },
 ]);
 
 function RealtimeManager() {
