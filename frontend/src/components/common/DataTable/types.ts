@@ -21,6 +21,8 @@ export interface PaginationConfig {
 export interface DataTableEmptyState {
   message: string;
   description?: string;
+  /** Optional icon element — use EmptyState preset variants for consistency */
+  icon?: React.ReactNode;
   cta?: {
     label: string;
     onClick: () => void;
