@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { WidgetRefreshIndicator } from '@components/dashboard/WidgetRefreshIndicator';
+import useWidgetRefresh from '@hooks/useWidgetRefresh';
 import {
   AreaChart,
   Area,
@@ -102,6 +104,17 @@ export default function DeliveryPerformanceWidget({
   const [period, setPeriod] = useState<TimePeriod>('30d');
   const [expandedKey, setExpandedKey] = useState<KpiKey | null>(null);
 
+  const handleRefresh = useCallback(async () => {
+    // In production this would re-fetch live KPI data from the API.
+    // Using a short delay here to simulate a network round-trip.
+    await new Promise<void>((resolve) => setTimeout(resolve, 800));
+  }, []);
+
+  const { status: refreshStatus, lastRefreshedAt, refresh } = useWidgetRefresh({
+    onRefresh: handleRefresh,
+    intervalMs: 60_000,
+  });
+
   const kpis = useMemo(() => data[period], [data, period]);
   const expanded = useMemo(
     () => kpis.find(k => k.key === expandedKey) ?? null,
@@ -120,23 +133,30 @@ export default function DeliveryPerformanceWidget({
           <TrendingUp size={18} className="text-accent-blue" />
           Delivery Performance
         </h2>
-        <div className="relative">
-          <select
-            value={period}
-            onChange={e => setPeriod(e.target.value as TimePeriod)}
-            aria-label="Time period"
-            className="appearance-none bg-[#1a1f2e] border border-border text-text-primary text-xs font-semibold pl-3 pr-8 py-1.5 rounded-md cursor-pointer focus:outline-none focus:border-accent-blue"
-          >
-            {PERIOD_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={14}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
+        <div className="flex items-center gap-3">
+          <WidgetRefreshIndicator
+            status={refreshStatus}
+            lastRefreshedAt={lastRefreshedAt}
+            onRefresh={refresh}
           />
+          <div className="relative">
+            <select
+              value={period}
+              onChange={e => setPeriod(e.target.value as TimePeriod)}
+              aria-label="Time period"
+              className="appearance-none bg-[#1a1f2e] border border-border text-text-primary text-xs font-semibold pl-3 pr-8 py-1.5 rounded-md cursor-pointer focus:outline-none focus:border-accent-blue"
+            >
+              {PERIOD_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={14}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
+            />
+          </div>
         </div>
       </div>
 

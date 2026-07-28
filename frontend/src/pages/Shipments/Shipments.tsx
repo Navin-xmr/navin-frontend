@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Download,
-  Loader2,
   LayoutGrid,
   List,
   Map,
   Package,
   SearchX,
+  ArrowUpDown,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import EmptyState from "../../components/common/EmptyState/EmptyState";
 import { shipmentApi, type Shipment } from "../../api/shipmentApi";
@@ -20,6 +21,13 @@ import { BulkStatusModal } from "../../components/shipment/BulkStatusModal";
 import { useBulkSelection } from "../../hooks/useBulkSelection";
 import { useToast } from "../../context/ToastContext";
 import { safeFormatDate } from "../../utils/safeFormat";
+import ExportDropdown from "../../components/ui/ExportDropdown";
+import type { ExportFormat } from "../../components/ui/ExportDropdown";
+import {
+  getShipmentRiskLevel,
+  getShipmentRiskStyle,
+} from "../../utils/shipmentRisk";
+import OverdueShipmentBadge from "../../components/shipment/OverdueShipmentBadge/OverdueShipmentBadge";
 import { useVirtualShipments } from "./hooks/useVirtualShipments";
 import ShipmentsKanban from "./KanbanView/ShipmentsKanban";
 import RouteMap from "./RouteMap/RouteMap";
@@ -30,7 +38,9 @@ import ShipmentFilters, {
 } from "./ShipmentFilters";
 import "./Shipments.css";
 
-type ViewMode = "list" | "kanban";
+type ListMode = "table" | "grid";
+
+const LIST_MODE_KEY = "shipments-list-mode";
 
 function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
   const headers = [
@@ -79,14 +89,12 @@ const Shipments: React.FC = () => {
   const { addToast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [retryKey, setRetryKey] = useState(0);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  const [pendingBulkStatus, setPendingBulkStatus] =
-    useState<ShipmentStatus | null>(null);
   const loadingRef = useRef(false);
 
   const {
@@ -124,17 +132,26 @@ const Shipments: React.FC = () => {
   const [timeframeFilter, setTimeframeFilter] = useState<"ALL" | "30" | "90">(
     "ALL",
   );
-  const [viewMode] = useState<ViewMode>(() => {
+  const [listMode, setListMode] = useState<ListMode>(() => {
     try {
-      const saved = localStorage.getItem("navin_shipments_view");
-      return saved === "kanban" ? "kanban" : "list";
+      const saved = localStorage.getItem(LIST_MODE_KEY);
+      return saved === "grid" ? "grid" : "table";
     } catch {
-      return "list";
+      return "table";
     }
   });
+  const handleListModeChange = (mode: ListMode) => {
+    setListMode(mode);
+    try {
+      localStorage.setItem(LIST_MODE_KEY, mode);
+    } catch {
+      // ignore
+    }
+  };
   const [priorityFilter, setPriorityFilter] = useState<
     "ALL" | ShipmentPriority
   >("ALL");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>(
     {
       status: [],
@@ -184,11 +201,31 @@ const Shipments: React.FC = () => {
       );
     }
 
+    // Wire dropdown status filter into the logic
+    if (statusFilter !== "ALL") {
+      result = result.filter((s) => s.status === statusFilter);
+    }
+
+    // Wire dropdown priority filter
+    if (priorityFilter !== "ALL") {
+      result = result.filter((s) => s.priority === priorityFilter);
+    }
+
+    // Wire timeframe filter
+    if (timeframeFilter !== "ALL") {
+      const daysAgo = parseInt(timeframeFilter, 10);
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - daysAgo);
+      result = result.filter((s) => new Date(s.createdAt) >= cutoff);
+    }
+
     const { status, dateFrom, dateTo, origin, destination, priority } =
       advancedFilters;
 
     if (status.length > 0) {
       result = result.filter((s) => status.includes(s.status));
+    } else if (statusFilter !== "ALL") {
+      result = result.filter((s) => s.status === statusFilter);
     }
 
     if (dateFrom) {
@@ -206,6 +243,8 @@ const Shipments: React.FC = () => {
       result = result.filter(
         (s) => s.priority && priority.includes(s.priority),
       );
+    } else if (priorityFilter !== "ALL") {
+      result = result.filter((s) => s.priority === priorityFilter);
     }
 
     if (origin) {
@@ -217,8 +256,31 @@ const Shipments: React.FC = () => {
       const d = destination.toLowerCase();
       result = result.filter((s) => s.destination.toLowerCase().includes(d));
     }
+
+    // Apply date sorting
+    result = [...result].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+    });
+
     return result;
-  }, [shipments, searchQuery, advancedFilters]);
+  }, [shipments, searchQuery, statusFilter, priorityFilter, timeframeFilter, advancedFilters, sortOrder]);
+    if (timeframeFilter !== "ALL") {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - Number(timeframeFilter));
+      result = result.filter((s) => new Date(s.createdAt) >= cutoff);
+    }
+
+    return result;
+  }, [
+    shipments,
+    searchQuery,
+    advancedFilters,
+    statusFilter,
+    priorityFilter,
+    timeframeFilter,
+  ]);
 
   const visibleIds = useMemo(
     () => filteredShipments.map((s) => s.id),
@@ -318,7 +380,7 @@ const Shipments: React.FC = () => {
         setIsLoading(false);
         loadingRef.current = false;
       });
-  }, [currentPage]);
+  }, [currentPage, retryKey]);
 
   // Restore scroll position on mount
   useEffect(() => {
@@ -340,27 +402,103 @@ const Shipments: React.FC = () => {
     navigate(`/dashboard/shipments/${shipmentId}`);
   };
 
-  const handleExportCSV = () => {
-    setIsExporting(true);
-    setTimeout(() => {
-      exportShipmentsToCSV(shipments);
-      setIsExporting(false);
-    }, 0);
+  const exportShipmentsToJSON = (shipmentsList: Shipment[], filename?: string): void => {
+    const today = new Date().toISOString().slice(0, 10);
+    const json = JSON.stringify(shipmentsList, null, 2);
+    const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename ?? `navin-shipments-${today}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  const handleExportSelected = () => {
+  const printShipments = (shipmentsList: Shipment[]): void => {
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = shipmentsList
+      .map(
+        (s) =>
+          `<tr>
+            <td style="padding:8px;border:1px solid #ddd">${s.id}</td>
+            <td style="padding:8px;border:1px solid #ddd">${s.origin}</td>
+            <td style="padding:8px;border:1px solid #ddd">${s.destination}</td>
+            <td style="padding:8px;border:1px solid #ddd">${s.status}</td>
+            <td style="padding:8px;border:1px solid #ddd">${safeFormatDate(s.createdAt)}</td>
+          </tr>`,
+      )
+      .join("");
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head><title>Navin Shipments - ${today}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+        h1 { color: #00d4c8; margin-bottom: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th { background: #f5f5f5; padding: 10px 8px; text-align: left; border: 1px solid #ddd; }
+        @media print { button { display: none; } }
+      </style></head>
+      <body>
+        <h1>NAVIN Shipments Report</h1>
+        <p>${today} — ${shipmentsList.length} shipments</p>
+        <button onclick="window.print()" style="padding:8px 16px;background:#00d4c8;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-bottom:16px;">Print / Save as PDF</button>
+        <table>
+          <thead><tr>
+            <th style="padding:10px 8px;border:1px solid #ddd">Tracking Number</th>
+            <th style="padding:10px 8px;border:1px solid #ddd">Origin</th>
+            <th style="padding:10px 8px;border:1px solid #ddd">Destination</th>
+            <th style="padding:10px 8px;border:1px solid #ddd">Status</th>
+            <th style="padding:10px 8px;border:1px solid #ddd">Created</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <p style="margin-top:20px;font-size:11px;color:#999">Generated by Navin — Blockchain-Verified Logistics</p>
+      </body></html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+    }
+  };
+
+  const handleExport = async (format: ExportFormat): Promise<void> => {
+    switch (format) {
+      case "csv":
+        exportShipmentsToCSV(shipments);
+        break;
+      case "json":
+        exportShipmentsToJSON(shipments);
+        break;
+      case "print":
+        printShipments(shipments);
+        break;
+    }
+  };
+
+  const handleExportSelected = (format: ExportFormat): void => {
     const selectedShipments = shipments.filter((s) => isSelected(s.id));
-    if (selectedShipments.length > 0) {
-      exportShipmentsToCSV(
-        selectedShipments,
-        `navin-selected-shipments-${new Date().toISOString().slice(0, 10)}.csv`,
-      );
+    if (selectedShipments.length === 0) return;
+
+    const prefix = `navin-selected-shipments-${new Date().toISOString().slice(0, 10)}`;
+
+    switch (format) {
+      case "csv":
+        exportShipmentsToCSV(selectedShipments, `${prefix}.csv`);
+        break;
+      case "json":
+        exportShipmentsToJSON(selectedShipments, `${prefix}.json`);
+        break;
+      case "print":
+        printShipments(selectedShipments);
+        break;
     }
   };
 
   const handleBulkStatusConfirm = async (newStatus: ShipmentStatus) => {
     if (selectedIds.size === 0) return;
-    setPendingBulkStatus(newStatus);
 
     // Optimistically update UI
     const prevShipments = shipments;
@@ -386,8 +524,19 @@ const Shipments: React.FC = () => {
     }
   };
 
+  const handleRetry = () => {
+    loadingRef.current = false;
+    setShipments([]);
+    setTotal(0);
+    setCurrentPage(1);
+    setRetryKey((value) => value + 1);
+  };
+
   const isAnyFilterActive =
     searchQuery !== "" ||
+    statusFilter !== "ALL" ||
+    priorityFilter !== "ALL" ||
+    timeframeFilter !== "ALL" ||
     advancedFilters.status.length > 0 ||
     advancedFilters.dateFrom !== "" ||
     advancedFilters.dateTo !== "" ||
@@ -411,6 +560,44 @@ const Shipments: React.FC = () => {
       <div className="shipments-header">
         <h1>Shipments</h1>
         <div className="flex items-center gap-3">
+          {/* List / Grid sub-toggle (only visible in list view) */}
+          {view === "list" && (
+            <div
+              className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.15)] bg-[rgba(19,186,186,0.04)] p-0.5"
+              role="group"
+              aria-label="Toggle list or grid layout"
+            >
+              <button
+                type="button"
+                onClick={() => handleListModeChange("table")}
+                aria-pressed={listMode === "table"}
+                title="Table view"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                  listMode === "table"
+                    ? "bg-[#62ffff] text-black"
+                    : "text-[#94a3b8] hover:text-white"
+                }`}
+              >
+                <List size={14} />
+                Table
+              </button>
+              <button
+                type="button"
+                onClick={() => handleListModeChange("grid")}
+                aria-pressed={listMode === "grid"}
+                title="Grid view"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                  listMode === "grid"
+                    ? "bg-[#62ffff] text-black"
+                    : "text-[#94a3b8] hover:text-white"
+                }`}
+              >
+                <LayoutGrid size={14} />
+                Grid
+              </button>
+            </div>
+          )}
+
           {/* View toggle */}
           <div
             className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
@@ -458,22 +645,12 @@ const Shipments: React.FC = () => {
             </button>
           </div>
 
-          <button
-            type="button"
-            className="export-csv-btn"
-            onClick={handleExportCSV}
-            disabled={isExporting || shipments.length === 0}
-            aria-label="Export shipments to CSV"
-          >
-            {isExporting ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Download size={16} />
-            )}
-            {isExporting ? "Exporting…" : "Export CSV"}
-          </button>
+          <ExportDropdown
+            onExport={handleExport}
+            disabled={shipments.length === 0}
+            label="Export"
+          />
         </div>
-      </div>
 
       {view === "kanban" ? (
         <ShipmentsKanban />
@@ -593,6 +770,18 @@ const Shipments: React.FC = () => {
                 Economy
               </option>
             </select>
+
+            {/* Sort Order Toggle */}
+            <button
+              type="button"
+              onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg text-sm text-white hover:border-[#62ffff] transition-colors cursor-pointer"
+              aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
+            >
+              <ArrowUpDown size={14} />
+              <span className="text-text-secondary">{sortOrder === "desc" ? "Newest" : "Oldest"}</span>
+            </button>
+
             <ShipmentFilters onFilterChange={setAdvancedFilters} />
 
             {/* Save Current Filters Button / Inline Form */}
@@ -639,9 +828,41 @@ const Shipments: React.FC = () => {
           </div>
 
           {error ? (
-            <div className="shipments-error">{error}</div>
+            <div
+              className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-left"
+              role="alert"
+              aria-live="assertive"
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex gap-3">
+                  <AlertTriangle
+                    size={22}
+                    className="mt-0.5 shrink-0 text-red-300"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <h2 className="m-0 text-base font-semibold text-red-100">
+                      Shipments could not be loaded
+                    </h2>
+                    <p className="mt-1 text-sm text-red-100/80">{error}</p>
+                    <p className="mt-2 text-xs text-red-100/60">
+                      Check your connection or API configuration, then retry. Existing filters are preserved.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-300/40 px-4 py-2 text-sm font-semibold text-red-100 transition-colors hover:bg-red-300/10 focus:outline-none focus:ring-2 focus:ring-red-300/40"
+                >
+                  <RefreshCw size={14} />
+                  Retry
+                </button>
+              </div>
+            </div>
           ) : viewMode === "kanban" ? (
             <ShipmentsKanban />
+            <div className="shipments-error">{error}</div>
           ) : isEmpty ? (
             <EmptyState
               icon={<Package size={28} />}
@@ -661,6 +882,9 @@ const Shipments: React.FC = () => {
                 label: "Clear Filters",
                 onClick: () => {
                   setSearchQuery("");
+                  setStatusFilter("ALL");
+                  setPriorityFilter("ALL");
+                  setTimeframeFilter("ALL");
                   setAdvancedFilters({
                     status: [],
                     dateFrom: "",
@@ -683,9 +907,99 @@ const Shipments: React.FC = () => {
                   ? ` of ${shipments.length} loaded`
                   : ` of ${total}`}{" "}
                 shipments
+                {sortOrder === "desc" ? " (newest first)" : " (oldest first)"}
               </div>
 
-              {/* Sticky table header */}
+              {listMode === "grid" ? (
+                /* ── Grid card view ── */
+                <>
+                  <div
+                    className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4"
+                    aria-label="Shipments grid"
+                  >
+                    {filteredShipments.map((shipment) => {
+                      const selected = isSelected(shipment.id);
+                      return (
+                        <div
+                          key={shipment.id}
+                          onClick={() =>
+                            navigate(`/dashboard/shipments/${shipment.id}`)
+                          }
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ")
+                              navigate(`/dashboard/shipments/${shipment.id}`);
+                          }}
+                          aria-label={`View shipment ${shipment.id}`}
+                          className={`relative flex flex-col gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-200 outline-none
+                            focus-visible:ring-2 focus-visible:ring-[#62ffff]/50
+                            ${
+                              selected
+                                ? "bg-[rgba(98,255,255,0.08)] border-[rgba(98,255,255,0.4)]"
+                                : "bg-[rgba(255,255,255,0.02)] border-[rgba(255,255,255,0.07)] hover:bg-[rgba(98,255,255,0.04)] hover:border-[rgba(98,255,255,0.25)]"
+                            }`}
+                        >
+                          {/* Select checkbox */}
+                          <input
+                            type="checkbox"
+                            aria-label={`Select shipment ${shipment.id}`}
+                            checked={selected}
+                            onChange={() => toggleOne(shipment.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute top-3 right-3 cursor-pointer accent-[#62ffff] w-4 h-4"
+                          />
+
+                          {/* Shipment ID */}
+                          <div className="flex items-center gap-2 pr-6">
+                            <Package size={14} className="text-[#62ffff] flex-shrink-0" />
+                            <span className="text-[0.75rem] font-mono text-[#62ffff] truncate">
+                              {shipment.id}
+                            </span>
+                          </div>
+
+                          {/* Route */}
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                              <span className="font-medium text-slate-300 truncate">{shipment.origin}</span>
+                              <span className="text-slate-600">→</span>
+                              <span className="font-medium text-slate-300 truncate">{shipment.destination}</span>
+                            </div>
+                          </div>
+
+                          {/* Badges */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <StatusBadge status={shipment.status} />
+                            {shipment.priority && (
+                              <PriorityBadge priority={shipment.priority as ShipmentPriority} />
+                            )}
+                          </div>
+
+                          {/* Date */}
+                          <div className="text-[0.7rem] text-slate-600 mt-auto">
+                            {safeFormatDate(shipment.createdAt)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {isLoading && (
+                    <div className="shipments-loading" aria-live="polite">
+                      Loading more shipments…
+                    </div>
+                  )}
+                  {!hasMore && filteredShipments.length > 0 && (
+                    <div className="shipments-summary" style={{ marginTop: "0.5rem" }}>
+                      {isAnyFilterActive
+                        ? `${filteredShipments.length} matching shipments`
+                        : `All ${total} shipments loaded`}
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* ── Table view ── */
+                <>
               <table
                 className="shipments-table"
                 style={{ tableLayout: "fixed", width: "100%" }}
@@ -710,7 +1024,16 @@ const Shipments: React.FC = () => {
                     <th>Destination</th>
                     <th>Status</th>
                     <th>Priority</th>
-                    <th>Created Date</th>
+                    <th>
+                      <button
+                        type="button"
+                        onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}
+                        className="inline-flex items-center gap-1 bg-transparent border-none text-inherit font-inherit cursor-pointer hover:text-[#62ffff]"
+                      >
+                        Created Date
+                        <ArrowUpDown size={12} />
+                      </button>
+                    </th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -742,12 +1065,15 @@ const Shipments: React.FC = () => {
                       const shipment = filteredShipments[virtualRow.index];
                       if (!shipment) return null;
                       const selected = isSelected(shipment.id);
+                      const riskInfo = getShipmentRiskLevel(shipment);
+                      const riskStyle = getShipmentRiskStyle(riskInfo.level);
                       return (
                         <tr
                           key={virtualRow.key}
                           data-index={virtualRow.index}
                           ref={virtualizer.measureElement}
                           aria-selected={selected}
+                          className={riskStyle}
                           style={{
                             position: "absolute",
                             top: 0,
@@ -772,7 +1098,17 @@ const Shipments: React.FC = () => {
                               className="cursor-pointer accent-[#62ffff] w-4 h-4"
                             />
                           </td>
-                          <td>{shipment.id}</td>
+                          <td>
+                            <span className="inline-flex items-center gap-1.5 flex-wrap">
+                              {shipment.id}
+                              {riskInfo.level !== "normal" && (
+                                <OverdueShipmentBadge
+                                  level={riskInfo.level}
+                                  daysOverdue={riskInfo.daysOverdue}
+                                />
+                              )}
+                            </span>
+                          </td>
                           <td>{shipment.origin}</td>
                           <td>{shipment.destination}</td>
                           <td>
@@ -818,6 +1154,8 @@ const Shipments: React.FC = () => {
                     : `All ${total} shipments loaded`}
                 </div>
               )}
+                </>
+              )}
             </>
           )}
         </>
@@ -827,7 +1165,7 @@ const Shipments: React.FC = () => {
       <BulkActionBar
         count={selectedCount}
         onUpdateStatus={() => setIsBulkModalOpen(true)}
-        onExport={handleExportSelected}
+        onExport={(format) => handleExportSelected(format)}
         onClear={clearSelection}
       />
 

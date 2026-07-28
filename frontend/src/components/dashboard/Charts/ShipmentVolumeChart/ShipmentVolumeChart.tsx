@@ -1,15 +1,21 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, useCallback } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, TrendingUp } from 'lucide-react';
 import { MOCK_VOLUME_DATA } from './mockVolumeData';
 import type { DailyVolume } from './mockVolumeData';
+import { ChartLoading } from '../../../ui/ChartLoading';
+import { ChartError } from '../../../ui/ChartError';
+import RichChartTooltip, { ViewDetailsAction } from '../../../ui/RichChartTooltip';
 
 type Range = 7 | 30 | 90;
 
 interface ShipmentVolumeChartProps {
   data?: DailyVolume[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 interface CustomTooltipProps {
@@ -20,15 +26,33 @@ interface CustomTooltipProps {
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
+  const value = payload[0].value ?? 0;
+
+  const handleViewDetails = useCallback(() => {
+    // In a real app, this would navigate to a shipment list filtered by date
+    console.info(`View shipments for ${label}`);
+  }, [label]);
+
   return (
-    <div className="bg-[#1a1f2e] border border-border rounded-lg px-3.5 py-2.5">
-      <div className="text-text-secondary text-[11px] font-semibold uppercase mb-1">{label}</div>
-      <div className="text-white text-sm font-bold">{payload[0].value} shipments</div>
-    </div>
+    <RichChartTooltip
+      active={active}
+      title={label}
+      items={[
+        {
+          label: 'Shipments',
+          value,
+          unit: 'shipments',
+          color: '#3b82f6',
+          trend: value > 50 ? 'up' : value < 20 ? 'down' : 'neutral',
+          trendLabel: value > 50 ? 'Above average volume' : value < 20 ? 'Below average volume' : 'Average volume',
+        },
+      ]}
+      actions={[ViewDetailsAction(handleViewDetails)]}
+    />
   );
 }
 
-function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: ShipmentVolumeChartProps) {
+function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA, loading, error, onRetry }: ShipmentVolumeChartProps) {
   const [activeRange, setActiveRange] = useState<Range>(30);
   const chartData = useMemo(() => data.slice(-activeRange), [data, activeRange]);
   const ranges: { value: Range; label: string }[] = [
@@ -36,6 +60,14 @@ function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: ShipmentVolumeChartPro
     { value: 30, label: '30D' },
     { value: 90, label: '90D' },
   ];
+
+  if (loading) {
+    return <ChartLoading rows={4} height={420} label="Loading shipment volume chart…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={420} />;
+  }
 
   return (
     <div className="p-0">
@@ -65,7 +97,8 @@ function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: ShipmentVolumeChartPro
             </button>
           ))}
         </div>
-      </div>
+
+        </div>
 
       {/* Chart body */}
       <div className="pt-5 pr-4 pb-3 pl-0 h-[300px] md:h-[220px] md:pt-4 md:pr-2 md:pb-2">

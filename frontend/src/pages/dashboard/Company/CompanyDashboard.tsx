@@ -9,6 +9,7 @@ import {
   Rocket,
   Menu,
   RefreshCw,
+  Save,
 } from "lucide-react";
 
 import { QuickActionsCard } from "./QuickActions";
@@ -115,6 +116,56 @@ const stats = [
   },
 ];
 
+type DashboardWidgetId =
+  | "map"
+  | "revenue"
+  | "scorecard"
+  | "targets"
+  | "shipments"
+  | "activity";
+
+interface DashboardPreset {
+  id: string;
+  label: string;
+  description: string;
+  widgets: DashboardWidgetId[];
+}
+
+const DASHBOARD_LAYOUT_KEY = "navin_dashboard_layout_preset";
+const CUSTOM_WIDGETS_KEY = "navin_dashboard_visible_widgets";
+
+const dashboardPresets: DashboardPreset[] = [
+  {
+    id: "operations",
+    label: "Operations",
+    description: "Fleet status, shipment movement, and latest updates.",
+    widgets: ["map", "scorecard", "shipments", "activity"],
+  },
+  {
+    id: "finance",
+    label: "Finance",
+    description: "Revenue, settlement targets, and route costs.",
+    widgets: ["revenue", "targets", "shipments", "activity"],
+  },
+  {
+    id: "overview",
+    label: "Overview",
+    description: "Balanced view for daily logistics reviews.",
+    widgets: ["map", "revenue", "scorecard", "targets", "shipments", "activity"],
+  },
+];
+
+const widgetLabels: Record<DashboardWidgetId, string> = {
+  map: "Fleet map",
+  revenue: "Revenue summary",
+  scorecard: "Performance scorecard",
+  targets: "Revenue and route costs",
+  shipments: "Recent shipments",
+  activity: "Recent activity",
+};
+
+const defaultWidgetIds = dashboardPresets[2].widgets;
+
 const CompanyDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
@@ -123,6 +174,23 @@ const CompanyDashboard: React.FC = () => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activePresetId, setActivePresetId] = useState(() => {
+    try {
+      return localStorage.getItem(DASHBOARD_LAYOUT_KEY) ?? "overview";
+    } catch {
+      return "overview";
+    }
+  });
+  const [visibleWidgets, setVisibleWidgets] = useState<DashboardWidgetId[]>(() => {
+    try {
+      const saved = localStorage.getItem(CUSTOM_WIDGETS_KEY);
+      if (!saved) return defaultWidgetIds;
+      const parsed = JSON.parse(saved) as DashboardWidgetId[];
+      return parsed.filter((id) => id in widgetLabels);
+    } catch {
+      return defaultWidgetIds;
+    }
+  });
 
   useKeyboardShortcuts([
     {
@@ -191,6 +259,30 @@ const CompanyDashboard: React.FC = () => {
     setLastRefreshed(new Date());
     setRefreshKey((value) => value + 1);
   };
+
+  const handlePresetChange = (presetId: string) => {
+    const preset = dashboardPresets.find((item) => item.id === presetId);
+    if (!preset) return;
+    setActivePresetId(preset.id);
+    setVisibleWidgets(preset.widgets);
+    localStorage.setItem(DASHBOARD_LAYOUT_KEY, preset.id);
+    localStorage.setItem(CUSTOM_WIDGETS_KEY, JSON.stringify(preset.widgets));
+  };
+
+  const handleWidgetToggle = (widgetId: DashboardWidgetId) => {
+    setVisibleWidgets((current) => {
+      const next = current.includes(widgetId)
+        ? current.filter((id) => id !== widgetId)
+        : [...current, widgetId];
+      localStorage.setItem(DASHBOARD_LAYOUT_KEY, "custom");
+      localStorage.setItem(CUSTOM_WIDGETS_KEY, JSON.stringify(next));
+      setActivePresetId("custom");
+      return next;
+    });
+  };
+
+  const isWidgetVisible = (widgetId: DashboardWidgetId) =>
+    visibleWidgets.includes(widgetId);
 
   if (hasError) {
     return (
@@ -289,6 +381,54 @@ const CompanyDashboard: React.FC = () => {
       </div>
 
       {!isLoading && <OnboardingChecklist />}
+      <section
+        className="rounded-xl border border-[#1e293b] bg-[#14171e] p-4"
+        aria-labelledby="dashboard-layout-heading"
+      >
+        <div className="flex items-start justify-between gap-4 max-md:flex-col">
+          <div>
+            <h2
+              id="dashboard-layout-heading"
+              className="m-0 flex items-center gap-2 text-sm font-semibold text-white"
+            >
+              <Save size={16} className="text-[#62ffff]" />
+              Saved dashboard layout
+            </h2>
+            <p className="mt-1 text-xs text-[#94a3b8]">
+              Choose a preset or show only the widgets needed for your current workflow.
+            </p>
+          </div>
+          <select
+            value={activePresetId}
+            onChange={(event) => handlePresetChange(event.target.value)}
+            className="rounded-lg border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-sm text-white outline-none transition-colors hover:border-[#62ffff] focus:border-[#62ffff] max-md:w-full"
+            aria-label="Dashboard layout preset"
+          >
+            {dashboardPresets.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.label}
+              </option>
+            ))}
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3">
+          {(Object.keys(widgetLabels) as DashboardWidgetId[]).map((widgetId) => (
+            <label
+              key={widgetId}
+              className="flex items-center gap-2 rounded-lg border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-xs text-[#cbd5e1]"
+            >
+              <input
+                type="checkbox"
+                checked={isWidgetVisible(widgetId)}
+                onChange={() => handleWidgetToggle(widgetId)}
+                className="h-4 w-4 accent-[#62ffff]"
+              />
+              {widgetLabels[widgetId]}
+            </label>
+          ))}
+        </div>
+      </section>
 
       {/* Stats + Quick Actions: two-column on desktop */}
       <div className="grid grid-cols-[1fr_300px] gap-6 items-start max-md:grid-cols-1 max-md:gap-3">
@@ -335,21 +475,25 @@ const CompanyDashboard: React.FC = () => {
       </div>
 
       {/* Shipments map */}
-      <div className="flex flex-col">
-        <div className="mb-4">
-          <ShipmentsMapWidget />
+      {isWidgetVisible("map") && (
+        <div className="flex flex-col">
+          <div className="mb-4">
+            <ShipmentsMapWidget />
+          </div>
         </div>
-      </div>
-      <RevenueSummaryWidget />
-      <PerformanceScorecardWidget />
+      )}
+      {isWidgetVisible("revenue") && <RevenueSummaryWidget />}
+      {isWidgetVisible("scorecard") && <PerformanceScorecardWidget />}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RevenueTargetWidget />
-        <CostPerRouteWidget />
-      </div>
+      {isWidgetVisible("targets") && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <RevenueTargetWidget />
+          <CostPerRouteWidget />
+        </div>
+      )}
 
       {/* Shipments */}
-      <div className="flex flex-col">
+      {isWidgetVisible("shipments") && <div className="flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-[0.05em] m-0 max-md:text-lg max-md:font-bold max-md:text-white max-md:normal-case max-md:tracking-normal">
             Recent Shipments
@@ -365,12 +509,12 @@ const CompanyDashboard: React.FC = () => {
         <div className="border border-[rgba(30,41,59,0.5)] rounded-xl overflow-hidden max-md:bg-transparent max-md:border-none">
           <RecentShipments />
         </div>
-      </div>
+      </div>}
 
       {/* Recent Activity */}
-      <div className="flex flex-col">
+      {isWidgetVisible("activity") && <div className="flex flex-col">
         <RecentActivityFeed />
-      </div>
+      </div>}
 
       {/* Active Fleet — desktop only */}
       {!isLoading && (

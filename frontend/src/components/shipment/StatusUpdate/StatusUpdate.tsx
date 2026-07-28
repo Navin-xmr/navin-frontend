@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useOptimisticUpdate } from "../../../hooks/useOptimisticUpdate";
-import { useToast } from "../../../context/ToastContext";
 
 export type ShipmentMilestone =
   | "Picked Up"
@@ -84,7 +83,6 @@ const StatusUpdate: React.FC<StatusUpdateProps> = ({
     triggerRef.current?.focus();
   };
 
-  const { addToast } = useToast();
   const { mutate: optimisticUpdate, isMutating: isUpdating } =
     useOptimisticUpdate<ShipmentMilestone | undefined>({
       onMutate: async () => {
