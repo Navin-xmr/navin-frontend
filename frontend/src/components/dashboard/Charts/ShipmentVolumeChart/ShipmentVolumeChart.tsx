@@ -1,15 +1,20 @@
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 import { MOCK_VOLUME_DATA } from './mockVolumeData';
 import type { DailyVolume } from './mockVolumeData';
+import { ChartLoading } from '../../../ui/ChartLoading';
+import { ChartError } from '../../../ui/ChartError';
 
 type Range = 7 | 30 | 90;
 
 interface ShipmentVolumeChartProps {
   data?: DailyVolume[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 interface CustomTooltipProps {
@@ -24,18 +29,25 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
     <div className="bg-[#1a1f2e] border border-border rounded-lg px-3.5 py-2.5">
       <div className="text-text-secondary text-[11px] font-semibold uppercase mb-1">{label}</div>
       <div className="text-white text-sm font-bold">{payload[0].value} shipments</div>
-    </div>
   );
 }
 
-export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: ShipmentVolumeChartProps) {
+function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA, loading, error, onRetry }: ShipmentVolumeChartProps) {
   const [activeRange, setActiveRange] = useState<Range>(30);
-  const chartData = data.slice(-activeRange);
+  const chartData = useMemo(() => data.slice(-activeRange), [data, activeRange]);
   const ranges: { value: Range; label: string }[] = [
     { value: 7, label: '7D' },
     { value: 30, label: '30D' },
     { value: 90, label: '90D' },
   ];
+
+  if (loading) {
+    return <ChartLoading rows={4} height={420} label="Loading shipment volume chart…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={420} />;
+  }
 
   return (
     <div className="p-0">
@@ -65,7 +77,6 @@ export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: Shipmen
             </button>
           ))}
         </div>
-      </div>
 
       {/* Chart body */}
       <div className="pt-5 pr-4 pb-3 pl-0 h-[300px] md:h-[220px] md:pt-4 md:pr-2 md:pb-2">
@@ -90,6 +101,7 @@ export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: Shipmen
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
   );
 }
+
+export default memo(ShipmentVolumeChart);

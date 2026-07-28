@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   AreaChart,
   Area,
@@ -12,9 +12,16 @@ import {
 import { TrendingUp, TrendingDown, Minus, LineChart } from 'lucide-react';
 import { MOCK_TREND_DATA } from './mockTrendData';
 import type { TimeRange, Granularity, TrendDataPoint } from './mockTrendData';
+import { ChartLoading } from '../../ui/ChartLoading';
+import { ChartError } from '../../ui/ChartError';
+import { WidgetRefreshIndicator } from '@components/dashboard/WidgetRefreshIndicator';
+import useWidgetRefresh from '@hooks/useWidgetRefresh';
 
 export interface ShipmentVolumeTrendWidgetProps {
   data?: Record<TimeRange, Record<Granularity, TrendDataPoint[]>>;
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 interface CustomTooltipProps {
@@ -87,9 +94,21 @@ function calculatePercentageChange(
 
 export default function ShipmentVolumeTrendWidget({
   data = MOCK_TREND_DATA,
+  loading,
+  error,
+  onRetry,
 }: ShipmentVolumeTrendWidgetProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [granularity, setGranularity] = useState<Granularity>('daily');
+
+  const handleRefresh = useCallback(async () => {
+    await new Promise<void>((resolve) => setTimeout(resolve, 800));
+  }, []);
+
+  const { status: refreshStatus, lastRefreshedAt, refresh } = useWidgetRefresh({
+    onRefresh: handleRefresh,
+    intervalMs: 60_000,
+  });
 
   const chartData = useMemo(
     () => data[timeRange][granularity],
@@ -111,6 +130,14 @@ export default function ShipmentVolumeTrendWidget({
   const TrendIcon =
     trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
 
+  if (loading) {
+    return <ChartLoading rows={6} height={520} label="Loading shipment volume trend…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={520} />;
+  }
+
   return (
     <div className="bg-background-card border border-border rounded-2xl overflow-hidden">
       {/* Header */}
@@ -123,21 +150,27 @@ export default function ShipmentVolumeTrendWidget({
               <TrendIcon size={14} />
               <span>{percentage.toFixed(1)}%</span>
             </div>
-          </div>
 
-          {/* Time Range Selector */}
-          <select
-            value={timeRange}
-            onChange={e => setTimeRange(e.target.value as TimeRange)}
-            aria-label="Time range"
-            className="appearance-none bg-[#1a1f2e] border border-border text-text-primary text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer focus:outline-none focus:border-accent-blue"
-          >
-            {TIME_RANGE_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <WidgetRefreshIndicator
+              status={refreshStatus}
+              lastRefreshedAt={lastRefreshedAt}
+              onRefresh={refresh}
+            />
+            {/* Time Range Selector */}
+            <select
+              value={timeRange}
+              onChange={e => setTimeRange(e.target.value as TimeRange)}
+              aria-label="Time range"
+              className="appearance-none bg-[#1a1f2e] border border-border text-text-primary text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer focus:outline-none focus:border-accent-blue"
+            >
+              {TIME_RANGE_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Granularity Toggle */}
@@ -161,7 +194,6 @@ export default function ShipmentVolumeTrendWidget({
             </button>
           ))}
         </div>
-      </div>
 
       {/* Chart body */}
       <div className="pt-5 pr-4 pb-3 pl-0 h-[400px] md:h-[300px] md:pt-4 md:pr-2 md:pb-2">
@@ -241,6 +273,5 @@ export default function ShipmentVolumeTrendWidget({
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </div>
   );
 }

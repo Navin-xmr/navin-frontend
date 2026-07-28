@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
@@ -14,6 +15,7 @@ import * as Sentry from '@sentry/react';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
+import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
 import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
@@ -127,7 +129,9 @@ function App() {
     <AuthProvider>
       <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
         <ErrorBoundary>
+          <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
           <OfflineBanner />
+          <SlowConnectionBanner />
           <RealtimeManager />
           <RouterProvider router={router} />
           <PWAInstallPrompt />

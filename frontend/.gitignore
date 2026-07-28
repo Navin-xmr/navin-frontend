@@ -1,3 +1,12 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
 # Dependencies
 node_modules
 
@@ -39,6 +48,15 @@ playwright-report/
 html/
 
 # Playwright / E2E
+# Somzilla issues document (root-level .gitignore handles this)
+__snapshots__/
+*.snap
+coverage/
+.nyc_output/
+
+# Playwright / E2E
+test-results/
+playwright-report/
 e2e/
 
 # PWA generated files
@@ -47,6 +65,12 @@ workbox-*.js
 
 # Lighthouse CI
 .lighthouseci/
+# Test snapshots and artifacts
+**/__snapshots__/
+*.snap
+test-results/
+playwright-report/
+coverage/
 
 # Lint output
 lint-output.txt

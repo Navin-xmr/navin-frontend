@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Smartphone, Globe, CheckCircle, HelpCircle } from 'lucide-react';
 import Modal from '../common/Modal/Modal';
 import { useWallet } from '../../context/WalletContext';
 import { WALLET_ADAPTERS } from '../../services/stellar/adapters';
@@ -11,25 +11,29 @@ type AvailabilityMap = Record<string, boolean>;
 function statusBadge(id: WalletAdapter['id'], available: boolean | undefined): React.ReactNode {
   if (id === 'lobstr') {
     return (
-      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+        <Smartphone size={10} aria-hidden="true" />
         Mobile
       </span>
     );
   }
   if (id === 'albedo') {
     return (
-      <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+        <Globe size={10} aria-hidden="true" />
         Web
       </span>
     );
   }
   if (available === undefined) return null;
   return available ? (
-    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+      <CheckCircle size={10} aria-hidden="true" />
       Installed
     </span>
   ) : (
-    <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+      <HelpCircle size={10} aria-hidden="true" />
       Not installed
     </span>
   );
@@ -83,13 +87,13 @@ const WalletModal: React.FC = () => {
         </div>
 
         {publicKey && (
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
-            <span className="text-xs font-mono text-emerald-700 dark:text-emerald-400 truncate">
+          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
+            <span className="text-xs font-mono text-emerald-700 dark:text-emerald-400 truncate max-sm:text-[11px]">
               {publicKey}
             </span>
             <button
               onClick={disconnect}
-              className="ml-2 text-xs text-red-500 hover:text-red-700 font-medium shrink-0"
+              className="text-xs text-red-500 hover:text-red-700 font-medium shrink-0 self-end sm:self-auto min-h-[32px] px-2"
             >
               Disconnect
             </button>
@@ -104,7 +108,7 @@ const WalletModal: React.FC = () => {
                 key={adapter.id}
                 onClick={() => handleConnect(adapter)}
                 disabled={!!connectingId || isConnecting}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border border-border hover:border-primary hover:bg-background-elevated transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed"
+                className="flex items-center gap-3 w-full px-4 py-3.5 sm:py-3 rounded-xl border border-border hover:border-primary hover:bg-background-elevated transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed min-h-[52px] sm:min-h-[48px] focus-visible:outline-2 focus-visible:outline-primary"
               >
                 <div className="w-8 h-8 rounded-lg bg-background-elevated flex items-center justify-center shrink-0">
                   <img src={adapter.icon} alt={adapter.name} className="w-5 h-5" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
