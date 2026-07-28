@@ -4,10 +4,11 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Loader2,
   Receipt,
+  AlertTriangle,
 } from "lucide-react";
 import EmptyState from "../../components/common/EmptyState/EmptyState";
+import TableRowSkeleton from "@components/ui/Skeleton/TableRowSkeleton";
 import { Link } from "react-router-dom";
 import {
   settlementsApi,
@@ -54,15 +55,6 @@ const statusDotClasses: Record<SettlementStatus, string> = {
 };
 
 const toStatusLabel = (s: SettlementStatus) => s;
-
-const LoadingState: React.FC = () => (
-  <div className="p-6 md:p-4">
-    <div className="flex items-center gap-3 text-text-secondary">
-      <Loader2 className="animate-spin" size={18} />
-      Loading settlements...
-    </div>
-  </div>
-);
 
 export default function Settlements() {
   const { role } = useAuthContext();
@@ -186,23 +178,21 @@ export default function Settlements() {
     "text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]";
   const tdClass = "px-6 py-4 text-sm border-b border-[rgba(98,255,255,0.2)]";
 
-  if (isLoading) return <LoadingState />;
   if (error) {
     return (
       <div className="p-6 md:p-4">
-        <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
-          <div className="text-red-200 font-semibold mb-2">Error</div>
-          <div className="text-text-secondary text-sm mb-4">{error}</div>
-          <button
-            onClick={() => {
+        <EmptyState
+          icon={<AlertTriangle size={28} />}
+          title="Failed to load settlements"
+          description={error}
+          cta={{
+            label: "Retry",
+            onClick: () => {
               setCurrentPage(1);
               void load();
-            }}
-            className="px-4 py-2 rounded-lg border border-[rgba(98,255,255,0.2)] text-text-primary hover:border-[#62ffff] hover:text-[#62ffff]"
-          >
-            Retry
-          </button>
-        </div>
+            },
+          }}
+        />
       </div>
     );
   }
@@ -298,7 +288,34 @@ export default function Settlements() {
         </div>
       </div>
 
-      {settlements.length === 0 ? (
+      {isLoading ? (
+        <div className={`${tableContainerClass} hidden md:block overflow-x-auto`}>
+          <table className="w-full border-collapse min-w-200">
+            <thead className="bg-[rgba(19,186,186,0.1)]">
+              <tr>
+                <th className={thClass}>Date</th>
+                <th className={thClass}>Shipment ID</th>
+                <th className={thClass}>Amount</th>
+                <th className={thClass}>Status</th>
+                <th className={thClass}>Stellar Tx</th>
+              </tr>
+            </thead>
+            <tbody>
+              <TableRowSkeleton count={limit} />
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      {isLoading ? (
+        <div className="md:hidden flex flex-col gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-28 rounded-2xl bg-[rgba(98,255,255,0.05)] border border-[rgba(98,255,255,0.2)] animate-pulse"
+            />
+          ))}
+        </div>
+      ) : settlements.length === 0 ? (
         <div className="p-6 md:p-4">
           <EmptyState
             icon={<Receipt size={28} />}

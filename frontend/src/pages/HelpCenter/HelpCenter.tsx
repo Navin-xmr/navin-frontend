@@ -15,7 +15,12 @@ import {
   BarChart3,
   FileText,
   ChevronRight,
+  ChevronDown,
   ListChecks,
+  Link2,
+  Landmark,
+  PlayCircle,
+  Keyboard,
 } from 'lucide-react';
 
 // === Types
@@ -27,6 +32,24 @@ interface HelpTask {
   path: string;
   icon: React.ReactNode;
   keywords: string[];
+}
+
+interface FaqEntry {
+  question: string;
+  answer: string;
+}
+
+interface QuickLink {
+  id: string;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}
+
+interface ShortcutRow {
+  keys: string;
+  action: string;
 }
 
 // === Data
@@ -82,12 +105,52 @@ const COMMON_TASKS: HelpTask[] = [
   },
 ];
 
+const FAQ_ENTRIES: FaqEntry[] = [
+  {
+    question: 'How do I create a new shipment?',
+    answer:
+      'Go to Shipments and select "New Shipment". Fill in the pickup and delivery details, attach any documents or photos, and submit — the shipment is registered on-chain and appears in your Shipments list with a Pending status.',
+  },
+  {
+    question: 'How does escrow and automated settlement work?',
+    answer:
+      'When a shipment is confirmed, payment funds are held in escrow on the Stellar blockchain. Once the delivery milestones are verified, the smart contract automatically releases the funds to the logistics provider — no manual invoicing or approval step required.',
+  },
+  {
+    question: 'How do I connect my Stellar wallet?',
+    answer:
+      'Open Settings and choose "Connect Wallet". Select your wallet provider (Freighter, Lobstr, or Solar Wallet) and approve the connection request. Once connected, your wallet address is used to sign and verify settlement transactions.',
+  },
+  {
+    question: 'What does each shipment status mean?',
+    answer:
+      'Pending means the shipment is registered but not yet picked up. In Transit means it is actively moving between milestones. Delivered means all milestones are complete. Exception flags an anomaly (delay, damage, or missed checkpoint) that needs attention.',
+  },
+  {
+    question: 'How do I invite a team member?',
+    answer:
+      'Go to Team, select "Invite", and enter the teammate\'s email along with their role. They will receive an invite link to set up their account with the permissions you assigned.',
+  },
+];
+
+const SHORTCUT_ROWS: ShortcutRow[] = [
+  { keys: 'Alt + D', action: 'Go to Dashboard' },
+  { keys: 'Alt + Shift + S', action: 'Go to Shipments' },
+  { keys: 'Alt + E', action: 'Go to Settlements' },
+  { keys: 'Alt + P', action: 'Go to Payments' },
+  { keys: 'Alt + L', action: 'Go to Analytics' },
+  { keys: 'Alt + Shift + N', action: 'Go to Notifications' },
+  { keys: 'Alt + Shift + Q', action: 'Go to Settings' },
+  { keys: '? / Shift + /', action: 'Toggle this help dialog' },
+];
+
 // === Component
 
 const HelpCenter: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [query, setQuery] = useState<string>('');
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const filteredTasks = useMemo<HelpTask[]>(() => {
     const term = query.trim().toLowerCase();
@@ -110,6 +173,37 @@ const HelpCenter: React.FC = () => {
     resetChecklist();
     addToast('Setup checklist restored on your dashboard.', 'success');
   };
+
+  const quickLinks: QuickLink[] = [
+    {
+      id: 'blockchain-ledger',
+      label: 'Blockchain Ledger',
+      description: 'View on-chain shipment and settlement records.',
+      icon: <Link2 size={18} />,
+      onClick: () => navigate('/dashboard/blockchain-ledger'),
+    },
+    {
+      id: 'settlements',
+      label: 'Settlements',
+      description: 'Track escrow and payment settlement status.',
+      icon: <Landmark size={18} />,
+      onClick: () => navigate('/dashboard/settlements'),
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics',
+      description: 'Review revenue, cost, and performance trends.',
+      icon: <BarChart3 size={18} />,
+      onClick: () => navigate('/dashboard/analytics'),
+    },
+    {
+      id: 'restart-tour',
+      label: 'Restart onboarding tour',
+      description: 'Replay the guided introduction to Navin.',
+      icon: <RotateCcw size={18} />,
+      onClick: handleRestartTour,
+    },
+  ];
 
   return (
     <div className="w-full max-w-3xl mx-auto px-6 py-8 max-md:px-4">
@@ -200,6 +294,116 @@ const HelpCenter: React.FC = () => {
             <ListChecks size={16} />
             Restore Setup Checklist
           </button>
+        </div>
+      </section>
+
+      <section aria-labelledby="quick-links-heading" className="mb-6">
+        <h2
+          id="quick-links-heading"
+          className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#64748b] mb-3"
+        >
+          Quick links
+        </h2>
+        <ul className="list-none m-0 p-0 grid grid-cols-3 gap-3 max-md:grid-cols-1">
+          {quickLinks.map((link) => (
+            <li key={link.id}>
+              <button
+                type="button"
+                onClick={link.onClick}
+                className="w-full h-full flex flex-col items-start gap-2 text-left rounded-xl border border-[#1e293b] bg-[#14171e] p-4 cursor-pointer transition-colors hover:border-[#62ffff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
+              >
+                <span className="text-[#62ffff]">{link.icon}</span>
+                <span className="text-sm font-semibold text-white">{link.label}</span>
+                <span className="text-xs text-[#94a3b8] leading-relaxed">{link.description}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="faq-heading" className="mb-6">
+        <h2
+          id="faq-heading"
+          className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#64748b] mb-3"
+        >
+          Frequently asked questions
+        </h2>
+        <div className="flex flex-col gap-2">
+          {FAQ_ENTRIES.map((entry, index) => {
+            const isOpen = openFaqIndex === index;
+            return (
+              <div
+                key={entry.question}
+                className="rounded-xl border border-[#1e293b] bg-[#14171e] overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                  aria-expanded={isOpen}
+                  className="w-full flex items-center justify-between gap-4 px-4 py-3.5 text-left cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
+                >
+                  <span className="text-sm font-semibold text-white">{entry.question}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`shrink-0 text-[#64748b] transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                  />
+                </button>
+                {isOpen && (
+                  <p className="px-4 pb-4 text-sm text-[#94a3b8] leading-relaxed">{entry.answer}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section aria-labelledby="shortcuts-heading" className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Keyboard size={18} className="text-[#62ffff]" />
+          <h2 id="shortcuts-heading" className="text-lg font-semibold text-white m-0">
+            Keyboard shortcuts
+          </h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-[#1e293b]">
+                <th className="text-left font-semibold text-[#64748b] py-2 pr-4 whitespace-nowrap">
+                  Shortcut key
+                </th>
+                <th className="text-left font-semibold text-[#64748b] py-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SHORTCUT_ROWS.map((row) => (
+                <tr key={row.keys} className="border-b border-[#1e293b] last:border-b-0">
+                  <td className="py-2.5 pr-4 whitespace-nowrap">
+                    <kbd className="text-xs font-mono bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.15)] rounded px-2 py-1 text-[#62ffff]">
+                      {row.keys}
+                    </kbd>
+                  </td>
+                  <td className="py-2.5 text-[#cbd5e1]">{row.action}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="video-heading" className="mb-6">
+        <h2
+          id="video-heading"
+          className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#64748b] mb-3"
+        >
+          Video guide
+        </h2>
+        <div
+          data-src="https://www.youtube.com/watch?v=REPLACE_ME"
+          className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#1e293b] bg-[#14171e] p-10 text-center"
+        >
+          <PlayCircle size={40} className="text-[#62ffff]" />
+          <p className="text-sm font-semibold text-white m-0">Getting Started with Navin</p>
+          <p className="text-xs text-[#94a3b8] m-0">Video walkthrough coming soon.</p>
         </div>
       </section>
 
