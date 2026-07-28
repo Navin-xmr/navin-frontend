@@ -26,6 +26,7 @@ import { RouteTransitionProvider } from './context/RouteTransitionContext';
 import RouteTransition from './components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
+import NotFoundPage from '@pages/NotFound/NotFoundPage';
 import './App.css';
 
 // Eagerly loaded (critical path)
@@ -110,11 +111,13 @@ const router = createBrowserRouter([
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
           { path: '/dashboard/profile', element: <CustomerProfile /> },
+          { path: '/dashboard/*', element: <NotFoundPage /> },
           { path: '/dashboard/whats-new', element: S(<WhatsNewPage />) },
         ],
       },
     ],
   },
+  { path: '*', element: <NotFoundPage /> },
 ]);
 
 function RealtimeManager() {

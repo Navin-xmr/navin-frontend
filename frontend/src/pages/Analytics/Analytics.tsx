@@ -4,9 +4,11 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
+  Calendar,
 } from "lucide-react";
 import Breadcrumb from "@components/common/Breadcrumb";
 import StatCard, { type StatCardProps } from "../../components/dashboard/StatCard/StatCard";
+import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
 import ShipmentVolumeChart from "../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart";
 import DeliverySuccessChart from "../../components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart";
 import Skeleton from "../../components/ui/Skeleton/Skeleton";
@@ -196,6 +198,13 @@ const Analytics: React.FC = () => {
           </button>
         </div>
       ) : loading ? (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-sm:grid-cols-1">
+            <DashboardWidgetSkeleton count={4} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
+            <DashboardWidgetSkeleton count={2} />
         <div className="flex flex-col gap-6" aria-busy="true" aria-live="polite">
           <span className="sr-only">Loading analytics data…</span>
           <div className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-sm:grid-cols-1">

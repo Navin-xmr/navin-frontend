@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Package, ArrowRight, QrCode, Printer, AlertTriangle, ChevronDown } from "lucide-react";
+import { Package, ArrowRight, QrCode, Printer, AlertTriangle, ChevronDown, Download, Loader2 } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
 import PriorityBadge from "../../../components/ui/PriorityBadge";
@@ -26,6 +26,8 @@ export interface ShipmentDetailHeaderProps {
   onTrack?: () => void;
   onPrint?: () => void;
   onRaiseDispute?: () => void;
+  onExport?: () => void;
+  isExporting?: boolean;
 }
 
 const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
@@ -42,6 +44,8 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   onTrack,
   onPrint,
   onRaiseDispute,
+  onExport,
+  isExporting = false,
 }) => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
@@ -225,6 +229,15 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
         >
           <Printer className="w-5 h-5" />
           Print Receipt
+        </button>
+        <button
+          onClick={onExport}
+          disabled={isExporting}
+          aria-label="Export shipment as PDF"
+          className="px-6 py-3 rounded-lg bg-background-elevated border border-border hover:bg-background-card text-white font-semibold transition-colors duration-200 flex items-center gap-2 justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {isExporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+          {isExporting ? "Exporting..." : "Export PDF"}
         </button>
       </div>
 
