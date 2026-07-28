@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Calendar,
 } from "lucide-react";
+import Breadcrumb from "@components/common/Breadcrumb";
 import StatCard, { type StatCardProps } from "../../components/dashboard/StatCard/StatCard";
 import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
 import ShipmentVolumeChart from "../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart";
@@ -165,6 +166,7 @@ const Analytics: React.FC = () => {
 
   return (
     <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6 font-sans text-white max-md:px-4 max-md:pb-[90px]">
+      <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }]} current="Analytics" />
       <div className="flex justify-between items-end mb-8 max-md:flex-col max-md:items-start max-md:gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1">

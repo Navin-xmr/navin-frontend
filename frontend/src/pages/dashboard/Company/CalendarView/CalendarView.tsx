@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Breadcrumb from '@components/common/Breadcrumb';
 import type { Shipment } from '../../../../api/shipmentApi';
 
 interface CalendarShipment extends Shipment {
@@ -110,7 +111,11 @@ export const CalendarView: React.FC = () => {
   const selectedShipments = selectedDay ? (shipmentsByDay[selectedDay] ?? []) : [];
 
   return (
-    <div className="flex h-full gap-4 p-4">
+    <div className="flex flex-col h-full">
+      <div className="px-4 pt-4">
+        <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Calendar" />
+      </div>
+      <div className="flex flex-1 min-h-0 gap-4 p-4 pt-0">
       {/* Calendar panel */}
       <div className="flex-1 min-w-0">
         {/* Header */}
@@ -256,6 +261,7 @@ export const CalendarView: React.FC = () => {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 };

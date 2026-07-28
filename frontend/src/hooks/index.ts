@@ -9,6 +9,8 @@ export type { FormDraft, UseFormDraftReturn } from './useFormDraft';
 export type { UseBulkSelectionReturn } from './useBulkSelection';
 export { useShipmentDetail } from './useShipmentDetail';
 export type { UseShipmentDetailReturn } from './useShipmentDetail';
+export { usePagination } from './usePagination';
+export type { UsePaginationOptions, UsePaginationReturn } from './usePagination';
 export { useReturningVisitor } from './useReturningVisitor';
 export type { ReturningVisitorState } from './useReturningVisitor';
 export { default as useWidgetCache } from './useWidgetCache';

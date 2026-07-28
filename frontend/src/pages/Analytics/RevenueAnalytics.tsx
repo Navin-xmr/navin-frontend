@@ -3,6 +3,7 @@ import { Calendar, Download } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import html2pdf from "html2pdf.js";
 import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
+import Breadcrumb from "@components/common/Breadcrumb";
 import RichChartTooltip, { ExportAction } from "../../components/ui/RichChartTooltip";
 
 interface MonthlyData {
@@ -191,6 +192,10 @@ const RevenueAnalytics: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-6 font-sans text-white max-md:px-4 max-md:pb-20">
+      <Breadcrumb
+        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Analytics", href: "/dashboard/analytics" }]}
+        current="Revenue Analytics"
+      />
       <div className="flex justify-between items-end mb-8 max-md:flex-col max-md:items-start max-md:gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight m-0 mb-2">

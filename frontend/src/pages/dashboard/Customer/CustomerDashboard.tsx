@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Package, Truck, CheckCircle2, Bell,
   ArrowUpDown, AlertTriangle, Download,
@@ -40,14 +41,14 @@ function getMilestoneProgress(shipment: Shipment): number {
   return STATUS_PROGRESS[shipment.status] ?? 0;
 }
 
-function getTimeAgo(timestamp: Date): string {
+function getTimeAgo(timestamp: Date, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const diffMs = Date.now() - timestamp.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return `${diffDays}d ago`;
+  if (diffMins < 60) return t('customerDashboard.timeAgo.minutes', { count: diffMins });
+  if (diffHours < 24) return t('customerDashboard.timeAgo.hours', { count: diffHours });
+  return t('customerDashboard.timeAgo.days', { count: diffDays });
 }
 
 function getNotificationIcon(type: NotificationItem['type']) {
@@ -61,6 +62,7 @@ function getNotificationIcon(type: NotificationItem['type']) {
 
 const CustomerDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('dashboard');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -106,13 +108,13 @@ const CustomerDashboard: React.FC = () => {
       <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6">
         <div className="flex flex-col items-center justify-center p-12 bg-[#14171e] border border-dashed border-[#ef4444] rounded-xl text-center">
           <AlertTriangle size={48} className="text-[#ef4444] mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Failed to load dashboard</h3>
-          <p className="text-[#94a3b8] text-sm mb-4">There was a problem loading your shipments.</p>
+          <h3 className="text-lg font-semibold mb-2">{t('customerDashboard.errorTitle')}</h3>
+          <p className="text-[#94a3b8] text-sm mb-4">{t('customerDashboard.errorBody')}</p>
           <button
             className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
             onClick={() => window.location.reload()}
           >
-            Retry
+            {t('customerDashboard.retry')}
           </button>
         </div>
       </div>
@@ -124,8 +126,8 @@ const CustomerDashboard: React.FC = () => {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1">My Shipments</h1>
-        <p className="text-[#94a3b8] text-sm m-0">Track your active and past deliveries</p>
+        <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1">{t('customerDashboard.title')}</h1>
+        <p className="text-[#94a3b8] text-sm m-0">{t('customerDashboard.subtitle')}</p>
       </div>
 
       {/* Main grid: content left, notifications right */}
@@ -142,19 +144,19 @@ const CustomerDashboard: React.FC = () => {
                 <>
                   <div className="bg-[#14171e] border border-[#1e293b] rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
                     <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
-                      <Package size={15} /> Total Shipments
+                      <Package size={15} /> {t('customerDashboard.stats.totalShipments')}
                     </div>
                     <div className="text-[28px] font-semibold">{shipments.length}</div>
                   </div>
                   <div className="bg-[#14171e] border border-[#1e293b] rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
                     <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
-                      <Truck size={15} /> In Transit
+                      <Truck size={15} /> {t('customerDashboard.stats.inTransit')}
                     </div>
                     <div className="text-[28px] font-semibold text-[#3b82f6]">{inTransitCount}</div>
                   </div>
                   <div className="bg-[#14171e] border border-[#1e293b] rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
                     <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
-                      <CheckCircle2 size={15} /> Delivered This Month
+                      <CheckCircle2 size={15} /> {t('customerDashboard.stats.deliveredThisMonth')}
                     </div>
                     <div className="text-[28px] font-semibold text-[#10b981]">{deliveredThisMonth}</div>
                   </div>
@@ -166,11 +168,11 @@ const CustomerDashboard: React.FC = () => {
           <section>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-[0.05em] m-0">
-                Active Shipments
+                {t('customerDashboard.activeShipments')}
               </h2>
               {!isLoading && (
                 <span className="text-xs text-[#94a3b8]">
-                  {activeShipments.length} shipment{activeShipments.length !== 1 ? 's' : ''}
+                  {t('customerDashboard.shipmentCount', { count: activeShipments.length })}
                 </span>
               )}
             </div>
@@ -182,7 +184,7 @@ const CustomerDashboard: React.FC = () => {
             ) : activeShipments.length === 0 ? (
               <div className="bg-[#14171e] border border-dashed border-[#1e293b] rounded-xl p-10 text-center">
                 <Package size={32} className="text-[#334155] mx-auto mb-3" />
-                <p className="text-[#94a3b8] text-sm">No active shipments</p>
+                <p className="text-[#94a3b8] text-sm">{t('customerDashboard.noActiveShipments')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
@@ -219,14 +221,14 @@ const CustomerDashboard: React.FC = () => {
 
                       {/* ETA */}
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-[11px] text-[#64748b] uppercase tracking-[0.05em]">Est. Delivery</span>
+                        <span className="text-[11px] text-[#64748b] uppercase tracking-[0.05em]">{t('customerDashboard.estDelivery')}</span>
                         <span className="text-sm font-medium">{safeFormatDate(eta)}</span>
                       </div>
 
                       {/* Progress bar */}
                       <div className="flex flex-col gap-1.5">
                         <div className="flex justify-between items-center">
-                          <span className="text-[11px] text-[#64748b]">Milestone Progress</span>
+                          <span className="text-[11px] text-[#64748b]">{t('customerDashboard.milestoneProgress')}</span>
                           <span className="text-[11px] font-semibold text-[#94a3b8]">{progress}%</span>
                         </div>
                         <div className="h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
@@ -247,7 +249,7 @@ const CustomerDashboard: React.FC = () => {
           <section>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-[0.05em] m-0">
-                Past Shipments
+                {t('customerDashboard.pastShipments')}
               </h2>
             </div>
 
@@ -258,7 +260,7 @@ const CustomerDashboard: React.FC = () => {
             ) : pastShipments.length === 0 ? (
               <div className="bg-[rgba(19,186,186,0.05)] border border-dashed border-[rgba(98,255,255,0.15)] rounded-xl p-10 text-center">
                 <Package size={32} className="text-[rgba(98,255,255,0.2)] mx-auto mb-3" />
-                <p className="text-[#94a3b8] text-sm">No past shipments yet</p>
+                <p className="text-[#94a3b8] text-sm">{t('customerDashboard.noPastShipments')}</p>
               </div>
             ) : (
               <div className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl overflow-hidden shadow-[inset_0_0_20px_0px_rgba(0,128,128,0.3)] overflow-x-auto">
@@ -266,24 +268,24 @@ const CustomerDashboard: React.FC = () => {
                   <thead className="bg-[rgba(19,186,186,0.1)]">
                     <tr>
                       <th className="text-left px-5 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]">
-                        Tracking #
+                        {t('customerDashboard.tableHeaders.trackingNumber')}
                       </th>
                       <th className="text-left px-5 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]">
-                        Route
+                        {t('customerDashboard.tableHeaders.route')}
                       </th>
                       <th className="text-left px-5 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]">
-                        Status
+                        {t('customerDashboard.tableHeaders.status')}
                       </th>
                       <th
                         className="text-left px-5 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)] cursor-pointer select-none hover:text-white transition-colors"
                         onClick={() => setPastSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
                       >
                         <span className="inline-flex items-center gap-1.5">
-                          Delivery Date <ArrowUpDown size={12} />
+                          {t('customerDashboard.tableHeaders.deliveryDate')} <ArrowUpDown size={12} />
                         </span>
                       </th>
                       <th className="text-left px-5 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]">
-                        Proof
+                        {t('customerDashboard.tableHeaders.proof')}
                       </th>
                     </tr>
                   </thead>
@@ -319,10 +321,10 @@ const CustomerDashboard: React.FC = () => {
                                 onClick={e => e.stopPropagation()}
                                 className="inline-flex items-center gap-1.5 text-[#62ffff] text-xs font-semibold border border-[rgba(98,255,255,0.3)] px-2.5 py-1 rounded-md hover:bg-[rgba(98,255,255,0.1)] hover:border-[#62ffff] transition-colors"
                               >
-                                <Download size={12} /> Download
+                                <Download size={12} /> {t('customerDashboard.download')}
                               </a>
                             ) : (
-                              <span className="text-[#334155] text-xs italic">N/A</span>
+                              <span className="text-[#334155] text-xs italic">{t('customerDashboard.notAvailable')}</span>
                             )}
                           </td>
                         </tr>
@@ -341,11 +343,11 @@ const CustomerDashboard: React.FC = () => {
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#1e293b]">
               <div className="flex items-center gap-2">
                 <Bell size={15} className="text-[#94a3b8]" />
-                <h3 className="text-sm font-semibold m-0">Notifications</h3>
+                <h3 className="text-sm font-semibold m-0">{t('customerDashboard.notifications')}</h3>
               </div>
               {unreadNotifications.length > 0 && (
                 <span className="bg-blue-500/20 text-blue-400 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
-                  {unreadNotifications.length} new
+                  {t('customerDashboard.newCount', { count: unreadNotifications.length })}
                 </span>
               )}
             </div>
@@ -354,7 +356,7 @@ const CustomerDashboard: React.FC = () => {
               {unreadNotifications.length === 0 ? (
                 <div className="px-5 py-8 text-center">
                   <CheckCircle2 size={24} className="text-[#334155] mx-auto mb-2" />
-                  <p className="text-[#94a3b8] text-sm">All caught up!</p>
+                  <p className="text-[#94a3b8] text-sm">{t('customerDashboard.allCaughtUp')}</p>
                 </div>
               ) : (
                 unreadNotifications.map(n => (
@@ -370,7 +372,7 @@ const CustomerDashboard: React.FC = () => {
                         {n.message}
                       </p>
                       <span className="text-[11px] text-slate-500 mt-0.5 block">
-                        {getTimeAgo(n.timestamp)}
+                        {getTimeAgo(n.timestamp, t)}
                       </span>
                     </div>
                   </div>
@@ -383,7 +385,7 @@ const CustomerDashboard: React.FC = () => {
                 className="w-full py-2 bg-transparent border-none text-blue-500 text-[12px] font-semibold cursor-pointer rounded-md hover:bg-blue-500/10 transition-colors text-center"
                 onClick={() => navigate('/dashboard/notifications')}
               >
-                View All Notifications
+                {t('customerDashboard.viewAllNotifications')}
               </button>
             </div>
           </div>
