@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Calendar, Download } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import html2pdf from "html2pdf.js";
+import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
 
 interface MonthlyData {
   month: string;
@@ -87,12 +88,18 @@ const RevenueAnalytics: React.FC = () => {
   const [data, setData] = useState(() =>
     generateMockData(new Date(startDate), new Date(endDate))
   );
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const startTimer = setTimeout(() => setIsLoading(true), 0);
+    const dataTimer = setTimeout(() => {
       setData(generateMockData(new Date(startDate), new Date(endDate)));
+      setIsLoading(false);
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(startTimer);
+      clearTimeout(dataTimer);
+    };
   }, [startDate, endDate]);
 
   const handleExportPDF = () => {
@@ -150,6 +157,16 @@ const RevenueAnalytics: React.FC = () => {
         </div>
       </div>
 
+      {isLoading ? (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-3 gap-4 max-lg:grid-cols-1 max-md:grid-cols-1">
+            <DashboardWidgetSkeleton count={3} />
+          </div>
+          <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
+            <DashboardWidgetSkeleton count={4} />
+          </div>
+        </div>
+      ) : (
       <div id="revenue-dashboard" className="flex flex-col gap-6 bg-slate-950">
           {/* KPI Cards */}
           <div className="grid grid-cols-3 gap-4 max-lg:grid-cols-1 max-md:grid-cols-1">
@@ -318,6 +335,7 @@ const RevenueAnalytics: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
     </div>
   );
 };

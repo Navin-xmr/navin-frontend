@@ -4,10 +4,10 @@ import {
   Clock,
   CheckCircle2,
   AlertTriangle,
-  Loader2,
   Calendar,
 } from "lucide-react";
 import StatCard, { type StatCardProps } from "../../components/dashboard/StatCard/StatCard";
+import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
 import ShipmentVolumeChart from "../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart";
 import DeliverySuccessChart from "../../components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart";
 import { analyticsApi } from "../../services/api/endpoints/analytics";
@@ -170,9 +170,14 @@ const Analytics: React.FC = () => {
           </button>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center p-24 gap-4">
-          <Loader2 className="animate-spin" size={32} />
-          <p className="text-[#94a3b8] text-sm">Loading analytics data...</p>
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-sm:grid-cols-1">
+            <DashboardWidgetSkeleton count={4} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
+            <DashboardWidgetSkeleton count={2} />
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
