@@ -1,28 +1,84 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  Clock, CheckCircle2, Truck,
-  ShieldCheck, AlertTriangle,
-  Rocket, Menu,
+  Clock,
+  CheckCircle2,
+  Truck,
+  ShieldCheck,
+  AlertTriangle,
+  Rocket,
+  Menu,
+  RefreshCw,
+  Save,
 } from "lucide-react";
 
-import { QuickActionsCard } from './QuickActions';
+import { QuickActionsCard } from "./QuickActions";
+import { useKeyboardShortcuts } from "../../../hooks/useKeyboardShortcuts";
 
-import RecentShipments from './RecentShipments/RecentShipments';
-import RecentActivityFeed from './RecentActivity/RecentActivityFeed';
-import ShipmentsMapWidget from './ShipmentsMap/ShipmentsMapWidget';
-import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
-import { CostPerRouteWidget } from '../../../components/dashboard/CostPerRouteWidget';
-import { RevenueTargetWidget } from '../../../components/dashboard/RevenueTargetWidget';
-import PerformanceScorecardWidget from './Scorecard/PerformanceScorecardWidget';
-import OnboardingTour, { isTourComplete } from '@components/onboarding/OnboardingTour';
-import type { TourStep } from '@components/onboarding/OnboardingTour';
+import RecentShipments from "./RecentShipments/RecentShipments";
+import RecentActivityFeed from "./RecentActivity/RecentActivityFeed";
+import ShipmentsMapWidget from "./ShipmentsMap/ShipmentsMapWidget";
+import RevenueSummaryWidget from "./RevenueSummary/RevenueSummaryWidget";
+import { CostPerRouteWidget } from "../../../components/dashboard/CostPerRouteWidget";
+import { RevenueTargetWidget } from "../../../components/dashboard/RevenueTargetWidget";
+import PerformanceScorecardWidget from "./Scorecard/PerformanceScorecardWidget";
+import OnboardingTour, {
+  isTourComplete,
+  resetTourFlag,
+} from "@components/onboarding/OnboardingTour";
+import type { TourStep } from "@components/onboarding/OnboardingTour";
+import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
+
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: "tour-welcome",
+    heading: "Welcome to Navin 🎉",
+    body: "This is your logistics command center. Monitor shipments, track performance, and manage your team — all in one place.",
+    placement: "bottom",
+  },
+  {
+    targetId: "tour-create-shipment",
+    heading: "Create Your First Shipment",
+    body: "Click here to create a new shipment, assign routes, set milestones, and configure automated settlements.",
+    placement: "bottom",
+  },
+  {
+    targetId: "tour-shipments-link",
+    heading: "Track Shipments",
+    body: "View all active and historical shipments with real-time on-chain milestone updates and IoT sensor data.",
+    placement: "right",
+  },
+  {
+    targetId: "tour-settlements-link",
+    heading: "Automated Settlements",
+    body: "Settlements trigger automatically when delivery milestones are verified on the Stellar blockchain.",
+    placement: "right",
+  },
+  {
+    targetId: "tour-wallet",
+    heading: "Connect Your Stellar Wallet",
+    body: "Connect your Stellar wallet to sign settlement transactions and interact with Soroban smart contracts.",
+    placement: "bottom",
+  },
+];
 
 const TrendIcon = ({ up }: { up: boolean }) => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {up
-      ? <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      : <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />}
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {up ? (
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+    ) : (
+      <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />
+    )}
   </svg>
 );
 
@@ -31,13 +87,123 @@ const stats = [
   { id: "delivered", value: "1,420", trend: "5%", trendType: "positive", icon: <CheckCircle2 size={18} /> },
   { id: "delayed", value: "12", trend: "2%", trendType: "negative", icon: <Clock size={18} /> },
   { id: "verified", value: "45", trend: "0%", trendType: "neutral", icon: <ShieldCheck size={18} /> },
+  {
+    id: "active",
+    label: "Active",
+    value: "128",
+    trend: "12%",
+    trendType: "positive",
+    icon: <Truck size={18} />,
+  },
+  {
+    id: "delivered",
+    label: "Delivered",
+    value: "1,420",
+    trend: "5%",
+    trendType: "positive",
+    icon: <CheckCircle2 size={18} />,
+  },
+  {
+    id: "delayed",
+    label: "Delayed",
+    value: "12",
+    trend: "2%",
+    trendType: "negative",
+    icon: <Clock size={18} />,
+  },
+  {
+    id: "verified",
+    label: "Verified",
+    value: "45",
+    trend: "0%",
+    trendType: "neutral",
+    icon: <ShieldCheck size={18} />,
+  },
 ];
+
+type DashboardWidgetId =
+  | "map"
+  | "revenue"
+  | "scorecard"
+  | "targets"
+  | "shipments"
+  | "activity";
+
+interface DashboardPreset {
+  id: string;
+  label: string;
+  description: string;
+  widgets: DashboardWidgetId[];
+}
+
+const DASHBOARD_LAYOUT_KEY = "navin_dashboard_layout_preset";
+const CUSTOM_WIDGETS_KEY = "navin_dashboard_visible_widgets";
+
+const dashboardPresets: DashboardPreset[] = [
+  {
+    id: "operations",
+    label: "Operations",
+    description: "Fleet status, shipment movement, and latest updates.",
+    widgets: ["map", "scorecard", "shipments", "activity"],
+  },
+  {
+    id: "finance",
+    label: "Finance",
+    description: "Revenue, settlement targets, and route costs.",
+    widgets: ["revenue", "targets", "shipments", "activity"],
+  },
+  {
+    id: "overview",
+    label: "Overview",
+    description: "Balanced view for daily logistics reviews.",
+    widgets: ["map", "revenue", "scorecard", "targets", "shipments", "activity"],
+  },
+];
+
+const widgetLabels: Record<DashboardWidgetId, string> = {
+  map: "Fleet map",
+  revenue: "Revenue summary",
+  scorecard: "Performance scorecard",
+  targets: "Revenue and route costs",
+  shipments: "Recent shipments",
+  activity: "Recent activity",
+};
+
+const defaultWidgetIds = dashboardPresets[2].widgets;
 
 const CompanyDashboard: React.FC = () => {
   const { t } = useTranslation('dashboard');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [activePresetId, setActivePresetId] = useState(() => {
+    try {
+      return localStorage.getItem(DASHBOARD_LAYOUT_KEY) ?? "overview";
+    } catch {
+      return "overview";
+    }
+  });
+  const [visibleWidgets, setVisibleWidgets] = useState<DashboardWidgetId[]>(() => {
+    try {
+      const saved = localStorage.getItem(CUSTOM_WIDGETS_KEY);
+      if (!saved) return defaultWidgetIds;
+      const parsed = JSON.parse(saved) as DashboardWidgetId[];
+      return parsed.filter((id) => id in widgetLabels);
+    } catch {
+      return defaultWidgetIds;
+    }
+  });
+
+  useKeyboardShortcuts([
+    {
+      key: "R",
+      alt: true,
+      callback: () => handleRefresh(),
+      label: "Refresh Dashboard",
+    },
+  ]);
 
   const TOUR_STEPS: TourStep[] = [
     {
@@ -78,14 +244,49 @@ const CompanyDashboard: React.FC = () => {
         setIsLoading(true);
         await new Promise((resolve) => setTimeout(resolve, 1200));
         setIsLoading(false);
+        setLastRefreshed(new Date());
         if (!isTourComplete()) setShowTour(true);
       } catch {
         setHasError(true);
         setIsLoading(false);
       }
     };
-    fetchDashboardData();
-  }, []);
+    void fetchDashboardData();
+  }, [refreshKey]);
+
+  const refreshedLabel = useMemo(() => {
+    if (!lastRefreshed) return "Awaiting first refresh";
+    return `Last refreshed ${lastRefreshed.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+  }, [lastRefreshed]);
+
+  const handleRefresh = () => {
+    setLastRefreshed(new Date());
+    setRefreshKey((value) => value + 1);
+  };
+
+  const handlePresetChange = (presetId: string) => {
+    const preset = dashboardPresets.find((item) => item.id === presetId);
+    if (!preset) return;
+    setActivePresetId(preset.id);
+    setVisibleWidgets(preset.widgets);
+    localStorage.setItem(DASHBOARD_LAYOUT_KEY, preset.id);
+    localStorage.setItem(CUSTOM_WIDGETS_KEY, JSON.stringify(preset.widgets));
+  };
+
+  const handleWidgetToggle = (widgetId: DashboardWidgetId) => {
+    setVisibleWidgets((current) => {
+      const next = current.includes(widgetId)
+        ? current.filter((id) => id !== widgetId)
+        : [...current, widgetId];
+      localStorage.setItem(DASHBOARD_LAYOUT_KEY, "custom");
+      localStorage.setItem(CUSTOM_WIDGETS_KEY, JSON.stringify(next));
+      setActivePresetId("custom");
+      return next;
+    });
+  };
+
+  const isWidgetVisible = (widgetId: DashboardWidgetId) =>
+    visibleWidgets.includes(widgetId);
 
   if (hasError) {
     return (
@@ -96,6 +297,17 @@ const CompanyDashboard: React.FC = () => {
           <p className="text-[#94a3b8] text-sm mb-4">{t('companyDashboard.errorBody')}</p>
           <button className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer" onClick={() => window.location.reload()}>
             {t('companyDashboard.retry')}
+          <h3 className="text-lg font-semibold mb-2">
+            Failed to load dashboard
+          </h3>
+          <p className="text-[#94a3b8] text-sm mb-4">
+            There was a problem connecting to the logistics network.
+          </p>
+          <button
+            className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
+            onClick={() => window.location.reload()}
+          >
+            Retry Connection
           </button>
         </div>
       </div>
@@ -104,8 +316,9 @@ const CompanyDashboard: React.FC = () => {
 
   return (
     <div className="font-sans text-white bg-transparent w-full max-w-[1080px] mx-auto min-h-[calc(100vh-72px)] px-[46px] py-6 flex flex-col gap-8 max-md:px-4 max-md:gap-6 max-md:pb-[90px]">
-
-      {showTour && <OnboardingTour steps={TOUR_STEPS} onClose={() => setShowTour(false)} />}
+      {showTour && (
+        <OnboardingTour steps={TOUR_STEPS} onClose={() => setShowTour(false)} />
+      )}
 
       {/* Mobile branded header */}
       <div className="hidden max-md:flex items-center justify-between py-3">
@@ -113,30 +326,125 @@ const CompanyDashboard: React.FC = () => {
           <div className="w-9 h-9 bg-[#3b82f6] rounded-[10px] flex items-center justify-center">
             <Rocket size={16} color="#fff" />
           </div>
-          <span className="text-lg font-extrabold text-white tracking-widest">NAVIN</span>
+          <span className="text-lg font-extrabold text-white tracking-widest">
+            NAVIN
+          </span>
         </div>
         <button className="bg-transparent border-none cursor-pointer p-1 flex items-center" aria-label={t('companyDashboard.menuAriaLabel')}>
+        <button
+          className="bg-transparent border-none cursor-pointer p-1 flex items-center"
+          aria-label="Menu"
+        >
           <Menu size={22} color="#fff" />
         </button>
       </div>
 
       {/* Title */}
-      <div className="flex justify-between items-end max-md:flex-col max-md:items-start max-md:gap-1" data-tour-id="tour-welcome">
+      <div
+        className="flex justify-between items-end max-md:flex-col max-md:items-start max-md:gap-1"
+        data-tour-id="tour-welcome"
+      >
         <div>
           <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1 max-md:text-[22px] max-md:font-bold">{t('companyDashboard.title')}</h1>
           <p className="text-[#94a3b8] text-sm m-0">{t('companyDashboard.subtitle')}</p>
         </div>
         <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
           {t('companyDashboard.live')} <span className="text-[#10b981]">{t('companyDashboard.connected')}</span>
+          <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1 max-md:text-[22px] max-md:font-bold">
+            Logistics Overview
+          </h1>
+          <p className="text-[#94a3b8] text-sm m-0">
+            Blockchain-synced real-time data
+          </p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[#64748b] mt-1">
+            {refreshedLabel}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
+            Live: <span className="text-[#10b981]">Connected</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              resetTourFlag();
+              setShowTour(true);
+            }}
+            aria-label="Restart onboarding tour"
+            className="max-md:hidden inline-flex items-center gap-2 rounded-md border border-[#1e293b] bg-[#14171e] px-3 py-1.5 text-xs font-medium text-[#94a3b8] transition-colors hover:border-[#62ffff] hover:text-[#62ffff]"
+          >
+            Tour
+          </button>
+          <button
+            type="button"
+            onClick={handleRefresh}
+            aria-label="Refresh dashboard"
+            className="inline-flex items-center gap-2 rounded-md border border-[#1e293b] bg-[#14171e] px-3 py-1.5 text-xs font-medium text-[#cbd5e1] transition-colors hover:border-[#3b82f6] hover:text-white"
+          >
+            <RefreshCw size={14} />
+            Refresh
+          </button>
         </div>
       </div>
+
+      {!isLoading && <OnboardingChecklist />}
+      <section
+        className="rounded-xl border border-[#1e293b] bg-[#14171e] p-4"
+        aria-labelledby="dashboard-layout-heading"
+      >
+        <div className="flex items-start justify-between gap-4 max-md:flex-col">
+          <div>
+            <h2
+              id="dashboard-layout-heading"
+              className="m-0 flex items-center gap-2 text-sm font-semibold text-white"
+            >
+              <Save size={16} className="text-[#62ffff]" />
+              Saved dashboard layout
+            </h2>
+            <p className="mt-1 text-xs text-[#94a3b8]">
+              Choose a preset or show only the widgets needed for your current workflow.
+            </p>
+          </div>
+          <select
+            value={activePresetId}
+            onChange={(event) => handlePresetChange(event.target.value)}
+            className="rounded-lg border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-sm text-white outline-none transition-colors hover:border-[#62ffff] focus:border-[#62ffff] max-md:w-full"
+            aria-label="Dashboard layout preset"
+          >
+            {dashboardPresets.map((preset) => (
+              <option key={preset.id} value={preset.id}>
+                {preset.label}
+              </option>
+            ))}
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-3">
+          {(Object.keys(widgetLabels) as DashboardWidgetId[]).map((widgetId) => (
+            <label
+              key={widgetId}
+              className="flex items-center gap-2 rounded-lg border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-xs text-[#cbd5e1]"
+            >
+              <input
+                type="checkbox"
+                checked={isWidgetVisible(widgetId)}
+                onChange={() => handleWidgetToggle(widgetId)}
+                className="h-4 w-4 accent-[#62ffff]"
+              />
+              {widgetLabels[widgetId]}
+            </label>
+          ))}
+        </div>
+      </section>
 
       {/* Stats + Quick Actions: two-column on desktop */}
       <div className="grid grid-cols-[1fr_300px] gap-6 items-start max-md:grid-cols-1 max-md:gap-3">
         {/* Stats 2×2 grid */}
         <div className="grid grid-cols-2 gap-6 max-md:gap-3">
           {isLoading
-            ? [1, 2, 3, 4].map((i) => <div key={i} className="h-[120px] rounded-xl animate-shimmer" />)
+            ? [1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-[120px] rounded-xl animate-shimmer" />
+              ))
             : stats.map((stat) => (
               <div key={stat.id} className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#334155] max-md:p-4">
                 <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
@@ -144,15 +452,33 @@ const CompanyDashboard: React.FC = () => {
                 </div>
                 <div className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}>
                   {stat.value}
+                <div
+                  key={stat.id}
+                  className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#334155] max-md:p-4"
+                >
+                  <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
+                    {stat.icon}
+                    {stat.label}
+                  </div>
+                  <div
+                    className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}
+                  >
+                    {stat.value}
+                  </div>
+                  <div
+                    className={`text-[13px] font-medium flex items-center gap-1 ${
+                      stat.trendType === "positive"
+                        ? "text-[#10b981]"
+                        : stat.trendType === "negative"
+                          ? "text-[#ef4444]"
+                          : "text-[#94a3b8]"
+                    }`}
+                  >
+                    <TrendIcon up={stat.trendType === "positive"} />
+                    {stat.trend}
+                  </div>
                 </div>
-                <div className={`text-[13px] font-medium flex items-center gap-1 ${stat.trendType === "positive" ? "text-[#10b981]" :
-                  stat.trendType === "negative" ? "text-[#ef4444]" : "text-[#94a3b8]"
-                  }`}>
-                  <TrendIcon up={stat.trendType === "positive"} />{stat.trend}
-                </div>
-              </div>
-            ))
-          }
+              ))}
         </div>
 
         {/* Quick Actions — top-right, desktop only */}
@@ -162,54 +488,78 @@ const CompanyDashboard: React.FC = () => {
       </div>
 
       {/* Shipments map */}
-      <div className="flex flex-col">
-        <div className="mb-4">
-          <ShipmentsMapWidget />
+      {isWidgetVisible("map") && (
+        <div className="flex flex-col">
+          <div className="mb-4">
+            <ShipmentsMapWidget />
+          </div>
         </div>
-      </div>
-      <RevenueSummaryWidget />
-      <PerformanceScorecardWidget />
+      )}
+      {isWidgetVisible("revenue") && <RevenueSummaryWidget />}
+      {isWidgetVisible("scorecard") && <PerformanceScorecardWidget />}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RevenueTargetWidget />
-        <CostPerRouteWidget />
-      </div>
+      {isWidgetVisible("targets") && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <RevenueTargetWidget />
+          <CostPerRouteWidget />
+        </div>
+      )}
 
       {/* Shipments */}
-      <div className="flex flex-col">
+      {isWidgetVisible("shipments") && <div className="flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-[0.05em] m-0 max-md:text-lg max-md:font-bold max-md:text-white max-md:normal-case max-md:tracking-normal">
             {t('companyDashboard.recentShipments')}
           </h2>
           <a href="#" className="text-[13px] font-medium text-[#94a3b8] no-underline transition-colors hover:text-white max-md:text-[#3b82f6] max-md:font-semibold">
             {t('companyDashboard.viewAll')}
+          <a
+            href="#"
+            className="text-[13px] font-medium text-[#94a3b8] no-underline transition-colors hover:text-white max-md:text-[#3b82f6] max-md:font-semibold"
+          >
+            View All
           </a>
         </div>
 
         <div className="border border-[rgba(30,41,59,0.5)] rounded-xl overflow-hidden max-md:bg-transparent max-md:border-none">
           <RecentShipments />
         </div>
-      </div>
+      </div>}
 
       {/* Recent Activity */}
-      <div className="flex flex-col">
+      {isWidgetVisible("activity") && <div className="flex flex-col">
         <RecentActivityFeed />
-      </div>
-
+      </div>}
 
       {/* Active Fleet — desktop only */}
       {!isLoading && (
         <div className="max-md:hidden bg-[#14171e] border border-[#1e293b] rounded-xl px-6 py-4 flex justify-between items-center">
-
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-[rgba(79,70,229,0.1)] text-[#4f46e5] rounded-md flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2v20" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
               </svg>
             </div>
             <div>
               <h3 className="m-0 mb-0.5 text-sm font-semibold">{t('companyDashboard.activeFleetRoutes')}</h3>
               <p className="m-0 text-xs text-[#94a3b8]">{t('companyDashboard.driversActive', { count: 12 })}</p>
+              <h3 className="m-0 mb-0.5 text-sm font-semibold">
+                Active Fleet Routes
+              </h3>
+              <p className="m-0 text-xs text-[#94a3b8]">
+                12 drivers currently active
+              </p>
             </div>
           </div>
           <div className="flex items-center">
@@ -220,6 +570,15 @@ const CompanyDashboard: React.FC = () => {
             ].map((a, i) => (
               <div key={i} className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 first:ml-0 bg-[#334155] overflow-hidden">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${a.seed}&backgroundColor=${a.bg}`} alt={t('companyDashboard.driverAlt')} className="w-full h-full object-cover" />
+              <div
+                key={i}
+                className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 first:ml-0 bg-[#334155] overflow-hidden"
+              >
+                <img
+                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${a.seed}&backgroundColor=${a.bg}`}
+                  alt="Driver"
+                  className="w-full h-full object-cover"
+                />
               </div>
             ))}
             <div className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 bg-[#334155] flex items-center justify-center text-[11px] font-semibold text-white">

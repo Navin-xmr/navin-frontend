@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, Download } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import html2pdf from "html2pdf.js";
 import Breadcrumb from "@components/common/Breadcrumb";
+import RichChartTooltip, { ExportAction } from "../../components/ui/RichChartTooltip";
 
 interface MonthlyData {
   month: string;
@@ -95,6 +96,77 @@ const RevenueAnalytics: React.FC = () => {
     }, 300);
     return () => clearTimeout(timer);
   }, [startDate, endDate]);
+
+  // ─── Custom chart tooltips ────────────────────────────────────────────
+
+  const MonthlyRevenueTooltip: React.FC<{
+    active?: boolean;
+    payload?: { name?: string; value?: number; dataKey?: string }[];
+    label?: string;
+  }> = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    const actual = payload.find((p) => p.dataKey === "actual")?.value ?? 0;
+    const target = payload.find((p) => p.dataKey === "target")?.value ?? 0;
+
+    const handleExport = useCallback(() => {
+      console.info(`Export data for ${label}`);
+    }, [label]);
+
+    return (
+      <RichChartTooltip
+        active={active}
+        title={label}
+        items={[
+          {
+            label: "Actual",
+            value: actual,
+            unit: "$",
+            color: "#3b82f6",
+            trend: actual >= target ? "up" : "down",
+            trendLabel: actual >= target ? "Met or exceeded target" : "Below target",
+          },
+          {
+            label: "Target",
+            value: target,
+            unit: "$",
+            color: "#10b981",
+          },
+        ]}
+        actions={[ExportAction(handleExport)]}
+      />
+    );
+  };
+
+  const ServiceTypeTooltip: React.FC<{
+    active?: boolean;
+    payload?: { name?: string; value?: number }[];
+  }> = ({ active, payload }) => {
+    if (!active || !payload?.length) return null;
+    const item = payload[0];
+
+    return (
+      <RichChartTooltip
+        active={active}
+        title={item.name}
+        items={[{ label: "Revenue", value: item.value ?? 0, unit: "$" }]}
+      />
+    );
+  };
+
+  const RegionTooltip: React.FC<{
+    active?: boolean;
+    payload?: { name?: string; value?: number }[];
+    label?: string;
+  }> = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <RichChartTooltip
+        active={active}
+        title={label}
+        items={[{ label: "Revenue", value: payload[0].value ?? 0, unit: "$", color: "#3b82f6" }]}
+      />
+    );
+  };
 
   const handleExportPDF = () => {
     const element = document.getElementById("revenue-dashboard");
@@ -204,13 +276,7 @@ const RevenueAnalytics: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis dataKey="month" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      border: "1px solid #475569",
-                      borderRadius: "6px",
-                    }}
-                  />
+                  <Tooltip content={<MonthlyRevenueTooltip />} />
                   <Legend />
                   <Bar dataKey="actual" fill="#3b82f6" />
                   <Bar dataKey="target" fill="#10b981" />
@@ -236,13 +302,7 @@ const RevenueAnalytics: React.FC = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      border: "1px solid #475569",
-                      borderRadius: "6px",
-                    }}
-                  />
+                  <Tooltip content={<ServiceTypeTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="mt-4 space-y-2">
@@ -269,13 +329,7 @@ const RevenueAnalytics: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis dataKey="region" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      border: "1px solid #475569",
-                      borderRadius: "6px",
-                    }}
-                  />
+                  <Tooltip content={<RegionTooltip />} />
                   <Line
                     type="monotone"
                     dataKey="revenue"

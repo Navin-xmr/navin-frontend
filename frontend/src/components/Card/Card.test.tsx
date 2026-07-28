@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
-import Card, { CardHeader, CardBody, CardFooter } from './Card';
+import { describe, it, expect, vi } from 'vitest';
+import Card, { CardHeader, CardBody, CardFooter, CardLoading, CardEmpty, CardError } from './Card';
 
 describe('Card', () => {
   it('renders children', () => {
@@ -44,6 +44,12 @@ describe('Card', () => {
     const card = screen.getByText('No glow').closest('div')!;
     expect(card.className).not.toContain('after:absolute');
   });
+
+  it('applies padding when padding is true', () => {
+    render(<Card padding>Padded</Card>);
+    const card = screen.getByText('Padded').closest('div')!;
+    expect(card.className).toContain('p-5');
+  });
 });
 
 describe('CardHeader', () => {
@@ -71,10 +77,11 @@ describe('CardBody', () => {
     expect(screen.getByText('Body')).toBeInTheDocument();
   });
 
-  it('applies padding', () => {
+  it('applies responsive padding', () => {
     render(<CardBody>Body</CardBody>);
     const body = screen.getByText('Body').closest('div')!;
-    expect(body.className).toContain('p-6');
+    expect(body.className).toContain('px-5');
+    expect(body.className).toContain('sm:px-6');
   });
 
   it('applies custom className', () => {
@@ -100,5 +107,55 @@ describe('CardFooter', () => {
     render(<CardFooter className="custom">Footer</CardFooter>);
     const footer = screen.getByText('Footer').closest('div')!;
     expect(footer).toHaveClass('custom');
+  });
+});
+
+describe('CardLoading', () => {
+  it('renders skeleton with provided lines', () => {
+    render(<CardLoading lines={3} />);
+    const status = screen.getByRole('status');
+    expect(status).toBeInTheDocument();
+    expect(status).toHaveAttribute('aria-label', 'Loading content');
+  });
+
+  it('renders default number of skeleton lines', () => {
+    render(<CardLoading />);
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+});
+
+describe('CardEmpty', () => {
+  it('renders title and description', () => {
+    render(<CardEmpty title="No data" description="Nothing to show" />);
+    expect(screen.getByText('No data')).toBeInTheDocument();
+    expect(screen.getByText('Nothing to show')).toBeInTheDocument();
+  });
+
+  it('renders action when provided', () => {
+    render(<CardEmpty title="Empty" action={<button>Add item</button>} />);
+    expect(screen.getByText('Add item')).toBeInTheDocument();
+  });
+
+  it('renders custom icon', () => {
+    render(<CardEmpty title="Empty" icon={<span data-testid="custom-icon">X</span>} />);
+    expect(screen.getByTestId('custom-icon')).toBeInTheDocument();
+  });
+});
+
+describe('CardError', () => {
+  it('renders error message', () => {
+    render(<CardError message="Failed to load" />);
+    expect(screen.getByText('Failed to load')).toBeInTheDocument();
+  });
+
+  it('renders retry button when onRetry provided', () => {
+    const onRetry = vi.fn();
+    render(<CardError message="Error" onRetry={onRetry} />);
+    expect(screen.getByText('Try again')).toBeInTheDocument();
+  });
+
+  it('renders custom title', () => {
+    render(<CardError title="Custom error" message="Oops" />);
+    expect(screen.getByText('Custom error')).toBeInTheDocument();
   });
 });

@@ -1,10 +1,13 @@
 import React from 'react';
-import { Download, RefreshCw, X } from 'lucide-react';
+import { RefreshCw, X } from 'lucide-react';
+
+import type { ExportFormat } from '../../ui/ExportDropdown';
+import ExportDropdown from '../../ui/ExportDropdown';
 
 export interface BulkActionBarProps {
   count: number;
   onUpdateStatus: () => void;
-  onExport: () => void;
+  onExport: (format: ExportFormat) => void;
   onClear: () => void;
 }
 
@@ -37,14 +40,12 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({
         Update Status
       </button>
 
-      <button
-        type="button"
-        onClick={onExport}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[rgba(98,255,255,0.1)] hover:bg-[rgba(98,255,255,0.2)] border border-[rgba(98,255,255,0.3)] text-sm font-medium text-white transition-colors cursor-pointer"
-      >
-        <Download size={14} />
-        Export Selected
-      </button>
+      {/* Export dropdown */}
+      <ExportDropdown
+        onExport={onExport}
+        label="Export Selected"
+        dropUp
+      />
 
       <div className="w-px h-5 bg-[rgba(98,255,255,0.2)]" aria-hidden="true" />
 

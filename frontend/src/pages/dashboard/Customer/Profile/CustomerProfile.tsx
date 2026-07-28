@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { User, Phone, MapPin, Mail, Wallet, Save, Loader2, CheckCircle2 } from 'lucide-react';
+import { User, Phone, MapPin, Mail, Wallet, Save, Loader2 } from 'lucide-react';
 import { WalletConnectButton } from '../../../../components/auth/WalletConnectButton/WalletConnectButton';
+import { useToast } from '@context/ToastContext';
 
 type Profile = { fullName: string; email: string; phone: string; address: string; };
 type ProfileErrors = { fullName?: string; phone?: string; address?: string; };
@@ -15,9 +16,9 @@ const initialProfile: Profile = {
 const CustomerProfile: React.FC = () => {
   const [profile, setProfile] = useState<Profile>(initialProfile);
   const [errors, setErrors] = useState<ProfileErrors>({});
-  const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState<boolean>(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const { addToast } = useToast();
 
   const validate = (field: keyof Profile, value: string): string => {
     if (field === 'fullName' && !value.trim()) return 'Full name is required.';
@@ -47,15 +48,16 @@ const CustomerProfile: React.FC = () => {
       }
     });
     setErrors(newErrors);
-    if (Object.keys(newErrors).length === 0) {
-      setLoading(true);
-      setSuccessMsg('');
-      setTimeout(() => {
-        setLoading(false);
-        setSuccessMsg('Profile saved successfully!');
-        setTimeout(() => setSuccessMsg(''), 3000);
-      }, 1500);
+    if (Object.keys(newErrors).length > 0) {
+      addToast('Please fix the highlighted fields before saving.', 'error');
+      return;
     }
+
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      addToast('Profile saved successfully!', 'success');
+    }, 1500);
   };
 
   const handleWalletConnect = (address: string) => {
@@ -223,15 +225,8 @@ const CustomerProfile: React.FC = () => {
           </div>
         </div>
 
-        {/* Save Button and Success Message */}
+        {/* Save Button */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-          {successMsg && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-[rgba(0,212,200,0.1)] border border-[rgba(0,212,200,0.2)] rounded-xl text-[#00d4c8] text-sm">
-              <CheckCircle2 size={16} />
-              {successMsg}
-            </div>
-          )}
-          
           <button
             type="submit"
             disabled={loading}
