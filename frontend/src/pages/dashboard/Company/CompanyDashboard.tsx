@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Clock,
   CheckCircle2,
@@ -14,7 +13,6 @@ import {
 
 import { QuickActionsCard } from "./QuickActions";
 import { useKeyboardShortcuts } from "../../../hooks/useKeyboardShortcuts";
-import ShortcutsHelpModal from "../../../components/common/ShortcutsHelpModal/ShortcutsHelpModal";
 
 import RecentShipments from "./RecentShipments/RecentShipments";
 import RecentActivityFeed from "./RecentActivity/RecentActivityFeed";
@@ -25,6 +23,7 @@ import { RevenueTargetWidget } from "../../../components/dashboard/RevenueTarget
 import PerformanceScorecardWidget from "./Scorecard/PerformanceScorecardWidget";
 import OnboardingTour, {
   isTourComplete,
+  resetTourFlag,
 } from "@components/onboarding/OnboardingTour";
 import type { TourStep } from "@components/onboarding/OnboardingTour";
 import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
@@ -167,11 +166,9 @@ const widgetLabels: Record<DashboardWidgetId, string> = {
 const defaultWidgetIds = dashboardPresets[2].widgets;
 
 const CompanyDashboard: React.FC = () => {
-  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showTour, setShowTour] = useState(false);
-  const [showShortcuts, setShowShortcuts] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [activePresetId, setActivePresetId] = useState(() => {
@@ -193,39 +190,6 @@ const CompanyDashboard: React.FC = () => {
   });
 
   useKeyboardShortcuts([
-    {
-      key: "?",
-      shift: true,
-      callback: () => setShowShortcuts((prev) => !prev),
-      label: "Toggle keyboard shortcuts help",
-    },
-    {
-      key: "/",
-      shift: true,
-      callback: () => setShowShortcuts((prev) => !prev),
-      label: "Toggle keyboard shortcuts help",
-    },
-    {
-      key: "S",
-      alt: true,
-      shift: true,
-      callback: () => navigate("/dashboard/shipments"),
-      label: "Go to Shipments",
-    },
-    {
-      key: "N",
-      alt: true,
-      shift: true,
-      callback: () => navigate("/dashboard/notifications"),
-      label: "Go to Notifications",
-    },
-    {
-      key: "Q",
-      alt: true,
-      shift: true,
-      callback: () => navigate("/dashboard/settings"),
-      label: "Go to Settings",
-    },
     {
       key: "R",
       alt: true,
@@ -312,24 +276,6 @@ const CompanyDashboard: React.FC = () => {
         <OnboardingTour steps={TOUR_STEPS} onClose={() => setShowTour(false)} />
       )}
 
-      <ShortcutsHelpModal
-        isOpen={showShortcuts}
-        onClose={() => setShowShortcuts(false)}
-        shortcuts={[
-          { keys: "Alt + N", label: "Create Shipment" },
-          { keys: "Alt + A", label: "View Anomalies" },
-          { keys: "Alt + S", label: "Open Settlements" },
-          { keys: "Alt + B", label: "Blockchain Ledger" },
-          { keys: "Alt + E", label: "Export Shipments" },
-          { keys: "Alt + L", label: "Analytics" },
-          { keys: "Alt + Shift + S", label: "Go to Shipments" },
-          { keys: "Alt + Shift + N", label: "Go to Notifications" },
-          { keys: "Alt + Shift + Q", label: "Go to Settings" },
-          { keys: "Alt + R", label: "Refresh Dashboard" },
-          { keys: "? / Shift + /", label: "Toggle this help dialog" },
-        ]}
-      />
-
       {/* Mobile branded header */}
       <div className="hidden max-md:flex items-center justify-between py-3">
         <div className="flex items-center gap-2.5">
@@ -368,6 +314,17 @@ const CompanyDashboard: React.FC = () => {
           <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
             Live: <span className="text-[#10b981]">Connected</span>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              resetTourFlag();
+              setShowTour(true);
+            }}
+            aria-label="Restart onboarding tour"
+            className="max-md:hidden inline-flex items-center gap-2 rounded-md border border-[#1e293b] bg-[#14171e] px-3 py-1.5 text-xs font-medium text-[#94a3b8] transition-colors hover:border-[#62ffff] hover:text-[#62ffff]"
+          >
+            Tour
+          </button>
           <button
             type="button"
             onClick={handleRefresh}

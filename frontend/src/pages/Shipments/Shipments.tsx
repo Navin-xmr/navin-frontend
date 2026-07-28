@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+  AlignJustify,
   LayoutGrid,
   List,
   Map,
@@ -39,8 +40,10 @@ import ShipmentFilters, {
 import "./Shipments.css";
 
 type ListMode = "table" | "grid";
+type ListDensity = "comfortable" | "compact";
 
 const LIST_MODE_KEY = "shipments-list-mode";
+const DENSITY_KEY = "shipments-density";
 
 function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
   const headers = [
@@ -84,8 +87,40 @@ const VIEW_KEY = "shipments-view";
 
 type ShipmentsView = "list" | "kanban" | "routeMap";
 
+// ─── URL param helpers ────────────────────────────────────────────────────────
+
+type TopStatusFilter = "ALL" | "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED";
+type TopPriorityFilter = "ALL" | ShipmentPriority;
+type TopTimeframeFilter = "ALL" | "30" | "90";
+type TopSortOrder = "asc" | "desc";
+
+const STATUS_VALUES: TopStatusFilter[] = ["ALL", "CREATED", "IN_TRANSIT", "DELIVERED", "CANCELLED"];
+const PRIORITY_VALUES: TopPriorityFilter[] = ["ALL", "URGENT", "STANDARD", "ECONOMY"];
+
+function readStatusParam(sp: URLSearchParams): TopStatusFilter {
+  const v = sp.get("status") as TopStatusFilter | null;
+  return v && STATUS_VALUES.includes(v) ? v : "ALL";
+}
+
+function readPriorityParam(sp: URLSearchParams): TopPriorityFilter {
+  const v = sp.get("priority") as TopPriorityFilter | null;
+  return v && PRIORITY_VALUES.includes(v) ? v : "ALL";
+}
+
+function readTimeframeParam(sp: URLSearchParams): TopTimeframeFilter {
+  const v = sp.get("timeframe");
+  return v === "30" || v === "90" ? v : "ALL";
+}
+
+function readSortParam(sp: URLSearchParams): TopSortOrder {
+  return sp.get("sort") === "asc" ? "asc" : "desc";
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { addToast } = useToast();
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -125,12 +160,12 @@ const Shipments: React.FC = () => {
     }
   };
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | "CREATED" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED"
-  >("ALL");
-  const [timeframeFilter, setTimeframeFilter] = useState<"ALL" | "30" | "90">(
-    "ALL",
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("q") ?? "");
+  const [statusFilter, setStatusFilter] = useState<TopStatusFilter>(
+    () => readStatusParam(searchParams),
+  );
+  const [timeframeFilter, setTimeframeFilter] = useState<TopTimeframeFilter>(
+    () => readTimeframeParam(searchParams),
   );
   const [listMode, setListMode] = useState<ListMode>(() => {
     try {
@@ -148,10 +183,28 @@ const Shipments: React.FC = () => {
       // ignore
     }
   };
-  const [priorityFilter, setPriorityFilter] = useState<
-    "ALL" | ShipmentPriority
-  >("ALL");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [listDensity, setListDensity] = useState<ListDensity>(() => {
+    try {
+      const saved = localStorage.getItem(DENSITY_KEY);
+      return saved === "compact" ? "compact" : "comfortable";
+    } catch {
+      return "comfortable";
+    }
+  });
+  const handleDensityChange = (density: ListDensity) => {
+    setListDensity(density);
+    try {
+      localStorage.setItem(DENSITY_KEY, density);
+    } catch {
+      // ignore
+    }
+  };
+  const [priorityFilter, setPriorityFilter] = useState<TopPriorityFilter>(
+    () => readPriorityParam(searchParams),
+  );
+  const [sortOrder, setSortOrder] = useState<TopSortOrder>(
+    () => readSortParam(searchParams),
+  );
   const [advancedFilters, setAdvancedFilters] = useState<ShipmentFiltersValues>(
     {
       status: [],
@@ -187,6 +240,43 @@ const Shipments: React.FC = () => {
   });
 
   const hasMore = shipments.length < total;
+
+  // ─── Sync top-level filters → URL (replace so back-button skips intermediates)
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syncFiltersToURL = useCallback(() => {
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    syncTimeoutRef.current = setTimeout(() => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          // search
+          if (searchQuery.trim()) next.set("q", searchQuery.trim());
+          else next.delete("q");
+          // status
+          if (statusFilter !== "ALL") next.set("status", statusFilter);
+          else next.delete("status");
+          // priority
+          if (priorityFilter !== "ALL") next.set("priority", priorityFilter);
+          else next.delete("priority");
+          // timeframe
+          if (timeframeFilter !== "ALL") next.set("timeframe", timeframeFilter);
+          else next.delete("timeframe");
+          // sort — only write when non-default
+          if (sortOrder !== "desc") next.set("sort", sortOrder);
+          else next.delete("sort");
+          return next;
+        },
+        { replace: true },
+      );
+    }, 200);
+  }, [searchQuery, statusFilter, priorityFilter, timeframeFilter, sortOrder, setSearchParams]);
+
+  useEffect(() => {
+    syncFiltersToURL();
+    return () => {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    };
+  }, [syncFiltersToURL]);
 
   const filteredShipments = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -266,21 +356,6 @@ const Shipments: React.FC = () => {
 
     return result;
   }, [shipments, searchQuery, statusFilter, priorityFilter, timeframeFilter, advancedFilters, sortOrder]);
-    if (timeframeFilter !== "ALL") {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - Number(timeframeFilter));
-      result = result.filter((s) => new Date(s.createdAt) >= cutoff);
-    }
-
-    return result;
-  }, [
-    shipments,
-    searchQuery,
-    advancedFilters,
-    statusFilter,
-    priorityFilter,
-    timeframeFilter,
-  ]);
 
   const visibleIds = useMemo(
     () => filteredShipments.map((s) => s.id),
@@ -562,39 +637,79 @@ const Shipments: React.FC = () => {
         <div className="flex items-center gap-3">
           {/* List / Grid sub-toggle (only visible in list view) */}
           {view === "list" && (
-            <div
-              className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.15)] bg-[rgba(19,186,186,0.04)] p-0.5"
-              role="group"
-              aria-label="Toggle list or grid layout"
-            >
-              <button
-                type="button"
-                onClick={() => handleListModeChange("table")}
-                aria-pressed={listMode === "table"}
-                title="Table view"
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                  listMode === "table"
-                    ? "bg-[#62ffff] text-black"
-                    : "text-[#94a3b8] hover:text-white"
-                }`}
+            <div className="flex items-center gap-2">
+              <div
+                className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.15)] bg-[rgba(19,186,186,0.04)] p-0.5"
+                role="group"
+                aria-label="Toggle list or grid layout"
               >
-                <List size={14} />
-                Table
-              </button>
-              <button
-                type="button"
-                onClick={() => handleListModeChange("grid")}
-                aria-pressed={listMode === "grid"}
-                title="Grid view"
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                  listMode === "grid"
-                    ? "bg-[#62ffff] text-black"
-                    : "text-[#94a3b8] hover:text-white"
-                }`}
-              >
-                <LayoutGrid size={14} />
-                Grid
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleListModeChange("table")}
+                  aria-pressed={listMode === "table"}
+                  title="Table view"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    listMode === "table"
+                      ? "bg-[#62ffff] text-black"
+                      : "text-[#94a3b8] hover:text-white"
+                  }`}
+                >
+                  <List size={14} />
+                  Table
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleListModeChange("grid")}
+                  aria-pressed={listMode === "grid"}
+                  title="Grid view"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                    listMode === "grid"
+                      ? "bg-[#62ffff] text-black"
+                      : "text-[#94a3b8] hover:text-white"
+                  }`}
+                >
+                  <LayoutGrid size={14} />
+                  Grid
+                </button>
+              </div>
+
+              {/* Density toggle — only meaningful in table mode */}
+              {listMode === "table" && (
+                <div
+                  className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.15)] bg-[rgba(19,186,186,0.04)] p-0.5"
+                  role="group"
+                  aria-label="Toggle row density"
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleDensityChange("comfortable")}
+                    aria-pressed={listDensity === "comfortable"}
+                    title="Comfortable density"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                      listDensity === "comfortable"
+                        ? "bg-[#62ffff] text-black"
+                        : "text-[#94a3b8] hover:text-white"
+                    }`}
+                  >
+                    <AlignJustify size={14} />
+                    Default
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDensityChange("compact")}
+                    aria-pressed={listDensity === "compact"}
+                    title="Compact density"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+                      listDensity === "compact"
+                        ? "bg-[#62ffff] text-black"
+                        : "text-[#94a3b8] hover:text-white"
+                    }`}
+                  >
+                    <List size={14} />
+                    Compact
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -651,6 +766,7 @@ const Shipments: React.FC = () => {
             label="Export"
           />
         </div>
+      </div>
 
       {view === "kanban" ? (
         <ShipmentsKanban />
@@ -700,12 +816,7 @@ const Shipments: React.FC = () => {
               value={statusFilter}
               onChange={(e) =>
                 setStatusFilter(
-                  e.target.value as
-                    | "ALL"
-                    | "CREATED"
-                    | "IN_TRANSIT"
-                    | "DELIVERED"
-                    | "CANCELLED",
+                  e.target.value as TopStatusFilter,
                 )
               }
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
@@ -732,7 +843,7 @@ const Shipments: React.FC = () => {
             <select
               value={timeframeFilter}
               onChange={(e) =>
-                setTimeframeFilter(e.target.value as "ALL" | "30" | "90")
+                setTimeframeFilter(e.target.value as TopTimeframeFilter)
               }
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
               aria-label="Filter by Timeframe"
@@ -752,7 +863,7 @@ const Shipments: React.FC = () => {
             <select
               value={priorityFilter}
               onChange={(e) =>
-                setPriorityFilter(e.target.value as "ALL" | ShipmentPriority)
+                setPriorityFilter(e.target.value as TopPriorityFilter)
               }
               className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] cursor-pointer"
               aria-label="Filter by Priority"
@@ -860,9 +971,6 @@ const Shipments: React.FC = () => {
                 </button>
               </div>
             </div>
-          ) : viewMode === "kanban" ? (
-            <ShipmentsKanban />
-            <div className="shipments-error">{error}</div>
           ) : isEmpty ? (
             <EmptyState
               icon={<Package size={28} />}
@@ -914,7 +1022,7 @@ const Shipments: React.FC = () => {
                 /* ── Grid card view ── */
                 <>
                   <div
-                    className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4"
+                    className={`grid ${listDensity === "compact" ? "gap-2" : "gap-4"} grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4`}
                     aria-label="Shipments grid"
                   >
                     {filteredShipments.map((shipment) => {
@@ -932,7 +1040,7 @@ const Shipments: React.FC = () => {
                               navigate(`/dashboard/shipments/${shipment.id}`);
                           }}
                           aria-label={`View shipment ${shipment.id}`}
-                          className={`relative flex flex-col gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-200 outline-none
+                          className={`relative flex flex-col ${listDensity === "compact" ? "gap-1.5 p-3" : "gap-3 p-4"} rounded-xl border cursor-pointer transition-all duration-200 outline-none
                             focus-visible:ring-2 focus-visible:ring-[#62ffff]/50
                             ${
                               selected
@@ -1085,10 +1193,11 @@ const Shipments: React.FC = () => {
                             background: selected
                               ? "rgba(98,255,255,0.06)"
                               : undefined,
+                            fontSize: listDensity === "compact" ? "0.78rem" : undefined,
                           }}
                         >
                           {/* Row checkbox */}
-                          <td style={{ width: "40px" }}>
+                          <td style={{ width: "40px", padding: listDensity === "compact" ? "4px 8px" : undefined }}>
                             <input
                               type="checkbox"
                               aria-label={`Select shipment ${shipment.id}`}

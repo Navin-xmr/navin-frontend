@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import Breadcrumb from "../../components/ui/Breadcrumb";
@@ -25,6 +25,7 @@ import CostBreakdown from "../../components/shipment/CostBreakdown/CostBreakdown
 import type { CostBreakdownData } from "../../components/shipment/CostBreakdown/CostBreakdown";
 import ShipmentComparison from "../../components/shipment/ShipmentComparison/ShipmentComparison";
 import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison/ShipmentComparison";
+import ShipmentStickyBar from "./ShipmentStickyBar";
 import { Zap } from "lucide-react";
 
 const ShipmentDetail: React.FC = () => {
@@ -38,6 +39,10 @@ const ShipmentDetail: React.FC = () => {
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
   const [existingDispute, setExistingDispute] = useState<DisputeData | null>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
+  // Ref attached to the hero heading — IntersectionObserver in ShipmentStickyBar
+  // watches this element and shows the bar once it scrolls out of the viewport.
+  const heroSentinelRef = useRef<HTMLDivElement>(null);
 
   const events = useRealtimeEvents(["shipment:status", "shipment:milestone"]);
   const statusEvent = events["shipment:status"];
@@ -223,12 +228,24 @@ const ShipmentDetail: React.FC = () => {
 
   return (
     <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
+      {/* Sticky summary bar — appears when the hero section scrolls out of view */}
+      <ShipmentStickyBar
+        sentinelRef={heroSentinelRef}
+        shipmentId={shipmentHeaderData.shipmentId}
+        status={currentStatus}
+        originAddress={shipmentHeaderData.originAddress}
+        destinationAddress={shipmentHeaderData.destinationAddress}
+        expectedDeliveryDate={shipmentHeaderData.expectedDeliveryDate}
+        priority={shipmentHeaderData.priority}
+      />
+
       <div className="max-w-300 mx-auto relative z-10">
         <Breadcrumb
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Shipments", href: "/dashboard/shipments" }, { label: id ? `#${id}` : "#SHP-992834" }]}
         />
 
-        <div className="text-center mb-16 md:mb-10">
+        {/* Hero heading — sentinel for sticky bar */}
+        <div ref={heroSentinelRef} className="text-center mb-16 md:mb-10">
           <h1 className="font-['Bebas_Neue',sans-serif] text-[clamp(2.5rem,7vw,5rem)] font-normal tracking-[0.04em] leading-[1.1] text-white m-0 mb-4">
             SHIPMENT <span className="text-[#00d4c8]">DETAILS</span>
           </h1>

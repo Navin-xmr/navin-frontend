@@ -59,14 +59,18 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="bg-[rgba(8,40,50,0.95)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-6 w-full max-w-md shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-detail-title"
+        className="bg-[rgba(8,40,50,0.95)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-6 w-full max-w-md shadow-xl mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-[#62ffff]">Payment Details</h2>
+          <h2 id="payment-detail-title" className="text-lg font-bold text-[#62ffff]">Payment Details</h2>
           <button
             onClick={onClose}
-            className="text-text-secondary hover:text-white transition-colors"
+            aria-label="Close payment details"
+            className="text-text-secondary hover:text-white transition-colors p-1 rounded-md focus-visible:outline-2 focus-visible:outline-[#62ffff]"
           >
             <X size={20} />
           </button>
@@ -75,13 +79,12 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
           {(
             [
               ["Shipment ID", payment.shipmentId],
-              ["Date", payment.date],
+              ["Date", new Date(payment.date).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })],
               [
                 "Amount",
                 `$${payment.amount.toLocaleString()} ${payment.token}`,
               ],
               ["Status", payment.status],
-              ["Tx Hash", payment.txHash],
             ] as [string, string][]
           ).map(([label, value]) => (
             <div key={label} className="flex justify-between gap-4">
@@ -91,7 +94,37 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
               </dd>
             </div>
           ))}
+          <div className="flex justify-between gap-4">
+            <dt className="text-text-secondary">Tx Hash</dt>
+            <dd className="text-right">
+              <a
+                href={getStellarExplorerUrl(payment.txHash)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs text-[#62ffff] inline-flex items-center gap-1 hover:underline"
+              >
+                {truncateHash(payment.txHash)}
+                <ExternalLink size={11} aria-hidden="true" />
+              </a>
+            </dd>
+          </div>
         </dl>
+        <div className="mt-5 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-3 py-2 rounded-lg border border-[rgba(98,255,255,0.2)] text-text-primary hover:border-[#62ffff] hover:text-[#62ffff] text-sm transition-colors"
+          >
+            Close
+          </button>
+          <a
+            href={getStellarExplorerUrl(payment.txHash)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 px-3 py-2 rounded-lg bg-[#00d4c8] text-black text-center text-sm font-semibold hover:bg-[#13baba] transition-colors"
+          >
+            Verify on Chain
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -100,8 +133,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
 const PaymentHistory: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ ADDED
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 2500);
     return () => clearTimeout(timer);
   }, []);
@@ -287,33 +319,6 @@ const PaymentHistory: React.FC = () => {
     "text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]";
   const tdClass = "px-6 py-4 text-sm border-b border-[rgba(98,255,255,0.2)]";
 
-  // if (isLoading) {
-  //     return (
-  //         <div className="p-6 md:p-4">
-  //             <div className="mb-6">
-  //                 <h1 className="text-2xl font-bold mb-1">Payment History</h1>
-  //                 <p className="text-text-secondary text-sm">
-  //                     Track all payment transactions on the blockchain
-  //                 </p>
-  //             </div>
-  //             <div className={`${tableContainerClass} p-6`}>
-  //                 {[...Array(10)].map((_, i) => (
-  //                     <div
-  //                         key={i}
-  //                         className="grid grid-cols-[1fr_1fr_1fr_1fr_1.5fr] gap-6 mb-4"
-  //                     >
-  //                         {[...Array(5)].map((__, j) => (
-  //                             <div
-  //                                 key={j}
-  //                                 className="h-8 rounded animate-shimmer-teal"
-  //                             />
-  //                         ))}
-  //                     </div>
-  //                 ))}
-  //             </div>
-  //         </div>
-  //     );
-  // }
 
   if (sortedPayments.length === 0) {
     return (
@@ -357,6 +362,7 @@ const PaymentHistory: React.FC = () => {
                 setFilterStatus(e.target.value as PaymentStatus | "All");
                 setCurrentPage(1);
               }}
+              aria-label="Filter by payment status"
               className="appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full"
             >
               <option value="All">All Status</option>
@@ -370,27 +376,30 @@ const PaymentHistory: React.FC = () => {
               className="absolute right-3 pointer-events-none text-text-secondary"
             />
           </div>
-          <span
-            className="inline-flex items-center gap-2 appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 rounded-lg text-sm font-medium cursor-pointer outline-none hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
             onClick={() =>
               setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
             }
+            aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
+            aria-pressed={sortOrder === "desc"}
           >
             Date
-            <ArrowUpDown size={14} />
-            <span className=" text-text-secondary max-md:hidden">
+            <ArrowUpDown size={14} aria-hidden="true" />
+            <span className="text-text-secondary max-md:hidden">
               {sortOrder === "desc" ? "Newest" : "Oldest"}
             </span>
-          </span>
+          </button>
         </div>
       </div>
 
       {/* Payment Summary Cards */}
       <PaymentSummaryCards />
 
-      {/* Table */}
-      <div className={`${tableContainerClass} md:overflow-x-auto`}>
-        <table className="w-full border-collapse md:min-w-200">
+      {/* Desktop table — hidden on mobile */}
+      <div className={`${tableContainerClass} hidden md:block overflow-x-auto`}>
+        <table className="w-full border-collapse min-w-[700px]">
           <thead className="bg-[rgba(19,186,186,0.1)]">
             <tr>
               <th
@@ -398,9 +407,10 @@ const PaymentHistory: React.FC = () => {
                 onClick={() =>
                   setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
                 }
+                aria-sort={sortOrder === "desc" ? "descending" : "ascending"}
               >
                 <span className="inline-flex items-center gap-2">
-                  Date <ArrowUpDown size={14} />
+                  Date <ArrowUpDown size={14} aria-hidden="true" />
                 </span>
               </th>
               <th className={thClass}>Shipment ID</th>
@@ -415,7 +425,7 @@ const PaymentHistory: React.FC = () => {
                   <tr key={i}>
                     {[...Array(5)].map((__, j) => (
                       <td key={j} className={tdClass}>
-                        <div className="h-8 w-full rounded bg-[rgba(98,255,255,0.1)] animate-shimmer-teal" />
+                        <div className="h-8 w-full rounded bg-[rgba(98,255,255,0.1)] animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -429,9 +439,7 @@ const PaymentHistory: React.FC = () => {
                       setIsModalOpen(true);
                     }}
                   >
-                    <td
-                      className={`${tdClass} font-medium text-text-secondary`}
-                    >
+                    <td className={`${tdClass} font-medium text-text-secondary`}>
                       {new Date(payment.date).toLocaleDateString(undefined, {
                         year: "numeric",
                         month: "short",
@@ -464,18 +472,16 @@ const PaymentHistory: React.FC = () => {
                         {payment.status}
                       </span>
                     </td>
-                    <td
-                      className={`${tdClass} font-['Courier_New',monospace] text-xs`}
-                    >
+                    <td className={`${tdClass} font-mono text-xs`}>
                       <a
                         href={getStellarExplorerUrl(payment.txHash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="text-text-secondary no-underline flex items-center gap-1.5 transition-colors hover:text-[#62ffff]"
+                        className="text-text-secondary no-underline inline-flex items-center gap-1.5 transition-colors hover:text-[#62ffff]"
                       >
                         {truncateHash(payment.txHash)}
-                        <ExternalLink size={12} className="text-[#62ffff]" />
+                        <ExternalLink size={12} className="text-[#62ffff]" aria-hidden="true" />
                       </a>
                     </td>
                   </tr>
@@ -484,14 +490,106 @@ const PaymentHistory: React.FC = () => {
         </table>
       </div>
 
+      {/* Mobile card list — hidden on md+ */}
+      <div className="md:hidden flex flex-col gap-3 mb-5">
+        {isLoading
+          ? [...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="h-28 rounded-2xl bg-[rgba(98,255,255,0.05)] border border-[rgba(98,255,255,0.2)] animate-pulse"
+              />
+            ))
+          : paginatedPayments.map((payment) => (
+              <button
+                key={payment.id}
+                type="button"
+                onClick={() => {
+                  setSelectedPayment(payment);
+                  setIsModalOpen(true);
+                }}
+                className="w-full text-left bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-4 shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] transition-all active:bg-[rgba(19,186,186,0.1)] focus-visible:outline-2 focus-visible:outline-[#62ffff]"
+              >
+                {/* Top row: status badge + date */}
+                <div className="flex items-center justify-between mb-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase ${statusClasses[payment.status]}`}
+                  >
+                    <span
+                      className={`inline-block w-1.5 h-1.5 rounded-full ${
+                        payment.status === "Released"
+                          ? "bg-[#34d399]"
+                          : payment.status === "Escrowed"
+                            ? "bg-[#62ffff]"
+                            : payment.status === "Pending"
+                              ? "bg-[#fbbf24]"
+                              : "bg-[#f87171]"
+                      }`}
+                      aria-hidden="true"
+                    />
+                    {payment.status}
+                  </span>
+                  <span className="text-xs text-text-secondary">
+                    {new Date(payment.date).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                </div>
+
+                {/* Middle row: shipment ID + amount */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="text-[11px] text-text-secondary uppercase tracking-wide mb-0.5">
+                      Shipment
+                    </p>
+                    <Link
+                      to={`/dashboard/shipments/${payment.shipmentId}`}
+                      className="text-[#62ffff] font-semibold text-sm no-underline hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {payment.shipmentId}
+                    </Link>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] text-text-secondary uppercase tracking-wide mb-0.5">
+                      Amount
+                    </p>
+                    <p className="font-semibold text-sm text-white">
+                      ${payment.amount.toLocaleString()}{" "}
+                      <span className="text-[11px] text-text-secondary font-normal uppercase">
+                        {payment.token}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bottom row: tx hash */}
+                <div className="flex items-center justify-between pt-2.5 border-t border-[rgba(98,255,255,0.1)]">
+                  <span className="text-[11px] text-text-secondary">Tx Hash</span>
+                  <a
+                    href={getStellarExplorerUrl(payment.txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-mono text-xs text-text-secondary inline-flex items-center gap-1 hover:text-[#62ffff] transition-colors"
+                  >
+                    {truncateHash(payment.txHash)}
+                    <ExternalLink size={11} className="text-[#62ffff]" aria-hidden="true" />
+                  </a>
+                </div>
+              </button>
+            ))}
+      </div>
+
       {/* Pagination */}
-      <div className="flex justify-between items-center px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] md:flex-col md:gap-4">
+      <div className="flex justify-between items-center px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] max-md:flex-col max-md:gap-4">
         <div className="text-sm text-text-secondary">
           Showing {startIndex + 1}–
           {Math.min(startIndex + itemsPerPage, sortedPayments.length)} of{" "}
           {sortedPayments.length}
         </div>
-        <div className="flex gap-2 md:w-full md:justify-center">
+        <div className="flex gap-2 max-md:w-full max-md:justify-center flex-wrap">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}

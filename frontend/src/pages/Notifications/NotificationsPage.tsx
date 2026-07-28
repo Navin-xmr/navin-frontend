@@ -12,6 +12,8 @@ import {
   Trash2,
   BellOff,
   ArrowUpDown,
+  AlignJustify,
+  List as ListIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import SearchInput from "../../components/ui/SearchInput";
@@ -89,6 +91,16 @@ const NotificationsPage = () => {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem("notificationsGrouped") === "true";
   });
+  const [notifDensity, setNotifDensity] = useState<"comfortable" | "compact">(() => {
+    if (typeof window === "undefined") return "comfortable";
+    return window.localStorage.getItem("notificationsDensity") === "compact"
+      ? "compact"
+      : "comfortable";
+  });
+  const handleNotifDensityChange = (d: "comfortable" | "compact") => {
+    setNotifDensity(d);
+    try { window.localStorage.setItem("notificationsDensity", d); } catch { /* ignore */ }
+  };
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<SortMode>("newest");
 
@@ -561,13 +573,17 @@ const NotificationsPage = () => {
 
   const NotificationCard = ({
     notification,
+    compact = false,
   }: {
     notification: NotificationType;
+    compact?: boolean;
   }) => (
     <div
       role="article"
       tabIndex={0}
-      className={`border rounded-xl p-5 flex gap-4 transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#101922] ${
+      className={`border rounded-xl flex gap-4 transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#101922] ${
+        compact ? "p-3" : "p-5"
+      } ${
         notification.isRead
           ? "bg-[#1a1f28] border-[#374151]"
           : "bg-[#1f2937] border-[#374151] hover:bg-[#283039] hover:border-[#4b5563]"
@@ -591,18 +607,18 @@ const NotificationsPage = () => {
         />
       </div>
       <div
-        className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative ${iconStyles[notification.icon]}`}
+        className={`rounded-full flex items-center justify-center shrink-0 relative ${compact ? "w-8 h-8" : "w-12 h-12"} ${iconStyles[notification.icon]}`}
       >
         {getIconComponent(notification.icon)}
         {!notification.isRead && (
-          <div className="absolute top-1 right-1 w-2 h-2 bg-[#3b82f6] rounded-full" />
+          <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-[#3b82f6] rounded-full" />
         )}
       </div>
 
-      <div className="flex-1 flex flex-col gap-2">
+      <div className={`flex-1 flex flex-col ${compact ? "gap-0.5" : "gap-2"}`}>
         <div className="flex items-center gap-3 flex-wrap">
           <span
-            className={`text-base font-semibold ${notification.isRead ? "text-[#6b7280] font-medium" : "text-white font-bold"}`}
+            className={`${compact ? "text-sm" : "text-base"} font-semibold ${notification.isRead ? "text-[#6b7280] font-medium" : "text-white font-bold"}`}
           >
             {notification.title}
           </span>
@@ -626,11 +642,13 @@ const NotificationsPage = () => {
             </span>
           )}
         </div>
-        <p
-          className={`text-sm leading-[1.5] m-0 ${notification.isRead ? "text-[#6b7280]" : "text-[#9ca3af]"}`}
-        >
-          {notification.description}
-        </p>
+        {!compact && (
+          <p
+            className={`text-sm leading-[1.5] m-0 ${notification.isRead ? "text-[#6b7280]" : "text-[#9ca3af]"}`}
+          >
+            {notification.description}
+          </p>
+        )}
         <span className="text-xs text-[#6b7280]">{notification.timestamp}</span>
       </div>
 
@@ -658,6 +676,7 @@ const NotificationsPage = () => {
           <Trash2 size={16} />
         </button>
       </div>
+    </div>
   );
 
   const sortOptions: { value: SortMode; label: string }[] = [
@@ -709,6 +728,7 @@ const NotificationsPage = () => {
               </button>
             ))}
           </div>
+        </div>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-8 py-12">
@@ -778,6 +798,42 @@ const NotificationsPage = () => {
             >
               {isGrouped ? "Grouped" : "Ungrouped"}
             </button>
+
+            {/* Density toggle */}
+            <div
+              className="inline-flex items-center rounded-lg bg-[#1a1f2e] p-[3px]"
+              role="group"
+              aria-label="Toggle notification density"
+            >
+              <button
+                type="button"
+                aria-pressed={notifDensity === "comfortable"}
+                title="Comfortable view"
+                onClick={() => handleNotifDensityChange("comfortable")}
+                className={`border-none text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1 ${
+                  notifDensity === "comfortable"
+                    ? "bg-[#2563eb] text-white"
+                    : "bg-transparent text-[#9ca3af] hover:text-white"
+                }`}
+              >
+                <AlignJustify size={12} />
+                Default
+              </button>
+              <button
+                type="button"
+                aria-pressed={notifDensity === "compact"}
+                title="Compact view"
+                onClick={() => handleNotifDensityChange("compact")}
+                className={`border-none text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1 ${
+                  notifDensity === "compact"
+                    ? "bg-[#2563eb] text-white"
+                    : "bg-transparent text-[#9ca3af] hover:text-white"
+                }`}
+              >
+                <ListIcon size={12} />
+                Compact
+              </button>
+            </div>
           </div>
           <SearchInput
             value={searchQuery}
@@ -843,9 +899,9 @@ const NotificationsPage = () => {
           </div>
         )}
 
-        <div className="flex flex-col gap-4">
+        <div className={`flex flex-col ${notifDensity === "compact" ? "gap-1.5" : "gap-4"}`}>
           {isLoading && notificationsList.length === 0 ? (
-            Array.from({ length: 4 }).map((_, index) => (
+            <>{Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
                 className="border border-[#374151] rounded-xl p-5 animate-pulse bg-[#1b2430]"
@@ -857,11 +913,13 @@ const NotificationsPage = () => {
                     <div className="h-4 rounded-lg bg-[#283039] w-full" />
                     <div className="h-4 rounded-lg bg-[#283039] w-5/6" />
                   </div>
+                </div>
                 <div className="flex justify-end gap-3">
                   <div className="h-9 w-20 rounded-md bg-[#283039]" />
                   <div className="h-9 w-9 rounded-md bg-[#283039]" />
                 </div>
-            ))
+              </div>
+            ))}</>
           ) : readStateFilteredNotifications.length === 0 ? (
             <EmptyState
               icon={<BellOff size={28} />}
@@ -924,6 +982,7 @@ const NotificationsPage = () => {
                               <NotificationCard
                                 key={notification.id}
                                 notification={notification}
+                                compact={notifDensity === "compact"}
                               />
                             ))}
                           </div>
@@ -944,6 +1003,7 @@ const NotificationsPage = () => {
                       <NotificationCard
                         key={notification.id}
                         notification={notification}
+                        compact={notifDensity === "compact"}
                       />
                     ),
                   )}
@@ -961,6 +1021,7 @@ const NotificationsPage = () => {
                     <NotificationCard
                       key={notification.id}
                       notification={notification}
+                      compact={notifDensity === "compact"}
                     />
                   ))}
                 </>
@@ -974,6 +1035,7 @@ const NotificationsPage = () => {
                     <NotificationCard
                       key={notification.id}
                       notification={notification}
+                      compact={notifDensity === "compact"}
                     />
                   ))}
                 </>

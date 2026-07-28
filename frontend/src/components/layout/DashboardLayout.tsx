@@ -23,6 +23,8 @@ import TopHeader from './TopHeader/TopHeader';
 import AnimatedPage from './AnimatedPage';
 import { SessionTimeoutModal } from '../auth/SessionTimeoutModal';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import ShortcutsHelpModal from '../common/ShortcutsHelpModal/ShortcutsHelpModal';
 
 interface NavItem {
   name: string;
@@ -40,6 +42,7 @@ const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [favoritePaths, setFavoritePaths] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
@@ -181,8 +184,86 @@ const DashboardLayout: React.FC = () => {
 
   // Use the shared focus-trap hook for the mobile sidebar drawer
   useFocusTrap(sidebarRef, isSidebarOpen, closeSidebar);
+
+  // Global keyboard shortcuts available on every dashboard page
+  useKeyboardShortcuts([
+    {
+      key: '?',
+      shift: true,
+      callback: () => setShowShortcuts((prev) => !prev),
+      label: 'Toggle keyboard shortcuts help',
+    },
+    {
+      key: '/',
+      shift: true,
+      callback: () => setShowShortcuts((prev) => !prev),
+      label: 'Toggle keyboard shortcuts help',
+    },
+    {
+      key: 'd',
+      alt: true,
+      callback: () => navigate('/dashboard'),
+      label: 'Go to Dashboard',
+    },
+    {
+      key: 's',
+      alt: true,
+      shift: true,
+      callback: () => navigate('/dashboard/shipments'),
+      label: 'Go to Shipments',
+    },
+    {
+      key: 'n',
+      alt: true,
+      shift: true,
+      callback: () => navigate('/dashboard/notifications'),
+      label: 'Go to Notifications',
+    },
+    {
+      key: 'q',
+      alt: true,
+      shift: true,
+      callback: () => navigate('/dashboard/settings'),
+      label: 'Go to Settings',
+    },
+    {
+      key: 'p',
+      alt: true,
+      callback: () => navigate('/dashboard/payments'),
+      label: 'Go to Payments',
+    },
+    {
+      key: 'l',
+      alt: true,
+      callback: () => navigate('/dashboard/analytics'),
+      label: 'Go to Analytics',
+    },
+    {
+      key: 'e',
+      alt: true,
+      callback: () => navigate('/dashboard/settlements'),
+      label: 'Go to Settlements',
+    },
+  ]);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#07090d] text-gray-900 dark:text-white font-sans flex">
+      {/* Global keyboard shortcuts overlay — available on every dashboard page */}
+      <ShortcutsHelpModal
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+        shortcuts={[
+          { keys: 'Alt + D', label: 'Go to Dashboard' },
+          { keys: 'Alt + Shift + S', label: 'Go to Shipments' },
+          { keys: 'Alt + E', label: 'Go to Settlements' },
+          { keys: 'Alt + P', label: 'Go to Payments' },
+          { keys: 'Alt + L', label: 'Go to Analytics' },
+          { keys: 'Alt + Shift + N', label: 'Go to Notifications' },
+          { keys: 'Alt + Shift + Q', label: 'Go to Settings' },
+          { keys: '? / Shift + /', label: 'Toggle this help dialog' },
+        ]}
+      />
+
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#62ffff] focus:text-black focus:font-semibold focus:rounded-lg focus:outline-none"
@@ -374,7 +455,18 @@ const DashboardLayout: React.FC = () => {
 
         {/* Bottom status widget — hidden when collapsed */}
         {!isCollapsed && (
-          <div className="mt-auto pt-6">
+          <div className="mt-auto pt-6 flex flex-col gap-3">
+            {/* Keyboard shortcuts hint */}
+            <button
+              type="button"
+              onClick={() => setShowShortcuts(true)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-gray-200 dark:border-[#1e293b] bg-transparent text-gray-500 dark:text-[#8a8f9d] hover:border-teal-400 dark:hover:border-[#62ffff] hover:text-teal-600 dark:hover:text-[#62ffff] text-xs font-medium transition-colors cursor-pointer"
+              aria-label="Show keyboard shortcuts"
+            >
+              <span>Keyboard shortcuts</span>
+              <kbd className="text-[10px] font-mono bg-gray-100 dark:bg-[rgba(255,255,255,0.08)] border border-gray-300 dark:border-[rgba(255,255,255,0.15)] rounded px-1.5 py-0.5">?</kbd>
+            </button>
+
             <div className="bg-teal-50 dark:bg-[rgba(19,186,186,0.1)] border border-teal-200 dark:border-[rgba(98,255,255,0.3)] rounded-xl p-3 flex items-center gap-3">
               <div className="w-9 h-9 bg-teal-100 dark:bg-[rgba(19,186,186,0.2)] rounded-[10px] flex items-center justify-center text-teal-600 dark:text-[#62ffff] shrink-0">
                 <ShieldCheck size={20} />

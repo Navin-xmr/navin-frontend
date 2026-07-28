@@ -189,26 +189,50 @@ const Popover: React.FC<PopoverProps> = ({
 
         {/* Footer */}
         <div className="flex justify-between items-center">
-          {/* Step counter */}
-          <span className="text-xs text-gray-500 dark:text-slate-500">
-            {stepIndex + 1} of {totalSteps}
-          </span>
+          {/* Step dots */}
+          <div className="flex items-center gap-1.5" role="tablist" aria-label="Tour steps">
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                role="tab"
+                aria-selected={i === stepIndex}
+                aria-label={`Go to step ${i + 1}`}
+                onClick={i < stepIndex ? () => onSkip() : undefined}
+                className={`w-1.5 h-1.5 rounded-full transition-all border-none p-0 cursor-default ${
+                  i === stepIndex
+                    ? 'bg-teal-500 dark:bg-[#62ffff] w-4'
+                    : i < stepIndex
+                      ? 'bg-teal-300 dark:bg-[rgba(98,255,255,0.4)]'
+                      : 'bg-gray-300 dark:bg-slate-600'
+                }`}
+              />
+            ))}
+          </div>
 
           <div className="flex gap-2 items-center">
             <button
               onClick={onSkip}
-              className="bg-transparent border-none text-gray-500 dark:text-slate-500 text-xs cursor-pointer underline px-2 py-1.5"
+              className="bg-transparent border-none text-gray-500 dark:text-slate-500 text-xs cursor-pointer underline px-2 py-1.5 hover:text-gray-700 dark:hover:text-slate-300"
             >
-              Skip
+              Skip tour
             </button>
             <button
               onClick={onNext}
-              className="bg-gradient-to-br from-[#13baba] to-[#0d9488] border-none text-white text-[13px] font-semibold cursor-pointer px-[18px] py-[7px] rounded-lg"
+              className="bg-gradient-to-br from-[#13baba] to-[#0d9488] border-none text-white text-[13px] font-semibold cursor-pointer px-[18px] py-[7px] rounded-lg hover:from-[#0fa8a8] hover:to-[#0b7a70] transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#13baba]"
             >
-              {stepIndex + 1 === totalSteps ? 'Done' : 'Next →'}
+              {stepIndex + 1 === totalSteps ? 'Done ✓' : 'Next →'}
             </button>
           </div>
         </div>
+
+        {/* Keyboard hint */}
+        <p className="mt-3 text-[11px] text-gray-400 dark:text-slate-600 m-0">
+          <kbd className="font-mono bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded px-1 py-0.5 text-[10px]">←→</kbd>{' '}
+          navigate &nbsp;·&nbsp;{' '}
+          <kbd className="font-mono bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded px-1 py-0.5 text-[10px]">Esc</kbd>{' '}
+          close
+        </p>
       </div>
     </div>
   );
@@ -226,12 +250,32 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
   // Only show if tour is not completed
   useEffect(() => {
     if (!isTourComplete()) {
-      // Short delay to let the DOM settle
+      // Short delay to let the DOM settle after route render
       const timer = setTimeout(() => setVisible(true), 400);
       return () => clearTimeout(timer);
     }
     return undefined;
   }, []);
+
+  // Keyboard handler: Escape closes, Arrow keys navigate
+  useEffect(() => {
+    if (!visible) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        markTourComplete();
+        setVisible(false);
+        onClose?.();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setCurrentStep((s) => Math.max(s - 1, 0));
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [visible, steps.length, onClose]);
 
   // Recompute spotlight target on each step change
   const updateTargetRect = useCallback(() => {
@@ -240,21 +284,24 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
 
     const el = document.querySelector(`[data-tour-id="${step.targetId}"]`);
     if (el) {
+      // Scroll element into view smoothly before computing rect
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       setTargetRect(el.getBoundingClientRect());
     } else {
+      // Target not found — clear rect so popover renders centred without spotlight
       setTargetRect(null);
     }
   }, [currentStep, steps]);
 
   useEffect(() => {
     if (!visible) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    updateTargetRect();
+    // Small delay after step change so scroll has time to settle
+    const t = setTimeout(updateTargetRect, 80);
 
-    // Recompute on resize / scroll
     window.addEventListener('resize', updateTargetRect);
     window.addEventListener('scroll', updateTargetRect, true);
     return () => {
+      clearTimeout(t);
       window.removeEventListener('resize', updateTargetRect);
       window.removeEventListener('scroll', updateTargetRect, true);
     };
@@ -282,14 +329,21 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
 
   return (
     <>
-      {/* Full-screen click-through blocker */}
+      {/* Screen-reader live region announces step changes */}
       <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9997,
-        }}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {`Step ${currentStep + 1} of ${steps.length}: ${step.heading}`}
+      </div>
+
+      {/* Full-screen click-to-skip overlay */}
+      <div
+        style={{ position: 'fixed', inset: 0, zIndex: 9997 }}
         onClick={handleSkip}
+        aria-hidden="true"
       />
 
       {/* Spotlight cutout */}
