@@ -1,10 +1,11 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { MOCK_DELIVERY_DATA, calculateSuccessRate } from './mockDeliveryData';
 import type { DeliveryOutcome } from './mockDeliveryData';
 import { ChartLoading } from '../../../ui/ChartLoading';
 import { ChartError } from '../../../ui/ChartError';
+import RichChartTooltip, { ViewDetailsAction } from '../../../ui/RichChartTooltip';
 
 interface DeliverySuccessChartProps {
   data?: DeliveryOutcome[];
@@ -15,15 +16,33 @@ interface DeliverySuccessChartProps {
 
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: { name?: string; value?: number }[];
+  payload?: { name?: string; value?: number; payload?: { color?: string } }[];
 }
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
+  const item = payload[0];
+  const value = item.value ?? 0;
+  const color = item.payload?.color;
+
+  const handleViewDetails = useCallback(() => {
+    console.info(`View details for: ${item.name}`);
+  }, [item.name]);
+
   return (
-    <div className="bg-[#1a1f2e] border border-border rounded-lg px-3.5 py-2.5">
-      <div className="text-text-secondary text-[11px] font-semibold uppercase mb-1">{payload[0].name}</div>
-      <div className="text-white text-sm font-bold">{payload[0].value} shipments</div>
+    <RichChartTooltip
+      active={active}
+      title={item.name}
+      items={[
+        {
+          label: 'Shipments',
+          value,
+          unit: 'shipments',
+          color,
+        },
+      ]}
+      actions={[ViewDetailsAction(handleViewDetails)]}
+    />
   );
 }
 
