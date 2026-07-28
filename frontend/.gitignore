@@ -1,13 +1,7 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
 *.local
@@ -35,4 +29,27 @@ dist-ssr
 vite.config.js
 vite.config.ts.timestamp-*
 
-# Somzilla issues document (root-level .gitignore handles this)
+# Test snapshots and coverage
+**/__snapshots__/
+*.snap
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+html/
+
+# Playwright / E2E
+e2e/
+
+# PWA generated files
+sw.js
+workbox-*.js
+
+# Lighthouse CI
+.lighthouseci/
+
+# Lint output
+lint-output.txt
+
+# Misc JSON artifacts
+vt.json

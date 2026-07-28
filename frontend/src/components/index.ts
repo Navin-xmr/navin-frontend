@@ -70,3 +70,7 @@ export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/
 export { OnboardingTour } from './onboarding';
 export type { OnboardingTourProps, TourStep } from './onboarding';
 export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';
+
+// Dashboard — Recent Activity Panel (#525)
+export { RecentActivityPanel } from './dashboard/RecentActivityPanel';
+export type { RecentActivityPanelProps } from './dashboard/RecentActivityPanel';
