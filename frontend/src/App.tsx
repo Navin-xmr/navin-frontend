@@ -22,6 +22,8 @@ import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmD
 import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
+import { RouteTransitionProvider } from './context/RouteTransitionContext';
+import RouteTransition from './components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
 import './App.css';
@@ -50,6 +52,7 @@ const ShipmentHistory = lazy(() => import('./pages/dashboard/Customer/ShipmentHi
 const UserManagement = lazy(() => import('./pages/dashboard/Company/UserManagement/UserManagement'));
 const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/AcceptInvitation'));
 const CalendarView = lazy(() => import('./pages/dashboard/Company/CalendarView/CalendarView'));
+const WhatsNewPage = lazy(() => import('./pages/WhatsNew/WhatsNewPage'));
 
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
@@ -107,6 +110,7 @@ const router = createBrowserRouter([
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
           { path: '/dashboard/profile', element: <CustomerProfile /> },
+          { path: '/dashboard/whats-new', element: S(<WhatsNewPage />) },
         ],
       },
     ],
@@ -125,16 +129,19 @@ function RealtimeManager() {
 function App() {
   return (
     <AuthProvider>
-      <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
-        <ErrorBoundary>
-          <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
-          <OfflineBanner />
-          <SlowConnectionBanner />
-          <RealtimeManager />
-          <RouterProvider router={router} />
-          <PWAInstallPrompt />
-        </ErrorBoundary>
-      </Sentry.ErrorBoundary>
+      <RouteTransitionProvider>
+        <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
+          <ErrorBoundary>
+            <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
+            <RouteTransition />
+            <OfflineBanner />
+            <SlowConnectionBanner />
+            <RealtimeManager />
+            <RouterProvider router={router} />
+            <PWAInstallPrompt />
+          </ErrorBoundary>
+        </Sentry.ErrorBoundary>
+      </RouteTransitionProvider>
     </AuthProvider>
   );
 }

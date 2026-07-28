@@ -100,6 +100,9 @@ export type { ShipmentActionMenuProps, ShipmentActionItem, ShipmentActionMenuSta
 // Common — GlobalSearch (#528)
 export { default as GlobalSearch } from './common/GlobalSearch';
 export type { GlobalSearchProps, SearchResult, SearchResultType } from './common/GlobalSearch';
+// Dashboard — Recent Activity Panel (#525)
+export { RecentActivityPanel } from './dashboard/RecentActivityPanel';
+export type { RecentActivityPanelProps } from './dashboard/RecentActivityPanel';
 // Skeletons
 export {
   Skeleton,

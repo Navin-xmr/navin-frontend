@@ -27,6 +27,7 @@ import OnboardingTour, {
   isTourComplete,
 } from "@components/onboarding/OnboardingTour";
 import type { TourStep } from "@components/onboarding/OnboardingTour";
+import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
 
 const TOUR_STEPS: TourStep[] = [
   {
@@ -379,6 +380,7 @@ const CompanyDashboard: React.FC = () => {
         </div>
       </div>
 
+      {!isLoading && <OnboardingChecklist />}
       <section
         className="rounded-xl border border-[#1e293b] bg-[#14171e] p-4"
         aria-labelledby="dashboard-layout-heading"

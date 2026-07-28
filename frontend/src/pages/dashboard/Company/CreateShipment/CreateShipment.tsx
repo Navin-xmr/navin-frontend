@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { CheckCircle2, Package, ArrowLeft, Loader2, Book, History } from 'lucide-react';
 import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
 import { addressesApi } from '@services/api/endpoints/addresses';
 import type { Address } from '@services/api/endpoints/addresses';
 import { useToast } from '@context/ToastContext';
 import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
+import { useFormDraft } from '@hooks/useFormDraft';
 import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
 import { getTemplatePreview, toTemplateFields } from '../../../../types/shipmentTemplate';
 import type { AxiosError } from 'axios';
@@ -40,6 +42,11 @@ const EMPTY_FORM: FormData = {
     expectedDeliveryDate: '',
 };
 
+const DRAFT_STORAGE_KEY = 'navin_draft_create_shipment';
+
+const isFormEmpty = (data: FormData): boolean =>
+    Object.values(data).every((value) => !value.trim());
+
 const CreateShipment: React.FC = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -54,6 +61,26 @@ const CreateShipment: React.FC = () => {
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [costEstimate, setCostEstimate] = useState<CostBreakdownData | null>(null);
     const [isEstimating, setIsEstimating] = useState(false);
+
+    const { draft, lastSavedAt, restoreDraft, discardDraft, clearDraft } = useFormDraft<FormData>(
+        DRAFT_STORAGE_KEY,
+        formData,
+        isFormEmpty,
+        { disabled: loading || success },
+    );
+
+    const handleRestoreDraft = () => {
+        const restored = restoreDraft();
+        if (!restored) return;
+        setFormData({ ...EMPTY_FORM, ...restored });
+        setErrors({});
+        addToast('Draft restored.', 'success');
+    };
+
+    const handleDiscardDraft = () => {
+        discardDraft();
+        addToast('Draft discarded.', 'info');
+    };
 
     const templateOptions = useMemo(
         () =>
@@ -271,6 +298,7 @@ useEffect(() => {
             const shipment = await shipmentApi.create(payload);
             setShipmentId(shipment.id ?? shipment._id);
             setSuccess(true);
+            clearDraft();
             addToast('Shipment created successfully!', 'success');
         } catch (err) {
             const error = err as AxiosError<{ message?: string }>;
@@ -350,6 +378,26 @@ useEffect(() => {
                   <h2>Create New Shipment</h2>
                   <p>Enter the shipment details to register it on the blockchain.</p>
               </div>
+
+              {draft && (
+                  <div className="draft-banner" role="status">
+                      <History size={18} className="draft-banner-icon" />
+                      <div className="draft-banner-text">
+                          <p className="draft-banner-title">Unfinished shipment found</p>
+                          <p className="draft-banner-meta">
+                              Saved {new Date(draft.savedAt).toLocaleString()}
+                          </p>
+                      </div>
+                      <div className="draft-banner-actions">
+                          <button type="button" className="draft-restore-btn" onClick={handleRestoreDraft}>
+                              Restore draft
+                          </button>
+                          <button type="button" className="draft-discard-btn" onClick={handleDiscardDraft}>
+                              Discard
+                          </button>
+                      </div>
+                  </div>
+              )}
 
               <div className="template-toolbar">
                   <div className="form-group template-select-group">
@@ -529,6 +577,12 @@ useEffect(() => {
                     isLoading={isEstimating}
                     mode="estimate"
                 />
+
+                  <p className="draft-status" aria-live="polite">
+                      {lastSavedAt
+                          ? `Draft saved ${lastSavedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
+                          : 'Your progress is saved automatically as you type.'}
+                  </p>
 
                   <div className="form-actions">
                       <button type="button" className="cancel-btn" onClick={() => navigate(-1)} disabled={loading}>

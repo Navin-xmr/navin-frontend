@@ -47,6 +47,7 @@ test-results/
 playwright-report/
 html/
 
+# Playwright / E2E
 # Somzilla issues document (root-level .gitignore handles this)
 __snapshots__/
 *.snap

@@ -7,6 +7,9 @@ playwright-report/
 **/__snapshots__/
 *.snap
 
+# Coverage
+coverage/
+.nyc_output/
 # Misc docs not needed in repo
 somzilla.md
 frontend-alignment-report.md
@@ -24,3 +27,9 @@ Thumbs.db
 # Misc docs not needed in repo
 frontend-alignment-report.md
 SHIPMENT_VOLUME_TREND_WIDGET_SUMMARY.md
+
+# Lint output
+lint-output.txt
+
+# Misc JSON artifacts
+vt.json
