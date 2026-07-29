@@ -28,6 +28,7 @@ import { useBulkSelection } from "../../hooks/useBulkSelection";
 import { useToast } from "../../context/ToastContext";
 import NotificationBulkActionBar from "../../components/notifications/NotificationBulkActionBar/NotificationBulkActionBar";
 import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
+import { resolveNotificationLink } from "../../utils/resolveNotificationLink";
 
 type NotificationFilterType = "all" | "shipments" | "settlements" | "system";
 type ReadStateFilter = "all" | "unread" | "read";
@@ -104,8 +105,6 @@ const NotificationsPage = () => {
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [sortMode, setSortMode] = useState<SortMode>("newest");
 
-  const realtimeEvents = useRealtimeEvents(["notification:new"]);
-
   // Sort notifications based on selected sort mode
   const sortNotifications = useCallback(
     (list: NotificationType[]): NotificationType[] => {
@@ -129,6 +128,7 @@ const NotificationsPage = () => {
     },
     [sortMode],
   );
+
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
@@ -155,11 +155,9 @@ const NotificationsPage = () => {
   }, [notificationsList, readStateFilter]);
 
   const groupedNotifications = useMemo(() => {
-    const sortedList = sortNotifications(notificationsList);
     const rawGroups = new Map<string, NotificationType[]>();
     const standalone: NotificationType[] = [];
 
-    sortedList.forEach((notification) => {
     readStateFilteredNotifications.forEach((notification) => {
       if (notification.shipmentId) {
         const group = rawGroups.get(notification.shipmentId) ?? [];
@@ -177,7 +175,7 @@ const NotificationsPage = () => {
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
         );
         const mostRecentNotification = sortedNotifications[0];
-        const unreadCount = sortedNotifications.filter(
+        const groupUnreadCount = sortedNotifications.filter(
           (item) => !item.isRead,
         ).length;
 
@@ -186,7 +184,7 @@ const NotificationsPage = () => {
           trackingNumber: mostRecentNotification.trackingNumber,
           notifications: sortedNotifications,
           mostRecentNotification,
-          unreadCount,
+          unreadCount: groupUnreadCount,
         };
       },
     );
@@ -206,17 +204,6 @@ const NotificationsPage = () => {
       shipmentGroups: sortedGroups,
       standaloneNotifications: sortedStandalone,
     };
-  }, [notificationsList, sortNotifications]);
-
-  const sortedUnreadNotifications = useMemo(
-    () => sortNotifications(unreadNotifications),
-    [unreadNotifications, sortNotifications],
-  );
-
-  const sortedReadNotifications = useMemo(
-    () => sortNotifications(readNotifications),
-    [readNotifications, sortNotifications],
-  );
   }, [readStateFilteredNotifications]);
 
   useEffect(() => {
@@ -379,8 +366,16 @@ const NotificationsPage = () => {
       }
     }
 
-    if (notification.link) {
-      navigate(notification.link);
+    // #225: resolve the navigation path using _id (shipmentId) preferentially,
+    // then trackingNumber, then the raw link — never hard-code trackingNumber-only paths.
+    const destination = resolveNotificationLink({
+      shipmentId: notification.shipmentId,
+      trackingNumber: notification.trackingNumber,
+      link: notification.link,
+    });
+
+    if (destination) {
+      navigate(destination);
     }
   };
 
@@ -535,6 +530,21 @@ const NotificationsPage = () => {
   const readNotifications = readStateFilteredNotifications.filter(
     (notification) => notification.isRead,
   );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const sortedUnreadNotifications = useMemo(
+    () => sortNotifications(unreadNotifications),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [unreadNotifications, sortNotifications],
+  );
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const sortedReadNotifications = useMemo(
+    () => sortNotifications(readNotifications),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [readNotifications, sortNotifications],
+  );
+
   const currentUnreadCount =
     notificationsList.filter((notification) => !notification.isRead).length ||
     unreadCount;
