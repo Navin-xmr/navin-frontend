@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Navin Backend Compatibility Checklist",
+  "description": "Enumerates critical frontend↔backend API contract expectations (issue #226). Each entry specifies an endpoint, expected HTTP status codes, and the required response envelope / field shapes that the frontend depends on. The companion script `scripts/check-backend-compat.mjs` validates a running server or a Swagger/OpenAPI document against this file.",
+  "version": "1.0.0",
+  "endpoints": [
+    {
+      "id": "auth-login",
+      "description": "Email + password login",
+      "method": "POST",
+      "path": "/auth/login",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data"],
+        "data": {
+          "requiredFields": ["token", "user"]
+        }
+      },
+      "notes": "Response must include a JWT in `data.token` and a user object in `data.user`."
+    },
+    {
+      "id": "auth-logout",
+      "description": "Logout (invalidate session/cookie)",
+      "method": "POST",
+      "path": "/auth/logout",
+      "expectedStatus": [200, 204],
+      "notes": "Any 2xx is acceptable; the frontend only checks for a non-error status."
+    },
+    {
+      "id": "auth-me",
+      "description": "Get authenticated user profile",
+      "method": "GET",
+      "path": "/auth/me",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data"],
+        "data": {
+          "requiredFields": ["id", "email", "role"]
+        }
+      },
+      "notes": "The `_id` field must be normalised to `id` by the backend or by the Axios interceptor."
+    },
+    {
+      "id": "shipments-list",
+      "description": "Paginated shipment list",
+      "method": "GET",
+      "path": "/shipments",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data", "meta"],
+        "data": {
+          "type": "array",
+          "itemFields": ["_id", "trackingNumber", "status", "origin", "destination"]
+        },
+        "meta": {
+          "requiredFields": ["hasMore"]
+        }
+      },
+      "notes": "Each shipment must have `_id` (MongoDB). The Axios interceptor maps `_id` → `id` automatically."
+    },
+    {
+      "id": "shipments-get-by-id",
+      "description": "Single shipment detail by _id",
+      "method": "GET",
+      "path": "/shipments/:id",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data"],
+        "data": {
+          "requiredFields": ["_id", "trackingNumber", "status", "milestones"]
+        }
+      },
+      "notes": "Route param `:id` is the MongoDB `_id`. The router path `/dashboard/shipments/:id` depends on this."
+    },
+    {
+      "id": "notifications-list",
+      "description": "Paginated notification list",
+      "method": "GET",
+      "path": "/notifications",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data", "meta"],
+        "data": {
+          "type": "array",
+          "itemFields": ["id", "type", "title", "description", "timestamp", "isRead"]
+        },
+        "meta": {
+          "requiredFields": ["page", "limit", "total", "hasMore"]
+        }
+      },
+      "notes": "Issue #225: notification items SHOULD include `shipmentId` (MongoDB _id) and optionally `trackingNumber`. The `link` field, if present, must be a `/dashboard/…` path. The frontend resolves the final navigation path via `resolveNotificationLink` (shipmentId › trackingNumber › link)."
+    },
+    {
+      "id": "notifications-unread-count",
+      "description": "Unread notification count",
+      "method": "GET",
+      "path": "/notifications/unread-count",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data"],
+        "data": {
+          "requiredFields": ["unreadCount"]
+        }
+      }
+    },
+    {
+      "id": "notifications-mark-read",
+      "description": "Mark a single notification as read",
+      "method": "PATCH",
+      "path": "/notifications/:id/read",
+      "expectedStatus": [200, 204],
+      "notes": "Any 2xx is acceptable."
+    },
+    {
+      "id": "notifications-mark-all-read",
+      "description": "Mark all notifications as read",
+      "method": "POST",
+      "path": "/notifications/read-all",
+      "expectedStatus": [200, 204]
+    },
+    {
+      "id": "notifications-delete",
+      "description": "Delete a single notification",
+      "method": "DELETE",
+      "path": "/notifications/:id",
+      "expectedStatus": [200, 204]
+    },
+    {
+      "id": "notification-preferences-get",
+      "description": "Get notification preferences",
+      "method": "GET",
+      "path": "/notifications/preferences",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data"],
+        "data": {
+          "type": "array",
+          "itemFields": ["event", "email", "sms"]
+        }
+      }
+    },
+    {
+      "id": "notification-preferences-update",
+      "description": "Update a single notification preference",
+      "method": "PATCH",
+      "path": "/notifications/preferences",
+      "expectedStatus": [200, 204],
+      "requestBody": {
+        "requiredFields": ["event", "channel", "enabled"]
+      }
+    },
+    {
+      "id": "settlements-list",
+      "description": "Paginated settlements list",
+      "method": "GET",
+      "path": "/settlements",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data", "meta"],
+        "data": {
+          "type": "array",
+          "itemFields": ["id", "amount", "status", "shipmentId"]
+        },
+        "meta": {
+          "requiredFields": ["hasMore"]
+        }
+      }
+    },
+    {
+      "id": "analytics-summary",
+      "description": "Dashboard analytics summary",
+      "method": "GET",
+      "path": "/analytics/summary",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data"]
+      }
+    },
+    {
+      "id": "users-list",
+      "description": "User management list (company-only)",
+      "method": "GET",
+      "path": "/users",
+      "expectedStatus": [200],
+      "responseEnvelope": {
+        "requiredFields": ["data"],
+        "data": {
+          "type": "array",
+          "itemFields": ["id", "email", "role"]
+        }
+      }
+    }
+  ]
+}
