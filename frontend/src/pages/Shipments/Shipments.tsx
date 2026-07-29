@@ -36,6 +36,8 @@ import OverdueShipmentBadge from "../../components/shipment/OverdueShipmentBadge
 import { useVirtualShipments } from "./hooks/useVirtualShipments";
 import ShipmentsKanban from "./KanbanView/ShipmentsKanban";
 import RouteMap from "./RouteMap/RouteMap";
+import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus, type Priority } from "./ShipmentFilters";
+import { TableRowSkeleton } from "@components/ui/Skeleton";
 import ShipmentFilters, {
   type ShipmentFiltersValues,
   type ShipmentStatus,
@@ -956,7 +958,28 @@ const Shipments: React.FC = () => {
             )}
           </div>
 
-          {error ? (
+          {currentPage === 1 && isLoading ? (
+            /* ── Initial load skeleton — prevents layout jump ── */
+            <div style={{ minHeight: "500px" }}>
+              <table className="shipments-table" style={{ tableLayout: "fixed", width: "100%" }} aria-label="Loading shipments" aria-busy="true">
+                <thead>
+                  <tr>
+                    <th style={{ width: "40px" }} aria-hidden="true" />
+                    <th>Shipment ID</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <TableRowSkeleton count={8} columns={8} />
+                </tbody>
+              </table>
+            </div>
+          ) : error ? (
             <div className="shipments-error">{error}</div>
           ) : viewMode === "kanban" ? (
             <ShipmentsKanban />
@@ -1291,6 +1314,12 @@ const Shipments: React.FC = () => {
                 </table>
               </div>
 
+              {currentPage > 1 && isLoading && (
+                <table className="shipments-table" style={{ tableLayout: "fixed", width: "100%" }} aria-label="Loading more shipments" aria-live="polite" aria-busy="true">
+                  <tbody>
+                    <TableRowSkeleton count={3} columns={8} />
+                  </tbody>
+                </table>
               {isLoading && (
                 <div className="shipments-loading" aria-live="polite">
                   {t("shipmentsList.loadingMore")}

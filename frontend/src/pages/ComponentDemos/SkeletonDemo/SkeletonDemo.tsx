@@ -5,6 +5,7 @@ import {
   TableRowSkeleton,
   DashboardWidgetSkeleton,
   ProfileSkeleton,
+  ShipmentsTableSkeleton,
   CardSkeleton,
   TableSkeleton,
 } from '../../../components/ui/Skeleton';
@@ -72,7 +73,18 @@ const SkeletonDemo: React.FC = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold mb-4 text-[#62ffff]">5. Dashboard Widget Skeleton</h2>
+          <h2 className="text-xl font-semibold mb-4 text-[#62ffff]">5. Shipments Table Skeleton</h2>
+          <p className="text-sm text-slate-400 mb-4">
+            Full skeleton matching the Shipments page layout — used during initial page load to prevent layout jumps.
+            Shows the real column headers with 8 animated placeholder rows.
+          </p>
+          <div className="overflow-x-auto bg-[#14171e] border border-[#1e293b] rounded-lg p-2">
+            <ShipmentsTableSkeleton count={5} />
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-4 text-[#62ffff]">6. Dashboard Widget Skeleton</h2>
           <div className="w-full max-w-2xl">
             <DashboardWidgetSkeleton count={1} />
           </div>
