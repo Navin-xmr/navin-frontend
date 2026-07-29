@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AlertTriangle, Download, Trash2 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { apiClient } from '@services/api/client';
+import SettingsSection from '@components/settings/SettingsSection';
 
 interface DangerZoneProps {
   userEmail: string;
@@ -40,11 +41,7 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
     'w-full bg-[rgba(239,68,68,0.05)] border border-red-500/30 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-red-400';
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center gap-2">
-        <AlertTriangle size={18} className="text-red-400" />
-        <h2 className="text-lg font-semibold text-red-400">Danger Zone</h2>
-      </div>
+    <SettingsSection title="Danger Zone" description="Irreversible actions — proceed with caution.">
 
       {/* Export */}
       <div className="border border-[rgba(98,255,255,0.1)] rounded-xl p-5 space-y-3">
@@ -91,7 +88,7 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
           {isLoading ? 'Deleting…' : 'Delete Account'}
         </button>
       </div>
-    </div>
+    </SettingsSection>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Camera, Save } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
+import SettingsSection from '@components/settings/SettingsSection';
 
 interface ProfileData {
   fullName: string;
@@ -41,9 +42,7 @@ const ProfileSection: React.FC<{ isCompany: boolean }> = ({ isCompany }) => {
     'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff]';
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Profile</h2>
-
+    <SettingsSection title="Profile" description="Update your personal information and avatar.">
       {/* Avatar */}
       <div className="flex items-center gap-5">
         <div
@@ -106,7 +105,7 @@ const ProfileSection: React.FC<{ isCompany: boolean }> = ({ isCompany }) => {
         <Save size={16} />
         {isLoading ? 'Saving…' : 'Save Profile'}
       </button>
-    </div>
+    </SettingsSection>
   );
 };
 

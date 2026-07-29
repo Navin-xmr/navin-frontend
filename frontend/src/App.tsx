@@ -22,6 +22,7 @@ import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
+import CommandPalette from './components/command-palette/CommandPalette';
 import './App.css';
 
 // Eagerly loaded (critical path)
@@ -127,6 +128,7 @@ function App() {
         <ErrorBoundary>
           <OfflineBanner />
           <RealtimeManager />
+          <CommandPalette />
           <RouterProvider router={router} />
           <PWAInstallPrompt />
         </ErrorBoundary>
