@@ -10,7 +10,9 @@ import type { WalletAdapter } from '../services/stellar/adapters/types';
 import { WALLET_ADAPTERS } from '../services/stellar/adapters';
 
 const LAST_ADAPTER_KEY = 'navin-last-wallet';
+const PUBLIC_KEY_KEY = 'navin-wallet-public-key';
 const NETWORK = (import.meta.env.VITE_STELLAR_NETWORK as 'testnet' | 'mainnet') ?? 'testnet';
+const STELLAR_PUBLIC_KEY_PATTERN = /^G[A-Z2-7]{55}$/;
 
 export interface WalletContextValue {
   adapter: WalletAdapter | null;
@@ -28,9 +30,16 @@ export interface WalletContextValue {
 
 const WalletContext = createContext<WalletContextValue | undefined>(undefined);
 
+function isValidPublicKey(publicKey: string): boolean {
+  return STELLAR_PUBLIC_KEY_PATTERN.test(publicKey);
+}
+
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [adapter, setAdapter] = useState<WalletAdapter | null>(null);
-  const [publicKey, setPublicKey] = useState<string | null>(null);
+  const [publicKey, setPublicKey] = useState<string | null>(() => {
+    const storedPublicKey = localStorage.getItem(PUBLIC_KEY_KEY);
+    return storedPublicKey && isValidPublicKey(storedPublicKey) ? storedPublicKey : null;
+  });
   const [isConnecting, setIsConnecting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -46,9 +55,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setIsConnecting(true);
     try {
       const { publicKey: pk } = await found.connect();
+      if (!isValidPublicKey(pk)) {
+        throw new Error('Invalid Stellar public key');
+      }
       setAdapter(found);
       setPublicKey(pk);
       localStorage.setItem(LAST_ADAPTER_KEY, adapterId);
+      localStorage.setItem(PUBLIC_KEY_KEY, pk);
       setIsModalOpen(false);
     } finally {
       setIsConnecting(false);
@@ -60,6 +73,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setAdapter(null);
     setPublicKey(null);
     localStorage.removeItem(LAST_ADAPTER_KEY);
+    localStorage.removeItem(PUBLIC_KEY_KEY);
   }, [adapter]);
 
   const signTransaction = useCallback(
