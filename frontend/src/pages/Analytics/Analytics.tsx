@@ -7,6 +7,9 @@ import {
   Calendar,
 } from "lucide-react";
 import Breadcrumb from "@components/common/Breadcrumb";
+  Loader2,
+} from "lucide-react";
+import { format } from "date-fns";
 import StatCard, { type StatCardProps } from "../../components/dashboard/StatCard/StatCard";
 import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
 import ShipmentVolumeChart from "../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart";
@@ -14,6 +17,8 @@ import DeliverySuccessChart from "../../components/dashboard/Charts/DeliverySucc
 import Skeleton from "../../components/ui/Skeleton/Skeleton";
 import DashboardWidgetSkeleton from "../../components/ui/Skeleton/DashboardWidgetSkeleton";
 import AnalyticsFilters, { type AnalyticsFiltersValues } from "./AnalyticsFilters";
+import { DateRangePicker } from "../../components/ui/DateRangePicker";
+import { SavedViewsPanel } from "../../components/saved-views/SavedViewsPanel";
 import { analyticsApi } from "../../services/api/endpoints/analytics";
 import { shipmentApi } from "../../services/api/endpoints/shipments";
 import { anomalyApi } from "../../services/api/endpoints/anomalies";
@@ -27,6 +32,12 @@ interface AnalyticsMetrics {
 }
 
 const defaultFilters = (): AnalyticsFiltersValues => {
+interface DateRange {
+  startDate: string;
+  endDate: string;
+}
+
+const defaultDateRange = (): DateRange => {
   const end = new Date();
   const start = new Date();
   start.setMonth(start.getMonth() - 1);
@@ -52,6 +63,7 @@ const Analytics: React.FC = () => {
 
   const dateRangeInvalid =
     !!filters.startDate && !!filters.endDate && filters.startDate > filters.endDate;
+  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
 
   const fetchData = useCallback(async () => {
     if (dateRangeInvalid) return;
@@ -64,21 +76,23 @@ const Analytics: React.FC = () => {
         anomalyApi.getAll({ limit: 1 }),
       ]);
 
-      const avgMs = perfData.averageDeliveryTimeByLogisticsId.length > 0
-        ? perfData.averageDeliveryTimeByLogisticsId.reduce(
-            (sum, item) => sum + item.averageDeliveryTimeMs, 0,
-          ) / perfData.averageDeliveryTimeByLogisticsId.length
-        : 0;
+      const avgMs =
+        perfData.averageDeliveryTimeByLogisticsId.length > 0
+          ? perfData.averageDeliveryTimeByLogisticsId.reduce(
+              (sum, item) => sum + item.averageDeliveryTimeMs,
+              0,
+            ) / perfData.averageDeliveryTimeByLogisticsId.length
+          : 0;
 
       const total =
-        perfData.shipmentsByStatus.reduce(
-          (sum, s) => sum + s.total, 0,
-        ) || 1;
+        perfData.shipmentsByStatus.reduce((sum, s) => sum + s.total, 0) || 1;
 
       setMetrics({
         onTimeRate: Math.round(
           (1 - perfData.totalDelayedShipments / total) * 100,
         ),
+        totalShipments: shipData.data.length,
+        onTimeRate: Math.round((1 - perfData.totalDelayedShipments / total) * 100),
         avgTransitDays: Math.round(avgMs / 86400000),
         activeAnomalies: anomData.data.filter((a) => !a.resolved).length,
       });
@@ -145,7 +159,8 @@ const Analytics: React.FC = () => {
       label: "On-Time Delivery Rate",
       value: `${metrics.onTimeRate}%`,
       trend: `${metrics.onTimeRate}%`,
-      trendType: metrics.onTimeRate >= 80 ? "up" : metrics.onTimeRate >= 50 ? "neutral" : "down",
+      trendType:
+        metrics.onTimeRate >= 80 ? "up" : metrics.onTimeRate >= 50 ? "neutral" : "down",
       icon: <CheckCircle2 size={18} />,
     },
     {
@@ -168,10 +183,9 @@ const Analytics: React.FC = () => {
     <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6 font-sans text-white max-md:px-4 max-md:pb-[90px]">
       <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }]} current="Analytics" />
       <div className="flex justify-between items-end mb-8 max-md:flex-col max-md:items-start max-md:gap-3">
+      <div className="flex justify-between items-end mb-6 max-md:flex-col max-md:items-start max-md:gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1">
-            Analytics
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1">Analytics</h1>
           <p className="text-[#94a3b8] text-sm m-0">
             Performance metrics and trends for your logistics operations
           </p>
@@ -182,6 +196,27 @@ const Analytics: React.FC = () => {
           onChange={handleFiltersChange}
           regionOptions={regionOptions}
           disabled={loading}
+        {/* Date Range Picker (#516) */}
+        <DateRangePicker
+          value={{
+            from: dateRange.startDate ? new Date(dateRange.startDate) : null,
+            to: dateRange.endDate ? new Date(dateRange.endDate) : null,
+          }}
+          onChange={(r) =>
+            setDateRange({
+              startDate: r.from ? format(r.from, "yyyy-MM-dd") : "",
+              endDate: r.to ? format(r.to, "yyyy-MM-dd") : "",
+            })
+          }
+        />
+      </div>
+
+      {/* Saved Views Panel (#514) */}
+      <div className="mb-6">
+        <SavedViewsPanel
+          currentFilters={dateRange as unknown as Record<string, unknown>}
+          onLoad={(saved) => setDateRange(saved as unknown as DateRange)}
+          storageKey="navin_analytics_saved_views"
         />
       </div>
 
@@ -274,13 +309,7 @@ const Analytics: React.FC = () => {
               <table className="w-full border-collapse">
                 <thead>
                   <tr>
-                    {[
-                      "Tracking #",
-                      "Origin",
-                      "Destination",
-                      "Status",
-                      "Created",
-                    ].map((h) => (
+                    {["Tracking #", "Origin", "Destination", "Status", "Created"].map((h) => (
                       <th
                         key={h}
                         className="text-left px-6 py-4 text-[13px] font-medium text-[#64748b] border-b border-[#1e293b] bg-[rgba(15,23,42,0.5)]"
@@ -344,6 +373,8 @@ const Analytics: React.FC = () => {
                             </button>
                           )}
                         </div>
+                      <td colSpan={5} className="text-center px-6 py-12 text-[#64748b]">
+                        No shipment data found for the selected period
                       </td>
                     </tr>
                   )}

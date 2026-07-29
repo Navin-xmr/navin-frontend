@@ -43,6 +43,7 @@ import ShipmentFilters, {
   type ShipmentStatus,
   type Priority,
 } from "./ShipmentFilters";
+import { SavedViewsPanel } from "../../components/saved-views/SavedViewsPanel";
 import "./Shipments.css";
 
 type ListMode = "table" | "grid";
@@ -791,6 +792,15 @@ const Shipments: React.FC = () => {
         <RouteMap />
       ) : (
         <>
+          {/* Saved Views Panel (#514) */}
+          <div className="mb-4">
+            <SavedViewsPanel
+              currentFilters={advancedFilters as unknown as Record<string, unknown>}
+              onLoad={(saved) => setAdvancedFilters(saved as unknown as ShipmentFiltersValues)}
+              storageKey="navin_shipments_saved_views"
+            />
+          </div>
+
           {/* Saved filter chips */}
           {savedFilters.length > 0 && (
             <div
