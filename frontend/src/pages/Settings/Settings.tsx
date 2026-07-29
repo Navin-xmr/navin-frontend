@@ -70,38 +70,42 @@ const Settings: React.FC = () => {
       />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-slate-400 text-sm">Manage your account, security, and preferences.</p>
+        <p className="text-slate-400 text-sm">Manage your account preferences, security, and platform configuration.</p>
       </div>
 
       {/* Tab nav */}
-      <div className="flex gap-1 mb-8 overflow-x-auto pb-1" role="tablist">
-        {visibleTabs.map((t) => (
-          <button
-            key={t.key}
-            role="tab"
-            aria-selected={activeTab === t.key}
-            className={tabCls(t.key)}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="border-b border-[#1E2433] mb-8">
+        <div className="flex gap-1 overflow-x-auto pb-1" role="tablist">
+          {visibleTabs.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={activeTab === t.key}
+              className={tabCls(t.key)}
+              onClick={() => setTab(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab content */}
-      <Suspense fallback={<PageSkeleton />}>
-        {activeTab === 'profile' && <ProfileSection isCompany={isCompany} />}
-        {activeTab === 'company-profile' && isCompany && <CompanyProfileSection />}
-        {activeTab === 'security' && <SecuritySection />}
-        {activeTab === 'notifications' && <NotificationsSection />}
-        {activeTab === 'appearance' && <AppearanceSection />}
-        {activeTab === 'wallets' && isCompany && <WalletsSection />}
-        {activeTab === 'templates' && isCompany && <MyTemplatesSection />}
-        {activeTab === 'api-keys' && can(role, 'api-keys:manage') && <ApiKeysSection />}
-        {activeTab === 'team' && isCompany && <TeamSection />}
-        {activeTab === 'address-book' && isCompany && <AddressBookSection />}
-        {activeTab === 'danger' && <DangerZone userEmail={userId ?? ''} />}
-      </Suspense>
+      <div className="bg-[#0F1419] border border-[#1E2433] rounded-2xl p-6 md:p-8">
+        <Suspense fallback={<PageSkeleton />}>
+          {activeTab === 'profile' && <ProfileSection isCompany={isCompany} />}
+          {activeTab === 'company-profile' && isCompany && <CompanyProfileSection />}
+          {activeTab === 'security' && <SecuritySection />}
+          {activeTab === 'notifications' && <NotificationsSection />}
+          {activeTab === 'appearance' && <AppearanceSection />}
+          {activeTab === 'wallets' && isCompany && <WalletsSection />}
+          {activeTab === 'templates' && isCompany && <MyTemplatesSection />}
+          {activeTab === 'api-keys' && can(role, 'api-keys:manage') && <ApiKeysSection />}
+          {activeTab === 'team' && isCompany && <TeamSection />}
+          {activeTab === 'address-book' && isCompany && <AddressBookSection />}
+          {activeTab === 'danger' && <DangerZone userEmail={userId ?? ''} />}
+        </Suspense>
+      </div>
     </div>
   );
 };

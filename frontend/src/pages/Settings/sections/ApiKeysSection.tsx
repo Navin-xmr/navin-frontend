@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Copy, Key, Trash2, X } from 'lucide-react';
+import { Copy, Trash2, X } from 'lucide-react';
 import { apiClient } from '@services/api/client';
+import SettingsSection from '@components/settings/SettingsSection';
 
 interface ApiKey {
   id: string;
@@ -59,10 +60,7 @@ const ApiKeysSection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Key size={18} className="text-[#62ffff]" />
-        <h2 className="text-lg font-semibold">API Keys</h2>
+    <SettingsSection title="API Keys" description="Manage API keys for programmatic access.">
       </div>
 
       {/* One-time secret modal */}
@@ -127,7 +125,7 @@ const ApiKeysSection: React.FC = () => {
           ))}
         </ul>
       )}
-    </div>
+    </SettingsSection>
   );
 };
 
