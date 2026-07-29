@@ -10,6 +10,7 @@ import {
   HelpCircle,
   AlertTriangle,
   Calendar,
+  Sparkles,
 } from "lucide-react";
 import { anomalyApi } from "@services/api/endpoints/anomalies";
 import Avatar from "../../ui/Avatar";
@@ -77,6 +78,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       name: "Settings",
       icon: <Settings size={22} className="nav-icon-svg" />,
       path: "/dashboard/settings",
+    },
+    {
+      name: "What's New",
+      icon: <Sparkles size={22} className="nav-icon-svg" />,
+      path: "/dashboard/whats-new",
     },
   ];
 

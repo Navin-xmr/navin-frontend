@@ -12,3 +12,9 @@ export type { DashboardWidgetSkeletonProps } from './DashboardWidgetSkeleton';
 
 export { default as ProfileSkeleton } from './ProfileSkeleton';
 export type { ProfileSkeletonProps } from './ProfileSkeleton';
+
+export { default as CardSkeleton } from './CardSkeleton';
+export type { CardSkeletonProps } from './CardSkeleton';
+
+export { default as TableSkeleton } from './TableSkeleton';
+export type { TableSkeletonProps } from './TableSkeleton';

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { ExternalLink, ShieldCheck, Loader2 } from "lucide-react";
+import { ExternalLink, ShieldCheck } from "lucide-react";
 import {
     settlementsApi,
     Settlement,
     SettlementStatus,
 } from "@services/api/endpoints/settlements";
+import Skeleton from "@components/ui/Skeleton/Skeleton";
 
 export interface EscrowStatusProps {
     shipmentId: string;
@@ -50,9 +51,20 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ shipmentId }) => {
             </h2>
 
             {loading && (
-                <div className="flex items-center justify-center gap-3 py-10 text-[rgba(255,255,255,0.5)]">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Loading escrow records…</span>
+                <div className="flex flex-col gap-4" aria-busy="true" aria-live="polite">
+                    <span className="sr-only">Loading escrow records…</span>
+                    {[0, 1].map((i) => (
+                        <div
+                            key={i}
+                            className="bg-[rgba(0,0,0,0.2)] rounded-2xl border border-[rgba(255,255,255,0.05)] px-6 py-5 flex flex-col gap-3"
+                        >
+                            <div className="flex items-center justify-between flex-wrap gap-3">
+                                <Skeleton width={120} height={22} />
+                                <Skeleton width={90} height={26} rounded="full" />
+                            </div>
+                            <Skeleton width={200} height={16} />
+                        </div>
+                    ))}
                 </div>
             )}
 
