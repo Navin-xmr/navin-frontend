@@ -1,8 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import Modal from "../../../components/common/Modal/Modal";
-import { useToast } from "../../../context/ToastContext";
-import { Copy, Download } from "lucide-react";
+import CopyToClipboard from "../../../components/ui/CopyToClipboard";
+import { Download } from "lucide-react";
 
 interface ShareQRCodeModalProps {
   isOpen: boolean;
@@ -15,22 +15,9 @@ const ShareQRCodeModal: React.FC<ShareQRCodeModalProps> = ({
   onClose,
   trackingNumber,
 }) => {
-  const { addToast } = useToast();
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
 
   const trackingUrl = `https://app.navin.io/track/${trackingNumber}`;
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(trackingUrl);
-      setCopied(true);
-      addToast("Tracking link copied to clipboard", "success");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      addToast("Could not copy link", "error");
-    }
-  };
 
   const handleDownload = () => {
     const canvas = canvasRef.current?.querySelector("canvas");
@@ -55,15 +42,8 @@ const ShareQRCodeModal: React.FC<ShareQRCodeModalProps> = ({
           <span className="flex-1 text-xs text-text-secondary truncate">
             {trackingUrl}
           </span>
-          <button
-            onClick={handleCopy}
-            aria-label="Copy tracking URL"
-            className="shrink-0 text-text-secondary hover:text-text-primary transition-colors"
-          >
-            <Copy className="w-4 h-4" />
-          </button>
+          <CopyToClipboard value={trackingUrl} label="Copy link" size="sm" className="shrink-0 border-border/50 text-text-secondary hover:text-text-primary" />
         </div>
-        {copied && <span className="text-xs text-emerald-400 -mt-3">Copied!</span>}
 
         <button
           onClick={handleDownload}

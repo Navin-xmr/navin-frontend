@@ -1,4 +1,5 @@
 import React, { useId, useMemo, useState } from "react";
+import { Calendar, SlidersHorizontal, X } from "lucide-react";
 import { format } from "date-fns";
 import { SlidersHorizontal, X } from "lucide-react";
 import { DateRangePicker } from "@components/ui/DateRangePicker";
@@ -51,6 +52,13 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const panelId = useId();
 
+  const dateError = useMemo(() => {
+    if (!values.startDate || !values.endDate) return null;
+    return values.startDate > values.endDate
+      ? "Start date must be before the end date."
+      : null;
+  }, [values.startDate, values.endDate]);
+
   const activeCount = useMemo(() => countActive(values), [values]);
 
   const patch = (next: Partial<AnalyticsFiltersValues>) =>
@@ -76,6 +84,40 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
   return (
     <div className="flex flex-col gap-3 w-full md:w-auto">
       <div className="flex items-center gap-3 flex-wrap max-md:flex-col max-md:items-stretch">
+        <div className="flex items-center gap-2 bg-[#14171e] border border-[#1e293b] rounded-lg px-3 py-2">
+          <Calendar size={14} className="text-[#64748b]" aria-hidden="true" />
+          <label className="sr-only" htmlFor="analytics-start-date">
+            Start date
+          </label>
+          <input
+            id="analytics-start-date"
+            type="date"
+            value={values.startDate}
+            max={values.endDate || undefined}
+            disabled={disabled}
+            onChange={(e) => patch({ startDate: e.target.value })}
+            className="bg-transparent border-none text-white text-sm outline-none w-[130px] [color-scheme:dark] disabled:opacity-50"
+            aria-invalid={!!dateError}
+            aria-describedby={dateError ? "analytics-date-error" : undefined}
+          />
+          <span className="text-[#64748b]" aria-hidden="true">
+            —
+          </span>
+          <label className="sr-only" htmlFor="analytics-end-date">
+            End date
+          </label>
+          <input
+            id="analytics-end-date"
+            type="date"
+            value={values.endDate}
+            min={values.startDate || undefined}
+            disabled={disabled}
+            onChange={(e) => patch({ endDate: e.target.value })}
+            className="bg-transparent border-none text-white text-sm outline-none w-[130px] [color-scheme:dark] disabled:opacity-50"
+            aria-invalid={!!dateError}
+            aria-describedby={dateError ? "analytics-date-error" : undefined}
+          />
+        </div>
         {/* Date Range Picker replaces the two plain date inputs */}
         <DateRangePicker
           value={{
@@ -112,6 +154,12 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
         </button>
       </div>
 
+      {dateError && (
+        <p id="analytics-date-error" role="alert" className="text-xs text-[#ef4444]">
+          {dateError}
+        </p>
+      )}
+
       {activeCount > 0 && (
         <div className="flex flex-wrap items-center gap-2" aria-label="Active filters">
           {values.regions.length > 0 && (
@@ -129,6 +177,7 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
           )}
           {values.shipmentTypes.length > 0 && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.3)] rounded-full text-xs text-[#3b82f6] font-medium">
+              Type: {values.shipmentTypes.map((t) => t.charAt(0) + t.slice(1).toLowerCase()).join(", ")}
               Type:{" "}
               {values.shipmentTypes
                 .map((t) => t.charAt(0) + t.slice(1).toLowerCase())
@@ -165,6 +214,7 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
             {regionOptions.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {regionOptions.map((region) => (
+                  <label key={region} className={toggleChip(values.regions.includes(region))}>
                   <label
                     key={region}
                     className={toggleChip(values.regions.includes(region))}
@@ -180,6 +230,7 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
                 ))}
               </div>
             ) : (
+              <p className="text-xs text-[#64748b]">No regions available for the selected period.</p>
               <p className="text-xs text-[#64748b]">
                 No regions available for the selected period.
               </p>
@@ -192,6 +243,7 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
             </span>
             <div className="flex flex-wrap gap-2">
               {SHIPMENT_TYPE_OPTIONS.map(({ value, label }) => (
+                <label key={value} className={toggleChip(values.shipmentTypes.includes(value))}>
                 <label
                   key={value}
                   className={toggleChip(values.shipmentTypes.includes(value))}

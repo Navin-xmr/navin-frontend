@@ -1,6 +1,7 @@
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Chip } from '../../../components/ui/Chip';
 import { format } from 'date-fns';
 import { DateRangePicker } from '../../../components/ui/DateRangePicker';
 
@@ -91,16 +92,6 @@ function countActive(f: ShipmentFiltersValues): number {
 
 const inputBase =
   'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] transition-colors';
-
-const chipBase =
-  'inline-flex items-center gap-1.5 px-3 py-1 border rounded-full text-xs font-medium transition-all';
-
-const toggleChip = (active: boolean) =>
-  `${chipBase} cursor-pointer ${
-    active
-      ? 'bg-[rgba(98,255,255,0.15)] text-[#62ffff] border-[#62ffff]'
-      : 'bg-[rgba(19,186,186,0.05)] text-slate-300 border-[rgba(98,255,255,0.15)] hover:border-[#62ffff]'
-  }`;
 
 const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -234,20 +225,13 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
           aria-label="Active filters"
         >
           {chips.map((chip) => (
-            <span
+            <Chip
               key={chip.key}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(98,255,255,0.06)] border border-[rgba(98,255,255,0.2)] rounded-full text-xs text-[#62ffff] font-medium"
-            >
-              {chip.label}
-              <button
-                type="button"
-                onClick={chip.onRemove}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.15)] text-[#62ffff] hover:text-white transition-colors"
-                aria-label={`Remove ${chip.key} filter`}
-              >
-                <X size={10} />
-              </button>
-            </span>
+              label={chip.label}
+              variant="info"
+              size="sm"
+              onRemove={chip.onRemove}
+            />
           ))}
           <button
             type="button"
@@ -270,25 +254,21 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
               </label>
               <div className="flex flex-wrap gap-2">
                 {STATUS_OPTIONS.map((s) => (
-                  <label
+                  <Chip
                     key={s}
-                    className={toggleChip(filters.status.includes(s))}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.status.includes(s)}
-                      onChange={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          status: prev.status.includes(s)
-                            ? prev.status.filter((v) => v !== s)
-                            : [...prev.status, s],
-                        }))
-                      }
-                      className="sr-only"
-                    />
-                    {s === 'CREATED' ? 'Created' : s === 'IN_TRANSIT' ? 'In Transit' : s === 'DELIVERED' ? 'Delivered' : 'Cancelled'}
-                  </label>
+                    label={s === 'CREATED' ? 'Created' : s === 'IN_TRANSIT' ? 'In Transit' : s === 'DELIVERED' ? 'Delivered' : 'Cancelled'}
+                    size="sm"
+                    selected={filters.status.includes(s)}
+                    variant={s === 'DELIVERED' ? 'success' : s === 'CANCELLED' ? 'danger' : s === 'IN_TRANSIT' ? 'info' : 'default'}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        status: prev.status.includes(s)
+                          ? prev.status.filter((v) => v !== s)
+                          : [...prev.status, s],
+                      }))
+                    }
+                  />
                 ))}
               </div>
             </div>
@@ -300,25 +280,21 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
               </label>
               <div className="flex flex-wrap gap-2">
                 {PRIORITY_OPTIONS.map((p) => (
-                  <label
+                  <Chip
                     key={p}
-                    className={toggleChip(filters.priority.includes(p))}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.priority.includes(p)}
-                      onChange={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          priority: prev.priority.includes(p)
-                            ? prev.priority.filter((v) => v !== p)
-                            : [...prev.priority, p],
-                        }))
-                      }
-                      className="sr-only"
-                    />
-                    {p.charAt(0) + p.slice(1).toLowerCase()}
-                  </label>
+                    label={p.charAt(0) + p.slice(1).toLowerCase()}
+                    size="sm"
+                    selected={filters.priority.includes(p)}
+                    variant={p === 'URGENT' ? 'danger' : p === 'ECONOMY' ? 'success' : 'default'}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        priority: prev.priority.includes(p)
+                          ? prev.priority.filter((v) => v !== p)
+                          : [...prev.priority, p],
+                      }))
+                    }
+                  />
                 ))}
               </div>
             </div>
