@@ -94,31 +94,52 @@ const ShipmentMap: React.FC<ShipmentMapProps> = ({
   };
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <h3 className="font-['Bebas_Neue',sans-serif] text-2xl font-normal tracking-[0.04em] text-white m-0">
+    <div className="mb-10 w-full">
+      {/* map-header: flex row on md+, column + centered on mobile */}
+      <div className="flex justify-between items-end mb-6 max-md:flex-col max-md:items-center max-md:gap-4 max-md:text-center">
+        {/* map-title */}
+        <h3 className="font-['Bebas_Neue',sans-serif] text-[2.5rem] font-normal tracking-[0.04em] text-white m-0">
           MAP <span className="text-[#00d4c8]">VIEW</span>
         </h3>
-        <div className="flex gap-6 text-xs text-[rgba(200,230,240,0.75)]">
-          <span>
-            <span className="font-semibold text-[rgba(200,230,240,0.9)]">ORIGIN:</span> {origin}
-          </span>
-          <span>
-            <span className="font-semibold text-[rgba(200,230,240,0.9)]">DESTINATION:</span>{' '}
-            {destination}
-          </span>
+
+        {/* map-stats */}
+        <div className="flex gap-8 text-right max-md:text-center">
+          {/* stat */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[0.7rem] font-semibold text-[rgba(0,212,200,0.6)] tracking-[0.1em] uppercase">
+              Origin
+            </span>
+            <span className="text-[0.85rem] text-[rgba(200,230,240,0.9)] max-w-[250px] max-md:max-w-full whitespace-nowrap overflow-hidden text-ellipsis">
+              {origin}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[0.7rem] font-semibold text-[rgba(0,212,200,0.6)] tracking-[0.1em] uppercase">
+              Destination
+            </span>
+            <span className="text-[0.85rem] text-[rgba(200,230,240,0.9)] max-w-[250px] max-md:max-w-full whitespace-nowrap overflow-hidden text-ellipsis">
+              {destination}
+            </span>
+          </div>
         </div>
       </div>
 
-      {!hasLocation ? (
-        <div className="h-64 flex items-center justify-center rounded-xl border border-[rgba(0,180,160,0.2)] bg-[rgba(8,40,50,0.4)] text-[rgba(200,230,240,0.5)] text-sm">
-          Location tracking unavailable
-        </div>
-      ) : (
-        <>
-          <div className="h-72 md:h-64 rounded-xl overflow-hidden border border-[rgba(0,180,160,0.3)]">
+      {/* map-placeholder */}
+      <div className="relative w-full aspect-[2/1] rounded-3xl overflow-hidden border border-[rgba(0,212,200,0.2)] bg-[rgba(8,40,50,0.2)] shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+        {!hasLocation ? (
+          <div className="absolute inset-0 flex items-center justify-center text-[rgba(200,230,240,0.5)] text-sm">
+            Location tracking unavailable
+          </div>
+        ) : (
+          <>
+            {/* map-image: opacity + filter applied inline on MapContainer style */}
             <MapContainer
-              style={{ height: '100%', width: '100%' }}
+              style={{
+                height: '100%',
+                width: '100%',
+                opacity: 0.8,
+                filter: 'saturate(0.8) brightness(0.9)',
+              }}
               center={center}
               zoom={6}
               scrollWheelZoom={false}
@@ -130,7 +151,6 @@ const ShipmentMap: React.FC<ShipmentMapProps> = ({
 
               {currentPos && <MapPanner position={currentPos} />}
 
-              {/* Route history polyline (solid) */}
               {historyPositions.length >= 2 && (
                 <Polyline
                   positions={historyPositions}
@@ -138,7 +158,6 @@ const ShipmentMap: React.FC<ShipmentMapProps> = ({
                 />
               )}
 
-              {/* Dashed line from current position to destination */}
               {currentPos && destPos && (
                 <Polyline
                   positions={[currentPos, destPos]}
@@ -151,34 +170,33 @@ const ShipmentMap: React.FC<ShipmentMapProps> = ({
                 />
               )}
 
-              {/* Origin marker */}
               {originPos && <Marker position={originPos} icon={pinIcon('#10b981')} />}
-
-              {/* Destination marker */}
               {destPos && <Marker position={destPos} icon={pinIcon('#f59e0b')} />}
-
-              {/* Current vehicle marker */}
               {currentPos && <Marker position={currentPos} icon={truckIcon} />}
             </MapContainer>
-          </div>
 
-          {tracking.lastUpdated && (
-            <p className="mt-2 text-xs text-[rgba(200,230,240,0.5)] text-right">
-              Last updated: {formatTimestamp(tracking.lastUpdated)}
-            </p>
-          )}
+            {/* map-overlay: radial gradient overlay, non-interactive */}
+            <div className="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle,rgba(0,212,200,0.05)_0%,transparent_70%)] pointer-events-none" />
+          </>
+        )}
+      </div>
 
-          <div className="mt-2 flex justify-end">
-            <button
-              aria-label="View full map"
-              type="button"
-              className="px-4 py-1.5 rounded-lg border border-[rgba(0,212,200,0.5)] text-[#00d4c8] text-xs font-semibold hover:bg-[rgba(0,212,200,0.1)] transition-colors cursor-pointer"
-            >
-              VIEW FULL MAP
-            </button>
-          </div>
-        </>
+      {tracking.lastUpdated && (
+        <p className="mt-2 text-xs text-[rgba(200,230,240,0.5)] text-right">
+          Last updated: {formatTimestamp(tracking.lastUpdated)}
+        </p>
       )}
+
+      <div className="mt-4 flex justify-end">
+        {/* view-full-map-btn */}
+        <button
+          aria-label="View full map"
+          type="button"
+          className="font-['Bebas_Neue',sans-serif] text-[1.25rem] tracking-[0.05em] px-10 py-3 bg-[rgba(0,212,200,0.1)] text-[#62ffff] border-[1.5px] border-[#00d4c8] rounded-xl cursor-pointer backdrop-blur-sm transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[0_0_15px_rgba(0,212,200,0.2)] hover:bg-[#00d4c8] hover:text-black hover:-translate-y-0.5 hover:shadow-[0_0_25px_rgba(0,212,200,0.4)]"
+        >
+          VIEW FULL MAP
+        </button>
+      </div>
     </div>
   );
 };
