@@ -21,3 +21,4 @@ export { default as useWidgetRefresh } from './useWidgetRefresh';
 export type { UseWidgetRefreshOptions, UseWidgetRefreshReturn, RefreshStatus } from './useWidgetRefresh';
 export { useSavedViews } from './useSavedViews';
 export type { UseSavedViewsReturn } from './useSavedViews';
+export { useLocalStorage } from './useLocalStorage';
