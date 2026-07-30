@@ -1,8 +1,5 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useMemo, useState } from 'react';
 import {
-  Package,
-  Clock,
-  CheckCircle2,
   AlertTriangle,
   Calendar,
 } from "lucide-react";
@@ -41,26 +38,31 @@ const defaultDateRange = (): DateRange => {
   const end = new Date();
   const start = new Date();
   start.setMonth(start.getMonth() - 1);
+
   return {
-    startDate: start.toISOString().split("T")[0],
-    endDate: end.toISOString().split("T")[0],
+    startDate: start.toISOString().split('T')[0],
+    endDate: end.toISOString().split('T')[0],
     regions: [],
     shipmentTypes: [],
   };
 };
 
-const Analytics: React.FC = () => {
-  const { announce } = useLiveRegion();
-  const [metrics, setMetrics] = useState<AnalyticsMetrics>({
-    onTimeRate: 0,
-    avgTransitDays: 0,
-    activeAnomalies: 0,
-  });
-  const [shipments, setShipments] = useState<Shipment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<AnalyticsFiltersValues>(defaultFilters);
+function formatDelta(current: number, previous: number, suffix = ''): string {
+  const delta = current - previous;
+  const sign = delta > 0 ? '+' : '';
+  return `${sign}${delta.toLocaleString()}${suffix}`;
+}
 
+const statusColors: Record<string, string> = {
+  DELIVERED: '#10b981',
+  IN_TRANSIT: '#3b82f6',
+  CREATED: '#94a3b8',
+  CANCELLED: '#ef4444',
+  DELAYED: '#f59e0b',
+};
+
+const Analytics: React.FC = () => {
+  const [filters, setFilters] = useState<AnalyticsFiltersValues>(defaultFilters);
   const dateRangeInvalid =
     !!filters.startDate && !!filters.endDate && filters.startDate > filters.endDate;
   const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
@@ -97,31 +99,28 @@ const Analytics: React.FC = () => {
         activeAnomalies: anomData.data.filter((a) => !a.resolved).length,
       });
 
-      const allShipments = await shipmentApi.getAll({ limit: 100 });
-      setShipments(allShipments.data);
-    } catch {
-      setError("Failed to load analytics data. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [filters.startDate, filters.endDate, dateRangeInvalid]);
+  const volumeData = useMemo<DailyVolume[]>(
+    () =>
+      summary?.totalShipmentsSparkline.map((count, index) => ({
+        date: `P${index + 1}`,
+        count,
+      })) ?? [],
+    [summary],
+  );
 
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      fetchData();
-    });
-  }, [fetchData]);
+  const deliveryData = useMemo<DeliveryOutcome[]>(
+    () =>
+      performance?.shipmentsByStatus.map((item) => ({
+        status: item.status,
+        count: item.total,
+        color: statusColors[item.status] ?? '#64748b',
+      })) ?? [],
+    [performance],
+  );
 
-  // Region and shipment type aren't tracked as dedicated fields on the shipment
-  // record today, so "Region" filters by origin city and "Shipment Type" filters
-  // by the existing priority tier (URGENT/STANDARD/ECONOMY) — the closest
-  // categorical attributes available. Both apply client-side to the shipments
-  // already loaded for the selected date range; the performance/anomaly stat
-  // cards are date-range scoped only, since the backend has no region/type
-  // breakdown for those endpoints.
   const regionOptions = useMemo(
-    () => Array.from(new Set(shipments.map((s) => s.origin))).sort(),
-    [shipments],
+    () => performance?.averageDeliveryTimeByLogisticsId.map((item) => item.logisticsId).sort() ?? [],
+    [performance],
   );
 
   const filteredShipments = useMemo(() => {
@@ -181,7 +180,7 @@ const Analytics: React.FC = () => {
 
   return (
     <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6 font-sans text-white max-md:px-4 max-md:pb-[90px]">
-      <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }]} current="Analytics" />
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Analytics" />
       <div className="flex justify-between items-end mb-8 max-md:flex-col max-md:items-start max-md:gap-3">
       <div className="flex justify-between items-end mb-6 max-md:flex-col max-md:items-start max-md:gap-3">
         <div>
@@ -193,7 +192,7 @@ const Analytics: React.FC = () => {
 
         <AnalyticsFilters
           values={filters}
-          onChange={handleFiltersChange}
+          onChange={setFilters}
           regionOptions={regionOptions}
           disabled={loading}
         {/* Date Range Picker (#516) */}
@@ -220,65 +219,25 @@ const Analytics: React.FC = () => {
         />
       </div>
 
-      {error ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-[#14171e] border border-dashed border-[#ef4444] rounded-xl text-center gap-4">
-          <AlertTriangle size={48} className="text-[#ef4444]" />
-          <h3 className="text-lg font-semibold">Failed to load analytics</h3>
-          <p className="text-[#94a3b8] text-sm">{error}</p>
-          <button
-            className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
-            onClick={fetchData}
-          >
-            Retry
-          </button>
+      {dateRangeInvalid ? (
+        <div className="flex items-center gap-3 p-4 rounded-xl border border-[#ef4444] bg-[rgba(239,68,68,0.08)]">
+          <AlertTriangle size={18} className="text-[#ef4444]" />
+          <p className="text-sm text-[#fecaca]">Start date must be before the end date.</p>
         </div>
-      ) : loading ? (
-        <div className="flex flex-col gap-6">
+      ) : error ? (
+        <ErrorFallback error={error} resetError={refetch} />
+      ) : isLoading ? (
+        <div className="flex flex-col gap-6" aria-busy="true" aria-live="polite">
           <div className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-sm:grid-cols-1">
             <DashboardWidgetSkeleton count={4} />
           </div>
-
-          <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
-            <DashboardWidgetSkeleton count={2} />
-        <div className="flex flex-col gap-6" aria-busy="true" aria-live="polite">
-          <span className="sr-only">Loading analytics data…</span>
-          <div className="grid grid-cols-4 gap-5 max-lg:grid-cols-2 max-sm:grid-cols-1">
-            {Array.from({ length: 4 }, (_, i) => (
-              <div key={i} className="bg-background-card border border-border rounded-2xl p-5">
-                <div className="flex justify-between items-start mb-5">
-                  <Skeleton width={40} height={40} rounded="lg" />
-                  <Skeleton width={48} height={14} />
-                </div>
-                <Skeleton width={90} height={12} className="mb-2" />
-                <Skeleton width={70} height={28} />
-              </div>
-            ))}
-          </div>
-
           <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
             <DashboardWidgetSkeleton />
             <DashboardWidgetSkeleton />
           </div>
-
-          <div className="bg-[#14171e] border border-[#1e293b] rounded-2xl overflow-hidden">
-            <div className="px-6 py-5 border-b border-[#1e293b]">
-              <Skeleton width={160} height={18} />
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <tbody>
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <tr key={i}>
-                      {Array.from({ length: 5 }, (_, j) => (
-                        <td key={j} className="px-6 py-4 border-b border-[rgba(30,41,59,0.5)]">
-                          <Skeleton width={j === 3 ? 70 : 100} height={j === 3 ? 22 : 16} rounded={j === 3 ? 'full' : 'md'} />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="bg-[#14171e] border border-[#1e293b] rounded-2xl overflow-hidden p-6">
+            <Skeleton width={180} height={18} className="mb-5" />
+            <Skeleton width="100%" height={180} />
           </div>
         </div>
       ) : (
@@ -291,10 +250,10 @@ const Analytics: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
             <div className="bg-[#14171e] border border-[#1e293b] rounded-2xl overflow-hidden">
-              <ShipmentVolumeChart />
+              <ShipmentVolumeChart data={volumeData} />
             </div>
             <div className="bg-[#14171e] border border-[#1e293b] rounded-2xl overflow-hidden">
-              <DeliverySuccessChart />
+              <DeliverySuccessChart data={deliveryData} />
             </div>
           </div>
 
@@ -302,7 +261,7 @@ const Analytics: React.FC = () => {
             <div className="px-6 py-5 border-b border-[#1e293b]">
               <h2 className="text-base font-bold flex items-center gap-2.5">
                 <Package size={18} className="text-[#3b82f6]" />
-                Recent Shipments
+                Shipments by Status
               </h2>
             </div>
             <div className="overflow-x-auto">
@@ -320,35 +279,14 @@ const Analytics: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredShipments.length > 0 ? (
-                    filteredShipments.slice(0, 10).map((s) => (
-                      <tr key={s._id} className="group hover:bg-[rgba(255,255,255,0.02)]">
-                        <td className="px-6 py-4 text-sm text-[#94a3b8] font-mono border-b border-[rgba(30,41,59,0.5)]">
-                          {s.trackingNumber}
-                        </td>
+                  {performance?.shipmentsByStatus.length ? (
+                    performance.shipmentsByStatus.map((item) => (
+                      <tr key={item.status} className="group hover:bg-[rgba(255,255,255,0.02)]">
                         <td className="px-6 py-4 text-sm text-white border-b border-[rgba(30,41,59,0.5)]">
-                          {s.origin}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-white border-b border-[rgba(30,41,59,0.5)]">
-                          {s.destination}
-                        </td>
-                        <td className="px-6 py-4 text-sm border-b border-[rgba(30,41,59,0.5)]">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-[0.05em] ${
-                              s.status === "DELIVERED"
-                                ? "bg-[rgba(16,185,129,0.1)] text-[#10b981]"
-                                : s.status === "IN_TRANSIT"
-                                  ? "bg-[rgba(59,130,246,0.1)] text-[#3b82f6]"
-                                  : s.status === "CANCELLED"
-                                    ? "bg-[rgba(239,68,68,0.1)] text-[#ef4444]"
-                                    : "bg-[rgba(100,116,139,0.1)] text-[#94a3b8]"
-                            }`}
-                          >
-                            {s.status}
-                          </span>
+                          {item.status}
                         </td>
                         <td className="px-6 py-4 text-sm text-[#94a3b8] border-b border-[rgba(30,41,59,0.5)]">
-                          {new Date(s.createdAt).toLocaleDateString()}
+                          {item.total.toLocaleString()}
                         </td>
                       </tr>
                     ))
@@ -381,6 +319,10 @@ const Analytics: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            <p className="px-6 py-4 text-xs text-[#64748b]">
+              Total delayed shipments: {performance?.totalDelayedShipments.toLocaleString() ?? 0} of{' '}
+              {totalFromPerformance.toLocaleString()}
+            </p>
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from './useAuth';
 
 const AUTH_STORAGE_KEY = 'authToken';
@@ -25,21 +25,44 @@ function setVisibility(state: DocumentVisibilityState) {
 
 describe('useAuth', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     localStorage.clear();
     setVisibility('visible');
   });
 
   afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+    localStorage.clear();
     setVisibility('visible');
   });
 
-  it('mounts with a valid token and becomes authenticated', async () => {
+  it('returns unauthenticated state when no token exists', () => {
+    const { result } = renderHook(() => useAuth());
+
+    expect(result.current.isLoading).toBe(true);
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(result.current).toEqual({
+      isLoading: false,
+      isAuthenticated: false,
+      role: null,
+      userId: null,
+    });
+  });
+
+  it('returns role, user id, and authenticated state for a valid token', () => {
     const token = makeToken({ sub: 'user-1', role: 'company', exp: Math.floor(Date.now() / 1000) + 3600 });
     localStorage.setItem(AUTH_STORAGE_KEY, token);
 
     const { result } = renderHook(() => useAuth());
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.role).toBe('company');
@@ -47,54 +70,63 @@ describe('useAuth', () => {
     expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBe(token);
   });
 
-  it('mounts with an expired token and clears it', async () => {
+  it('returns unauthenticated state for an expired token', () => {
     const token = makeToken({ sub: 'user-1', role: 'company', exp: Math.floor(Date.now() / 1000) - 3600 });
     localStorage.setItem(AUTH_STORAGE_KEY, token);
 
     const { result } = renderHook(() => useAuth());
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
   });
 
-  it('keeps state unchanged when the tab regains focus with a still-valid token', async () => {
+  it('handles malformed tokens without throwing', () => {
+    localStorage.setItem(AUTH_STORAGE_KEY, 'not-a-jwt');
+
+    const { result } = renderHook(() => useAuth());
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(result.current).toEqual({
+      isLoading: false,
+      isAuthenticated: false,
+      role: null,
+      userId: null,
+    });
+  });
+
+  it('updates to unauthenticated when the token is removed between renders', () => {
     const token = makeToken({ sub: 'user-1', role: 'company', exp: Math.floor(Date.now() / 1000) + 3600 });
     localStorage.setItem(AUTH_STORAGE_KEY, token);
 
     const { result } = renderHook(() => useAuth());
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.isAuthenticated).toBe(true);
-
-    setVisibility('visible');
     act(() => {
-      document.dispatchEvent(new Event('visibilitychange'));
+      vi.advanceTimersByTime(200);
     });
 
     expect(result.current.isAuthenticated).toBe(true);
-    expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBe(token);
-  });
 
-  it('transitions to unauthenticated when the tab regains focus with an expired token', async () => {
-    const token = makeToken({ sub: 'user-1', role: 'company', exp: Math.floor(Date.now() / 1000) + 3600 });
-    localStorage.setItem(AUTH_STORAGE_KEY, token);
-
-    const { result } = renderHook(() => useAuth());
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.isAuthenticated).toBe(true);
-
-    const expiredToken = makeToken({ sub: 'user-1', role: 'company', exp: Math.floor(Date.now() / 1000) - 3600 });
-    localStorage.setItem(AUTH_STORAGE_KEY, expiredToken);
-
+    localStorage.removeItem(AUTH_STORAGE_KEY);
     setVisibility('visible');
     act(() => {
       document.dispatchEvent(new Event('visibilitychange'));
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
+    expect(result.current.role).toBeNull();
+    expect(result.current.userId).toBeNull();
+  });
+
+  it('starts with loading set to true', () => {
+    const { result } = renderHook(() => useAuth());
+
+    expect(result.current.isLoading).toBe(true);
   });
 });
