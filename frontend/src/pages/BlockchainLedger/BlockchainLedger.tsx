@@ -3,7 +3,6 @@ import {
   ExternalLink,
   Hash,
   Layers,
-  AlertCircle,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
