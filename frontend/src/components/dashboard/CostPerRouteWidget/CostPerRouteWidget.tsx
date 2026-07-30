@@ -66,6 +66,7 @@ function RouteTooltip({ active, payload, label }: RouteTooltipProps) {
       <div className="mt-2 border-t border-[#334155] pt-2 text-sm font-semibold text-white">
         Total cost: {formatCurrency(total)}
       </div>
+    </div>
   );
 }
 
@@ -141,6 +142,7 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
             Table
           </button>
         </div>
+      </div>
 
       {viewMode === 'chart' ? (
         <>

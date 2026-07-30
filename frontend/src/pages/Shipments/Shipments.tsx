@@ -17,9 +17,10 @@ import ShipmentFilters, {
   type Priority,
   type ShipmentFiltersValues,
   type ShipmentStatus,
-} from './ShipmentFilters';
-import { useVirtualShipments } from './hooks/useVirtualShipments';
-import './Shipments.css';
+  type Priority,
+} from "./ShipmentFilters";
+import { SavedViewsPanel } from "../../components/saved-views/SavedViewsPanel";
+import "./Shipments.css";
 
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
@@ -377,6 +378,43 @@ const Shipments: React.FC = () => {
         <RouteMap />
       ) : (
         <>
+          {/* Saved Views Panel (#514) */}
+          <div className="mb-4">
+            <SavedViewsPanel
+              currentFilters={advancedFilters as unknown as Record<string, unknown>}
+              onLoad={(saved) => setAdvancedFilters(saved as unknown as ShipmentFiltersValues)}
+              storageKey="navin_shipments_saved_views"
+            />
+          </div>
+
+          {/* Saved filter chips */}
+          {savedFilters.length > 0 && (
+            <div
+              className="flex flex-wrap gap-2 mb-4"
+              aria-label="Saved filters"
+            >
+              {savedFilters.map((sf) => (
+                <button
+                  key={sf.name}
+                  type="button"
+                  onClick={() => handleApplyFilter(sf.filters)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(98,255,255,0.06)] hover:bg-[rgba(98,255,255,0.12)] border border-[rgba(98,255,255,0.2)] hover:border-[rgba(98,255,255,0.4)] rounded-full text-xs text-[#62ffff] font-medium transition-all cursor-pointer"
+                >
+                  <span>{sf.name}</span>
+                  <span
+                    onClick={(e) => handleDeleteFilter(sf.name, e)}
+                    className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.15)] text-[#62ffff] font-bold text-xs"
+                    role="button"
+                    aria-label={t("shipmentsList.deleteFilterAriaLabel", { name: sf.name })}
+                  >
+                    ×
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Filter and Search Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-6 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
             <div className="flex-1 min-w-[280px]">
               <SearchInput

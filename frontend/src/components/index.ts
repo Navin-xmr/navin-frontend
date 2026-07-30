@@ -137,3 +137,14 @@ export type { WidgetRefreshIndicatorProps } from './dashboard/WidgetRefreshIndic
 // Shipment — Summary Print View (#532)
 export { ShipmentSummaryPrint } from './shipment/ShipmentSummaryPrint';
 export type { ShipmentSummaryPrintProps, ShipmentSummaryPrintData, PrintMilestone, PrintCostItem, PrintPaymentInfo, PrintSensorSnapshot } from './shipment/ShipmentSummaryPrint';
+// Command Palette (#513)
+export { default as CommandPalette } from './command-palette/CommandPalette';
+export type { CommandPaletteProps, CommandItem } from './command-palette/CommandPalette';
+
+// Saved Views (#514)
+export { SavedViewsPanel } from './saved-views/SavedViewsPanel';
+export type { SavedViewsPanelProps } from './saved-views/SavedViewsPanel';
+
+// Settings Section (#515)
+export { default as SettingsSection } from './settings/SettingsSection';
+export type { SettingsSectionProps } from './settings/SettingsSection';
