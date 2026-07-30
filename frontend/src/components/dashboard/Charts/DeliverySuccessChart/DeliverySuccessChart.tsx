@@ -94,6 +94,7 @@ function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA, loading, error, onRet
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
           <div className="text-[32px] md:text-[28px] font-bold text-white leading-none">{successRate}%</div>
           <div className="text-xs font-semibold text-text-secondary uppercase mt-1">Success</div>
+        </div>
       </div>
 
       {/* Legend */}
@@ -105,11 +106,13 @@ function DeliverySuccessChart({ data = MOCK_DELIVERY_DATA, loading, error, onRet
               <span className="text-[13px] text-text-secondary font-medium">{item.status}</span>
               <span className="text-sm text-white font-semibold">{item.count}</span>
             </div>
+          </div>
         ))}
         <div className="flex justify-between items-center pt-3 mt-1 border-t border-border">
           <span className="text-[13px] text-text-secondary font-semibold uppercase">Total</span>
           <span className="text-base text-white font-bold">{total}</span>
         </div>
+      </div>
     </div>
   );
 }

@@ -51,13 +51,13 @@ const DashboardLayout: React.FC = () => {
     } catch {
       return [];
     }
+  });
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     'Main Menu': true,
     'System': false,
   });
   const sidebarRef = useRef<HTMLElement>(null);
-  const mainMenu = [
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const lastFocusedElement = useRef<HTMLElement | null>(null);
 
@@ -121,7 +121,6 @@ const DashboardLayout: React.FC = () => {
     },
   ];
 
-  const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
