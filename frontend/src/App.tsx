@@ -28,7 +28,6 @@ import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
 import NotFoundPage from '@pages/NotFound/NotFoundPage';
 import CommandPalette from './components/command-palette/CommandPalette';
-import './App.css';
 
 // Eagerly loaded (critical path)
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
