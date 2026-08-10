@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Package, ArrowLeft, Loader2, Book, History } from 'lucide-react';
-import { CheckCircle2, Package, ArrowLeft, Loader2 } from 'lucide-react';
+import { CheckCircle2, Package, ArrowLeft, Loader2, History, Book } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
 import { addressesApi } from '@services/api/endpoints/addresses';
 import type { Address } from '@services/api/endpoints/addresses';
@@ -9,6 +8,7 @@ import { useToast } from '@context/ToastContext';
 import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
 import { useFormDraft } from '@hooks/useFormDraft';
 import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
+import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
 import { getTemplatePreview, toTemplateFields } from '../../../../types/shipmentTemplate';
 import type { AxiosError } from 'axios';
 import Combobox from '@components/ui/Combobox';
@@ -59,6 +59,7 @@ const CreateShipment: React.FC = () => {
     const [shipmentId, setShipmentId] = useState('');
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [addressBookTarget, setAddressBookTarget] = useState<'origin' | 'destination' | null>(null);
     const [costEstimate, setCostEstimate] = useState<CostBreakdownData | null>(null);
     const [isEstimating, setIsEstimating] = useState(false);
 
@@ -156,6 +157,14 @@ const CreateShipment: React.FC = () => {
             const formatted = formatAddress(addr);
             setFormData((prev) => ({ ...prev, [field]: formatted }));
         }
+    };
+
+    const handleAddressBookSelect = (address: Address) => {
+        if (!addressBookTarget) return;
+        const field = addressBookTarget;
+        const formatted = formatAddress(address);
+        setFormData((prev) => ({ ...prev, [field]: formatted }));
+        if (errors[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
     };
 
     // Auto-fetch cost estimate when required fields are filled
@@ -431,7 +440,17 @@ useEffect(() => {
 
               <form onSubmit={handleSubmit} className="shipment-form">
                   <div className="form-group">
-                      <label htmlFor="origin">Origin Address</label>
+                      <div className="label-row">
+                          <label htmlFor="origin">Origin Address</label>
+                          <button
+                              type="button"
+                              className="address-book-btn"
+                              onClick={() => setAddressBookTarget('origin')}
+                          >
+                              <Book size={12} />
+                              Address Book
+                          </button>
+                      </div>
                       <Combobox
                           id="origin"
                           name="origin"
@@ -457,7 +476,17 @@ useEffect(() => {
                   </div>
 
                   <div className="form-group">
-                      <label htmlFor="destination">Destination Address</label>
+                      <div className="label-row">
+                          <label htmlFor="destination">Destination Address</label>
+                          <button
+                              type="button"
+                              className="address-book-btn"
+                              onClick={() => setAddressBookTarget('destination')}
+                          >
+                              <Book size={12} />
+                              Address Book
+                          </button>
+                      </div>
                       <Combobox
                           id="destination"
                           name="destination"
@@ -611,6 +640,12 @@ useEffect(() => {
               isOpen={isSaveModalOpen}
               onClose={() => setIsSaveModalOpen(false)}
               onSave={handleSaveTemplate}
+          />
+
+          <AddressBookPickerModal
+              isOpen={addressBookTarget !== null}
+              onClose={() => setAddressBookTarget(null)}
+              onSelect={handleAddressBookSelect}
           />
     </div>
   );

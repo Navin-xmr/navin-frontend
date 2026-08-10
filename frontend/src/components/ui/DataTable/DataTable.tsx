@@ -138,8 +138,8 @@ function DataTable<T extends object>({
           <tbody>
             {pagedData.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-6 py-16 text-center text-text-secondary text-sm">
-                  No data available
+                <td colSpan={columns.length} className="p-0">
+                  <EmptyState title="No data available" />
                 </td>
               </tr>
             ) : (

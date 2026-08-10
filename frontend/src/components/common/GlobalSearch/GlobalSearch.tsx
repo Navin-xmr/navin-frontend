@@ -165,13 +165,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
     const trimmed = query.trim();
     if (!trimmed) {
-      setResults([]);
-      setLoading(false);
       return;
     }
 
-    setLoading(true);
     debounceRef.current = setTimeout(async () => {
+      setLoading(true);
       try {
         const { data } = await shipmentApi.getAll({ limit: 50 });
         const q = trimmed.toLowerCase();
@@ -199,7 +197,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
   // ── Keyboard navigation ───────────────────────────────────────────────────
 
-  const allItems = query.trim() ? results : recent.map((r) => ({ id: r, recent: true }));
+  const trimmedQuery = query.trim();
+  // Results/loading only reflect the current query; once it's cleared, the
+  // previous search's state is stale and shouldn't be shown.
+  const displayResults = trimmedQuery ? results : [];
+  const displayLoading = trimmedQuery ? loading : false;
+
+  const allItems = trimmedQuery ? displayResults : recent.map((r) => ({ id: r, recent: true }));
   const itemCount = allItems.length;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -211,8 +215,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
       setActiveIdx((prev) => (prev - 1 + itemCount) % itemCount);
     } else if (e.key === 'Enter' && activeIdx >= 0) {
       e.preventDefault();
-      if (query.trim()) {
-        const result = results[activeIdx];
+      if (trimmedQuery) {
+        const result = displayResults[activeIdx];
         if (result) navigateTo(result);
       } else {
         const r = recent[activeIdx];
@@ -239,9 +243,9 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   // ── Render ────────────────────────────────────────────────────────────────
 
   const showPanel = open;
-  const showRecent = open && !query.trim() && recent.length > 0;
-  const showResults = open && query.trim().length > 0;
-  const noResults = showResults && !loading && results.length === 0;
+  const showRecent = open && !trimmedQuery && recent.length > 0;
+  const showResults = open && trimmedQuery.length > 0;
+  const noResults = showResults && !displayLoading && displayResults.length === 0;
 
   return (
     <>
@@ -285,7 +289,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
           <div className="absolute top-full left-0 right-0 mt-2 bg-background-elevated border border-border rounded-2xl shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden animate-fade-in-up min-w-[320px]">
             {/* Input */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-              {loading ? (
+              {displayLoading ? (
                 <Loader2 size={16} className="shrink-0 text-accent-blue animate-spin" />
               ) : (
                 <Search size={16} className="shrink-0 text-text-secondary" />
@@ -354,7 +358,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
                 role="listbox"
                 className="py-2 max-h-72 overflow-y-auto"
               >
-                {results.map((result, i) => (
+                {displayResults.map((result, i) => (
                   <li
                     key={result.id}
                     id={`gs-item-${i}`}
@@ -422,7 +426,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
             )}
 
             {/* Loading */}
-            {loading && results.length === 0 && (
+            {displayLoading && displayResults.length === 0 && (
               <div className="flex items-center justify-center gap-2 py-8 text-text-secondary text-sm">
                 <Loader2 size={16} className="animate-spin" />
                 Searching…

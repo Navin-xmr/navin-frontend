@@ -123,14 +123,12 @@ export const NotificationDropdown: React.FC = () => {
 
   // Focus first item when dropdown opens
   useEffect(() => {
-    if (isOpen) {
-      setFocusIndex(-1);
-      // Small delay to allow the dropdown to render
-      const timer = setTimeout(() => {
-        listRef.current?.querySelector<HTMLElement>('[role="listitem"]')?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
-    }
+    if (!isOpen) return;
+    // Small delay to allow the dropdown to render
+    const timer = setTimeout(() => {
+      listRef.current?.querySelector<HTMLElement>('[role="listitem"]')?.focus();
+    }, 50);
+    return () => clearTimeout(timer);
   }, [isOpen]);
 
   useEffect(() => {
@@ -162,7 +160,11 @@ export const NotificationDropdown: React.FC = () => {
       <button
         ref={toggleRef}
         className="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-[#07090d] text-white border-none cursor-pointer transition-all hover:bg-[#1e2433] focus-visible:outline-2 focus-visible:outline-blue-500"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          const next = !isOpen;
+          setIsOpen(next);
+          if (next) setFocusIndex(-1);
+        }}
         aria-label={unreadCount > 0 ? `Notifications — ${unreadCount} unread` : "Notifications"}
         aria-haspopup="true"
         aria-expanded={isOpen}

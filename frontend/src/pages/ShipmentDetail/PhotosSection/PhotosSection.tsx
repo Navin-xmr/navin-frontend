@@ -121,11 +121,11 @@ const Lightbox: React.FC<{
   onNavigate?: (idx: number) => void;
 }> = ({ items, index, onClose, onPrev, onNext, onNavigate }) => {
   // ── Zoom / loading state ──────────────────────────────────────────────
+  // Remounted per `index` (see `key` at the call site) so zoom/loaded/error
+  // reset automatically when navigating to a different photo.
   const [zoom, setZoom] = useState(1);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
-
-  useEffect(() => { setZoom(1); setImgLoaded(false); setImgError(false); }, [index]);
 
   // ── Touch swipe ───────────────────────────────────────────────────────
   const touchStartX = useRef<number | null>(null);
@@ -805,7 +805,7 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({ shipmentId, canDelete }) 
 
       {/* ── Lightbox (portal) ── */}
       {lightboxOpen && activeLightboxItems.length > 0 && (
-        <Lightbox items={activeLightboxItems} index={lightboxIndex} onClose={closeLightbox} onPrev={goPrev} onNext={goNext} onNavigate={setLightboxIndex} />
+        <Lightbox key={lightboxIndex} items={activeLightboxItems} index={lightboxIndex} onClose={closeLightbox} onPrev={goPrev} onNext={goNext} onNavigate={setLightboxIndex} />
       )}
 
       {/* ── Delete confirmation ── */}

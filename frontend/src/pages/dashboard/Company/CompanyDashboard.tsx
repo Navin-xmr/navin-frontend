@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import React, { useEffect, useMemo, useState } from "react";
 import {
   Clock,
   CheckCircle2,
@@ -29,39 +28,6 @@ import OnboardingTour, {
 } from "@components/onboarding/OnboardingTour";
 import type { TourStep } from "@components/onboarding/OnboardingTour";
 import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
-
-const TOUR_STEPS: TourStep[] = [
-  {
-    targetId: "tour-welcome",
-    heading: "Welcome to Navin 🎉",
-    body: "This is your logistics command center. Monitor shipments, track performance, and manage your team — all in one place.",
-    placement: "bottom",
-  },
-  {
-    targetId: "tour-create-shipment",
-    heading: "Create Your First Shipment",
-    body: "Click here to create a new shipment, assign routes, set milestones, and configure automated settlements.",
-    placement: "bottom",
-  },
-  {
-    targetId: "tour-shipments-link",
-    heading: "Track Shipments",
-    body: "View all active and historical shipments with real-time on-chain milestone updates and IoT sensor data.",
-    placement: "right",
-  },
-  {
-    targetId: "tour-settlements-link",
-    heading: "Automated Settlements",
-    body: "Settlements trigger automatically when delivery milestones are verified on the Stellar blockchain.",
-    placement: "right",
-  },
-  {
-    targetId: "tour-wallet",
-    heading: "Connect Your Stellar Wallet",
-    body: "Connect your Stellar wallet to sign settlement transactions and interact with Soroban smart contracts.",
-    placement: "bottom",
-  },
-];
 
 const TrendIcon = ({ up }: { up: boolean }) => (
   <svg
@@ -297,17 +263,6 @@ const CompanyDashboard: React.FC = () => {
           <p className="text-[#94a3b8] text-sm mb-4">{t('companyDashboard.errorBody')}</p>
           <button className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer" onClick={() => window.location.reload()}>
             {t('companyDashboard.retry')}
-          <h3 className="text-lg font-semibold mb-2">
-            Failed to load dashboard
-          </h3>
-          <p className="text-[#94a3b8] text-sm mb-4">
-            There was a problem connecting to the logistics network.
-          </p>
-          <button
-            className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
-            onClick={() => window.location.reload()}
-          >
-            Retry Connection
           </button>
         </div>
       </div>
@@ -331,10 +286,6 @@ const CompanyDashboard: React.FC = () => {
           </span>
         </div>
         <button className="bg-transparent border-none cursor-pointer p-1 flex items-center" aria-label={t('companyDashboard.menuAriaLabel')}>
-        <button
-          className="bg-transparent border-none cursor-pointer p-1 flex items-center"
-          aria-label="Menu"
-        >
           <Menu size={22} color="#fff" />
         </button>
       </div>
@@ -350,20 +301,11 @@ const CompanyDashboard: React.FC = () => {
         </div>
         <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
           {t('companyDashboard.live')} <span className="text-[#10b981]">{t('companyDashboard.connected')}</span>
-          <h1 className="text-2xl font-semibold tracking-tight m-0 mb-1 max-md:text-[22px] max-md:font-bold">
-            Logistics Overview
-          </h1>
-          <p className="text-[#94a3b8] text-sm m-0">
-            Blockchain-synced real-time data
-          </p>
           <p className="text-[11px] uppercase tracking-[0.2em] text-[#64748b] mt-1">
             {refreshedLabel}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
-            Live: <span className="text-[#10b981]">Connected</span>
-          </div>
           <button
             type="button"
             onClick={() => {
@@ -450,35 +392,25 @@ const CompanyDashboard: React.FC = () => {
                 <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
                   {stat.icon}{t(`companyDashboard.stats.${stat.id}`)}
                 </div>
-                <div className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}>
-                  {stat.value}
                 <div
-                  key={stat.id}
-                  className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#334155] max-md:p-4"
+                  className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}
                 >
-                  <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
-                    {stat.icon}
-                    {stat.label}
-                  </div>
-                  <div
-                    className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === "delayed" ? "text-[#f59e0b]" : "text-white"}`}
-                  >
-                    {stat.value}
-                  </div>
-                  <div
-                    className={`text-[13px] font-medium flex items-center gap-1 ${
-                      stat.trendType === "positive"
-                        ? "text-[#10b981]"
-                        : stat.trendType === "negative"
-                          ? "text-[#ef4444]"
-                          : "text-[#94a3b8]"
-                    }`}
-                  >
-                    <TrendIcon up={stat.trendType === "positive"} />
-                    {stat.trend}
-                  </div>
+                  {stat.value}
                 </div>
-              ))}
+                <div
+                  className={`text-[13px] font-medium flex items-center gap-1 ${
+                    stat.trendType === "positive"
+                      ? "text-[#10b981]"
+                      : stat.trendType === "negative"
+                        ? "text-[#ef4444]"
+                        : "text-[#94a3b8]"
+                  }`}
+                >
+                  <TrendIcon up={stat.trendType === "positive"} />
+                  {stat.trend}
+                </div>
+              </div>
+            ))}
         </div>
 
         {/* Quick Actions — top-right, desktop only */}
@@ -513,11 +445,6 @@ const CompanyDashboard: React.FC = () => {
           </h2>
           <a href="#" className="text-[13px] font-medium text-[#94a3b8] no-underline transition-colors hover:text-white max-md:text-[#3b82f6] max-md:font-semibold">
             {t('companyDashboard.viewAll')}
-          <a
-            href="#"
-            className="text-[13px] font-medium text-[#94a3b8] no-underline transition-colors hover:text-white max-md:text-[#3b82f6] max-md:font-semibold"
-          >
-            View All
           </a>
         </div>
 
@@ -554,12 +481,6 @@ const CompanyDashboard: React.FC = () => {
             <div>
               <h3 className="m-0 mb-0.5 text-sm font-semibold">{t('companyDashboard.activeFleetRoutes')}</h3>
               <p className="m-0 text-xs text-[#94a3b8]">{t('companyDashboard.driversActive', { count: 12 })}</p>
-              <h3 className="m-0 mb-0.5 text-sm font-semibold">
-                Active Fleet Routes
-              </h3>
-              <p className="m-0 text-xs text-[#94a3b8]">
-                12 drivers currently active
-              </p>
             </div>
           </div>
           <div className="flex items-center">
@@ -570,15 +491,6 @@ const CompanyDashboard: React.FC = () => {
             ].map((a, i) => (
               <div key={i} className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 first:ml-0 bg-[#334155] overflow-hidden">
                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${a.seed}&backgroundColor=${a.bg}`} alt={t('companyDashboard.driverAlt')} className="w-full h-full object-cover" />
-              <div
-                key={i}
-                className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 first:ml-0 bg-[#334155] overflow-hidden"
-              >
-                <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${a.seed}&backgroundColor=${a.bg}`}
-                  alt="Driver"
-                  className="w-full h-full object-cover"
-                />
               </div>
             ))}
             <div className="w-7 h-7 rounded-full border-2 border-[#14171e] -ml-2 bg-[#334155] flex items-center justify-center text-[11px] font-semibold text-white">

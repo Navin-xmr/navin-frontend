@@ -7,7 +7,6 @@ import CopyToClipboard from "../../../components/ui/CopyToClipboard";
 import ETACountdown from "../../../components/shipment/ETACountdown";
 import InlineEditField from "../../../components/ui/InlineEditField";
 import RoleAccessInfo from "../../../components/ui/RoleAccessInfo";
-import AccessRestrictedBadge from "../../../components/ui/AccessRestrictedBadge";
 import type { ShipmentStatus } from "../../../services/api/endpoints/shipments";
 
 export type UserRole = "company" | "customer";

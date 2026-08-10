@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import Breadcrumb from '@components/common/Breadcrumb';
 import { DashboardWidgetSkeleton, Skeleton } from '@components/ui/Skeleton';
-import ErrorFallback from '@components/ErrorFallback/ErrorFallback/ErrorFallback';
+import ErrorFallback from '@components/ErrorFallback/ErrorFallback';
 import StatCard, { type StatCardProps } from '../../components/dashboard/StatCard/StatCard';
 import ShipmentVolumeChart from '../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart';
 import DeliverySuccessChart from '../../components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart';

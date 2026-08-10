@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Loader2, Smartphone, Globe, CheckCircle, HelpCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, Smartphone, Globe, CheckCircle, HelpCircle, AlertCircle, RefreshCw, Wallet } from 'lucide-react';
 import Modal from '../common/Modal/Modal';
 import { useWallet } from '../../context/WalletContext';
 import { WALLET_ADAPTERS } from '../../services/stellar/adapters';
@@ -28,6 +28,13 @@ function friendlyError(err: unknown): string {
   }
   // Trim overly long SDK messages
   return msg.length > 120 ? `${msg.slice(0, 117)}…` : msg;
+}
+
+/** No per-wallet artwork ships with the app, so fall back to a recognizable lucide icon per adapter. */
+function adapterIcon(id: WalletAdapter['id']): React.ReactNode {
+  if (id === 'albedo') return <Globe size={16} aria-hidden="true" />;
+  if (id === 'lobstr') return <Smartphone size={16} aria-hidden="true" />;
+  return <Wallet size={16} aria-hidden="true" />;
 }
 
 function statusBadge(id: WalletAdapter['id'], available: boolean | undefined): React.ReactNode {
@@ -150,14 +157,8 @@ const WalletModal: React.FC = () => {
                       : 'border-border hover:border-primary hover:bg-background-elevated'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-background-elevated flex items-center justify-center shrink-0">
-                    <img
-                      src={adapter.icon}
-                      alt=""
-                      aria-hidden="true"
-                      className="w-5 h-5"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                    />
+                  <div className="w-8 h-8 rounded-lg bg-background-elevated flex items-center justify-center shrink-0 text-text-primary">
+                    {adapterIcon(adapter.id)}
                   </div>
                   <span className="flex-1 font-medium text-text-primary">{adapter.name}</span>
                   {isLoadingThis ? (

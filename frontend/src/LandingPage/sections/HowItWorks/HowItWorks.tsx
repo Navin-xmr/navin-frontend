@@ -1,25 +1,25 @@
+import { useTranslation } from "react-i18next";
+
 type Step = {
     number: string;
-    title: string;
-    description: string;
+    key: string;
 };
 
 function HowItWorks() {
+    const { t } = useTranslation("landing");
+
     const steps: Step[] = [
         {
             number: "01",
-            title: "Smart Pickup",
-            description: "We pick up your package from your chosen location or partner hub and log it into our system for full transparency from the start.",
+            key: "pickup",
         },
         {
             number: "02",
-            title: "Live Tracking",
-            description: "Track your shipment in real time with instant updates at every milestone—from dispatch to delivery. No more wondering where your package is.",
+            key: "tracking",
         },
         {
             number: "03",
-            title: "Secure Delivery",
-            description: "Once your package arrives, you'll receive a secure delivery confirmation—complete with proof of hand-off. Peace of mind, guaranteed.",
+            key: "delivery",
         },
     ];
 
@@ -34,10 +34,10 @@ function HowItWorks() {
             
             <div className="relative max-w-7xl mx-auto">
                 <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold text-center mb-6 text-text-primary">
-                    How <span className="text-primary">Navin</span> Works
+                    {t("howItWorks.headingPrefix")} <span className="text-primary">{t("howItWorks.headingHighlight")}</span> {t("howItWorks.headingSuffix")}
                 </h2>
                 <p className="text-center text-text-secondary text-lg mb-16 max-w-2xl mx-auto">
-                    Simple, transparent, and blockchain-powered. Track your shipments from pickup to delivery.
+                    {t("howItWorks.subtitle")}
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -56,10 +56,10 @@ function HowItWorks() {
                             {/* Content */}
                             <div>
                                 <h3 className="font-display text-2xl font-semibold text-text-primary mb-3 transition-colors duration-300 group-hover:text-primary">
-                                    {step.title}
+                                    {t(`howItWorks.${step.key}.title`)}
                                 </h3>
                                 <p className="font-sans text-base leading-relaxed text-text-secondary transition-colors duration-300 group-hover:text-text-primary">
-                                    {step.description}
+                                    {t(`howItWorks.${step.key}.description`)}
                                 </p>
                             </div>
                             

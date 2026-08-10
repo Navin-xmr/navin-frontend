@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowRight, ArrowUp, Package } from "lucide-react";
 import {
   getStatusBadgeClass,
