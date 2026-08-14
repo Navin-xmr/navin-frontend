@@ -27,7 +27,7 @@ import RouteTransition from './components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
 import NotFoundPage from '@pages/NotFound/NotFoundPage';
-import './App.css';
+import CommandPalette from './components/command-palette/CommandPalette';
 
 // Eagerly loaded (critical path)
 import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
@@ -145,6 +145,15 @@ function App() {
           </ErrorBoundary>
         </Sentry.ErrorBoundary>
       </RouteTransitionProvider>
+      <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
+        <ErrorBoundary>
+          <OfflineBanner />
+          <RealtimeManager />
+          <CommandPalette />
+          <RouterProvider router={router} />
+          <PWAInstallPrompt />
+        </ErrorBoundary>
+      </Sentry.ErrorBoundary>
     </AuthProvider>
   );
 }

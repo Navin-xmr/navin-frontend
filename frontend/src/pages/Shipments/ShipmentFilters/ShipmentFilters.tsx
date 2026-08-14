@@ -2,6 +2,8 @@ import { SlidersHorizontal } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Chip } from '../../../components/ui/Chip';
+import { format } from 'date-fns';
+import { DateRangePicker } from '../../../components/ui/DateRangePicker';
 
 export type ShipmentStatus = 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
 export type Priority = 'URGENT' | 'STANDARD' | 'ECONOMY';
@@ -297,32 +299,25 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
               </div>
             </div>
 
-            {/* Date Range */}
+            {/* Date Range (#516) */}
             <div>
               <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
                 Date Range
               </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
-                  }
-                  className={`${inputBase} [color-scheme:dark]`}
-                  aria-label="Date from"
-                />
-                <span className="text-slate-500 text-xs shrink-0">to</span>
-                <input
-                  type="date"
-                  value={filters.dateTo}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, dateTo: e.target.value }))
-                  }
-                  className={`${inputBase} [color-scheme:dark]`}
-                  aria-label="Date to"
-                />
-              </div>
+              <DateRangePicker
+                value={{
+                  from: filters.dateFrom ? new Date(filters.dateFrom) : null,
+                  to: filters.dateTo ? new Date(filters.dateTo) : null,
+                }}
+                onChange={(r) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    dateFrom: r.from ? format(r.from, 'yyyy-MM-dd') : '',
+                    dateTo: r.to ? format(r.to, 'yyyy-MM-dd') : '',
+                  }))
+                }
+                className="w-full"
+              />
             </div>
 
             {/* Origin */}

@@ -62,12 +62,8 @@ export default function DeliverySuccessChart({
         </ResponsiveContainer>
 
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-          <div className="text-[32px] md:text-[28px] font-bold text-white leading-none">
-            {successRate}%
-          </div>
-          <div className="text-xs font-semibold text-text-secondary uppercase mt-1">
-            Success
-          </div>
+          <div className="text-[32px] md:text-[28px] font-bold text-white leading-none">{successRate}%</div>
+          <div className="text-xs font-semibold text-text-secondary uppercase mt-1">Success</div>
         </div>
       </div>
 

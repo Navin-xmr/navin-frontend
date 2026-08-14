@@ -1,0 +1,68 @@
+import { useState, useCallback } from 'react';
+
+/**
+ * A type-safe, generic hook that syncs a value to `window.localStorage`.
+ *
+ * @param key          - The localStorage key to read/write.
+ * @param initialValue - Fallback value when the key is absent or the stored
+ *                       JSON cannot be parsed.
+ * @returns A tuple of `[storedValue, setValue, removeValue]`.
+ */
+export function useLocalStorage<T>(
+  key: string,
+  initialValue: T,
+): readonly [T, (value: T | ((prev: T) => T)) => void, () => void] {
+  // Lazy initialiser — read from storage once on mount.
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    // SSR guard: window may be absent in server-side environments.
+    if (typeof window === 'undefined') return initialValue;
+
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw === null) return initialValue;
+      return JSON.parse(raw) as T;
+    } catch {
+      // Corrupted / invalid JSON — fall back silently.
+      return initialValue;
+    }
+  });
+
+  /**
+   * Persist a new value (or apply an updater function) to localStorage and
+   * update React state so consumers re-render.
+   */
+  const setValue = useCallback(
+    (value: T | ((prev: T) => T)) => {
+      setStoredValue((prev) => {
+        const next = value instanceof Function ? value(prev) : value;
+
+        if (typeof window !== 'undefined') {
+          try {
+            window.localStorage.setItem(key, JSON.stringify(next));
+          } catch {
+            // Quota exceeded or storage unavailable — update state anyway.
+          }
+        }
+
+        return next;
+      });
+    },
+    [key],
+  );
+
+  /**
+   * Remove the key from localStorage and reset state to `initialValue`.
+   */
+  const removeValue = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(key);
+      } catch {
+        // Storage unavailable — proceed to reset state.
+      }
+    }
+    setStoredValue(initialValue);
+  }, [key, initialValue]);
+
+  return [storedValue, setValue, removeValue] as const;
+}

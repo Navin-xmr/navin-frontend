@@ -188,6 +188,24 @@ html {
   animation: shimmer 1.5s infinite;
 }
 
+/* Modal overlay fade-in */
+@keyframes modal-overlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-modal-overlay {
+  animation: modal-overlay 0.2s ease forwards;
+}
+
+/* Modal content fade + slide-up */
+@keyframes modal-content {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.animate-modal-content {
+  animation: modal-content 0.25s ease forwards;
+}
+
 /* Connector line patterns */
 .connector-dashed {
   background-image: linear-gradient(to bottom, #9ca3af 50%, transparent 50%);

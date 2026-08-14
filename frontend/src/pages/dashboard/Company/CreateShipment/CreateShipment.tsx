@@ -129,7 +129,7 @@ const CreateShipment: React.FC = () => {
     // Load addresses for typeahead suggestions
     useEffect(() => {
         let cancelled = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag for async fetch
+         
         setAddressesLoading(true);
         addressesApi.getAll().then((addrs) => {
             if (cancelled) return;

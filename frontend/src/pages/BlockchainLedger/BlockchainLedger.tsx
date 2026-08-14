@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ExternalLink,
   Hash,
   Layers,
-  AlertCircle,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
@@ -11,10 +10,12 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import { ledgerApi } from '@services/api/endpoints/ledger';
 import type { LedgerBlock, MilestoneEvent, GetLedgerBlocksParams } from '@services/api/endpoints/ledger';
 import CopyToClipboard from '../../components/ui/CopyToClipboard';
 import Breadcrumb from '@components/common/Breadcrumb';
+import { Skeleton } from '@components';
+import ErrorFallback from '@components/ErrorFallback/ErrorFallback';
+import { useLedger } from './hooks/useLedger';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -68,7 +69,15 @@ function truncateHash(hash: string, chars = 8): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function PageHeader({ onRefresh, refreshing }: { onRefresh: () => void; refreshing: boolean }) {
+function PageHeader({
+  onRefresh,
+  refreshing,
+  total,
+}: {
+  onRefresh: () => void;
+  refreshing: boolean;
+  total?: number;
+}) {
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-1">
@@ -76,8 +85,16 @@ function PageHeader({ onRefresh, refreshing }: { onRefresh: () => void; refreshi
           <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
             <Layers size={20} className="text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-text-primary font-display tracking-tight">
+          <h1 className="text-2xl font-bold text-text-primary font-display tracking-tight flex items-center gap-2">
             Blockchain Ledger
+            {total !== undefined && (
+              <span
+                id="ledger-total-badge"
+                className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 border border-primary/30 text-primary"
+              >
+                {total.toLocaleString()} total
+              </span>
+            )}
           </h1>
         </div>
         <p className="text-sm text-text-secondary pl-[52px]">
@@ -186,7 +203,7 @@ function SkeletonRow({ cols }: { cols: number }) {
     <tr>
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-5 py-4 border-b border-[rgba(98,255,255,0.08)]">
-          <div className="h-4 rounded-md bg-[rgba(98,255,255,0.06)] animate-pulse" />
+          <Skeleton height={16} className="bg-[rgba(98,255,255,0.06)] w-full" />
         </td>
       ))}
     </tr>
@@ -380,11 +397,6 @@ function CursorPager({ hasPrev, hasNext, onPrev, onNext, pageLabel, loading }: P
 
 
 const BlockchainLedger: React.FC = () => {
-  const [blocks, setBlocks] = useState<LedgerBlock[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState<number | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(false);
   const [filter, setFilter] = useState<MilestoneEvent | ''>('');
 
   // Cursor stack: index 0 = first page (no cursor), subsequent = "next" cursors
@@ -393,43 +405,35 @@ const BlockchainLedger: React.FC = () => {
 
   const currentCursor = cursorStack[pageIndex] ?? null;
 
-  const fetchBlocks = useCallback(
-    async (cursor: string | null, milestoneEvent: MilestoneEvent | '') => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params: GetLedgerBlocksParams = { limit: PAGE_LIMIT };
-        if (cursor) params.cursor = cursor;
-        if (milestoneEvent) params.milestoneEvent = milestoneEvent;
+  const params = React.useMemo(() => {
+    const p: GetLedgerBlocksParams = { limit: PAGE_LIMIT };
+    if (currentCursor) p.cursor = currentCursor;
+    if (filter) p.milestoneEvent = filter;
+    return p;
+  }, [currentCursor, filter]);
 
-        const result = await ledgerApi.getBlocks(params);
-        setBlocks(result.data);
-        setHasMore(result.hasMore);
-        if (result.total !== undefined) setTotal(result.total);
+  const {
+    entries: blocks,
+    isLoading: loading,
+    error,
+    refetch,
+    total,
+    hasMore,
+    nextCursor,
+  } = useLedger(params);
 
-        // Store the next cursor at cursorStack[pageIndex + 1] if available
-        if (result.hasMore && result.nextCursor) {
-          setCursorStack((prev) => {
-            const next = [...prev];
-            next[pageIndex + 1] = result.nextCursor;
-            return next;
-          });
-        }
-      } catch {
-        setError('Failed to load blockchain ledger data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [pageIndex],
-  );
-
-  // Re-fetch whenever cursor or filter changes
+  // Store the next cursor at cursorStack[pageIndex + 1] if available
   useEffect(() => {
-    Promise.resolve().then(() => {
-      void fetchBlocks(currentCursor, filter);
-    });
-  }, [currentCursor, filter]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (hasMore && nextCursor) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCursorStack((prev) => {
+        if (prev[pageIndex + 1] === nextCursor) return prev;
+        const next = [...prev];
+        next[pageIndex + 1] = nextCursor;
+        return next;
+      });
+    }
+  }, [hasMore, nextCursor, pageIndex]);
 
   const handleFilterChange = (value: MilestoneEvent | '') => {
     setFilter(value);
@@ -447,7 +451,7 @@ const BlockchainLedger: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    void fetchBlocks(currentCursor, filter);
+    void refetch();
   };
 
   const pageLabel = total !== undefined
@@ -458,7 +462,7 @@ const BlockchainLedger: React.FC = () => {
     <main className="flex flex-col gap-6 p-6 max-w-[1400px] mx-auto">
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Blockchain Ledger" />
       {/* Header */}
-      <PageHeader onRefresh={handleRefresh} refreshing={loading} />
+      <PageHeader onRefresh={handleRefresh} refreshing={loading} total={total} />
 
       {/* Stats bar */}
       <StatsBar total={total} hasMore={hasMore} />
@@ -469,23 +473,11 @@ const BlockchainLedger: React.FC = () => {
       </div>
 
       {/* Error state */}
-      {error && !loading && (
-        <div
-          role="alert"
-          id="ledger-error-banner"
-          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-accent-red/10 border border-accent-red/25 text-red-400 text-sm"
-        >
-          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold">Error loading ledger</span>
-            <span className="text-red-300/80">{error}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Table / empty state */}
-      {!error || loading ? (
+      {error && !loading ? (
+        <ErrorFallback error={error} resetError={handleRefresh} />
+      ) : (
         <>
+          {/* Table / empty state */}
           {!loading && blocks.length === 0 ? (
             <div
               id="ledger-empty-state"
@@ -509,7 +501,7 @@ const BlockchainLedger: React.FC = () => {
             />
           )}
         </>
-      ) : null}
+      )}
     </main>
   );
 };

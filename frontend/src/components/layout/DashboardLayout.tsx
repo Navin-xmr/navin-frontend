@@ -58,6 +58,8 @@ const DashboardLayout: React.FC = () => {
     'System': false,
   });
   const sidebarRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const lastFocusedElement = useRef<HTMLElement | null>(null);
 
   const mainMenu: NavItem[] = [
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
@@ -119,7 +121,9 @@ const DashboardLayout: React.FC = () => {
     },
   ];
 
-  const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
   const closeSidebar = () => setIsSidebarOpen(false);
   const toggleCollapse = () => setIsCollapsed(prev => !prev);
 

@@ -1,9 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Trash2, Wallet } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { apiClient } from '@services/api/client';
 import { useWallet } from '@context/WalletContext';
 import { useToast } from '../../../context/ToastContext';
 import { WalletConnectButton } from '../../../components/auth/WalletConnectButton/WalletConnectButton';
+import SettingsSection from '@components/settings/SettingsSection';
 
 interface WalletEntry {
   publicKey: string;
@@ -61,12 +62,7 @@ const WalletsSection: React.FC = () => {
   const shortKey = (k: string) => `${k.slice(0, 6)}…${k.slice(-4)}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Wallet size={18} className="text-[#62ffff]" />
-        <h2 className="text-lg font-semibold">Connected Wallets</h2>
-      </div>
-
+    <SettingsSection title="Wallets" description="Connect and manage your Stellar wallets.">
       {wallets.length === 0 && !isLoading && (
         <div className="p-4 border border-yellow-500/30 bg-yellow-500/10 rounded-lg text-sm text-yellow-300">
           No wallet connected. Connect a wallet to manage settlements.
@@ -96,8 +92,8 @@ const WalletsSection: React.FC = () => {
         </ul>
       )}
 
-      <WalletConnectButton onConnect={handleWalletConnect} />
-    </div>
+      <WalletConnectButton />
+    </SettingsSection>
   );
 };
 

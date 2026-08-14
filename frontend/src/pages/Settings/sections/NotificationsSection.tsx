@@ -1,11 +1,14 @@
 import React from 'react';
+import SettingsSection from '@components/settings/SettingsSection';
 import NotificationPreferences from '../NotificationPreferences/NotificationPreferences';
 
 const NotificationsSection: React.FC = () => (
-  <div className="space-y-4">
-    <h2 className="text-lg font-semibold">Notifications</h2>
+  <SettingsSection
+    title="Notifications"
+    description="Configure which events trigger notifications and how you receive them."
+  >
     <NotificationPreferences />
-  </div>
+  </SettingsSection>
 );
 
 export default NotificationsSection;
