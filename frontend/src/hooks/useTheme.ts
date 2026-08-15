@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback, createElement, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useCallback, createElement, type ReactNode } from 'react';
+import { useLocalStorage } from './useLocalStorage';
 
 type Theme = 'dark' | 'light';
 
@@ -9,12 +10,24 @@ function getSystemPreference(): Theme {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-function getInitialTheme(): Theme {
-  if (typeof window === 'undefined') return 'dark';
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'dark' || stored === 'light') return stored;
-  return getSystemPreference();
+function migrateLegacyStorage(): void {
+  if (typeof window === 'undefined') return;
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (stored === null) return;
+  try {
+    const parsed = JSON.parse(stored);
+    if (parsed === 'dark' || parsed === 'light') return;
+  } catch {
+    // Not valid JSON - could be legacy raw format
+  }
+  if (stored === 'dark' || stored === 'light') {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  } else {
+    window.localStorage.removeItem(STORAGE_KEY);
+  }
 }
+
+migrateLegacyStorage();
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
@@ -33,42 +46,34 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const { value: theme, setValue: setTheme } = useLocalStorage<Theme>(
+    STORAGE_KEY,
+    getSystemPreference(),
+  );
 
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handleSystemChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem(STORAGE_KEY)) {
+      if (!window.localStorage.getItem(STORAGE_KEY)) {
         setTheme(e.matches ? 'dark' : 'light');
       }
     };
     mq.addEventListener('change', handleSystemChange);
 
-    // Keep theme in sync across tabs/windows when the user changes it elsewhere.
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && (e.newValue === 'dark' || e.newValue === 'light')) {
-        setTheme(e.newValue);
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-
     return () => {
       mq.removeEventListener('change', handleSystemChange);
-      window.removeEventListener('storage', handleStorage);
     };
-  }, []);
+  }, [setTheme]);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next: Theme = prev === 'dark' ? 'light' : 'dark';
-      localStorage.setItem(STORAGE_KEY, next);
-      return next;
-    });
-  }, []);
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  }, [setTheme]);
 
   return createElement(ThemeContext.Provider, { value: { theme, toggleTheme } }, children);
 }
