@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Trash2, Wallet } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { apiClient } from '@services/api/client';
-import { useWallet } from '@context/WalletContext';
-import { useToast } from '../../../context/ToastContext';
 import { WalletConnectButton } from '../../../components/auth/WalletConnectButton/WalletConnectButton';
+import SettingsSection from '@components/settings/SettingsSection';
 
 interface WalletEntry {
   publicKey: string;
@@ -15,38 +14,14 @@ const WalletsSection: React.FC = () => {
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
-  const { adapter } = useWallet();
-  const { addToast } = useToast();
-
-  const fetchWallets = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const r = await apiClient.get<{ data: WalletEntry[] }>('/api/users/me/wallets');
-      setWallets(r.data.data);
-    } catch {
-      setWallets([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => { void fetchWallets(); }, 0);
-    return () => clearTimeout(timer);
-  }, [fetchWallets]);
-
-  const handleWalletConnect = async (publicKey: string) => {
-    try {
-      await apiClient.post('/api/users/me/wallets', {
-        publicKey,
-        label: adapter?.name ?? 'Wallet',
-      });
-      addToast('Wallet connected and saved.', 'success');
-      await fetchWallets();
-    } catch {
-      addToast('Wallet connected, but saving it to your account failed. Please try again.', 'error');
-    }
-  };
+    apiClient
+      .get<{ data: WalletEntry[] }>('/api/users/me/wallets')
+      .then((r) => setWallets(r.data.data))
+      .catch(() => setWallets([]))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const removeWallet = async (publicKey: string) => {
     setRemoving(publicKey);
@@ -61,12 +36,7 @@ const WalletsSection: React.FC = () => {
   const shortKey = (k: string) => `${k.slice(0, 6)}…${k.slice(-4)}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Wallet size={18} className="text-[#62ffff]" />
-        <h2 className="text-lg font-semibold">Connected Wallets</h2>
-      </div>
-
+    <SettingsSection title="Wallets" description="Connect and manage your Stellar wallets.">
       {wallets.length === 0 && !isLoading && (
         <div className="p-4 border border-yellow-500/30 bg-yellow-500/10 rounded-lg text-sm text-yellow-300">
           No wallet connected. Connect a wallet to manage settlements.
@@ -96,8 +66,8 @@ const WalletsSection: React.FC = () => {
         </ul>
       )}
 
-      <WalletConnectButton onConnect={handleWalletConnect} />
-    </div>
+      <WalletConnectButton />
+    </SettingsSection>
   );
 };
 

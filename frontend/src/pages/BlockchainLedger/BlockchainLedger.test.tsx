@@ -226,9 +226,9 @@ describe('BlockchainLedger page', () => {
       renderPage();
 
       await waitFor(() => {
-        expect(screen.getByText('Error loading ledger')).toBeInTheDocument();
-        expect(screen.getByText('Error loading ledger').closest('[role="alert"]')).toBeInTheDocument();
-        expect(screen.getByText('Error loading ledger')).toBeInTheDocument();
+        expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+        expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
+        expect(screen.getByText(/Network Error/i)).toBeInTheDocument();
       });
     });
   });

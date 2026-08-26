@@ -4,6 +4,9 @@ import { apiClient } from '@services/api/client';
 import { ConfirmDialog } from '@components/ui/ConfirmDialog';
 import CopyToClipboard from '@components/ui/CopyToClipboard';
 import Tooltip from '@components/ui/Tooltip';
+import { Copy, Trash2, X } from 'lucide-react';
+import { apiClient } from '@services/api/client';
+import SettingsSection from '@components/settings/SettingsSection';
 
 interface ApiKey {
   id: string;
@@ -63,6 +66,7 @@ const ApiKeysSection: React.FC = () => {
         <Tooltip content="API keys let external services authenticate as you. Treat them like passwords — anyone with a key can act on your account.">
           <Info size={14} className="text-slate-400 hover:text-slate-300 cursor-help" aria-label="What are API keys?" />
         </Tooltip>
+    <SettingsSection title="API Keys" description="Manage API keys for programmatic access.">
       </div>
 
       {/* One-time secret modal */}
@@ -140,6 +144,7 @@ const ApiKeysSection: React.FC = () => {
         isLoading={revoking !== null}
       />
     </div>
+    </SettingsSection>
   );
 };
 

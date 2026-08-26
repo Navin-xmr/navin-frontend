@@ -1,13 +1,13 @@
 import React from 'react';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from '@hooks/useTheme';
+import SettingsSection from '@components/settings/SettingsSection';
 
 const AppearanceSection: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Appearance</h2>
+    <SettingsSection title="Appearance" description="Customize the look and feel of your dashboard.">
 
       <div className="bg-gray-50 dark:bg-[rgba(19,186,186,0.05)] border border-gray-200 dark:border-[rgba(98,255,255,0.2)] rounded-xl p-5">
         <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300 mb-4">Color Theme</h3>
@@ -62,7 +62,7 @@ const AppearanceSection: React.FC = () => {
           Preference is saved locally and persists across sessions.
         </p>
       </div>
-    </div>
+    </SettingsSection>
   );
 };
 

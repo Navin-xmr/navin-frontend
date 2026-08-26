@@ -1,5 +1,8 @@
 import React, { useId, useMemo, useState } from "react";
 import { Calendar, SlidersHorizontal, X } from "lucide-react";
+import { format } from "date-fns";
+import { SlidersHorizontal, X } from "lucide-react";
+import { DateRangePicker } from "@components/ui/DateRangePicker";
 
 export type ShipmentTypeFilter = "URGENT" | "STANDARD" | "ECONOMY";
 
@@ -115,6 +118,20 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
             aria-describedby={dateError ? "analytics-date-error" : undefined}
           />
         </div>
+        {/* Date Range Picker replaces the two plain date inputs */}
+        <DateRangePicker
+          value={{
+            from: values.startDate ? new Date(values.startDate) : null,
+            to: values.endDate ? new Date(values.endDate) : null,
+          }}
+          onChange={(r) =>
+            patch({
+              startDate: r.from ? format(r.from, "yyyy-MM-dd") : "",
+              endDate: r.to ? format(r.to, "yyyy-MM-dd") : "",
+            })
+          }
+          disabled={disabled}
+        />
 
         <button
           type="button"
@@ -161,6 +178,10 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
           {values.shipmentTypes.length > 0 && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.3)] rounded-full text-xs text-[#3b82f6] font-medium">
               Type: {values.shipmentTypes.map((t) => t.charAt(0) + t.slice(1).toLowerCase()).join(", ")}
+              Type:{" "}
+              {values.shipmentTypes
+                .map((t) => t.charAt(0) + t.slice(1).toLowerCase())
+                .join(", ")}
               <button
                 type="button"
                 onClick={() => patch({ shipmentTypes: [] })}
@@ -194,6 +215,10 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
               <div className="flex flex-wrap gap-2">
                 {regionOptions.map((region) => (
                   <label key={region} className={toggleChip(values.regions.includes(region))}>
+                  <label
+                    key={region}
+                    className={toggleChip(values.regions.includes(region))}
+                  >
                     <input
                       type="checkbox"
                       checked={values.regions.includes(region)}
@@ -206,6 +231,9 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
               </div>
             ) : (
               <p className="text-xs text-[#64748b]">No regions available for the selected period.</p>
+              <p className="text-xs text-[#64748b]">
+                No regions available for the selected period.
+              </p>
             )}
           </div>
 
@@ -216,6 +244,10 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
             <div className="flex flex-wrap gap-2">
               {SHIPMENT_TYPE_OPTIONS.map(({ value, label }) => (
                 <label key={value} className={toggleChip(values.shipmentTypes.includes(value))}>
+                <label
+                  key={value}
+                  className={toggleChip(values.shipmentTypes.includes(value))}
+                >
                   <input
                     type="checkbox"
                     checked={values.shipmentTypes.includes(value)}
