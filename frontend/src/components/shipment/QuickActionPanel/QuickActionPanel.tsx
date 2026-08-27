@@ -10,6 +10,8 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
+import { shipmentApi } from '../../../services/api/endpoints/shipments';
+import type { ShipmentDocument, ShipmentStatus } from '../../../services/api/endpoints/shipments';
 
 export interface QuickActionPanelProps {
   shipmentId: string;
@@ -39,6 +41,84 @@ interface Action {
   onClick: () => void;
 }
 
+/** Logical next status advanced by the "Update Status" quick action. */
+const NEXT_STATUS: Partial<Record<ShipmentStatus, ShipmentStatus>> = {
+  CREATED: 'IN_TRANSIT',
+  IN_TRANSIT: 'DELIVERED',
+};
+
+function resolveNextStatus(currentStatus?: string): ShipmentStatus {
+  if (currentStatus) {
+    const next = NEXT_STATUS[currentStatus as ShipmentStatus];
+    if (next) return next;
+    throw new Error(`Shipment is already in its final status (${currentStatus}).`);
+  }
+  return 'IN_TRANSIT';
+}
+
+function downloadDocuments(documents: ShipmentDocument[]): void {
+  documents.forEach((doc) => {
+    const link = document.createElement('a');
+    link.href = doc.url;
+    link.download = doc.name;
+    link.rel = 'noopener';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  });
+}
+
+async function shareTrackingLink(shipmentId: string): Promise<void> {
+  const url = `${window.location.origin}/tracking/${shipmentId}`;
+  if (navigator.share) {
+    await navigator.share({ title: 'Track your shipment', url });
+    return;
+  }
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(url);
+    return;
+  }
+  throw new Error('Sharing is not supported in this browser.');
+}
+
+function openSupportContact(shipmentId: string): void {
+  const subject = encodeURIComponent(`Support request for shipment ${shipmentId}`);
+  window.open(`mailto:support@navin.io?subject=${subject}`, '_blank');
+}
+
+/** Executes the real server/client action behind each quick action type. */
+async function executeAction(
+  actionType: ActionType,
+  shipmentId: string,
+  currentStatus?: string,
+): Promise<void> {
+  switch (actionType) {
+    case 'update-status':
+      await shipmentApi.updateStatus(shipmentId, resolveNextStatus(currentStatus));
+      break;
+    case 'mark-delivered':
+      await shipmentApi.updateStatus(shipmentId, 'DELIVERED');
+      break;
+    case 'flag-priority':
+      await shipmentApi.updatePriority(shipmentId, 'URGENT');
+      break;
+    case 'download-docs': {
+      const documents = await shipmentApi.getDocuments(shipmentId);
+      if (documents.length === 0) {
+        throw new Error('No documents are available to download for this shipment.');
+      }
+      downloadDocuments(documents);
+      break;
+    }
+    case 'share-tracking':
+      await shareTrackingLink(shipmentId);
+      break;
+    case 'contact-support':
+      openSupportContact(shipmentId);
+      break;
+  }
+}
+
 const QuickActionPanel: React.FC<QuickActionPanelProps> = ({
   shipmentId,
   currentStatus,
@@ -61,17 +141,8 @@ const QuickActionPanel: React.FC<QuickActionPanelProps> = ({
     }));
 
     try {
-      // Simulate async action (in real app, this would be an API call)
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // Simulate occasional errors for testing
-          if (Math.random() > 0.9) {
-            reject(new Error('Action failed'));
-          } else {
-            resolve(true);
-          }
-        }, 1200);
-      });
+      // Run the real action (API call / browser share / support contact)
+      await executeAction(actionType, shipmentId, currentStatus);
 
       // Success state
       setActionStates((prev) => ({

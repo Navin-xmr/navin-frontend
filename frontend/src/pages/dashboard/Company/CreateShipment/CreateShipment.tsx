@@ -7,15 +7,15 @@ import type { Address } from '@services/api/endpoints/addresses';
 import { useToast } from '@context/ToastContext';
 import { useShipmentTemplates } from '@hooks/useShipmentTemplates';
 import { useFormDraft } from '@hooks/useFormDraft';
-import SaveTemplateModal from '@components/shipment/SaveTemplateModal/SaveTemplateModal';
+import SaveTemplateModal from '@components/shipment/SaveTemplateModal';
 import AddressBookPickerModal from '@components/address-book/AddressBookPickerModal';
 import { getTemplatePreview, toTemplateFields } from '../../../../types/shipmentTemplate';
 import type { AxiosError } from 'axios';
 import Combobox from '@components/ui/Combobox';
 import type { ComboboxOption } from '@components/ui/Combobox';
-import CostBreakdown from '@components/shipment/CostBreakdown/CostBreakdown';
+import CostBreakdown from '@components/shipment/CostBreakdown';
 import { formatAddress as formatLocalizedAddress } from '@utils/localeFormat';
-import type { CostBreakdownData } from '@components/shipment/CostBreakdown/CostBreakdown';
+import type { CostBreakdownData } from '@components/shipment/CostBreakdown';
 import './CreateShipment.css';
 
 interface FormData {

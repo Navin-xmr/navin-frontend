@@ -40,9 +40,8 @@ function adapterIcon(id: WalletAdapter['id']): React.ReactNode {
 function statusBadge(id: WalletAdapter['id'], available: boolean | undefined): React.ReactNode {
   if (id === 'lobstr') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-        <Smartphone size={10} aria-hidden="true" />
-        Mobile
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+        Coming soon
       </span>
     );
   }
@@ -140,7 +139,8 @@ const WalletModal: React.FC = () => {
         <div className="flex flex-col gap-2" role="list" aria-label="Available wallets">
           {WALLET_ADAPTERS.map((adapter) => {
             const isLoadingThis = connectingId === adapter.id;
-            const isDisabled = !!connectingId || isConnecting;
+            const isComingSoon = adapter.id === 'lobstr';
+            const isDisabled = !!connectingId || isConnecting || isComingSoon;
             const adapterError = errors[adapter.id];
             const hasError = Boolean(adapterError);
 
@@ -149,6 +149,7 @@ const WalletModal: React.FC = () => {
                 <button
                   onClick={() => handleConnect(adapter)}
                   disabled={isDisabled}
+                  aria-disabled={isDisabled}
                   aria-describedby={hasError ? `wallet-error-${adapter.id}` : undefined}
                   aria-busy={isLoadingThis}
                   className={`flex items-center gap-3 w-full px-4 py-3.5 sm:py-3 rounded-xl border transition-all text-left disabled:opacity-60 disabled:cursor-not-allowed min-h-[52px] sm:min-h-[48px] focus-visible:outline-2 focus-visible:outline-primary ${

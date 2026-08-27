@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
-import { Toast } from "../components/notifications/Toast/Toast";
+import { Toast } from "../components/notifications/Toast";
 import { useLiveRegion } from "./LiveRegionContext";
 
 export type ToastType = "success" | "error" | "info" | "warning";
