@@ -249,6 +249,9 @@ Several existing components were built before Tailwind was adopted. They still c
 
 | Component | Legacy CSS file |
 |---|---|
+| `layout/TopHeader` | `TopHeader.css` |
+| `auth/WalletConnectButton` | `WalletConnectButton.css` |
+| `notifications/NotificationDropdown` | `NotificationDropdown.css` |
 | `layout/DashboardLayout` | `DashboardLayout.css` |
 | `layout/Sidebar` | `Sidebar.css` |
 | `auth/ProtectedRoute` | `ProtectedRoute.css` |
