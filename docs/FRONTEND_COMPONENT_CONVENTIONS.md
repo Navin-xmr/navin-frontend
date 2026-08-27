@@ -251,10 +251,7 @@ Several existing components were built before Tailwind was adopted. They still c
 |---|---|
 | `layout/DashboardLayout` | `DashboardLayout.css` |
 | `layout/Sidebar` | `Sidebar.css` |
-| `layout/TopHeader` | `TopHeader.css` |
-| `auth/WalletConnectButton` | `WalletConnectButton.css` |
 | `auth/ProtectedRoute` | `ProtectedRoute.css` |
-| `notifications/NotificationDropdown` | `NotificationDropdown.css` |
 | `pages/dashboard` | `Dashboard.css` |
 | `pages/ShipmentDetail/ShipmentMap` | `ShipmentMap.css` |
 | `pages/Payments/PaymentDetailModal` | `PaymentDetailModal.css` |
