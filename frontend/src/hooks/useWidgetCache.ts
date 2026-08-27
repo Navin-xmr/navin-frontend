@@ -11,8 +11,7 @@ interface CacheEntry<T> {
   fetchedAt: number; // epoch ms
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const widgetCacheMap = new Map<string, CacheEntry<any>>();
+const widgetCacheMap = new Map<string, CacheEntry<unknown>>();
 
 // ---------------------------------------------------------------------------
 // Types

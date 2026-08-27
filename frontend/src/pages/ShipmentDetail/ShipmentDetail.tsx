@@ -68,8 +68,8 @@ const ShipmentDetail: React.FC = () => {
   }, [statusEvent, id, announce, t]);
 
   const shipmentHeaderData = {
-    shipmentId: id ? `#${id}` : "#SHP-992834",
-    trackingNumber: shipment?.trackingNumber ?? id ?? "SHP-992834", // TODO: swap for real public tracking token once backend exposes one
+    shipmentId: id ? `#${id}` : t("shipmentDetail.unknownId"),
+    trackingNumber: shipment?.trackingNumber ?? id ?? "",
     status: shipment?.status ?? "IN_TRANSIT",
     originAddress: shipment?.origin ?? "New York Distribution Center, NY 10001",
     destinationAddress: shipment?.destination ?? "123 Main Street, Boston, MA 02101",
@@ -166,8 +166,8 @@ const ShipmentDetail: React.FC = () => {
   };
 
   const summaryPrintData: ShipmentSummaryPrintData = {
-    shipmentId: id ? `#${id}` : "#SHP-992834",
-    trackingNumber: id ?? "SHP-992834",
+    shipmentId: id ? `#${id}` : t("shipmentDetail.unknownId"),
+    trackingNumber: shipment?.trackingNumber ?? id ?? undefined,
     status: currentStatus,
     priority: shipmentHeaderData.priority,
     sender: { name: "Navin Logistics", address: shipmentHeaderData.originAddress },
@@ -283,7 +283,7 @@ const ShipmentDetail: React.FC = () => {
       <div ref={contentRef} className="max-w-300 mx-auto relative z-10">
         <Breadcrumb
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Shipments", href: "/dashboard/shipments" }]}
-          current={id ? `#${id}` : "#SHP-992834"}
+          current={id ? `#${id}` : t("shipmentDetail.unknownId")}
         />
 
         {/* Hero heading — sentinel for sticky bar */}
