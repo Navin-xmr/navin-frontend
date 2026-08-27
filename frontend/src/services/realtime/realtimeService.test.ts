@@ -141,6 +141,139 @@ describe('RealtimeService', () => {
     expect(listener).toHaveBeenCalledWith('reconnecting');
     expect(listener).toHaveBeenCalledWith('connected');
   });
+
+  it('onStatusChange unsubscribe stops future notifications', () => {
+    const listener = vi.fn();
+    const unsubscribe = service.onStatusChange(listener);
+    unsubscribe();
+
+    service.connect();
+    MockEventSource.instance!.simulateOpen();
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('ignores malformed JSON messages instead of throwing', () => {
+    const handler = vi.fn();
+    service.subscribe('shipment:status', handler);
+    service.connect();
+    MockEventSource.instance!.simulateOpen();
+
+    expect(() => MockEventSource.instance!.simulateMessage('{not valid json')).not.toThrow();
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('supports multiple subscribers for the same event type', () => {
+    const handlerA = vi.fn();
+    const handlerB = vi.fn();
+    service.subscribe('shipment:status', handlerA);
+    service.subscribe('shipment:status', handlerB);
+    service.connect();
+    MockEventSource.instance!.simulateOpen();
+
+    const event: RealtimeEvent = {
+      type: 'shipment:status',
+      shipmentId: 'abc',
+      newStatus: 'DELIVERED',
+      timestamp: '',
+    };
+    MockEventSource.instance!.simulateMessage(JSON.stringify(event));
+
+    expect(handlerA).toHaveBeenCalledWith(event);
+    expect(handlerB).toHaveBeenCalledWith(event);
+  });
+
+  it('unsubscribing one handler does not affect another handler for the same type', () => {
+    const handlerA = vi.fn();
+    const handlerB = vi.fn();
+    service.subscribe('shipment:status', handlerA);
+    service.subscribe('shipment:status', handlerB);
+    service.unsubscribe('shipment:status', handlerA);
+    service.connect();
+    MockEventSource.instance!.simulateOpen();
+
+    MockEventSource.instance!.simulateMessage(
+      JSON.stringify({ type: 'shipment:status', shipmentId: 'abc', newStatus: 'DELIVERED', timestamp: '' }),
+    );
+
+    expect(handlerA).not.toHaveBeenCalled();
+    expect(handlerB).toHaveBeenCalled();
+  });
+
+  it('falls back to polling immediately when EventSource is unavailable', () => {
+    vi.unstubAllGlobals();
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
+    vi.stubGlobal('fetch', fetchMock);
+
+    service.connect();
+
+    expect(service.status).toBe('disconnected');
+    expect(MockEventSource.instance).toBeNull();
+  });
+
+  it('poll() emits fetched events to subscribers and sets status to connected', async () => {
+    vi.useFakeTimers();
+    const event: RealtimeEvent = {
+      type: 'notification:new',
+      notification: {
+        id: 'n1',
+        type: 'system',
+        title: 'Hello',
+        description: 'World',
+        timestamp: 'now',
+        isRead: false,
+      },
+    };
+    vi.unstubAllGlobals();
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [event] });
+    vi.stubGlobal('fetch', fetchMock);
+    const handler = vi.fn();
+    service.subscribe('notification:new', handler);
+
+    service.connect();
+
+    await vi.advanceTimersByTimeAsync(15_000);
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/events/poll', { credentials: 'include' });
+    expect(handler).toHaveBeenCalledWith(event);
+    expect(service.status).toBe('connected');
+  });
+
+  it('poll() sets status to disconnected when the request fails', async () => {
+    vi.useFakeTimers();
+    vi.unstubAllGlobals();
+    const fetchMock = vi.fn().mockRejectedValue(new Error('network down'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    service.connect();
+
+    await vi.advanceTimersByTimeAsync(15_000);
+
+    expect(service.status).toBe('disconnected');
+  });
+
+  it('reset() allows a new SSE connection after a prior disconnect', () => {
+    service.connect();
+    service.disconnect();
+    expect(MockEventSource.instance!.closed).toBe(true);
+
+    service.reset();
+    service.connect();
+
+    expect(MockEventSource.instance).not.toBeNull();
+    expect(MockEventSource.instance!.closed).toBe(false);
+  });
+
+  it('connect() is a no-op once the service has been closed without a reset', () => {
+    service.connect();
+    service.disconnect();
+    MockEventSource.instance = null;
+
+    service.connect();
+
+    expect(MockEventSource.instance).toBeNull();
+  });
 });
 
 function backoffMs(attempt: number): number {
