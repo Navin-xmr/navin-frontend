@@ -26,7 +26,7 @@ import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import EmptyState from "../../components/common/EmptyState/EmptyState";
 import { useBulkSelection } from "../../hooks/useBulkSelection";
 import { useToast } from "../../context/ToastContext";
-import NotificationBulkActionBar from "../../components/notifications/NotificationBulkActionBar/NotificationBulkActionBar";
+import NotificationBulkActionBar from "../../components/notifications/NotificationBulkActionBar";
 import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
 import { resolveNotificationLink } from "../../utils/resolveNotificationLink";
 

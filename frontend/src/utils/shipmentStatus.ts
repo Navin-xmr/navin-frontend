@@ -23,6 +23,20 @@ const DOT_CLASSES: Record<ShipmentStatus, string> = {
     CANCELLED: 'bg-[#ef4444]',
 };
 
+/**
+ * Hex colors for data-viz & print contexts (analytics charts, PDF export).
+ * These intentionally use a muted slate for CREATED (matching the existing
+ * analytics chart look) so it stays visually distinct from DELAYED, which uses
+ * the amber status color. The badge/dot palettes above serve UI badges.
+ */
+const STATUS_HEX_COLORS: Record<string, string> = {
+    CREATED: '#94a3b8',
+    IN_TRANSIT: '#3b82f6',
+    DELIVERED: '#10b981',
+    CANCELLED: '#ef4444',
+    DELAYED: '#f59e0b',
+};
+
 export function getStatusDisplayLabel(status: ShipmentStatus | string): string {
     if (!status) return 'Unknown';
     return (DISPLAY_LABELS as Record<string, string>)[status] ?? String(status);
@@ -36,8 +50,13 @@ export function getStatusDotClass(status: ShipmentStatus | string): string {
     return (DOT_CLASSES as Record<string, string>)[status] ?? 'bg-text-secondary';
 }
 
+export function getStatusColorHex(status: ShipmentStatus | string): string {
+    return (STATUS_HEX_COLORS as Record<string, string>)[status] ?? '#64748b';
+}
+
 export default {
     getStatusDisplayLabel,
     getStatusBadgeClass,
     getStatusDotClass,
+    getStatusColorHex,
 };

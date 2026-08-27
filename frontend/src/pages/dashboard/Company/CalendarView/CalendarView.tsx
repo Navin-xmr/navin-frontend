@@ -3,18 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Breadcrumb from '@components/common/Breadcrumb';
 import { shipmentApi } from '../../../../services/api/endpoints/shipments';
+import { getStatusBadgeClass, getStatusDotClass } from '../../../../utils/shipmentStatus';
 import type { Shipment } from '../../../../api/shipmentApi';
 
 interface CalendarShipment extends Shipment {
   expectedDelivery?: string;
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  DELIVERED: 'bg-green-500',
-  IN_TRANSIT: 'bg-blue-500',
-  CREATED: 'bg-yellow-500',
-  CANCELLED: 'bg-red-500',
-};
+const LEGEND_STATUSES = ['CREATED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'] as const;
 
 function formatYMD(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -45,7 +41,7 @@ export const CalendarView: React.FC = () => {
         expectedDeliveryFrom: from,
         expectedDeliveryTo: to,
       });
-      const items = res.data as Array<Record<string, unknown>>;
+      const items = res.data as unknown as Array<Record<string, unknown>>;
       setShipments(
         items.map((s) => ({
           id: String(s.id),
@@ -196,7 +192,7 @@ export const CalendarView: React.FC = () => {
                     {dayShipments.slice(0, 3).map(s => (
                       <span
                         key={s.id}
-                        className={`w-2 h-2 rounded-full ${STATUS_COLORS[s.status] ?? 'bg-gray-400'}`}
+                        className={`w-2 h-2 rounded-full ${getStatusDotClass(s.status)}`}
                       />
                     ))}
                     {dayShipments.length > 3 && (
@@ -213,9 +209,9 @@ export const CalendarView: React.FC = () => {
 
         {/* Legend */}
         <div className="flex gap-3 mt-3 flex-wrap">
-          {Object.entries(STATUS_COLORS).map(([status, color]) => (
+          {LEGEND_STATUSES.map((status) => (
             <div key={status} className="flex items-center gap-1 text-xs text-gray-500">
-              <span className={`w-2 h-2 rounded-full ${color}`} />
+              <span className={`w-2 h-2 rounded-full ${getStatusDotClass(status)}`} />
               {status}
             </div>
           ))}
@@ -247,7 +243,7 @@ export const CalendarView: React.FC = () => {
                       {s.origin} → {s.destination}
                     </p>
                     <span
-                      className={`inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded text-white ${STATUS_COLORS[s.status] ?? 'bg-gray-400'}`}
+                      className={`inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded ${getStatusBadgeClass(s.status)}`}
                     >
                       {s.status}
                     </span>

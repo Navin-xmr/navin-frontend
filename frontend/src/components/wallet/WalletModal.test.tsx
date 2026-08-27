@@ -15,6 +15,7 @@ vi.mock('../../services/stellar/adapters', () => ({
   WALLET_ADAPTERS: [
     { id: 'freighter', name: 'Freighter', isAvailable: () => isAvailableMock('freighter') },
     { id: 'albedo', name: 'Albedo', isAvailable: () => isAvailableMock('albedo') },
+    { id: 'lobstr', name: 'LOBSTR', isAvailable: () => isAvailableMock('lobstr') },
   ],
 }));
 
@@ -90,5 +91,17 @@ describe('WalletModal', () => {
       await screen.findByText('Connection cancelled. Please approve the request in your wallet.')
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Clear all errors/i })).toBeInTheDocument();
+  });
+
+  it('shows LOBSTR as coming soon and prevents connecting to it', async () => {
+    useWalletMock.mockReturnValue(baseWalletValue());
+    render(<WalletModal />);
+
+    const lobstrButton = screen.getByRole('button', { name: /LOBSTR/i });
+    expect(screen.getByText('Coming soon')).toBeInTheDocument();
+    expect(lobstrButton).toBeDisabled();
+
+    await userEvent.click(lobstrButton);
+    expect(connectMock).not.toHaveBeenCalled();
   });
 });
