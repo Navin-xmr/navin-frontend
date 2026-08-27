@@ -103,9 +103,9 @@ const ShortcutsHelpModal: React.FC<ShortcutsHelpModalProps> = ({
         {/* Shortcuts list */}
         <div className="px-6 py-5 max-h-[60vh] overflow-y-auto">
           <div className="flex flex-col gap-2">
-            {shortcuts.map((shortcut, index) => (
+            {shortcuts.map((shortcut) => (
               <div
-                key={index}
+                key={`${shortcut.keys}-${shortcut.label}`}
                 className="flex items-center justify-between py-2.5 border-b border-[#1e293b] last:border-b-0"
               >
                 <span className="text-sm text-[#cbd5e1]">{shortcut.label}</span>

@@ -43,7 +43,7 @@ function HowItWorks() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {steps.map((step, index) => (
                         <article 
-                            key={index}
+                            key={step.key}
                             className="group relative flex flex-col gap-4 p-8 bg-background-card/60 backdrop-blur-lg border border-border-light rounded-2xl transition-all duration-300 hover:border-primary-light hover:shadow-glow-blue hover:-translate-y-2 hover:bg-background-card/80"
                         >
                             {/* Step number with glow */}

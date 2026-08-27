@@ -37,8 +37,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <div className="text-text-secondary text-[11px] font-semibold uppercase mb-2">
         {label}
       </div>
-      {payload.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
+      {payload.map((entry) => (
+        <div key={entry.name ?? entry.color ?? String(entry.value)} className="flex items-center gap-2 mb-1 last:mb-0">
           <div
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: entry.color }}
