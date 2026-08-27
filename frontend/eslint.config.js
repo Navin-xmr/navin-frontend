@@ -34,6 +34,15 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
       'no-undef': 'off', // Handled by TypeScript compiler
+      // Prevent accidental console statements in production code
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+  // Allow all console methods in test files
+  {
+    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ])

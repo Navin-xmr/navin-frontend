@@ -1,5 +1,6 @@
 import { AxiosInstance, AxiosError } from "axios";
 import { toast } from "react-hot-toast";
+import { clearToken } from "../../auth/tokenStorage";
 
 // This stops the app from showing multiple pop-ups at the same time if multiple requests fail at once
 let isRedirecting = false;
@@ -75,7 +76,7 @@ export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path:
                         isRedirecting = true;
                         
                         // Clean up old login token safely
-                        localStorage.removeItem("authToken");
+                        clearToken();
                         
                         // Show the exact toast message requested by the issue
                         toast.error("Session expired, redirecting to login...");

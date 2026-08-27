@@ -3,6 +3,7 @@ import { AlertTriangle, Download, Trash2 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { apiClient } from '@services/api/client';
 import { useToast } from '../../../context/ToastContext';
+import { clearToken } from '../../../services/auth/tokenStorage';
 
 interface DangerZoneProps {
   userEmail: string;
@@ -18,7 +19,7 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
     if (confirmEmail !== userEmail) return;
     const ok = await save({ url: '/api/users/me', method: 'delete' });
     if (ok) {
-      localStorage.removeItem('authToken');
+      clearToken();
       window.location.href = '/';
     }
   };

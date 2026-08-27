@@ -79,13 +79,13 @@ const ShipmentDetail: React.FC = () => {
   };
 
   const handleUpdateStatus = () => {
-    console.log("Update status clicked");
+    // TODO: wire to status update API when endpoint is available
   };
-  const handleUpdatePriority = (priority: "URGENT" | "STANDARD" | "ECONOMY") => {
-    console.log("Update priority clicked", priority);
+  const handleUpdatePriority = (_priority: "URGENT" | "STANDARD" | "ECONOMY") => {
+    // TODO: wire to priority update API when endpoint is available
   };
   const handleTrack = () => {
-    console.log("Track clicked");
+    // TODO: wire to tracking flow when implemented
   };
   const handlePrint = () => {
     setIsPrinting(true);
@@ -371,8 +371,8 @@ const ShipmentDetail: React.FC = () => {
           <DeliveryConfirmation
             shipmentId={shipmentHeaderData.shipmentId}
             status={shipmentHeaderData.status}
-            onConfirm={async (confirmId, rating, feedback) => {
-              console.log("Delivery confirmed", { confirmId, rating, feedback });
+            onConfirm={async (_confirmId, _rating, _feedback) => {
+              // TODO: wire to delivery confirmation API when endpoint is available
             }}
           />
         )}
