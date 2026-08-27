@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuthContext } from '@context/AuthContext';
 import { can } from '@utils/rbac';
 import PageSkeleton from '../../components/ui/PageSkeleton';
-import Breadcrumb from '../../components/ui/Breadcrumb';
+import Breadcrumb from '@components/common/Breadcrumb';
 
 const ProfileSection = lazy(() => import('./sections/ProfileSection'));
 const CompanyProfileSection = lazy(() => import('./CompanyProfile/CompanyProfile'));
@@ -65,8 +65,9 @@ const Settings: React.FC = () => {
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Settings', href: '/dashboard/settings' },
-          { label: activeTabLabel },
         ]}
+        current={activeTabLabel}
+        className="mb-4"
       />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Settings</h1>
