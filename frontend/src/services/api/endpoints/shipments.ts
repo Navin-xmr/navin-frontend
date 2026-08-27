@@ -69,6 +69,10 @@ export interface GetShipmentsParams {
     cursor?: string;
     limit?: number;
     role?: string;
+    /** Inclusive lower bound for filtering by expected delivery date (YYYY-MM-DD). */
+    expectedDeliveryFrom?: string;
+    /** Inclusive upper bound for filtering by expected delivery date (YYYY-MM-DD). */
+    expectedDeliveryTo?: string;
 }
 
 export interface NoteResponse {

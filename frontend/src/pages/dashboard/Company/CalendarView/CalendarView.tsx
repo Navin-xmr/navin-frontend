@@ -1,16 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Breadcrumb from '@components/common/Breadcrumb';
+import { shipmentApi } from '../../../../services/api/endpoints/shipments';
 import type { Shipment } from '../../../../api/shipmentApi';
 
 interface CalendarShipment extends Shipment {
   expectedDelivery?: string;
-}
-
-interface BackendCalendarResponse {
-  data?: Array<Record<string, unknown>>;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -45,10 +41,11 @@ export const CalendarView: React.FC = () => {
     const from = formatYMD(new Date(y, m, 1));
     const to = formatYMD(new Date(y, m + 1, 0));
     try {
-      const res = await axios.get<BackendCalendarResponse>('/api/shipments', {
-        params: { expectedDeliveryFrom: from, expectedDeliveryTo: to },
+      const res = await shipmentApi.getAll({
+        expectedDeliveryFrom: from,
+        expectedDeliveryTo: to,
       });
-      const items = (res.data?.data ?? []) as Array<Record<string, unknown>>;
+      const items = res.data as Array<Record<string, unknown>>;
       setShipments(
         items.map((s) => ({
           id: String(s.id),
