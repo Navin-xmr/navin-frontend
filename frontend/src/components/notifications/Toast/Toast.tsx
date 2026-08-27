@@ -35,8 +35,13 @@ export const Toast: React.FC<ToastProps> = ({
     if (navigateTo) navigate(navigateTo);
   };
 
+  const isAssertive = type === "error";
+
   return (
     <div
+      role={isAssertive ? "alert" : "status"}
+      aria-live={isAssertive ? "assertive" : "polite"}
+      aria-atomic="true"
       onClick={handleClick}
       className={`
         pointer-events-auto flex items-center justify-between min-w-[320px] max-w-md 
