@@ -1,4 +1,5 @@
 import { AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import { getToken, clearToken } from "../../auth/tokenStorage";
 
 /**
  * Validates that a string looks like a JWT (3 dot-separated base64 segments).
@@ -20,14 +21,14 @@ const isValidJWT = (token: string): boolean => {
 export const setupAuthInterceptor = (client: AxiosInstance) => {
     client.interceptors.request.use(
         (config: InternalAxiosRequestConfig) => {
-            const token = localStorage.getItem("authToken");
+            const token = getToken();
 
             if (token && config.headers) {
                 if (isValidJWT(token)) {
                     config.headers.Authorization = `Bearer ${token}`;
                 } else {
                     // Token is malformed or corrupted — clear it to prevent 401 loops
-                    localStorage.removeItem("authToken");
+                    clearToken();
                     // Only redirect if not already on login page to avoid infinite loops
                     if (!window.location.pathname.includes("/login")) {
                         window.location.href = "/login";
