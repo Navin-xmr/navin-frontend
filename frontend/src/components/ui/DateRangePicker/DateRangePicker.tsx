@@ -166,11 +166,11 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
               {day}
             </div>
           ))}
-          {days.map((date, index) => {
+          {days.map((date) => {
             const isCurrentMonth = date.getMonth() === month.getMonth();
             return (
               <button
-                key={index}
+                key={date.toISOString()}
                 onClick={() => handleDateClick(date)}
                 onMouseEnter={() => handleDateHover(date)}
                 onMouseLeave={() => setHoveredDate(null)}

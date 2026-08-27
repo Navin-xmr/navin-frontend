@@ -728,9 +728,9 @@ const NotificationsPage = () => {
               },
               { icon: <Settings size={20} />, label: "Settings" },
               { icon: <UserCircle size={20} />, label: "Profile" },
-            ].map(({ icon, active, label }, i) => (
+            ].map(({ icon, active, label }) => (
               <button
-                key={i}
+                key={label}
                 aria-label={label}
                 className={`w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none ${active ? "bg-[#2563eb] text-white" : "bg-[#1f2937] text-[#9ca3af] hover:bg-[#374151]"}`}
               >
@@ -913,7 +913,7 @@ const NotificationsPage = () => {
           {isLoading && notificationsList.length === 0 ? (
             <>{Array.from({ length: 4 }).map((_, index) => (
               <div
-                key={index}
+                key={`notification-skeleton-${index}`}
                 className="border border-[#374151] rounded-xl p-5 animate-pulse bg-[#1b2430]"
               >
                 <div className="flex gap-4 mb-4">

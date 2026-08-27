@@ -45,7 +45,7 @@ function FAQSection() {
                             const isOpen = openIndex === index;
                             return (
                                 <div
-                                    key={index}
+                                    key={item.key}
                                     className={`group bg-background-card/60 backdrop-blur-lg border rounded-2xl transition-all duration-300 ${
                                         isOpen 
                                             ? 'border-primary-light shadow-glow-blue scale-[1.02]' 
