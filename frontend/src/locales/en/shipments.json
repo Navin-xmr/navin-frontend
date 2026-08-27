@@ -64,6 +64,8 @@
     "milestoneTitlePart2": "TIMELINE",
     "statusUpdated": "Shipment status updated to {{status}}",
     "disputeSubmitted": "Dispute submitted. Reference number: {{ref}}",
-    "offlineBanner": "Upload Proof requires an internet connection."
+    "offlineBanner": "Upload Proof requires an internet connection.",
+    "unknownId": "Unknown Shipment",
+    "trackingUnavailable": "Tracking number unavailable"
   }
 }

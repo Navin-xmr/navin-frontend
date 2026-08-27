@@ -190,8 +190,7 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
                     stackId="cost"
                     fill={segment.color}
                     radius={segment.key === 'insurance' ? [0, 4, 4, 0] : [0, 0, 0, 0]}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onClick={(barData: any) => openRoute(String(barData.route || barData.payload?.route))}
+                    onClick={(barData: { route?: string; payload?: { route?: string } }) => openRoute(String(barData.route ?? barData.payload?.route ?? ''))}
                     className="cursor-pointer"
                   />
                 ))}
