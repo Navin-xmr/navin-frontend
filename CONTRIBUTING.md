@@ -344,6 +344,18 @@ Keep PRs focused. A PR for a single issue should not touch unrelated files.
 
 ---
 
+## Release Process
+
+`package.json`'s `version` field tracks the app's current released state and
+should be bumped to match the latest entry in the in-app changelog
+(`src/pages/WhatsNew/WhatsNewPage.tsx`) whenever a new release is shipped.
+
+`VITE_APP_VERSION` (used for Sentry release tracking, see `src/main.tsx`) is a
+separate, manually-set CI build value — it is **not** currently derived from
+`package.json`, so updating one does not automatically update the other.
+
+---
+
 ## Getting Help
 
 - **Issues & Tasks**: See [ISSUES](https://github.com/Navin-xmr/navin-frontend/issues) for all open work

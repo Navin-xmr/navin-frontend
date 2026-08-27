@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Settlement, SettlementDetail } from "@services/api/endpoints/settlements";
 import { useFocusTrap } from "@hooks/useFocusTrap";
 
-interface PaymentDetailModalProps {
+interface SettlementDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     settlement: Settlement | null;
@@ -22,13 +22,13 @@ const getStellarExplorerUrl = (hash?: string) => {
     return `https://stellar.expert/explorer/public/tx/${hash}`;
 };
 
-export default function PaymentDetailModal({
+export default function SettlementDetailModal({
     isOpen,
     onClose,
     settlement,
     detail,
     isLoading,
-}: PaymentDetailModalProps) {
+}: SettlementDetailModalProps) {
     const dialogRef = useRef<HTMLDivElement>(null);
     useFocusTrap(dialogRef, isOpen, onClose);
 

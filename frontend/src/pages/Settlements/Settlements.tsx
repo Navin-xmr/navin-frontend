@@ -16,7 +16,7 @@ import {
   SettlementStatus,
   SettlementDetail,
 } from "@services/api/endpoints/settlements";
-import { PaymentDetailModal } from "./components";
+import { SettlementDetailModal } from "./components";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
 import { can } from "../../utils/rbac";
 import { useAuthContext } from "../../context/AuthContext";
@@ -582,7 +582,7 @@ export default function Settlements() {
             </div>
           </div>
 
-          <PaymentDetailModal
+          <SettlementDetailModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             settlement={selected}
