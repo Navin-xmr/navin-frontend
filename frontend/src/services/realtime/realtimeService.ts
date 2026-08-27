@@ -1,4 +1,5 @@
 import type { RealtimeEvent, RealtimeEventType } from '../../types/realtimeEvents';
+import { apiClient } from '../api/client';
 
 export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
 
@@ -92,10 +93,8 @@ export class RealtimeService {
 
   private async poll(): Promise<void> {
     try {
-      const res = await fetch('/api/events/poll', { credentials: 'include' });
-      if (!res.ok) return;
-      const events = (await res.json()) as RealtimeEvent[];
-      events.forEach((ev) => this.emit(ev));
+      const res = await apiClient.get<RealtimeEvent[]>('/api/events/poll');
+      res.data.forEach((ev) => this.emit(ev));
       this.setStatus('connected');
     } catch {
       this.setStatus('disconnected');
