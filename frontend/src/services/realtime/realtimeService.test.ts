@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { RealtimeService } from './realtimeService';
+import { apiClient } from '../api/client';
 import type { RealtimeEvent } from '../../types/realtimeEvents';
+
+vi.mock('../api/client', () => ({
+  apiClient: { get: vi.fn() },
+}));
 
 // Minimal EventSource mock
 class MockEventSource {
@@ -37,6 +42,7 @@ describe('RealtimeService', () => {
   beforeEach(() => {
     MockEventSource.instance = null;
     vi.stubGlobal('EventSource', MockEventSource);
+    vi.mocked(apiClient.get).mockReset().mockResolvedValue({ data: [] });
     service = new RealtimeService();
   });
 
@@ -112,8 +118,6 @@ describe('RealtimeService', () => {
 
   it('falls back to polling after MAX_RETRIES errors', () => {
     vi.useFakeTimers();
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
-    vi.stubGlobal('fetch', fetchMock);
 
     service.connect();
     // Exhaust all 3 retries + trigger the 4th error that switches to fallback
@@ -203,8 +207,6 @@ describe('RealtimeService', () => {
   it('falls back to polling immediately when EventSource is unavailable', () => {
     vi.unstubAllGlobals();
     vi.useFakeTimers();
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
-    vi.stubGlobal('fetch', fetchMock);
 
     service.connect();
 
@@ -226,8 +228,7 @@ describe('RealtimeService', () => {
       },
     };
     vi.unstubAllGlobals();
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [event] });
-    vi.stubGlobal('fetch', fetchMock);
+    vi.mocked(apiClient.get).mockResolvedValue({ data: [event] });
     const handler = vi.fn();
     service.subscribe('notification:new', handler);
 
@@ -235,7 +236,7 @@ describe('RealtimeService', () => {
 
     await vi.advanceTimersByTimeAsync(15_000);
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/events/poll', { credentials: 'include' });
+    expect(apiClient.get).toHaveBeenCalledWith('/api/events/poll');
     expect(handler).toHaveBeenCalledWith(event);
     expect(service.status).toBe('connected');
   });
@@ -243,8 +244,7 @@ describe('RealtimeService', () => {
   it('poll() sets status to disconnected when the request fails', async () => {
     vi.useFakeTimers();
     vi.unstubAllGlobals();
-    const fetchMock = vi.fn().mockRejectedValue(new Error('network down'));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.mocked(apiClient.get).mockRejectedValue(new Error('network down'));
 
     service.connect();
 
