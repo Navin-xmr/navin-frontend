@@ -233,7 +233,7 @@ const ExceptionDashboard: React.FC = () => {
               <select
                 value={filters.type}
                 onChange={(e) => setFilters((current) => ({ ...current, type: e.target.value as FilterState['type'] }))}
-                className="bg-transparent text-sm text-white outline-none"
+                className="bg-transparent text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 rounded"
               >
                 <option value="ALL">All types</option>
                 {EXCEPTION_TYPES.map((type) => (
@@ -246,7 +246,7 @@ const ExceptionDashboard: React.FC = () => {
               <select
                 value={filters.dateRange}
                 onChange={(e) => setFilters((current) => ({ ...current, dateRange: e.target.value as FilterState['dateRange'] }))}
-                className="bg-transparent text-sm text-white outline-none"
+                className="bg-transparent text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 rounded"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="14d">Last 14 days</option>
@@ -260,7 +260,7 @@ const ExceptionDashboard: React.FC = () => {
                 value={filters.route}
                 onChange={(e) => setFilters((current) => ({ ...current, route: e.target.value }))}
                 placeholder="Route"
-                className="bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
+                className="bg-transparent text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 rounded placeholder:text-slate-500"
               />
             </label>
           </div>
@@ -321,7 +321,7 @@ const ExceptionDashboard: React.FC = () => {
                               onChange={(e) => setNote(e.target.value)}
                               rows={2}
                               placeholder="Add an update"
-                              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none"
+                              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:border-cyan-400"
                             />
                             <button
                               type="button"
