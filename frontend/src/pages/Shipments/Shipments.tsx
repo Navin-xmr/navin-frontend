@@ -18,7 +18,6 @@ import ShipmentFilters, {
   type ShipmentStatus,
 } from './ShipmentFilters';
 import { useVirtualShipments } from './hooks/useVirtualShipments';
-import './Shipments.css';
 
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
@@ -326,9 +325,9 @@ const Shipments: React.FC = () => {
   const totalSize = virtualizer.getTotalSize();
 
   return (
-    <div className="shipments-page">
-      <div className="shipments-header">
-        <h1>Shipments</h1>
+    <div className="w-full p-6">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
+        <h1 className="text-2xl font-semibold m-0">Shipments</h1>
         <div className="flex items-center gap-3">
           <div
             className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
@@ -359,7 +358,7 @@ const Shipments: React.FC = () => {
 
           <button
             type="button"
-            className="export-csv-btn"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-transparent border border-[rgba(98,255,255,0.3)] rounded-lg text-[#62ffff] text-sm font-medium cursor-pointer transition-colors enabled:hover:bg-[rgba(98,255,255,0.08)] enabled:hover:border-[rgba(98,255,255,0.5)] disabled:opacity-[0.45] disabled:cursor-not-allowed"
             onClick={handleExportCSV}
             disabled={isExporting || filteredShipments.length === 0}
             aria-label="Export shipments to CSV"
@@ -425,28 +424,35 @@ const Shipments: React.FC = () => {
           </div>
 
           {error ? (
-            <div className="shipments-error" role="alert">{error}</div>
+            <div className="py-8 px-6 text-center text-[var(--text-secondary)]" role="alert">{error}</div>
           ) : isEmpty ? (
-            <div className="shipments-empty">
+            <div className="py-8 px-6 text-center text-[var(--text-secondary)]">
               <h3>No shipments available</h3>
               <p>There are no shipments to show.</p>
             </div>
           ) : isFilterEmpty ? (
-            <div className="shipments-empty">
+            <div className="py-8 px-6 text-center text-[var(--text-secondary)]">
               <h3>No results found</h3>
               <p>No shipments match the selected filters.</p>
-              <button type="button" className="verify-button" onClick={clearFilters}>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-transparent border border-[rgba(98,255,255,0.3)] rounded-lg text-[#62ffff] text-sm font-medium cursor-pointer transition-colors hover:bg-[rgba(98,255,255,0.08)] hover:border-[rgba(98,255,255,0.5)]"
+                onClick={clearFilters}
+              >
                 Clear Filters
               </button>
             </div>
           ) : (
             <>
-              <div className="shipments-summary">
+              <div className="text-sm text-[#94a3b8] mb-3">
                 Showing {filteredShipments.length}
                 {isAnyFilterActive ? ` of ${shipments.length} loaded` : ` of ${total}`} shipments
               </div>
 
-              <table className="shipments-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+              <table
+                className="w-full mt-4 border-collapse text-inherit [&_th]:px-3 [&_th]:py-2.5 [&_th]:border-b [&_th]:border-[var(--border-color)] [&_th]:text-left [&_th]:leading-[1.35] [&_th]:align-middle [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.02em] [&_th]:text-xs [&_th]:whitespace-nowrap [&_td]:px-3 [&_td]:py-2.5 [&_td]:border-b [&_td]:border-[var(--border-color)] [&_td]:text-left [&_td]:leading-[1.35] [&_td]:align-middle [&_td]:[overflow-wrap:anywhere]"
+                style={{ tableLayout: 'fixed', width: '100%' }}
+              >
                 <thead>
                   <tr>
                     <th style={{ width: '40px' }}>
@@ -478,7 +484,7 @@ const Shipments: React.FC = () => {
                 style={{ height: '500px', overflowY: 'auto', position: 'relative' }}
               >
                 <table
-                  className="shipments-table"
+                  className="w-full mt-4 border-collapse text-inherit [&_th]:px-3 [&_th]:py-2.5 [&_th]:border-b [&_th]:border-[var(--border-color)] [&_th]:text-left [&_th]:leading-[1.35] [&_th]:align-middle [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.02em] [&_th]:text-xs [&_th]:whitespace-nowrap [&_td]:px-3 [&_td]:py-2.5 [&_td]:border-b [&_td]:border-[var(--border-color)] [&_td]:text-left [&_td]:leading-[1.35] [&_td]:align-middle [&_td]:[overflow-wrap:anywhere]"
                   style={{ tableLayout: 'fixed', width: '100%' }}
                   aria-label="Shipments list"
                 >
@@ -541,7 +547,7 @@ const Shipments: React.FC = () => {
                           <td>
                             <button
                               type="button"
-                              className="verify-button"
+                              className="rounded-lg bg-[#62ffff] px-3 py-1.5 text-sm font-semibold text-black transition hover:bg-[#4ae8e8]"
                               onClick={() => handleRowClick(shipment.id, virtualRow.index)}
                             >
                               View
@@ -555,7 +561,7 @@ const Shipments: React.FC = () => {
               </div>
 
               {isLoading && (
-                <div className="shipments-loading" aria-live="polite">
+                <div className="py-8 px-6 text-center text-[var(--text-secondary)]" aria-live="polite">
                   Loading more shipments...
                 </div>
               )}
