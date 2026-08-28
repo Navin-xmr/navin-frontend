@@ -71,7 +71,7 @@ describe('Shipments', () => {
     await import('@testing-library/user-event').then(async ({ default: userEvent }) => {
       const user = userEvent.setup();
 
-      await user.click(screen.getByRole('button', { name: /filters/i }));
+      await user.click(screen.getByRole('button', { name: /^filters$/i }));
 
       const originInput = await screen.findByLabelText('Origin City');
 
