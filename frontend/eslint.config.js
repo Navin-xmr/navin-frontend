@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import globals from 'globals'
+import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from '@typescript-eslint/eslint-plugin'
@@ -17,6 +18,7 @@ export default defineConfig([
     ],
     plugins: {
       '@typescript-eslint': tseslint,
+      react,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -28,6 +30,9 @@ export default defineConfig([
         sourceType: 'module',
       },
     },
+    settings: {
+      react: { version: 'detect' },
+    },
     rules: {
       // TypeScript-specific rules
       '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
@@ -36,6 +41,9 @@ export default defineConfig([
       'no-undef': 'off', // Handled by TypeScript compiler
       // Prevent accidental console statements in production code
       'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // Require rel="noopener noreferrer" on target="_blank" links (prevents
+      // reverse tabnabbing / referrer leakage). See issue #717.
+      'react/jsx-no-target-blank': ['error', { enforceDynamicLinks: 'always' }],
     },
   },
   // Allow all console methods in test files
