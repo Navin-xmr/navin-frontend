@@ -1,6 +1,17 @@
 # Somzilla issues document
 somzilla.md
 
-# Playwright
+# Test snapshots
+**/__snapshots__/
+*.snap
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Vitest cache
+.vitest-cache/
+
+# Test results
 test-results/
 playwright-report/
