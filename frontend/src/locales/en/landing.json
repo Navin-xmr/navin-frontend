@@ -1,0 +1,111 @@
+{
+  "hero": {
+    "titleLine1": "TRANSPARENT",
+    "titleLine2": "TRACKING",
+    "subtitle": "Our platform uses next gen tech to make your deliveries faster and more reliable. Every step is visible, every shipment secure.",
+    "cta": "Track Your Shipment"
+  },
+  "logoStrip": {
+    "poweredBy": "Powered by & Trusted with"
+  },
+  "whyNavin": {
+    "heading": "Why",
+    "headingHighlight": "Navin?",
+    "subtitle": "Blockchain-powered logistics that puts transparency, speed, and security first.",
+    "transparency": {
+      "title": "Total Transparency",
+      "description": "See your shipments journey, every step of the way."
+    },
+    "alerts": {
+      "title": "Real Time Alerts",
+      "description": "Know instantly if there is a delay or issue."
+    },
+    "deliveries": {
+      "title": "Safe Deliveries",
+      "description": "Tamper proof technology prevents fraud and errors."
+    },
+    "fastService": {
+      "title": "Faster Service",
+      "description": "Automated processes mean quicker, smoother deliveries."
+    }
+  },
+  "coreFeatures": {
+    "heading": "Core",
+    "headingHighlight": "Features",
+    "subtitle": "Built on Stellar blockchain for transparency, security, and automation",
+    "chartAriaLabel": "Illustrative visualization of on-chain shipment activity",
+    "tokenizedAssets": {
+      "label": "Tokenized Assets",
+      "description": "Every shipment is assigned a unique digital identity on the Stellar blockchain, giving you full on-chain visibility from pickup to delivery."
+    },
+    "iotMilestones": {
+      "label": "IoT-Verified Milestones",
+      "description": "Real-time location and environmental data — temperature, humidity — are hashed and anchored on-chain to prevent tampering at every checkpoint."
+    },
+    "smartSettlements": {
+      "label": "Smart Settlements",
+      "description": "Funds are locked in escrow and released automatically via smart contract the instant a delivery is cryptographically verified."
+    },
+    "parityDashboards": {
+      "label": "Parity Dashboards",
+      "description": "A single source of truth for Company, Carrier, Customer, and Admin roles — each with tailored, permissioned visibility. No referee, no player conflict."
+    },
+    "cta": "Track Your Shipment"
+  },
+  "howItWorks": {
+    "headingPrefix": "How",
+    "headingHighlight": "Navin",
+    "headingSuffix": "Works",
+    "subtitle": "Simple, transparent, and blockchain-powered. Track your shipments from pickup to delivery.",
+    "pickup": {
+      "title": "Smart Pickup",
+      "description": "We pick up your package from your chosen location or partner hub and log it into our system for full transparency from the start."
+    },
+    "tracking": {
+      "title": "Live Tracking",
+      "description": "Track your shipment in real time with instant updates at every milestone—from dispatch to delivery. No more wondering where your package is."
+    },
+    "delivery": {
+      "title": "Secure Delivery",
+      "description": "Once your package arrives, you'll receive a secure delivery confirmation—complete with proof of hand-off. Peace of mind, guaranteed."
+    }
+  },
+  "faq": {
+    "heading": "Frequently Asked",
+    "headingHighlight": "Questions",
+    "subtitle": "Everything you need to know about Navin's blockchain-powered logistics platform.",
+    "whatIsNavin": {
+      "question": "What is Navin?",
+      "answer": "Navin is a next-generation logistics platform that combines blockchain technology with IoT tracking to provide transparent, tamper-proof shipment management. Every milestone is recorded on-chain, ensuring accountability from pickup to delivery."
+    },
+    "stellarPayments": {
+      "question": "How do Stellar payments work on Navin?",
+      "answer": "Navin integrates with the Stellar blockchain to handle payments via smart contracts. When a shipment is confirmed, funds are held in escrow and automatically released to the logistics provider upon successful delivery—no manual processing required."
+    },
+    "iotTracking": {
+      "question": "How does IoT tracking work?",
+      "answer": "Our IoT sensors attached to shipments continuously report GPS location, temperature, humidity, and shock events. This data is logged in real-time and anchored to the blockchain, giving you a verifiable, tamper-proof record of your shipment's journey."
+    },
+    "getStarted": {
+      "question": "How do I get started with Navin?",
+      "answer": "Simply sign up for an account, choose your role (logistics company or customer), and you'll have immediate access to the dashboard. You can create your first shipment in minutes—our onboarding tour will guide you through each step."
+    },
+    "dataSecure": {
+      "question": "Is my data secure on Navin?",
+      "answer": "Yes. All sensitive data is encrypted in transit and at rest. Shipment records are anchored to the Stellar blockchain, making them immutable and auditable. Access is controlled through role-based permissions, ensuring only authorized parties can view or modify shipment details."
+    },
+    "walletsSupported": {
+      "question": "Which wallets are supported?",
+      "answer": "Navin supports Freighter and Albedo out of the box, with LOBSTR available via WalletConnect pairing. You can connect your wallet directly from the dashboard to manage payments and view on-chain transaction history."
+    }
+  },
+  "footer": {
+    "heading": "Get Started",
+    "headingHighlight": "Today",
+    "subtitle": "Join 500+ enterprise leaders. Get the latest on blockchain logistics and zero trust supply chain management.",
+    "emailPlaceholder": "Enter your Email",
+    "subscribe": "Subscribe",
+    "tagline": "The New Standard in Logistics Security",
+    "copyright": "Navin. All rights reserved."
+  }
+}

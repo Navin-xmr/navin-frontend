@@ -1,5 +1,8 @@
 # Navin Frontend
 
+> 🚨 **Contributors:** All PRs must target the `dev` branch, not `main`.  
+> See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
 **Navin** is a blockchain-powered logistics platform that improves supply chain visibility for enterprises through tokenized shipments, immutable milestone tracking, and automated settlements.
 By creating a zero-trust interface between logistics providers and their clients, Navin ensures both parties access identical real-time data — removing information asymmetry and enabling seamless, dispute-free operations.
 
@@ -25,18 +28,7 @@ This repository is the **React frontend** of the Navin platform — built with *
 | **HTTP Client** | [Axios](https://axios-http.com/) | API communication with the Navin backend |
 | **Blockchain** | [Stellar Soroban](https://soroban.stellar.org/) | Smart contract interaction for payments and milestones |
 
-> **Why TypeScript + Tailwind + pnpm?**
-> 
-> **TypeScript:** The Soroban Stellar SDK returns complex XDR types and contract client objects.
-> TypeScript catches type mismatches at build time — critical when a wrong parameter type means a failed blockchain transaction.
-> It also makes the codebase self-documenting for open-source contributors picking up issues.
->
-> **Tailwind CSS:** Utility-first styling eliminates CSS file sprawl and enforces consistent design tokens.
-> With our design system configured in `tailwind.config.js`, every component uses the same colors, spacing, and typography.
-> Smaller bundle sizes through automatic tree-shaking of unused styles.
->
-> **pnpm:** 2x faster installs than npm, ~70% less disk space, and strict dependency resolution that prevents phantom dependencies.
-> Content-addressable storage means one copy of each package globally, with symlinks to projects.
+> **Tech Stack Rationale:** See [Technology Choices](docs/production/technology-choices.md) for detailed explanation of TypeScript, Tailwind CSS, and pnpm.
 
 ---
 
@@ -52,6 +44,16 @@ This repository is the **React frontend** of the Navin platform — built with *
 | **Shipment Detail View** | Full breakdown of a single shipment — milestones, IoT sensor data, payment status, and delivery proof |
 | **Notification System** | Real-time alerts for shipment updates, delays, and payment events |
 | **Responsive Interface** | Works across desktop, tablet, and mobile |
+
+---
+
+## Production Documentation
+
+For deployment and configuration guidance:
+
+- **[Environment Setup Guide](docs/production/environment-setup.md)** - Configure environment variables for all deployment platforms
+- **[Legacy CSS Migration Guide](docs/production/legacy-css-migration.md)** - Migrate components from CSS to Tailwind
+- **[Technology Choices](docs/production/technology-choices.md)** - Why TypeScript, Tailwind CSS, and pnpm
 
 ---
 
@@ -97,11 +99,9 @@ cp .env.example .env
 # Install dependencies with pnpm
 pnpm install
 
-# Set up environment variables
-cp .env.example .env
-
 # Start the development server
 pnpm run dev
+```
 
 Your app runs at `http://localhost:5173`.
 
@@ -122,6 +122,13 @@ pnpm run test:watch   # Run tests in watch mode
 
 ## Contributing
 
+> 🌿 **Git Flow Workflow**  
+> We use a `dev` → `main` workflow:
+> - **`dev`** = Active development (all PRs go here)
+> - **`main`** = Production-ready code (Vercel deploys from here)
+> 
+> **Never submit PRs to `main` directly.** All feature work goes to `dev` first.
+
 We welcome contributors of all experience levels — whether you're building your first open-source component or you're a seasoned TypeScript developer.
 
 Read our [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide on branching, commits, PRs, and our review process.
@@ -129,7 +136,8 @@ Read our [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide on branching, com
 Quick overview:
 - Browse open issues on the [Issues page](https://github.com/Navin-xmr/navin-frontend/issues)
 - Comment on an issue and wait to be assigned before starting
-- Create a branch and implement the feature
+- **Create your branch from `dev`** (not `main`)
+- Implement the feature and **ensure your PR targets `dev`**
 - All frontend PRs **must include a screenshot** of the UI change
 - Use **pnpm** for all package management commands (not npm or yarn)
 - Use **Tailwind CSS utility classes** for styling (no vanilla CSS files for new components)

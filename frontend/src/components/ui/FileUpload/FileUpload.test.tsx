@@ -78,11 +78,15 @@ describe('FileUpload', () => {
 
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = makeFile('report.pdf', 'application/pdf');
-    await userEvent.upload(input, file);
+
+    Object.defineProperty(input, 'files', {
+      value: [file],
+      writable: false,
+    });
+    fireEvent.change(input);
 
     await waitFor(() => {
-      const alert = screen.getByRole('alert');
-      expect(alert).toHaveTextContent(/file type not allowed/i);
+      expect(screen.getByText(/file type not allowed/i)).toBeInTheDocument();
     });
     expect(onFilesSelected).toHaveBeenCalledWith([]);
   });

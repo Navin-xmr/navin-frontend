@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { AlertTriangle, CheckCircle2, DollarSign, Truck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { activityApi, type ActivityEvent } from '../../../../api/activityApi';
 
 const PAGE_LIMIT = 20;
@@ -44,7 +45,7 @@ const formatRelativeTime = (isoTs: string): string => {
     const absSeconds = Math.abs(diffSeconds);
 
     const rtf =
-        typeof Intl !== 'undefined' && (Intl as any).RelativeTimeFormat
+        typeof Intl !== 'undefined' && typeof Intl.RelativeTimeFormat !== 'undefined'
             ? new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
             : null;
 
@@ -95,13 +96,14 @@ const getDateGroup = (isoTs: string): 'today' | 'yesterday' | 'earlier' => {
     return 'earlier';
 };
 
-const groupLabel: Record<'today' | 'yesterday' | 'earlier', string> = {
-    today: 'Today',
-    yesterday: 'Yesterday',
-    earlier: 'Earlier',
+const groupLabelKey: Record<'today' | 'yesterday' | 'earlier', string> = {
+    today: 'recentActivity.groupToday',
+    yesterday: 'recentActivity.groupYesterday',
+    earlier: 'recentActivity.groupEarlier',
 };
 
 const RecentActivityFeed: React.FC = () => {
+    const { t } = useTranslation('dashboard');
     const [items, setItems] = useState<ActivityEvent[]>([]);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -152,8 +154,8 @@ const RecentActivityFeed: React.FC = () => {
     };
 
     useEffect(() => {
-        void fetchPage({ reset: true });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        const timer = setTimeout(() => { void fetchPage({ reset: true }); }, 0);
+        return () => clearTimeout(timer);
     }, []);
 
     // Auto-refresh every 60 seconds.
@@ -167,7 +169,6 @@ const RecentActivityFeed: React.FC = () => {
         return () => {
             if (refreshIntervalRef.current) window.clearInterval(refreshIntervalRef.current);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Load-more on scroll (best-effort).
@@ -187,7 +188,6 @@ const RecentActivityFeed: React.FC = () => {
 
         observer.observe(el);
         return () => observer.disconnect();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [hasMore, isLoadingMore, isInitialLoading]);
 
     const grouped = useMemo(() => {
@@ -217,14 +217,14 @@ const RecentActivityFeed: React.FC = () => {
             <div className="px-6 py-4 border-b border-[rgba(30,41,59,0.5)]">
                 <div className="flex justify-between items-center gap-4">
                     <h2 className="text-[13px] font-semibold text-[#64748b] uppercase tracking-[0.05em] m-0 max-md:text-lg max-md:font-bold max-md:text-white max-md:normal-case max-md:tracking-normal">
-                        Recent Activity
+                        {t('recentActivity.heading')}
                     </h2>
-                    <div className="text-xs text-[#94a3b8] font-medium">Live updates</div>
+                    <div className="text-xs text-[#94a3b8] font-medium">{t('recentActivity.liveUpdates')}</div>
                 </div>
             </div>
 
             {isInitialLoading ? (
-                <div className="px-6 py-4" aria-label="Recent activity loading">
+                <div className="px-6 py-4" aria-label={t('recentActivity.loadingAriaLabel')}>
                     {Array.from({ length: SKELETON_COUNT }).map((_, idx) => (
                         <div key={idx} className="flex items-center gap-3 py-3">
                             <div className="w-8 h-8 rounded-md bg-[rgba(148,163,184,0.12)] animate-shimmer" />
@@ -239,20 +239,20 @@ const RecentActivityFeed: React.FC = () => {
             ) : error ? (
                 <div className="px-6 py-10 flex flex-col items-center text-center gap-2">
                     <AlertTriangle size={44} className="text-[#ef4444]" />
-                    <div className="text-sm font-semibold text-white">Failed to load activity</div>
-                    <div className="text-xs text-[#94a3b8]">Please try again shortly.</div>
+                    <div className="text-sm font-semibold text-white">{t('recentActivity.errorTitle')}</div>
+                    <div className="text-xs text-[#94a3b8]">{t('recentActivity.errorBody')}</div>
                     <button
                         type="button"
                         className="mt-2 bg-accent-blue text-white border-none rounded-lg px-3.5 py-2 text-[13px] font-semibold cursor-pointer"
                         onClick={() => void fetchPage({ reset: true })}
                     >
-                        Retry
+                        {t('recentActivity.retry')}
                     </button>
                 </div>
             ) : !hasAny ? (
                 <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-                    <h3 className="text-lg font-semibold">No recent activity</h3>
-                    <p className="text-text-secondary text-sm max-w-[420px]">When shipments update, you’ll see events here.</p>
+                    <h3 className="text-lg font-semibold">{t('recentActivity.emptyTitle')}</h3>
+                    <p className="text-text-secondary text-sm max-w-[420px]">{t('recentActivity.emptyBody')}</p>
                 </div>
             ) : (
                 <div className="px-6 py-2">
@@ -263,7 +263,7 @@ const RecentActivityFeed: React.FC = () => {
                         return (
                             <div key={bucketKey} className="mb-2">
                                 <div className="px-1 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-[0.05em] text-[#64748b]">
-                                    {groupLabel[bucketKey]}
+                                    {t(groupLabelKey[bucketKey])}
                                 </div>
                                 <div className="flex flex-col gap-1">
                                     {bucketItems.map((evt) => {
@@ -273,7 +273,7 @@ const RecentActivityFeed: React.FC = () => {
                                             evt.description ??
                                             evt.message ??
                                             evt.event ??
-                                            (evt.type ? `Event: ${evt.type}` : 'Shipment update');
+                                            (evt.type ? t('recentActivity.eventFallback', { type: evt.type }) : t('recentActivity.shipmentUpdateFallback'));
 
                                         return (
                                             <div key={evt.id} className="flex items-start justify-between gap-4 py-2.5">
@@ -291,10 +291,10 @@ const RecentActivityFeed: React.FC = () => {
                                                                     to={`/shipments/${encodeURIComponent(String(shipmentId))}`}
                                                                     className="text-[#3b82f6] font-semibold no-underline hover:underline"
                                                                 >
-                                                                    Shipment #{String(shipmentId)}
+                                                                    {t('recentActivity.shipmentLink', { id: String(shipmentId) })}
                                                                 </Link>
                                                             ) : (
-                                                                <span className="text-[#94a3b8]">Shipment details unavailable</span>
+                                                                <span className="text-[#94a3b8]">{t('recentActivity.shipmentUnavailable')}</span>
                                                             )}
                                                         </div>
                                                     </div>
@@ -321,10 +321,10 @@ const RecentActivityFeed: React.FC = () => {
                                 disabled={isLoadingMore}
                                 className="border border-border bg-background-elevated text-[#d1d5db] rounded-lg cursor-pointer text-xs font-semibold inline-flex items-center gap-1.5 px-3 py-2 disabled:opacity-45 disabled:cursor-not-allowed transition-colors hover:not-disabled:bg-[#1a2030]"
                             >
-                                {isLoadingMore ? 'Loading…' : 'Load more'}
+                                {isLoadingMore ? t('recentActivity.loading') : t('recentActivity.loadMore')}
                             </button>
                         ) : (
-                            <div className="text-xs text-[#94a3b8] font-medium py-2">You’re all caught up</div>
+                            <div className="text-xs text-[#94a3b8] font-medium py-2">{t('recentActivity.caughtUp')}</div>
                         )}
                     </div>
                 </div>

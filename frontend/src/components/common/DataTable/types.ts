@@ -1,6 +1,7 @@
 import React from 'react';
 
 export type SortDirection = 'asc' | 'desc' | null;
+export type DataTableDensity = 'compact' | 'comfortable' | 'spacious';
 
 export interface ColumnDef<T> {
   key: string;
@@ -20,6 +21,8 @@ export interface PaginationConfig {
 export interface DataTableEmptyState {
   message: string;
   description?: string;
+  /** Optional icon element — use EmptyState preset variants for consistency */
+  icon?: React.ReactNode;
   cta?: {
     label: string;
     onClick: () => void;
@@ -34,4 +37,5 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   onRowClick?: (row: T) => void;
   pagination?: PaginationConfig;
   className?: string;
+  density?: DataTableDensity;
 }

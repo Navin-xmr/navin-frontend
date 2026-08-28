@@ -1,6 +1,7 @@
-import { SlidersHorizontal, X } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { SlidersHorizontal } from 'lucide-react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Chip } from '../../../components/ui/Chip';
 
 export type ShipmentStatus = 'CREATED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
 export type Priority = 'URGENT' | 'STANDARD' | 'ECONOMY';
@@ -90,20 +91,12 @@ function countActive(f: ShipmentFiltersValues): number {
 const inputBase =
   'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] transition-colors';
 
-const chipBase =
-  'inline-flex items-center gap-1.5 px-3 py-1 border rounded-full text-xs font-medium transition-all';
-
-const toggleChip = (active: boolean) =>
-  `${chipBase} cursor-pointer ${
-    active
-      ? 'bg-[rgba(98,255,255,0.15)] text-[#62ffff] border-[#62ffff]'
-      : 'bg-[rgba(19,186,186,0.05)] text-slate-300 border-[rgba(98,255,255,0.15)] hover:border-[#62ffff]'
-  }`;
-
 const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<ShipmentFiltersValues>(() => loadFiltersFromURL(searchParams));
   const [isOpen, setIsOpen] = useState(() => countActive(loadFiltersFromURL(searchParams)) > 0);
+  const fieldId = useId();
+  const fieldIdFor = (field: string) => `${fieldId}-${field}`;
   const mounted = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipDebounce = useRef(false);
@@ -232,20 +225,13 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
           aria-label="Active filters"
         >
           {chips.map((chip) => (
-            <span
+            <Chip
               key={chip.key}
-              className="inline-flex items-center gap-1.5 px-3 py-1 bg-[rgba(98,255,255,0.06)] border border-[rgba(98,255,255,0.2)] rounded-full text-xs text-[#62ffff] font-medium"
-            >
-              {chip.label}
-              <button
-                type="button"
-                onClick={chip.onRemove}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded-full hover:bg-[rgba(255,255,255,0.15)] text-[#62ffff] hover:text-white transition-colors"
-                aria-label={`Remove ${chip.key} filter`}
-              >
-                <X size={10} />
-              </button>
-            </span>
+              label={chip.label}
+              variant="info"
+              size="sm"
+              onRemove={chip.onRemove}
+            />
           ))}
           <button
             type="button"
@@ -263,70 +249,83 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Status */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('status')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Status
-              </label>
-              <div className="flex flex-wrap gap-2">
+              </span>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('status')}
+              >
                 {STATUS_OPTIONS.map((s) => (
-                  <label
+                  <Chip
                     key={s}
-                    className={toggleChip(filters.status.includes(s))}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.status.includes(s)}
-                      onChange={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          status: prev.status.includes(s)
-                            ? prev.status.filter((v) => v !== s)
-                            : [...prev.status, s],
-                        }))
-                      }
-                      className="sr-only"
-                    />
-                    {s === 'CREATED' ? 'Created' : s === 'IN_TRANSIT' ? 'In Transit' : s === 'DELIVERED' ? 'Delivered' : 'Cancelled'}
-                  </label>
+                    label={s === 'CREATED' ? 'Created' : s === 'IN_TRANSIT' ? 'In Transit' : s === 'DELIVERED' ? 'Delivered' : 'Cancelled'}
+                    size="sm"
+                    selected={filters.status.includes(s)}
+                    variant={s === 'DELIVERED' ? 'success' : s === 'CANCELLED' ? 'danger' : s === 'IN_TRANSIT' ? 'info' : 'default'}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        status: prev.status.includes(s)
+                          ? prev.status.filter((v) => v !== s)
+                          : [...prev.status, s],
+                      }))
+                    }
+                  />
                 ))}
               </div>
             </div>
 
             {/* Priority */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('priority')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Priority
-              </label>
-              <div className="flex flex-wrap gap-2">
+              </span>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('priority')}
+              >
                 {PRIORITY_OPTIONS.map((p) => (
-                  <label
+                  <Chip
                     key={p}
-                    className={toggleChip(filters.priority.includes(p))}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={filters.priority.includes(p)}
-                      onChange={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          priority: prev.priority.includes(p)
-                            ? prev.priority.filter((v) => v !== p)
-                            : [...prev.priority, p],
-                        }))
-                      }
-                      className="sr-only"
-                    />
-                    {p.charAt(0) + p.slice(1).toLowerCase()}
-                  </label>
+                    label={p.charAt(0) + p.slice(1).toLowerCase()}
+                    size="sm"
+                    selected={filters.priority.includes(p)}
+                    variant={p === 'URGENT' ? 'danger' : p === 'ECONOMY' ? 'success' : 'default'}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        priority: prev.priority.includes(p)
+                          ? prev.priority.filter((v) => v !== p)
+                          : [...prev.priority, p],
+                      }))
+                    }
+                  />
                 ))}
               </div>
             </div>
 
             {/* Date Range */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('date-range')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Date Range
-              </label>
-              <div className="flex items-center gap-2">
+              </span>
+              <div
+                className="flex items-center gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('date-range')}
+              >
                 <input
                   type="date"
                   value={filters.dateFrom}
@@ -351,10 +350,14 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Origin */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <label
+                htmlFor={fieldIdFor('origin')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Origin City
               </label>
               <input
+                id={fieldIdFor('origin')}
                 type="text"
                 value={filters.origin}
                 onChange={(e) =>
@@ -367,10 +370,14 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Destination */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <label
+                htmlFor={fieldIdFor('destination')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Destination City
               </label>
               <input
+                id={fieldIdFor('destination')}
                 type="text"
                 value={filters.destination}
                 onChange={(e) =>
@@ -383,10 +390,14 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Carrier */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <label
+                htmlFor={fieldIdFor('carrier')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Carrier
               </label>
               <input
+                id={fieldIdFor('carrier')}
                 type="text"
                 value={filters.carrier}
                 onChange={(e) =>
@@ -399,10 +410,17 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Weight Range */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('weight-range')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Weight Range (kg)
-              </label>
-              <div className="flex items-center gap-2">
+              </span>
+              <div
+                className="flex items-center gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('weight-range')}
+              >
                 <input
                   type="number"
                   min={0}
@@ -411,6 +429,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                     setFilters((prev) => ({ ...prev, weightMin: e.target.value }))
                   }
                   placeholder="Min"
+                  aria-label="Minimum weight (kg)"
                   className={inputBase}
                 />
                 <span className="text-slate-500 text-xs shrink-0">to</span>
@@ -422,6 +441,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                     setFilters((prev) => ({ ...prev, weightMax: e.target.value }))
                   }
                   placeholder="Max"
+                  aria-label="Maximum weight (kg)"
                   className={inputBase}
                 />
               </div>

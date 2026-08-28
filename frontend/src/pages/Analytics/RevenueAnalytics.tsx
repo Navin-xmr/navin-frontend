@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Calendar, Download, Loader2 } from "lucide-react";
+import { Calendar, Download } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import html2pdf from "html2pdf.js";
-
-interface KPIData {
-  totalRevenue: number;
-  momChangePercent: number;
-  avgPerShipment: number;
-}
+import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
+import Breadcrumb from "@components/common/Breadcrumb";
+import RichChartTooltip, { ExportAction } from "../../components/ui/RichChartTooltip";
 
 interface MonthlyData {
   month: string;
@@ -83,6 +80,77 @@ const generateMockData = (startDate: Date, endDate: Date) => {
   };
 };
 
+// ─── Custom chart tooltips ────────────────────────────────────────────
+
+const MonthlyRevenueTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name?: string; value?: number; dataKey?: string }[];
+  label?: string;
+}> = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const actual = payload.find((p) => p.dataKey === "actual")?.value ?? 0;
+  const target = payload.find((p) => p.dataKey === "target")?.value ?? 0;
+
+  const handleExport = () => {
+    console.info(`Export data for ${label}`);
+  };
+
+  return (
+    <RichChartTooltip
+      active={active}
+      title={label}
+      items={[
+        {
+          label: "Actual",
+          value: actual,
+          unit: "$",
+          color: "#3b82f6",
+          trend: actual >= target ? "up" : "down",
+          trendLabel: actual >= target ? "Met or exceeded target" : "Below target",
+        },
+        {
+          label: "Target",
+          value: target,
+          unit: "$",
+          color: "#10b981",
+        },
+      ]}
+      actions={[ExportAction(handleExport)]}
+    />
+  );
+};
+
+const ServiceTypeTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name?: string; value?: number }[];
+}> = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const item = payload[0];
+
+  return (
+    <RichChartTooltip
+      active={active}
+      title={item.name}
+      items={[{ label: "Revenue", value: item.value ?? 0, unit: "$" }]}
+    />
+  );
+};
+
+const RegionTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name?: string; value?: number }[];
+  label?: string;
+}> = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <RichChartTooltip
+      active={active}
+      title={label}
+      items={[{ label: "Revenue", value: payload[0].value ?? 0, unit: "$", color: "#3b82f6" }]}
+    />
+  );
+};
+
 const RevenueAnalytics: React.FC = () => {
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -90,18 +158,21 @@ const RevenueAnalytics: React.FC = () => {
     return date.toISOString().split("T")[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
-  const [loading, setLoading] = useState(false);
   const [data, setData] = useState(() =>
     generateMockData(new Date(startDate), new Date(endDate))
   );
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => {
+    const startTimer = setTimeout(() => setIsLoading(true), 0);
+    const dataTimer = setTimeout(() => {
       setData(generateMockData(new Date(startDate), new Date(endDate)));
-      setLoading(false);
+      setIsLoading(false);
     }, 300);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(startTimer);
+      clearTimeout(dataTimer);
+    };
   }, [startDate, endDate]);
 
   const handleExportPDF = () => {
@@ -113,7 +184,7 @@ const RevenueAnalytics: React.FC = () => {
       filename: "revenue-analytics.pdf",
       image: { type: "png" as const, quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { orientation: "landscape" },
+      jsPDF: { orientation: "landscape" as const },
     };
 
     html2pdf().set(opt).from(element).save();
@@ -121,6 +192,10 @@ const RevenueAnalytics: React.FC = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 py-6 font-sans text-white max-md:px-4 max-md:pb-20">
+      <Breadcrumb
+        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Analytics", href: "/dashboard/analytics" }]}
+        current="Revenue Analytics"
+      />
       <div className="flex justify-between items-end mb-8 max-md:flex-col max-md:items-start max-md:gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight m-0 mb-2">
@@ -159,13 +234,17 @@ const RevenueAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center p-12 gap-3">
-          <Loader2 className="animate-spin" size={24} />
-          <p className="text-slate-400">Loading revenue data...</p>
+      {isLoading ? (
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-3 gap-4 max-lg:grid-cols-1 max-md:grid-cols-1">
+            <DashboardWidgetSkeleton count={3} />
+          </div>
+          <div className="grid grid-cols-2 gap-6 max-lg:grid-cols-1">
+            <DashboardWidgetSkeleton count={4} />
+          </div>
         </div>
       ) : (
-        <div id="revenue-dashboard" className="flex flex-col gap-6 bg-slate-950">
+      <div id="revenue-dashboard" className="flex flex-col gap-6 bg-slate-950">
           {/* KPI Cards */}
           <div className="grid grid-cols-3 gap-4 max-lg:grid-cols-1 max-md:grid-cols-1">
             <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
@@ -214,13 +293,7 @@ const RevenueAnalytics: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis dataKey="month" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      border: "1px solid #475569",
-                      borderRadius: "6px",
-                    }}
-                  />
+                  <Tooltip content={<MonthlyRevenueTooltip />} />
                   <Legend />
                   <Bar dataKey="actual" fill="#3b82f6" />
                   <Bar dataKey="target" fill="#10b981" />
@@ -246,13 +319,7 @@ const RevenueAnalytics: React.FC = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      border: "1px solid #475569",
-                      borderRadius: "6px",
-                    }}
-                  />
+                  <Tooltip content={<ServiceTypeTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="mt-4 space-y-2">
@@ -279,13 +346,7 @@ const RevenueAnalytics: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                   <XAxis dataKey="region" stroke="#94a3b8" />
                   <YAxis stroke="#94a3b8" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1e293b",
-                      border: "1px solid #475569",
-                      borderRadius: "6px",
-                    }}
-                  />
+                  <Tooltip content={<RegionTooltip />} />
                   <Line
                     type="monotone"
                     dataKey="revenue"

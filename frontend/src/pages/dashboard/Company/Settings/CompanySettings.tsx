@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Camera, Save, CheckCircle2, Loader2, Link as LinkIcon, Building2 } from 'lucide-react';
+import { Camera, Save, Loader2, Link as LinkIcon, Building2 } from 'lucide-react';
+import { useToast } from '@context/ToastContext';
 import { WalletConnectButton } from '../../../../components/auth/WalletConnectButton/WalletConnectButton';
 import NotificationPreferences from '../../../Settings/NotificationPreferences/NotificationPreferences';
 import MyTemplatesSection from '../../../Settings/sections/MyTemplatesSection';
-import './CompanySettings.css';
+import { useTranslation } from "react-i18next";
 
 const CompanySettings: React.FC = () => {
+    const { t, i18n } = useTranslation("common");
     const [profile, setProfile] = useState({
         name: 'Navin Logistics',
         address: '123 Supply Chain Blvd, Singapore 109332',
@@ -13,8 +15,8 @@ const CompanySettings: React.FC = () => {
 
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-    const [loading, setLoading] = useState(false);
-    const [successMsg, setSuccessMsg] = useState('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const { addToast } = useToast();
 
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -31,41 +33,60 @@ const CompanySettings: React.FC = () => {
 
     const handleSave = () => {
         setLoading(true);
-        setSuccessMsg('');
         setTimeout(() => {
             setLoading(false);
-            setSuccessMsg('Settings saved successfully!');
-            setTimeout(() => setSuccessMsg(''), 3000);
+            addToast('Settings saved successfully!', 'success');
         }, 1500);
     };
 
   return (
-    <div className="company-settings-container">
-      <div className="settings-header">
-        <h1>Company Settings</h1>
-        <p>Manage your company profile, notifications, and connected wallets.</p>
-      </div>
+ <div className="py-5 px-4 sm:py-8 sm:px-6 max-w-[900px] mx-auto min-h-[calc(100vh-80px)] text-[#F1F5F9]">
+    <div className="mb-8">
+    <div className="flex justify-between items-center">
+        <div>
+            <h1 className="text-[28px] font-semibold mb-2">{t("settings")}</h1>
+            <p className="text-[15px] text-[#94A3B8]">
+                Manage your company profile, notifications, and connected wallets.
+            </p>
+        </div>
 
-          <div className="settings-content">
+        <select
+            value={i18n.language}
+            onChange={(e) => {
+                const lang = e.target.value;
+                i18n.changeLanguage(lang);
+                localStorage.setItem("language", lang);
+            }}
+            className="border rounded-md px-3 py-2"
+        >
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+        </select>
+    </div>
+    </div>
+
+
+          <div className="flex flex-col gap-6">
               {/* Company Profile Section */}
-              <section className="settings-card">
-                  <div className="card-header">
-                      <Building2 className="card-icon" size={24} />
-                      <h2>Company Profile</h2>
+              <section className="bg-[#14171E] border border-[#1E293B] rounded-xl overflow-hidden shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+                  <div className="p-4 sm:px-6 sm:pt-6 sm:pb-5 flex items-center gap-3 border-b border-[#1E293B]">
+                      <Building2 className="text-[#3B82F6] bg-[rgba(59,130,246,0.1)] p-1.5 rounded-lg [box-sizing:content-box]" size={24} />
+                      <h2 className="text-lg font-semibold m-0">{t("companyProfile")}</h2>
                   </div>
-                  <div className="card-body">
-                      <div className="logo-upload-group">
-                          <label>Company Logo</label>
-                          <div className="logo-preview-container">
+                  <div className="p-4 sm:p-6 flex flex-col gap-6">
+                      <div className="flex flex-col gap-3 border-b border-[#1E293B] pb-6 mb-2">
+                          <label>{t("companyLogo")}</label>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                               {logoPreview ? (
-                                  <img src={logoPreview} alt="Company Logo" className="logo-preview" />
+                                  <img src={logoPreview} alt="Company Logo" className="w-20 h-20 rounded-xl bg-[#0B0E14] border border-dashed border-[#3B82F6] object-cover" />
                               ) : (
-                                  <div className="logo-placeholder">
+                                  <div className="w-20 h-20 rounded-xl bg-[#0B0E14] border border-dashed border-[#3B82F6] flex items-center justify-center">
                                       <Camera size={32} color="#475569" />
                                   </div>
                               )}
-                              <div className="upload-actions">
-                                  <label htmlFor="logo-upload" className="upload-btn">
+                              <div className="flex flex-col gap-2">
+                                  <label htmlFor="logo-upload" className="bg-[#1E293B] text-[#F1F5F9] border border-[#334155] px-4 py-2 rounded-md text-[13px] font-medium cursor-pointer inline-block self-start transition-colors duration-200 hover:bg-[#334155]">
                                       Upload new
                                   </label>
                                   <input
@@ -75,30 +96,32 @@ const CompanySettings: React.FC = () => {
                                       onChange={handleLogoUpload}
                                       hidden
                                   />
-                                  <p className="upload-hint">JPG, GIF or PNG. Max size 2MB</p>
+                                  <p className="text-xs text-[#64748B] m-0">JPG, GIF or PNG. Max size 2MB</p>
                               </div>
                           </div>
                       </div>
 
-                      <div className="form-group">
-                          <label htmlFor="companyName">Company Name</label>
+                      <div className="flex flex-col gap-2">
+                          <label htmlFor="companyName" className="text-sm font-medium text-[#CBD5E1]">Company Name</label>
                           <input
                               type="text"
                               id="companyName"
                               name="name"
                               value={profile.name}
                               onChange={handleProfileChange}
+                              className="bg-[#0B0E14] border border-[#1E293B] rounded-lg px-4 py-3 text-[#F1F5F9] text-sm font-[inherit] transition-[border-color,box-shadow] duration-200 focus:outline-none focus:border-[#3B82F6] focus:shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
                           />
                       </div>
 
-                      <div className="form-group">
-                          <label htmlFor="companyAddress">Company Address</label>
+                      <div className="flex flex-col gap-2">
+                          <label htmlFor="companyAddress" className="text-sm font-medium text-[#CBD5E1]">Company Address</label>
                           <textarea
                               id="companyAddress"
                               name="address"
                               rows={3}
                               value={profile.address}
                               onChange={handleProfileChange}
+                              className="bg-[#0B0E14] border border-[#1E293B] rounded-lg px-4 py-3 text-[#F1F5F9] text-sm font-[inherit] transition-[border-color,box-shadow] duration-200 focus:outline-none focus:border-[#3B82F6] focus:shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
                           />
                       </div>
                   </div>
@@ -110,37 +133,31 @@ const CompanySettings: React.FC = () => {
               <MyTemplatesSection />
 
               {/* Connected Wallet Section */}
-              <section className="settings-card">
-                  <div className="card-header">
-                      <LinkIcon className="card-icon" size={24} />
-                      <h2>Connected Wallet</h2>
+              <section className="bg-[#14171E] border border-[#1E293B] rounded-xl overflow-hidden shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1),0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+                  <div className="p-4 sm:px-6 sm:pt-6 sm:pb-5 flex items-center gap-3 border-b border-[#1E293B]">
+                      <LinkIcon className="text-[#3B82F6] bg-[rgba(59,130,246,0.1)] p-1.5 rounded-lg [box-sizing:content-box]" size={24} />
+                      <h2 className="text-lg font-semibold m-0">Connected Wallet</h2>
                   </div>
-                  <div className="card-body">
-                      <p className="wallet-desc">
+                  <div className="p-4 sm:p-6 flex flex-col gap-6">
+                      <p className="text-[#94A3B8] text-sm mb-4 leading-relaxed">
                           Connect your Freighter wallet to authorize blockchain transactions and manage smart contracts.
                       </p>
-                      <div className="wallet-connect-wrapper">
+                      <div className="flex items-start">
                           <WalletConnectButton />
                       </div>
                   </div>
               </section>
           </div>
 
-          <div className="settings-footer">
-              {successMsg && (
-                  <div className="success-toast">
-                      <CheckCircle2 size={18} />
-                      {successMsg}
-                  </div>
-              )}
+          <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-5 mt-8 pt-6 border-t border-[#1E293B]">
               <button
-                  className="save-btn"
+                  className="flex items-center gap-2 px-6 py-3 bg-[#3B82F6] text-white border-none rounded-lg text-[15px] font-medium cursor-pointer transition-colors duration-200 enabled:hover:bg-[#2563EB] disabled:opacity-70 disabled:cursor-not-allowed w-full sm:w-auto justify-center sm:justify-start"
                   onClick={handleSave}
                   disabled={loading}
               >
                   {loading ? (
                       <>
-                          <Loader2 className="spinner" size={18} />
+                          <Loader2 className="animate-spin" size={18} />
                           Saving...
                       </>
                   ) : (

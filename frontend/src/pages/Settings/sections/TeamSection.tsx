@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   Users,
   Mail,
@@ -14,6 +14,7 @@ import {
 import { usersApi, invitationsApi } from '@services/api/endpoints/users';
 import type { UserRole, User, Invitation } from '@services/api/endpoints/users';
 import Modal from '@components/common/Modal/Modal';
+import { formatDate } from '@utils/localeFormat';
 
 type TeamMemberStatus = 'Active' | 'Invited' | 'Deactivated';
 
@@ -121,6 +122,8 @@ const TeamSection: React.FC = () => {
   const [openRoleDropdown, setOpenRoleDropdown] = useState<string | null>(null);
 
   const roleDropdownRef = useRef<HTMLDivElement | null>(null);
+  const inviteEmailId = useId();
+  const inviteRoleLabelId = useId();
 
   const fetchMembers = useCallback(async () => {
     setIsLoading(true);
@@ -162,7 +165,8 @@ const TeamSection: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void fetchMembers();
+    const timer = setTimeout(() => { void fetchMembers(); }, 0);
+    return () => clearTimeout(timer);
   }, [fetchMembers]);
 
   useEffect(() => {
@@ -269,18 +273,6 @@ const TeamSection: React.FC = () => {
     if (type === 'deactivate') void handleDeactivate(member);
     else if (type === 'activate') void handleActivate(member);
     else if (type === 'resend') void handleResendInvite(member);
-  };
-
-  const formatDate = (d?: string) => {
-    if (!d) return '—';
-    const date = new Date(d);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
   };
 
   const filtered = members.filter((m) => {
@@ -556,10 +548,14 @@ const TeamSection: React.FC = () => {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-1.5">
+            <label
+              htmlFor={inviteEmailId}
+              className="block text-sm font-medium text-white mb-1.5"
+            >
               Email Address
             </label>
             <input
+              id={inviteEmailId}
               type="email"
               value={inviteEmail}
               onChange={(e) => {
@@ -573,9 +569,12 @@ const TeamSection: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-medium text-white">
+              <span
+                id={inviteRoleLabelId}
+                className="block text-sm font-medium text-white"
+              >
                 Role
-              </label>
+              </span>
               <button
                 onClick={() => setShowRoleInfo(!showRoleInfo)}
                 className="text-xs text-[#62ffff] hover:text-white"
@@ -583,7 +582,11 @@ const TeamSection: React.FC = () => {
                 {showRoleInfo ? 'Hide details' : 'View role details'}
               </button>
             </div>
-            <div className="flex gap-2">
+            <div
+              className="flex gap-2"
+              role="group"
+              aria-labelledby={inviteRoleLabelId}
+            >
               {ROLES.map((role) => (
                 <button
                   key={role}

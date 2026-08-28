@@ -14,9 +14,12 @@ const SaveTemplateModal: React.FC<SaveTemplateModalProps> = ({ isOpen, onClose, 
 
   useEffect(() => {
     if (!isOpen) {
-      setName('');
-      setError('');
-      setIsSaving(false);
+      const timer = setTimeout(() => {
+        setName('');
+        setError('');
+        setIsSaving(false);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 

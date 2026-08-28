@@ -1,5 +1,5 @@
-import { Loader2, Search, X } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react';
+import { Loader2, Search, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
 export interface SearchInputProps {
   value: string;
@@ -12,7 +12,7 @@ export interface SearchInputProps {
 const SearchInput: React.FC<SearchInputProps> = ({
   value,
   onChange,
-  placeholder = 'Search...',
+  placeholder = "Search...",
   debounceMs = 300,
   isLoading = false,
 }) => {
@@ -27,6 +27,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
   // Sync external value changes (e.g., programmatic clear from parent)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setInputValue(value);
   }, [value]);
 
@@ -45,8 +46,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
   }, [inputValue, debounceMs]);
 
   const handleClear = () => {
-    setInputValue('');
-    onChangeRef.current('');
+    setInputValue("");
+    onChangeRef.current("");
     inputRef.current?.focus();
   };
 
@@ -59,6 +60,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
         placeholder={placeholder}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
+        aria-label={placeholder}
         className="bg-transparent border-none outline-none text-white text-sm flex-1 placeholder:text-[#6b7280]"
       />
       {isLoading ? (

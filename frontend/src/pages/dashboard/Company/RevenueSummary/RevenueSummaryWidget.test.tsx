@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import RevenueSummaryWidget from './RevenueSummaryWidget';
 import { settlementsApi } from '../../../../services/api/endpoints/settlements';
@@ -25,14 +26,14 @@ describe('RevenueSummaryWidget', () => {
 
   it('renders the summary data and supports period switching', async () => {
     const user = userEvent.setup();
-    render(<RevenueSummaryWidget />);
+    render(<MemoryRouter><RevenueSummaryWidget /></MemoryRouter>);
 
     expect(await screen.findByText('Total USDC Released This Month')).toBeInTheDocument();
     expect(screen.getByText('USDC 123,456.78')).toBeInTheDocument();
     expect(screen.getByText('USDC 9,876.54')).toBeInTheDocument();
     expect(screen.getByText('USDC 2,345.67')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'This Week' }));
+    await user.click(screen.getByRole('tab', { name: 'This Week' }));
     expect(mockedGetSummary).toHaveBeenCalledWith('week');
   });
 });

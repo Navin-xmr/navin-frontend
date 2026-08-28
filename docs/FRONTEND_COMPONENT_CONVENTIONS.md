@@ -249,12 +249,12 @@ Several existing components were built before Tailwind was adopted. They still c
 
 | Component | Legacy CSS file |
 |---|---|
-| `layout/DashboardLayout` | `DashboardLayout.css` |
-| `layout/Sidebar` | `Sidebar.css` |
 | `layout/TopHeader` | `TopHeader.css` |
 | `auth/WalletConnectButton` | `WalletConnectButton.css` |
-| `auth/ProtectedRoute` | `ProtectedRoute.css` |
 | `notifications/NotificationDropdown` | `NotificationDropdown.css` |
+| `layout/DashboardLayout` | `DashboardLayout.css` |
+| `layout/Sidebar` | `Sidebar.css` |
+| `auth/ProtectedRoute` | `ProtectedRoute.css` |
 | `pages/dashboard` | `Dashboard.css` |
 | `pages/ShipmentDetail/ShipmentMap` | `ShipmentMap.css` |
 | `pages/Payments/PaymentDetailModal` | `PaymentDetailModal.css` |

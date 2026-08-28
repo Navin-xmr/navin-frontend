@@ -3,9 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuthContext } from '@context/AuthContext';
 import { can } from '@utils/rbac';
 import PageSkeleton from '../../components/ui/PageSkeleton';
-import Breadcrumb from '../../components/ui/Breadcrumb';
+import Breadcrumb from '@components/common/Breadcrumb';
 
 const ProfileSection = lazy(() => import('./sections/ProfileSection'));
+const CompanyProfileSection = lazy(() => import('./CompanyProfile/CompanyProfile'));
 const SecuritySection = lazy(() => import('./sections/SecuritySection/SecuritySection'));
 const NotificationsSection = lazy(() => import('./sections/NotificationsSection'));
 const WalletsSection = lazy(() => import('./sections/WalletsSection'));
@@ -17,7 +18,7 @@ const MyTemplatesSection = lazy(() => import('./sections/MyTemplatesSection'));
 const TeamSection = lazy(() => import('./sections/TeamSection'));
 const AddressBookSection = lazy(() => import('./sections/AddressBookSection'));
 
-type Tab = 'profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'templates' | 'team' | 'address-book' | 'danger';
+type Tab = 'profile' | 'company-profile' | 'security' | 'notifications' | 'appearance' | 'wallets' | 'api-keys' | 'templates' | 'team' | 'address-book' | 'danger';
 
 interface TabDef {
   key: Tab;
@@ -27,6 +28,7 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { key: 'profile', label: 'Profile' },
+  { key: 'company-profile', label: 'Company Profile', companyOnly: true },
   { key: 'security', label: 'Security' },
   { key: 'notifications', label: 'Notifications' },
   { key: 'appearance', label: 'Appearance' },
@@ -63,8 +65,9 @@ const Settings: React.FC = () => {
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'Settings', href: '/dashboard/settings' },
-          { label: activeTabLabel },
         ]}
+        current={activeTabLabel}
+        className="mb-4"
       />
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Settings</h1>
@@ -89,6 +92,7 @@ const Settings: React.FC = () => {
       {/* Tab content */}
       <Suspense fallback={<PageSkeleton />}>
         {activeTab === 'profile' && <ProfileSection isCompany={isCompany} />}
+        {activeTab === 'company-profile' && isCompany && <CompanyProfileSection />}
         {activeTab === 'security' && <SecuritySection />}
         {activeTab === 'notifications' && <NotificationsSection />}
         {activeTab === 'appearance' && <AppearanceSection />}

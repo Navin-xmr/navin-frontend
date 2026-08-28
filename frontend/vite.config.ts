@@ -86,6 +86,18 @@ export default defineConfig({
       },
     }),
   ], // tailwindcss() removed temporarily for CI
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'stellar-sdk': ['@stellar/stellar-sdk'],
+          'sentry': ['@sentry/react'],
+          'recharts': ['recharts'],
+          'react-router': ['react-router-dom'],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
@@ -110,7 +122,6 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     exclude: [
       ...configDefaults.exclude,
-      "src/LandingPage/sections/CoreFeatures/CoreFeatures.test.tsx",
     ],
   },
 });

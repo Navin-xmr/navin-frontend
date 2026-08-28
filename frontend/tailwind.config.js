@@ -58,9 +58,49 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'pulse-glow': {
+          '0%, 100%': { opacity: '1', boxShadow: '-3px -2px 12px rgba(0, 194, 203, 0.18), -1px -2px 12px rgba(0, 194, 203, 0.29)' },
+          '50%': { opacity: '0.8', boxShadow: '-3px -2px 20px rgba(0, 194, 203, 0.35), -1px -2px 20px rgba(0, 194, 203, 0.45)' },
+        },
+        'float': {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+        'glow-pulse': {
+          '0%, 100%': { opacity: '0.5' },
+          '50%': { opacity: '1' },
+        },
+        'modal-in': {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'notif-fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(3px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-in-left': {
+          '0%': { transform: 'translateX(-100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        'slide-in-right': {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' },
+        },
+        'shimmer': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
       },
       animation: {
         'fade-in-up': 'fade-in-up 200ms ease-out forwards',
+        'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
+        'modal-in': 'modal-in 0.2s ease-out',
+        'notif-fade-in': 'notif-fade-in 0.25s ease-out',
+        'slide-in-left': 'slide-in-left 250ms ease-out forwards',
+        'slide-in-right': 'slide-in-right 250ms ease-out forwards',
+        'shimmer': 'shimmer 1.5s infinite',
       },
     },
   },

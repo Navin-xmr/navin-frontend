@@ -1,0 +1,138 @@
+{
+  "title": "Tableau de bord",
+  "welcome": "Bienvenue",
+  "overview": "Aperçu",
+  "companyDashboard": {
+    "tour": {
+      "welcome": {
+        "heading": "Bienvenue chez Navin 🎉",
+        "body": "Voici votre centre de contrôle logistique. Suivez vos expéditions, mesurez la performance et gérez votre équipe — le tout en un seul endroit."
+      },
+      "createShipment": {
+        "heading": "Créez votre première expédition",
+        "body": "Cliquez ici pour créer une nouvelle expédition, assigner des itinéraires, définir des jalons et configurer des règlements automatisés."
+      },
+      "trackShipments": {
+        "heading": "Suivez vos expéditions",
+        "body": "Consultez toutes les expéditions actives et passées avec des mises à jour de jalons en temps réel sur la blockchain et les données des capteurs IoT."
+      },
+      "settlements": {
+        "heading": "Règlements automatisés",
+        "body": "Les règlements se déclenchent automatiquement lorsque les jalons de livraison sont vérifiés sur la blockchain Stellar."
+      },
+      "wallet": {
+        "heading": "Connectez votre portefeuille Stellar",
+        "body": "Connectez votre portefeuille Stellar pour signer les transactions de règlement et interagir avec les smart contracts Soroban."
+      }
+    },
+    "stats": {
+      "active": "Actives",
+      "delivered": "Livrées",
+      "delayed": "Retardées",
+      "verified": "Vérifiées"
+    },
+    "errorTitle": "Échec du chargement du tableau de bord",
+    "errorBody": "Un problème est survenu lors de la connexion au réseau logistique.",
+    "retry": "Réessayer la connexion",
+    "menuAriaLabel": "Menu",
+    "title": "Aperçu logistique",
+    "subtitle": "Données en temps réel synchronisées sur la blockchain",
+    "live": "En direct :",
+    "connected": "Connecté",
+    "recentShipments": "Expéditions récentes",
+    "viewAll": "Tout afficher",
+    "activeFleetRoutes": "Itinéraires de flotte actifs",
+    "driversActive_one": "{{count}} chauffeur actuellement actif",
+    "driversActive_other": "{{count}} chauffeurs actuellement actifs",
+    "driverAlt": "Chauffeur"
+  },
+  "customerDashboard": {
+    "errorTitle": "Échec du chargement du tableau de bord",
+    "errorBody": "Un problème est survenu lors du chargement de vos expéditions.",
+    "retry": "Réessayer",
+    "title": "Mes expéditions",
+    "subtitle": "Suivez vos livraisons en cours et passées",
+    "stats": {
+      "totalShipments": "Total des expéditions",
+      "inTransit": "En transit",
+      "deliveredThisMonth": "Livrées ce mois-ci"
+    },
+    "activeShipments": "Expéditions en cours",
+    "shipmentCount_one": "{{count}} expédition",
+    "shipmentCount_other": "{{count}} expéditions",
+    "noActiveShipments": "Aucune expédition en cours",
+    "estDelivery": "Livraison estimée",
+    "milestoneProgress": "Progression des jalons",
+    "pastShipments": "Expéditions passées",
+    "noPastShipments": "Aucune expédition passée pour le moment",
+    "tableHeaders": {
+      "trackingNumber": "N° de suivi",
+      "route": "Itinéraire",
+      "status": "Statut",
+      "deliveryDate": "Date de livraison",
+      "proof": "Preuve"
+    },
+    "download": "Télécharger",
+    "notAvailable": "N/D",
+    "notifications": "Notifications",
+    "newCount_one": "{{count}} nouvelle",
+    "newCount_other": "{{count}} nouvelles",
+    "allCaughtUp": "Vous êtes à jour !",
+    "viewAllNotifications": "Voir toutes les notifications",
+    "timeAgo": {
+      "minutes": "il y a {{count}} min",
+      "hours": "il y a {{count}} h",
+      "days": "il y a {{count}} j"
+    }
+  },
+  "recentActivity": {
+    "groupToday": "Aujourd'hui",
+    "groupYesterday": "Hier",
+    "groupEarlier": "Plus tôt",
+    "heading": "Activité récente",
+    "liveUpdates": "Mises à jour en direct",
+    "loadingAriaLabel": "Chargement de l'activité récente",
+    "errorTitle": "Échec du chargement de l'activité",
+    "errorBody": "Veuillez réessayer sous peu.",
+    "retry": "Réessayer",
+    "emptyTitle": "Aucune activité récente",
+    "emptyBody": "Lorsque des expéditions seront mises à jour, les événements apparaîtront ici.",
+    "eventFallback": "Événement : {{type}}",
+    "shipmentUpdateFallback": "Mise à jour de l'expédition",
+    "shipmentLink": "Expédition n° {{id}}",
+    "shipmentUnavailable": "Détails de l'expédition indisponibles",
+    "loading": "Chargement…",
+    "loadMore": "Charger plus",
+    "caughtUp": "Vous êtes à jour"
+  },
+  "anomalyPanel": {
+    "title": "Alertes d'anomalies",
+    "subtitle": "Anomalies actives triées par gravité — accusez réception pour les traiter",
+    "refresh": "Actualiser",
+    "refreshAriaLabel": "Actualiser les anomalies",
+    "noOpenAnomalies": "Aucune anomalie ouverte",
+    "openAnomalies_one": "{{count}} anomalie ouverte",
+    "openAnomalies_other": "{{count}} anomalies ouvertes",
+    "loadingAriaLabel": "Chargement des anomalies",
+    "retry": "Réessayer",
+    "errorBody": "Échec du chargement des anomalies. Veuillez réessayer.",
+    "allClear": "Tout est en ordre !",
+    "allClearBody": "Aucune anomalie ouverte pour le moment.",
+    "detected": "Détectée : {{date}}",
+    "shipmentPrefix": "Expédition :",
+    "viewShipmentAriaLabel": "Voir l'expédition {{id}}",
+    "viewShipment": "Voir l'expédition",
+    "acknowledgeAriaLabel": "Accuser réception de l'anomalie {{id}}",
+    "acknowledge": "Accuser réception",
+    "acknowledging": "Traitement en cours…",
+    "listAriaLabel": "Alertes d'anomalies",
+    "severityAriaLabel": "Gravité : {{severity}}",
+    "types": {
+      "temperatureExceeded": "Température dépassée",
+      "temperatureBelowMin": "Température sous le minimum",
+      "humidityExceeded": "Humidité dépassée",
+      "humidityBelowMin": "Humidité sous le minimum",
+      "batteryLow": "Batterie faible"
+    }
+  }
+}

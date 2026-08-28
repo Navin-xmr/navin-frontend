@@ -1,0 +1,138 @@
+{
+  "title": "Panel",
+  "welcome": "Bienvenido",
+  "overview": "Resumen",
+  "companyDashboard": {
+    "tour": {
+      "welcome": {
+        "heading": "Bienvenido a Navin 🎉",
+        "body": "Este es su centro de control logístico. Supervise envíos, mida el rendimiento y gestione a su equipo, todo en un solo lugar."
+      },
+      "createShipment": {
+        "heading": "Cree su primer envío",
+        "body": "Haga clic aquí para crear un nuevo envío, asignar rutas, definir hitos y configurar liquidaciones automatizadas."
+      },
+      "trackShipments": {
+        "heading": "Rastree sus envíos",
+        "body": "Vea todos los envíos activos e históricos con actualizaciones de hitos en tiempo real en la blockchain y datos de sensores IoT."
+      },
+      "settlements": {
+        "heading": "Liquidaciones automatizadas",
+        "body": "Las liquidaciones se activan automáticamente cuando los hitos de entrega se verifican en la blockchain de Stellar."
+      },
+      "wallet": {
+        "heading": "Conecte su billetera Stellar",
+        "body": "Conecte su billetera Stellar para firmar transacciones de liquidación e interactuar con los smart contracts de Soroban."
+      }
+    },
+    "stats": {
+      "active": "Activos",
+      "delivered": "Entregados",
+      "delayed": "Retrasados",
+      "verified": "Verificados"
+    },
+    "errorTitle": "No se pudo cargar el panel",
+    "errorBody": "Ocurrió un problema al conectar con la red logística.",
+    "retry": "Reintentar conexión",
+    "menuAriaLabel": "Menú",
+    "title": "Resumen logístico",
+    "subtitle": "Datos en tiempo real sincronizados con la blockchain",
+    "live": "En vivo:",
+    "connected": "Conectado",
+    "recentShipments": "Envíos recientes",
+    "viewAll": "Ver todo",
+    "activeFleetRoutes": "Rutas de flota activas",
+    "driversActive_one": "{{count}} conductor actualmente activo",
+    "driversActive_other": "{{count}} conductores actualmente activos",
+    "driverAlt": "Conductor"
+  },
+  "customerDashboard": {
+    "errorTitle": "No se pudo cargar el panel",
+    "errorBody": "Ocurrió un problema al cargar sus envíos.",
+    "retry": "Reintentar",
+    "title": "Mis envíos",
+    "subtitle": "Siga sus entregas activas y pasadas",
+    "stats": {
+      "totalShipments": "Envíos totales",
+      "inTransit": "En tránsito",
+      "deliveredThisMonth": "Entregados este mes"
+    },
+    "activeShipments": "Envíos activos",
+    "shipmentCount_one": "{{count}} envío",
+    "shipmentCount_other": "{{count}} envíos",
+    "noActiveShipments": "No hay envíos activos",
+    "estDelivery": "Entrega estimada",
+    "milestoneProgress": "Progreso de hitos",
+    "pastShipments": "Envíos pasados",
+    "noPastShipments": "Aún no hay envíos pasados",
+    "tableHeaders": {
+      "trackingNumber": "N.º de seguimiento",
+      "route": "Ruta",
+      "status": "Estado",
+      "deliveryDate": "Fecha de entrega",
+      "proof": "Comprobante"
+    },
+    "download": "Descargar",
+    "notAvailable": "N/D",
+    "notifications": "Notificaciones",
+    "newCount_one": "{{count}} nueva",
+    "newCount_other": "{{count}} nuevas",
+    "allCaughtUp": "¡Todo al día!",
+    "viewAllNotifications": "Ver todas las notificaciones",
+    "timeAgo": {
+      "minutes": "hace {{count}} min",
+      "hours": "hace {{count}} h",
+      "days": "hace {{count}} d"
+    }
+  },
+  "recentActivity": {
+    "groupToday": "Hoy",
+    "groupYesterday": "Ayer",
+    "groupEarlier": "Anteriormente",
+    "heading": "Actividad reciente",
+    "liveUpdates": "Actualizaciones en vivo",
+    "loadingAriaLabel": "Cargando actividad reciente",
+    "errorTitle": "No se pudo cargar la actividad",
+    "errorBody": "Vuelva a intentarlo en breve.",
+    "retry": "Reintentar",
+    "emptyTitle": "Sin actividad reciente",
+    "emptyBody": "Cuando se actualicen los envíos, verá los eventos aquí.",
+    "eventFallback": "Evento: {{type}}",
+    "shipmentUpdateFallback": "Actualización de envío",
+    "shipmentLink": "Envío n.º {{id}}",
+    "shipmentUnavailable": "Detalles del envío no disponibles",
+    "loading": "Cargando…",
+    "loadMore": "Cargar más",
+    "caughtUp": "Está al día"
+  },
+  "anomalyPanel": {
+    "title": "Alertas de anomalías",
+    "subtitle": "Anomalías activas ordenadas por gravedad — reconózcalas para gestionarlas",
+    "refresh": "Actualizar",
+    "refreshAriaLabel": "Actualizar anomalías",
+    "noOpenAnomalies": "No hay anomalías abiertas",
+    "openAnomalies_one": "{{count}} anomalía abierta",
+    "openAnomalies_other": "{{count}} anomalías abiertas",
+    "loadingAriaLabel": "Cargando anomalías",
+    "retry": "Reintentar",
+    "errorBody": "No se pudieron cargar las anomalías. Inténtelo de nuevo.",
+    "allClear": "¡Todo despejado!",
+    "allClearBody": "No hay anomalías abiertas en este momento.",
+    "detected": "Detectada: {{date}}",
+    "shipmentPrefix": "Envío:",
+    "viewShipmentAriaLabel": "Ver envío {{id}}",
+    "viewShipment": "Ver envío",
+    "acknowledgeAriaLabel": "Reconocer anomalía {{id}}",
+    "acknowledge": "Reconocer",
+    "acknowledging": "Reconociendo…",
+    "listAriaLabel": "Alertas de anomalías",
+    "severityAriaLabel": "Gravedad: {{severity}}",
+    "types": {
+      "temperatureExceeded": "Temperatura excedida",
+      "temperatureBelowMin": "Temperatura por debajo del mínimo",
+      "humidityExceeded": "Humedad excedida",
+      "humidityBelowMin": "Humedad por debajo del mínimo",
+      "batteryLow": "Batería baja"
+    }
+  }
+}

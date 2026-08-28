@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
@@ -14,14 +15,15 @@ import * as Sentry from '@sentry/react';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
+import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
-import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
-import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
-import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
+import { RouteTransitionProvider } from './context/RouteTransitionContext';
+import RouteTransition from './components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
+import NotFoundPage from '@pages/NotFound/NotFoundPage';
 import './App.css';
 
 // Eagerly loaded (critical path)
@@ -33,11 +35,15 @@ import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipm
 import CustomerProfile from './pages/dashboard/Customer/Profile/CustomerProfile';
 
 // Lazy loaded
+const PaginationDemo = lazy(() => import('./pages/ComponentDemos/PaginationDemo/PaginationDemo'));
+const ConfirmDialogDemo = lazy(() => import('./pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo'));
+const SkeletonDemo = lazy(() => import('./pages/ComponentDemos/SkeletonDemo/SkeletonDemo'));
 const ShipmentDetail = lazy(() => import('./pages/ShipmentDetail/ShipmentDetail'));
 const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainLedger'));
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
 const Analytics = lazy(() => import('./pages/Analytics/Analytics'));
 const RevenueAnalytics = lazy(() => import('./pages/Analytics/RevenueAnalytics'));
+const ExceptionDashboard = lazy(() => import('./pages/dashboard/ExceptionDashboard'));
 const CompanySettings = lazy(() => import('./pages/dashboard/Company/Settings/CompanySettings'));
 const Settings = lazy(() => import('./pages/Settings/Settings'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter/HelpCenter'));
@@ -47,6 +53,7 @@ const ShipmentHistory = lazy(() => import('./pages/dashboard/Customer/ShipmentHi
 const UserManagement = lazy(() => import('./pages/dashboard/Company/UserManagement/UserManagement'));
 const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/AcceptInvitation'));
 const CalendarView = lazy(() => import('./pages/dashboard/Company/CalendarView/CalendarView'));
+const WhatsNewPage = lazy(() => import('./pages/WhatsNew/WhatsNewPage'));
 
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
@@ -61,9 +68,9 @@ const router = createBrowserRouter([
   { path: '/register/company', element: <CompanyRegister /> },
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
-  { path: '/pagination-demo', element: <PaginationDemo /> },
-  { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
-  { path: '/skeleton-demo', element: <SkeletonDemo /> },
+  { path: '/pagination-demo', element: S(<PaginationDemo />) },
+  { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
+  { path: '/skeleton-demo', element: S(<SkeletonDemo />) },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,
@@ -82,6 +89,7 @@ const router = createBrowserRouter([
               { path: '/dashboard/payments', element: S(<PaymentHistory />) },
               { path: '/dashboard/analytics', element: S(<Analytics />) },
               { path: '/dashboard/analytics/revenue', element: S(<RevenueAnalytics />) },
+              { path: '/dashboard/analytics/exceptions', element: S(<ExceptionDashboard />) },
               { path: '/dashboard/team', element: S(<UserManagement />) },
               { path: '/dashboard/shipments/create', element: <CreateShipment /> },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
@@ -103,10 +111,13 @@ const router = createBrowserRouter([
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
           { path: '/dashboard/profile', element: <CustomerProfile /> },
+          { path: '/dashboard/*', element: <NotFoundPage /> },
+          { path: '/dashboard/whats-new', element: S(<WhatsNewPage />) },
         ],
       },
     ],
   },
+  { path: '*', element: <NotFoundPage /> },
 ]);
 
 function RealtimeManager() {
@@ -121,14 +132,19 @@ function RealtimeManager() {
 function App() {
   return (
     <AuthProvider>
-      <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
-        <ErrorBoundary>
-          <OfflineBanner />
-          <RealtimeManager />
-          <RouterProvider router={router} />
-          <PWAInstallPrompt />
-        </ErrorBoundary>
-      </Sentry.ErrorBoundary>
+      <RouteTransitionProvider>
+        <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
+          <ErrorBoundary>
+            <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
+            <RouteTransition />
+            <OfflineBanner />
+            <SlowConnectionBanner />
+            <RealtimeManager />
+            <RouterProvider router={router} />
+            <PWAInstallPrompt />
+          </ErrorBoundary>
+        </Sentry.ErrorBoundary>
+      </RouteTransitionProvider>
     </AuthProvider>
   );
 }

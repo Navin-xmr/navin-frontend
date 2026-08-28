@@ -90,6 +90,16 @@ export function MyComponent({ foo }: MyComponentProps): React.ReactElement { ...
 - Do **not** create per-component `.css` files — use `index.css` or `App.css` only for global keyframes and animations that cannot be expressed as Tailwind utilities.
 - Use design tokens from `tailwind.config.js` (e.g. `bg-background-card`, `text-text-secondary`, `border-border`).
 
+## Accessibility Review Checklist
+
+Use this lightweight checklist during design review and PR review for every new or changed UI surface:
+
+- Confirm every interactive control has an accessible name, visible focus state, and keyboard path.
+- Confirm loading, empty, error, success, and validation states are clear without relying on color alone.
+- Confirm dialogs, inline editing, menus, and shortcut controls support Escape/cancel behavior where users need recovery.
+- Confirm dense tables preserve readable spacing, row scanability, and responsive overflow behavior.
+- Confirm screen-reader announcements are present for important async state changes.
+
 ---
 
 ## Dead Code Policy

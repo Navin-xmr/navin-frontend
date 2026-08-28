@@ -1,2 +1,35 @@
-# Somzilla issues document
+# Playwright / test artifacts
+test-results/
+playwright-report/
+
+# OS
+# Test snapshots
+**/__snapshots__/
+*.snap
+
+# Coverage
+coverage/
+.nyc_output/
+# Misc docs not needed in repo
 somzilla.md
+frontend-alignment-report.md
+SHIPMENT_VOLUME_TREND_WIDGET_SUMMARY.md
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Misc docs not needed in repo
+frontend-alignment-report.md
+SHIPMENT_VOLUME_TREND_WIDGET_SUMMARY.md
+
+# Lint output
+lint-output.txt
+
+# Misc JSON artifacts
+vt.json
