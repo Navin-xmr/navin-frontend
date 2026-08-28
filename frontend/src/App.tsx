@@ -17,9 +17,6 @@ import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
-import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
-import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
-import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { RouteTransitionProvider } from './context/RouteTransitionContext';
@@ -55,6 +52,17 @@ const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/Accept
 const CalendarView = lazy(() => import('./pages/dashboard/Company/CalendarView/CalendarView'));
 const WhatsNewPage = lazy(() => import('./pages/WhatsNew/WhatsNewPage'));
 
+// Dev-only component demos (lazy-loaded; excluded from production bundle)
+const PaginationDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/PaginationDemo/PaginationDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
+const ConfirmDialogDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
+const SkeletonDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/SkeletonDemo/SkeletonDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
+
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
 );
@@ -68,9 +76,9 @@ const router = createBrowserRouter([
   { path: '/register/company', element: <CompanyRegister /> },
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
-  { path: '/pagination-demo', element: <PaginationDemo /> },
-  { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
-  { path: '/skeleton-demo', element: <SkeletonDemo /> },
+  { path: '/pagination-demo', element: S(<PaginationDemo />) },
+  { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
+  { path: '/skeleton-demo', element: S(<SkeletonDemo />) },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,
