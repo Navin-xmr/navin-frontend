@@ -184,14 +184,20 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  // Single page-level heading shared by the error and loaded render states so
+  // the page always exposes just one top-level heading.
+  const pageHeader = (
+    <div>
+      <h1 className="text-[28px] font-semibold m-0 mb-2">Team Management</h1>
+      <p className="text-[15px] text-slate-400 m-0">Manage access, roles, and invite new members to your organization.</p>
+    </div>
+  );
+
   if (error) {
     return (
       <div className="px-6 py-8 max-w-[1200px] mx-auto min-h-[calc(100vh-80px)] text-slate-100 max-sm:px-4 max-sm:py-5">
         <div className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-[28px] font-semibold m-0 mb-2">Team Management</h1>
-            <p className="text-[15px] text-slate-400 m-0">Manage access, roles, and invite new members to your organization.</p>
-          </div>
+          {pageHeader}
         </div>
         <div className="flex flex-col items-center justify-center py-16 px-6 text-red-400 gap-3 bg-[#14171E] border border-[#1E293B] rounded-xl text-center">
           <AlertTriangle size={48} />
@@ -213,10 +219,7 @@ const UserManagement: React.FC = () => {
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Team" />
 
       <div className="flex justify-between items-start mb-8 max-sm:flex-col max-sm:gap-4">
-        <div>
-          <h1 className="text-[28px] font-semibold m-0 mb-2">Team Management</h1>
-          <p className="text-[15px] text-slate-400 m-0">Manage access, roles, and invite new members to your organization.</p>
-        </div>
+        {pageHeader}
         <button
           className="flex items-center gap-2 bg-blue-500 text-white border-none rounded-lg px-4 py-2.5 text-sm font-medium cursor-pointer hover:bg-blue-600 transition-colors"
           onClick={() => setIsModalOpen(true)}
