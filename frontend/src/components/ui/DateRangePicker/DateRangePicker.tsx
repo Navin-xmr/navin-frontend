@@ -53,6 +53,7 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
   // Sync pending with external value when the popover opens
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPending({ from: value.from, to: value.to });
     }
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps

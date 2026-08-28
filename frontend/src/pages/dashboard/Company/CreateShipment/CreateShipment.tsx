@@ -130,6 +130,7 @@ const CreateShipment: React.FC = () => {
     useEffect(() => {
         let cancelled = false;
          
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAddressesLoading(true);
         addressesApi.getAll().then((addrs) => {
             if (cancelled) return;

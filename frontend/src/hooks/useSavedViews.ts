@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { SavedView } from '@types/savedView';
+import type { SavedView } from '../types/savedView';
 
 export interface UseSavedViewsReturn {
   views: SavedView[];

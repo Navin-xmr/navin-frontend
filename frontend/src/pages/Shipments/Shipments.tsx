@@ -16,7 +16,6 @@ import RouteMap from './RouteMap/RouteMap';
 import ShipmentFilters, {
   type ShipmentFiltersValues,
   type ShipmentStatus,
-  type Priority,
 } from "./ShipmentFilters";
 import { SavedViewsPanel } from "../../components/saved-views/SavedViewsPanel";
 import { useVirtualShipments } from "./hooks/useVirtualShipments";
