@@ -17,9 +17,6 @@ import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
-import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
-import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
-import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { RouteTransitionProvider } from './context/RouteTransitionContext';
@@ -38,6 +35,9 @@ import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipm
 import CustomerProfile from './pages/dashboard/Customer/Profile/CustomerProfile';
 
 // Lazy loaded
+const PaginationDemo = lazy(() => import('./pages/ComponentDemos/PaginationDemo/PaginationDemo'));
+const ConfirmDialogDemo = lazy(() => import('./pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo'));
+const SkeletonDemo = lazy(() => import('./pages/ComponentDemos/SkeletonDemo/SkeletonDemo'));
 const ShipmentDetail = lazy(() => import('./pages/ShipmentDetail/ShipmentDetail'));
 const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainLedger'));
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
@@ -68,9 +68,9 @@ const router = createBrowserRouter([
   { path: '/register/company', element: <CompanyRegister /> },
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
-  { path: '/pagination-demo', element: <PaginationDemo /> },
-  { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
-  { path: '/skeleton-demo', element: <SkeletonDemo /> },
+  { path: '/pagination-demo', element: S(<PaginationDemo />) },
+  { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
+  { path: '/skeleton-demo', element: S(<SkeletonDemo />) },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,

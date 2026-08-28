@@ -14,6 +14,7 @@ import {
 import { usersApi, invitationsApi } from '@services/api/endpoints/users';
 import type { UserRole, User, Invitation } from '@services/api/endpoints/users';
 import Modal from '@components/common/Modal/Modal';
+import { formatDate } from '@utils/localeFormat';
 
 type TeamMemberStatus = 'Active' | 'Invited' | 'Deactivated';
 
@@ -270,18 +271,6 @@ const TeamSection: React.FC = () => {
     if (type === 'deactivate') void handleDeactivate(member);
     else if (type === 'activate') void handleActivate(member);
     else if (type === 'resend') void handleResendInvite(member);
-  };
-
-  const formatDate = (d?: string) => {
-    if (!d) return '—';
-    const date = new Date(d);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
   };
 
   const filtered = members.filter((m) => {
