@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Bell, Package, DollarSign, AlertTriangle, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { notificationsApi } from "../../../services/api/endpoints/notifications";
+import type { Notification as ApiNotification } from "../../../services/api/endpoints/notifications";
 
 export interface NotificationItem {
   id: string;
@@ -11,13 +12,18 @@ export interface NotificationItem {
   read: boolean;
 }
 
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  { id: "1", type: "shipment", message: "Shipment #SH-2024-001 has been delivered successfully", timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), read: false },
-  { id: "2", type: "payment", message: "Payment of 5,000 XLM received for shipment #SH-2024-002", timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), read: false },
-  { id: "3", type: "alert", message: "Shipment #SH-2024-003 is delayed due to weather conditions", timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), read: false },
-  { id: "4", type: "shipment", message: "New shipment #SH-2024-004 has been created and is awaiting pickup", timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), read: true },
-  { id: "5", type: "payment", message: "Settlement completed for 3 shipments totaling 15,000 XLM", timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), read: true },
-];
+
+// Map API notification icon type to local type
+const mapApiNotification = (n: ApiNotification): NotificationItem => ({
+  id: n.id,
+  type: (n.icon === "shipment" || n.icon === "contract") ? "shipment"
+    : (n.icon === "payment" || n.icon === "invoice") ? "payment"
+    : "alert",
+  message: `${n.title}${n.description ? ": " + n.description : ""}`,
+  timestamp: new Date(n.timestamp),
+  read: n.isRead,
+});
+
 
 const getTimeAgo = (timestamp: Date, now: number): string => {
   const diffMs = now - timestamp.getTime();
@@ -32,8 +38,8 @@ const getTimeAgo = (timestamp: Date, now: number): string => {
 export const NotificationDropdown: React.FC = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
-  const [unreadCount, setUnreadCount] = useState(() => notifications.filter((n) => !n.read).length);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [now] = useState(() => Date.now());
   const [focusIndex, setFocusIndex] = useState<number>(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,16 +59,20 @@ export const NotificationDropdown: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchUnreadCount = async () => {
+    const fetchNotifications = async () => {
       try {
-        const count = await notificationsApi.getUnreadCount();
+        const [list, count] = await Promise.all([
+          notificationsApi.getAll({ limit: 5 }),
+          notificationsApi.getUnreadCount(),
+        ]);
+        setNotifications(list.data.map(mapApiNotification));
         setUnreadCount(count);
       } catch {
-        // Keep mock count if API fails.
+        // Fail silently — bell badge still works if list fails
       }
     };
 
-    fetchUnreadCount();
+    fetchNotifications();
   }, []);
 
   // Keyboard navigation handler
