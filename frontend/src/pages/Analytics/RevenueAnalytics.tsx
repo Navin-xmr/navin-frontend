@@ -5,6 +5,8 @@ import html2pdf from "html2pdf.js";
 import { DashboardWidgetSkeleton } from "@components/ui/Skeleton";
 import Breadcrumb from "@components/common/Breadcrumb";
 import RichChartTooltip, { ExportAction } from "../../components/ui/RichChartTooltip";
+import { analyticsApi } from "../../services/api/endpoints/analytics";
+import { shipmentApi } from "../../services/api/endpoints/shipments";
 
 interface MonthlyData {
   month: string;
@@ -29,56 +31,6 @@ interface Customer {
 }
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
-
-const generateMockData = (startDate: Date, endDate: Date) => {
-  const monthsDiff = Math.max(
-    1,
-    Math.round(
-      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
-    )
-  );
-
-  const monthlyData: MonthlyData[] = Array.from({ length: Math.min(12, monthsDiff) }).map((_, i) => {
-    const date = new Date(endDate);
-    date.setMonth(date.getMonth() - i);
-    return {
-      month: date.toLocaleString("default", { month: "short", year: "2-digit" }),
-      actual: Math.floor(Math.random() * 80000 + 20000),
-      target: Math.floor(Math.random() * 85000 + 25000),
-    };
-  }).reverse();
-
-  const serviceTypeData: ServiceTypeData[] = [
-    { name: "Express", value: Math.floor(Math.random() * 45000 + 10000) },
-    { name: "Standard", value: Math.floor(Math.random() * 55000 + 20000) },
-    { name: "Economy", value: Math.floor(Math.random() * 35000 + 5000) },
-  ];
-
-  const regionData: RegionData[] = [
-    { region: "North", revenue: Math.floor(Math.random() * 50000 + 15000) },
-    { region: "South", revenue: Math.floor(Math.random() * 45000 + 12000) },
-    { region: "East", revenue: Math.floor(Math.random() * 40000 + 10000) },
-    { region: "West", revenue: Math.floor(Math.random() * 48000 + 14000) },
-  ];
-
-  const customers: Customer[] = Array.from({ length: 10 }).map((_, i) => ({
-    id: `cust_${i}`,
-    name: `Customer ${String.fromCharCode(65 + i)}`,
-    revenue: Math.floor(Math.random() * 25000 + 5000),
-  })).sort((a, b) => b.revenue - a.revenue);
-
-  const totalRevenue = serviceTypeData.reduce((sum, item) => sum + item.value, 0);
-  const avgPerShipment = Math.floor(totalRevenue / (Math.random() * 500 + 100));
-  const momChangePercent = Math.floor(Math.random() * 20 - 10);
-
-  return {
-    kpi: { totalRevenue, momChangePercent, avgPerShipment },
-    monthlyData,
-    serviceTypeData,
-    regionData,
-    customers,
-  };
-};
 
 // ─── Custom chart tooltips ────────────────────────────────────────────
 
@@ -151,6 +103,22 @@ const RegionTooltip: React.FC<{
   );
 };
 
+interface RevenueData {
+  kpi: { totalRevenue: number; momChangePercent: number; avgPerShipment: number };
+  monthlyData: MonthlyData[];
+  serviceTypeData: ServiceTypeData[];
+  regionData: RegionData[];
+  customers: Customer[];
+}
+
+const EMPTY_DATA: RevenueData = {
+  kpi: { totalRevenue: 0, momChangePercent: 0, avgPerShipment: 0 },
+  monthlyData: [],
+  serviceTypeData: [],
+  regionData: [],
+  customers: [],
+};
+
 const RevenueAnalytics: React.FC = () => {
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -158,21 +126,89 @@ const RevenueAnalytics: React.FC = () => {
     return date.toISOString().split("T")[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split("T")[0]);
-  const [data, setData] = useState(() =>
-    generateMockData(new Date(startDate), new Date(endDate))
-  );
+  const [data, setData] = useState<RevenueData>(EMPTY_DATA);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    const startTimer = setTimeout(() => setIsLoading(true), 0);
-    const dataTimer = setTimeout(() => {
-      setData(generateMockData(new Date(startDate), new Date(endDate)));
-      setIsLoading(false);
-    }, 300);
-    return () => {
-      clearTimeout(startTimer);
-      clearTimeout(dataTimer);
-    };
+    let cancelled = false;
+    setIsLoading(true);
+    setFetchError(null);
+
+    Promise.all([
+      analyticsApi.getPerformance(startDate, endDate),
+      shipmentApi.getAll({ status: "DELIVERED", limit: 100 }),
+    ])
+      .then(([perfData, shipmentRes]) => {
+        if (cancelled) return;
+        const shipments = shipmentRes.data;
+
+        // Derive revenue proxies from real shipment data
+        // Group by month using updatedAt date
+        const monthlyMap: Record<string, { actual: number; target: number }> = {};
+        shipments.forEach((s) => {
+          const date = new Date(s.updatedAt);
+          const key = date.toLocaleString("default", { month: "short", year: "2-digit" });
+          if (!monthlyMap[key]) monthlyMap[key] = { actual: 0, target: 0 };
+          monthlyMap[key].actual += 1; // count as proxy (real amounts require payment API)
+          monthlyMap[key].target += 1;
+        });
+
+        const monthlyData: MonthlyData[] = Object.entries(monthlyMap)
+          .map(([month, v]) => ({ month, actual: v.actual, target: v.target }))
+          .slice(-12);
+
+        // Derive service breakdown from shipment priority
+        const byPriority: Record<string, number> = {};
+        shipments.forEach((s) => {
+          const key = s.priority ?? "STANDARD";
+          byPriority[key] = (byPriority[key] ?? 0) + 1;
+        });
+        const serviceTypeData: ServiceTypeData[] = Object.entries(byPriority).map(
+          ([name, value]) => ({ name, value })
+        );
+
+        // Region proxy — derive from origin string
+        const byRegion: Record<string, number> = {};
+        shipments.forEach((s) => {
+          const region = s.origin.split(",").pop()?.trim() ?? "Unknown";
+          byRegion[region] = (byRegion[region] ?? 0) + 1;
+        });
+        const regionData: RegionData[] = Object.entries(byRegion)
+          .slice(0, 4)
+          .map(([region, revenue]) => ({ region, revenue }));
+
+        // KPI from real performance data
+        const statusByDelivered = perfData.shipmentsByStatus.find(
+          (s) => s.status === "DELIVERED"
+        );
+        const totalDelivered = statusByDelivered?.total ?? shipments.length;
+        const prevMonth = monthlyData[monthlyData.length - 2]?.actual ?? 0;
+        const currMonth = monthlyData[monthlyData.length - 1]?.actual ?? 0;
+        const momChangePercent =
+          prevMonth > 0 ? Math.round(((currMonth - prevMonth) / prevMonth) * 100) : 0;
+
+        setData({
+          kpi: {
+            totalRevenue: totalDelivered,
+            momChangePercent,
+            avgPerShipment: shipments.length > 0 ? Math.round(totalDelivered / shipments.length) : 0,
+          },
+          monthlyData,
+          serviceTypeData,
+          regionData,
+          customers: [],
+        });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setFetchError(err instanceof Error ? err.message : "Failed to load revenue data.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [startDate, endDate]);
 
   const handleExportPDF = () => {
@@ -234,7 +270,12 @@ const RevenueAnalytics: React.FC = () => {
         </div>
       </div>
 
-      {isLoading ? (
+      {fetchError ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <p className="text-red-400 text-sm">{fetchError}</p>
+          <p className="text-slate-500 text-xs">Revenue analytics could not be loaded. Please try again later.</p>
+        </div>
+      ) : isLoading ? (
         <div className="flex flex-col gap-6">
           <div className="grid grid-cols-3 gap-4 max-lg:grid-cols-1 max-md:grid-cols-1">
             <DashboardWidgetSkeleton count={3} />
