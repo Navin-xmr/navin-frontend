@@ -6,13 +6,41 @@ This guide documents the migration strategy for converting legacy CSS files to T
 
 ## Migration Status
 
-As of the production readiness cleanup, **1 of 17** components have been migrated to Tailwind CSS:
+As of the latest audit, **9 of 14** component stylesheets have been migrated to Tailwind CSS. Their legacy CSS files have been orphaned (no longer imported) and are candidates for deletion once verified:
 
-✅ **Migrated (1)**:
+✅ **Migrated (9)**:
 - `Features` - Landing page features section
+- `ProtectedRoute` - Auth route guard loading screen
+- `WalletConnectButton` - Wallet connect/disconnect button
+- `NotificationDropdown` - Notification bell + dropdown
+- `StatusBadge` - Status pill (now via `utils/shipmentStatus.ts` Tailwind classes)
+- `DashboardLayout` - Dashboard shell, sidebar, top bar base layout
+- `TopHeader` - Sticky top header with search + actions
+- `Sidebar` - Sidebar navigation (component retired; layout now inlined in `DashboardLayout`)
+- `Dashboard` - Old monolith dashboard page (page retired; Dashboard.tsx is an empty stub)
 
-⬜ **Remaining (16)**:
-- Various components throughout the application (see component inventory below)
+Each migrated component above still has an orphaned `.css` file that nothing imports.
+Clean them up as part of a routine removal pass:
+
+- `src/components/auth/ProtectedRoute/ProtectedRoute.css`
+- `src/components/auth/WalletConnectButton/WalletConnectButton.css`
+- `src/components/notifications/NotificationDropdown/NotificationDropdown.css`
+- `src/components/ui/StatusBadge/StatusBadge.css`
+- `src/components/layout/DashboardLayout.css`
+- `src/components/layout/TopHeader/TopHeader.css`
+- `src/components/layout/Sidebar/Sidebar.css`
+- `src/pages/dashboard/Dashboard.css`
+
+⬜ **Remaining (5)** - still actively imported and awaiting migration:
+- `CompanySettings` - `pages/dashboard/Company/Settings/CompanySettings.css`
+- `CreateShipment` - `pages/dashboard/Company/CreateShipment/CreateShipment.css`
+- `Shipments` - `pages/Shipments/Shipments.css`
+- `ShipmentHeader` - `pages/Shipment/sections/ShipmentHeader/ShipmentHeader.css`
+- `PaymentDetailModal` - `pages/Payments/PaymentDetailModal/PaymentDetailModal.css`
+
+ℹ️ **Global styles kept as-is (not component-specific)**:
+- `src/index.css` - global base layer, fonts, design tokens
+- `src/App.css` - global animation keyframes
 
 ## Why Tailwind CSS?
 
@@ -199,4 +227,4 @@ For each component migration:
 
 ## Future Work
 
-The remaining 16 components should be migrated incrementally as they are touched for feature work or bug fixes. Complete migration is not required for production deployment but is recommended for long-term maintainability.
+The remaining 5 components should be migrated incrementally as they are touched for feature work or bug fixes. Complete migration is not required for production deployment but is recommended for long-term maintainability. Whenever a component is migrated, remember to delete its now-orphaned CSS file as well so the repository stays clean.
