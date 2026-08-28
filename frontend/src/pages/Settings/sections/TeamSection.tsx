@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   Users,
   Mail,
@@ -122,6 +122,8 @@ const TeamSection: React.FC = () => {
   const [openRoleDropdown, setOpenRoleDropdown] = useState<string | null>(null);
 
   const roleDropdownRef = useRef<HTMLDivElement | null>(null);
+  const inviteEmailId = useId();
+  const inviteRoleLabelId = useId();
 
   const fetchMembers = useCallback(async () => {
     setIsLoading(true);
@@ -546,10 +548,14 @@ const TeamSection: React.FC = () => {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-1.5">
+            <label
+              htmlFor={inviteEmailId}
+              className="block text-sm font-medium text-white mb-1.5"
+            >
               Email Address
             </label>
             <input
+              id={inviteEmailId}
               type="email"
               value={inviteEmail}
               onChange={(e) => {
@@ -563,9 +569,12 @@ const TeamSection: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-medium text-white">
+              <span
+                id={inviteRoleLabelId}
+                className="block text-sm font-medium text-white"
+              >
                 Role
-              </label>
+              </span>
               <button
                 onClick={() => setShowRoleInfo(!showRoleInfo)}
                 className="text-xs text-[#62ffff] hover:text-white"
@@ -573,7 +582,11 @@ const TeamSection: React.FC = () => {
                 {showRoleInfo ? 'Hide details' : 'View role details'}
               </button>
             </div>
-            <div className="flex gap-2">
+            <div
+              className="flex gap-2"
+              role="group"
+              aria-labelledby={inviteRoleLabelId}
+            >
               {ROLES.map((role) => (
                 <button
                   key={role}

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { CalendarRange, Filter, RefreshCw, Search, TrendingUp } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { exceptionApi, ExceptionType, ShipmentException } from '@services/api/endpoints/exceptions';
@@ -44,6 +44,7 @@ const ExceptionDashboard: React.FC = () => {
   const [sortKey, setSortKey] = useState<'age' | 'type' | 'owner'>('age');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const filterId = useId();
 
   const trendData = useMemo(() => generateTrendData(), []);
 
@@ -180,9 +181,10 @@ const ExceptionDashboard: React.FC = () => {
             <p className="text-sm text-slate-400">Sortable queue of open issues with inline resolution workflow.</p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
-            <label className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-400">
+            <label htmlFor={`${filterId}-type`} className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-400">
               <Filter size={16} />
               <select
+                id={`${filterId}-type`}
                 value={filters.type}
                 onChange={(e) => setFilters((current) => ({ ...current, type: e.target.value as FilterState['type'] }))}
                 className="bg-transparent text-sm text-white outline-none"
@@ -193,9 +195,10 @@ const ExceptionDashboard: React.FC = () => {
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-400">
+            <label htmlFor={`${filterId}-date-range`} className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-400">
               <CalendarRange size={16} />
               <select
+                id={`${filterId}-date-range`}
                 value={filters.dateRange}
                 onChange={(e) => setFilters((current) => ({ ...current, dateRange: e.target.value as FilterState['dateRange'] }))}
                 className="bg-transparent text-sm text-white outline-none"
@@ -206,9 +209,10 @@ const ExceptionDashboard: React.FC = () => {
                 <option value="all">All time</option>
               </select>
             </label>
-            <label className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-400">
+            <label htmlFor={`${filterId}-route`} className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 text-sm text-slate-400">
               <Search size={16} />
               <input
+                id={`${filterId}-route`}
                 value={filters.route}
                 onChange={(e) => setFilters((current) => ({ ...current, route: e.target.value }))}
                 placeholder="Route"
@@ -289,6 +293,7 @@ const ExceptionDashboard: React.FC = () => {
                               onChange={(e) => setNote(e.target.value)}
                               rows={2}
                               placeholder="Add an update"
+                              aria-label={`Resolution note for shipment ${item.shipmentId}`}
                               className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none"
                             />
                             <button

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useId, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Clock,
@@ -144,6 +144,7 @@ const CompanyDashboard: React.FC = () => {
   const [showTour, setShowTour] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const widgetToggleId = useId();
   const [activePresetId, setActivePresetId] = useState(() => {
     try {
       return localStorage.getItem(DASHBOARD_LAYOUT_KEY) ?? "overview";
@@ -365,9 +366,11 @@ const CompanyDashboard: React.FC = () => {
           {(Object.keys(widgetLabels) as DashboardWidgetId[]).map((widgetId) => (
             <label
               key={widgetId}
+              htmlFor={`${widgetToggleId}-${widgetId}`}
               className="flex items-center gap-2 rounded-lg border border-[#1e293b] bg-[#0f172a] px-3 py-2 text-xs text-[#cbd5e1]"
             >
               <input
+                id={`${widgetToggleId}-${widgetId}`}
                 type="checkbox"
                 checked={isWidgetVisible(widgetId)}
                 onChange={() => handleWidgetToggle(widgetId)}

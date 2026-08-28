@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { invitationsApi } from '@services/api';
@@ -35,6 +35,7 @@ const AcceptInvitation: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const fieldId = useId();
 
   useEffect(() => {
     if (!token) {
@@ -143,8 +144,9 @@ const AcceptInvitation: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Full Name *</label>
+            <label htmlFor={`${fieldId}-name`} className="block text-xs font-medium text-slate-400 mb-1.5">Full Name *</label>
             <input
+              id={`${fieldId}-name`}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -155,9 +157,10 @@ const AcceptInvitation: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Create Password *</label>
+            <label htmlFor={`${fieldId}-password`} className="block text-xs font-medium text-slate-400 mb-1.5">Create Password *</label>
             <div className="relative">
               <input
+                id={`${fieldId}-password`}
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -182,8 +185,9 @@ const AcceptInvitation: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Confirm Password *</label>
+            <label htmlFor={`${fieldId}-confirm-password`} className="block text-xs font-medium text-slate-400 mb-1.5">Confirm Password *</label>
             <input
+              id={`${fieldId}-confirm-password`}
               type={showPassword ? 'text' : 'password'}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
