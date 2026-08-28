@@ -91,13 +91,19 @@ const ShipmentHistory: React.FC = () => {
     "text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]";
   const tdClass = "px-6 py-4 text-sm border-b border-[rgba(98,255,255,0.2)]";
 
+  // Single page-level heading shared by every render state (loading / error /
+  // empty / loaded) so the page always exposes just one top-level heading.
+  const pageHeader = (
+    <div>
+      <h1 className="text-2xl font-bold mb-1 sm:text-xl">Shipment History</h1>
+      <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="p-6 md:p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Shipment History</h1>
-          <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
-        </div>
+        <div className="mb-6">{pageHeader}</div>
         <div className={`${tableContainerClass} p-6`}>
           {[...Array(10)].map((_, i) => (
             <div key={i} className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_0.5fr] gap-6 mb-4">
@@ -114,10 +120,7 @@ const ShipmentHistory: React.FC = () => {
   if (hasError) {
     return (
       <div className="p-6 md:p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Shipment History</h1>
-          <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
-        </div>
+        <div className="mb-6">{pageHeader}</div>
         <div className={`${tableContainerClass} px-10 py-20 text-center`}>
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(239,68,68,0.1)] flex items-center justify-center">
             <AlertTriangle size={32} className="text-[#ef4444]" />
@@ -141,10 +144,7 @@ const ShipmentHistory: React.FC = () => {
   if (sortedShipments.length === 0 && !searchQuery) {
     return (
       <div className="p-6 md:p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Shipment History</h1>
-          <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
-        </div>
+        <div className="mb-6">{pageHeader}</div>
         <div className={`${tableContainerClass} px-10 py-20 text-center`}>
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(98,255,255,0.1)] flex items-center justify-center">
             <Package size={32} className="text-[#62ffff]" />
@@ -162,10 +162,7 @@ const ShipmentHistory: React.FC = () => {
     <div className="p-6 md:p-4">
       {/* Header */}
       <div className="flex justify-between items-start mb-6 lg:flex-col lg:gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1 sm:text-xl">Shipment History</h1>
-          <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
-        </div>
+        {pageHeader}
 
         {/* Search */}
         <div className="relative lg:w-full">

@@ -243,15 +243,23 @@ const PaymentHistory: React.FC = () => {
     "text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]";
   const tdClass = "px-6 py-4 text-sm border-b border-[rgba(98,255,255,0.2)]";
 
+  // Single page-level heading shared by every render state (error / empty /
+  // loaded) so the page always exposes just one top-level heading.
+  const pageHeader = (
+    <div>
+      <h1 className="text-2xl font-bold mb-1 max-md:text-xl max-md:font-semibold">
+        Payment History
+      </h1>
+      <p className="text-text-secondary text-sm max-md:text-xs">
+        Track all payment transactions on the blockchain
+      </p>
+    </div>
+  );
+
   if (error) {
     return (
       <div className="p-6 md:p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Payment History</h1>
-          <p className="text-text-secondary text-sm">
-            Track all payment transactions on the blockchain
-          </p>
-        </div>
+        <div className="mb-6">{pageHeader}</div>
         <EmptyState
           icon={<AlertTriangle size={28} />}
           title="Failed to load payment history"
@@ -271,12 +279,7 @@ const PaymentHistory: React.FC = () => {
   if (!isLoading && payments.length === 0) {
     return (
       <div className="p-6 md:p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Payment History</h1>
-          <p className="text-text-secondary text-sm">
-            Track all payment transactions on the blockchain
-          </p>
-        </div>
+        <div className="mb-6">{pageHeader}</div>
         <div className={tableContainerClass}>
           <EmptyState.NoPayments />
         </div>
@@ -288,14 +291,7 @@ const PaymentHistory: React.FC = () => {
     <div className="p-6 md:p-4">
       {/* Header */}
       <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1 max-md:text-xl max-md:font-semibold">
-            Payment History
-          </h1>
-          <p className="text-text-secondary text-sm max-md:text-xs">
-            Track all payment transactions on the blockchain
-          </p>
-        </div>
+        {pageHeader}
         <div className="flex gap-3 max-md:w-full max-md:flex-col max-md:gap-2">
           <div className="relative flex items-center max-md:w-full">
             <select
