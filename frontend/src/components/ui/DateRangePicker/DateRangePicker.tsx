@@ -1,6 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfDay, endOfDay, subDays, isSameDay, isBefore, isAfter, isWithinInterval } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, X } from 'lucide-react';
+import { formatDate } from '../../../utils/localeFormat';
+import {
+  addMonths,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  startOfDay,
+  endOfDay,
+  subDays,
+  isSameDay,
+  isBefore,
+  isAfter,
+  isWithinInterval,
+} from './dateUtils';
 
 export interface DateRangePickerProps {
   value: {
@@ -44,10 +57,10 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
   const formatDateRange = () => {
     if (value.from && value.to) {
-      return `${format(value.from, 'MMM d, yyyy')} - ${format(value.to, 'MMM d, yyyy')}`;
+      return `${formatDate(value.from)} - ${formatDate(value.to)}`;
     }
     if (value.from) {
-      return format(value.from, 'MMM d, yyyy');
+      return formatDate(value.from);
     }
     return 'Select date range';
   };
@@ -151,7 +164,9 @@ export const DateRangePicker: React.FC<DateRangePickerProps> = ({
           >
             <ChevronLeft className="w-4 h-4 text-white" />
           </button>
-          <span className="font-semibold text-white">{format(month, 'MMMM yyyy')}</span>
+          <span className="font-semibold text-white">
+            {formatDate(month, { month: 'long', year: 'numeric' })}
+          </span>
           <button
             onClick={() => handleNextMonth(isLeft)}
             className="p-1 rounded-full hover:bg-background-elevated transition-colors"
