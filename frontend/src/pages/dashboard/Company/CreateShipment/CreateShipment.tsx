@@ -16,7 +16,6 @@ import type { ComboboxOption } from '@components/ui/Combobox';
 import CostBreakdown from '@components/shipment/CostBreakdown';
 import { formatAddress as formatLocalizedAddress } from '@utils/localeFormat';
 import type { CostBreakdownData } from '@components/shipment/CostBreakdown';
-import './CreateShipment.css';
 
 interface FormData {
     origin: string;
@@ -46,6 +45,11 @@ const DRAFT_STORAGE_KEY = 'navin_draft_create_shipment';
 
 const isFormEmpty = (data: FormData): boolean =>
     Object.values(data).every((value) => !value.trim());
+
+const inputClasses = (hasError: boolean) =>
+    `w-full bg-[#0b0e14] border rounded-lg px-4 py-3 text-slate-100 text-sm font-sans transition-all focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 placeholder:text-slate-600 ${
+        hasError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-800 focus:border-blue-500'
+    }`;
 
 const CreateShipment: React.FC = () => {
     const navigate = useNavigate();
@@ -346,20 +350,20 @@ useEffect(() => {
 
     if (success) {
         return (
-            <div className="create-shipment-container success-view">
-                <div className="success-content">
+            <div className="px-6 py-8 bg-[#050505] text-slate-100 min-h-[calc(100vh-80px)] flex flex-col items-center justify-center sm:p-4">
+                <div className="bg-[#14171E] border border-slate-800 rounded-xl p-12 max-w-[500px] w-full text-center shadow-lg sm:px-5 sm:py-8">
                     <CheckCircle2 size={64} className="text-green-500 mb-4 mx-auto" color="#22c55e" />
-                    <h2 className="success-title">Shipment Created Successfully!</h2>
-                    <p className="success-message">Your shipment has been registered on the blockchain.</p>
-                    <div className="shipment-id-box">
-                        <span className="shipment-id-label">Shipment ID:</span>
-                        <span className="shipment-id-value">{shipmentId}</span>
+                    <h2 className="text-2xl font-semibold text-slate-100 mb-2">Shipment Created Successfully!</h2>
+                    <p className="text-slate-400 text-[15px] mb-8">Your shipment has been registered on the blockchain.</p>
+                    <div className="bg-[#0b0e14] border border-dashed border-blue-500 rounded-lg p-4 mb-8 flex flex-col gap-2">
+                        <span className="text-slate-400 text-xs uppercase tracking-wider">Shipment ID:</span>
+                        <span className="text-blue-500 text-xl font-semibold font-mono">{shipmentId}</span>
                     </div>
-                    <div className="success-actions">
-                        <button className="primary-btn" onClick={() => navigate('/dashboard/shipments')}>
+                    <div className="flex flex-col gap-3">
+                        <button className="w-full bg-blue-600 border border-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all hover:bg-blue-700 hover:border-blue-700 disabled:opacity-60 disabled:cursor-not-allowed" onClick={() => navigate('/dashboard/shipments')}>
                             View Shipment
                         </button>
-                        <button className="secondary-btn" onClick={() => {
+                        <button className="w-full bg-transparent border border-slate-800 text-slate-100 px-6 py-3 rounded-lg text-sm font-medium transition-all hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed" onClick={() => {
                             setSuccess(false);
                             setFormData(EMPTY_FORM);
                             setSelectedTemplateId('');
@@ -373,44 +377,44 @@ useEffect(() => {
     }
 
   return (
-    <div className="create-shipment-container">
-          <div className="header-actions">
-              <button className="back-btn" onClick={() => navigate(-1)}>
+    <div className="px-6 py-8 bg-[#050505] text-slate-100 min-h-[calc(100vh-80px)] flex flex-col items-center sm:p-4 w-full">
+          <div className="w-full max-w-[800px] mb-6">
+              <button className="flex items-center gap-2 bg-transparent border-none text-slate-100 text-sm cursor-pointer px-3 py-2 rounded-md transition-colors hover:bg-slate-800" onClick={() => navigate(-1)}>
                   <ArrowLeft size={20} />
                   <span>Back</span>
               </button>
           </div>
 
-          <div className="form-wrapper">
-              <div className="form-header">
-                  <Package className="form-icon" size={28} />
-                  <h2>Create New Shipment</h2>
-                  <p>Enter the shipment details to register it on the blockchain.</p>
+          <div className="w-full max-w-[800px] bg-[#14171E] border border-slate-800 rounded-xl p-8 shadow-lg sm:p-5">
+              <div className="mb-8 border-b border-slate-800 pb-6">
+                  <Package className="text-blue-500 bg-blue-500/10 p-2 rounded-lg box-content mb-3" size={28} />
+                  <h2 className="text-2xl font-semibold mt-3 mb-2 text-slate-100">Create New Shipment</h2>
+                  <p className="text-slate-400 text-sm">Enter the shipment details to register it on the blockchain.</p>
               </div>
 
               {draft && (
-                  <div className="draft-banner" role="status">
-                      <History size={18} className="draft-banner-icon" />
-                      <div className="draft-banner-text">
-                          <p className="draft-banner-title">Unfinished shipment found</p>
-                          <p className="draft-banner-meta">
+                  <div className="flex items-center gap-3 p-4 mb-5 bg-blue-500/5 border border-blue-500/35 rounded-lg sm:flex-col sm:items-start" role="status">
+                      <History size={18} className="text-blue-500 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                          <p className="m-0 text-sm font-semibold text-slate-100">Unfinished shipment found</p>
+                          <p className="m-0 mt-0.5 text-xs text-slate-400">
                               Saved {new Date(draft.savedAt).toLocaleString()}
                           </p>
                       </div>
-                      <div className="draft-banner-actions">
-                          <button type="button" className="draft-restore-btn" onClick={handleRestoreDraft}>
+                      <div className="flex gap-2 shrink-0 sm:w-full">
+                          <button type="button" className="bg-blue-600 border border-blue-600 text-white px-3.5 py-2 text-xs font-semibold rounded-md transition-all hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-[#62FFFF] focus-visible:outline-offset-2 sm:flex-1" onClick={handleRestoreDraft}>
                               Restore draft
                           </button>
-                          <button type="button" className="draft-discard-btn" onClick={handleDiscardDraft}>
+                          <button type="button" className="bg-transparent border border-slate-800 text-slate-400 px-3.5 py-2 text-xs font-semibold rounded-md transition-all hover:border-slate-700 hover:text-slate-100 focus-visible:outline-2 focus-visible:outline-[#62FFFF] focus-visible:outline-offset-2 sm:flex-1" onClick={handleDiscardDraft}>
                               Discard
                           </button>
                       </div>
                   </div>
               )}
 
-              <div className="template-toolbar">
-                  <div className="form-group template-select-group">
-                      <label htmlFor="load-template">Load Template</label>
+              <div className="mb-6 pb-6 border-b border-slate-800">
+                  <div className="flex flex-col gap-2 mb-0">
+                      <label htmlFor="load-template" className="text-sm font-medium text-slate-100">Load Template</label>
                       <select
                           id="load-template"
                           value={selectedTemplateId}
@@ -420,7 +424,7 @@ useEffect(() => {
                               if (templateId) applyTemplate(templateId);
                           }}
                           disabled={templatesLoading || templates.length === 0}
-                          className="template-select"
+                          className="w-full px-4 py-3 bg-[#0b0e14] border border-slate-800 rounded-lg text-slate-100 text-sm cursor-pointer focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                           <option value="">
                               {templatesLoading
@@ -438,13 +442,13 @@ useEffect(() => {
                   </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="shipment-form">
-                  <div className="form-group">
-                      <div className="label-row">
-                          <label htmlFor="origin">Origin Address</label>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                          <label htmlFor="origin" className="text-sm font-medium text-slate-100">Origin Address</label>
                           <button
                               type="button"
-                              className="address-book-btn"
+                              className="inline-flex items-center gap-1 bg-transparent border border-blue-500 text-blue-500 text-xs px-2 py-0.5 rounded cursor-pointer transition-all hover:bg-blue-500/15"
                               onClick={() => setAddressBookTarget('origin')}
                           >
                               <Book size={12} />
@@ -472,15 +476,15 @@ useEffect(() => {
                           loadingMessage="Loading your saved addresses…"
                           className={errors.origin ? '[&_input]:border-red-500 [&_input]:focus:border-red-400' : ''}
                       />
-                      {errors.origin && <span id="origin-error" className="error-text" role="alert">{errors.origin}</span>}
+                      {errors.origin && <span id="origin-error" className="text-red-500 text-xs -mt-1" role="alert">{errors.origin}</span>}
                   </div>
 
-                  <div className="form-group">
-                      <div className="label-row">
-                          <label htmlFor="destination">Destination Address</label>
+                  <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                          <label htmlFor="destination" className="text-sm font-medium text-slate-100">Destination Address</label>
                           <button
                               type="button"
-                              className="address-book-btn"
+                              className="inline-flex items-center gap-1 bg-transparent border border-blue-500 text-blue-500 text-xs px-2 py-0.5 rounded cursor-pointer transition-all hover:bg-blue-500/15"
                               onClick={() => setAddressBookTarget('destination')}
                           >
                               <Book size={12} />
@@ -508,11 +512,11 @@ useEffect(() => {
                           loadingMessage="Loading your saved addresses…"
                           className={errors.destination ? '[&_input]:border-red-500 [&_input]:focus:border-red-400' : ''}
                       />
-                      {errors.destination && <span id="destination-error" className="error-text" role="alert">{errors.destination}</span>}
+                      {errors.destination && <span id="destination-error" className="text-red-500 text-xs -mt-1" role="alert">{errors.destination}</span>}
                   </div>
 
-                  <div className="form-group">
-                      <label htmlFor="itemDescription">Item Description</label>
+                  <div className="flex flex-col gap-2">
+                      <label htmlFor="itemDescription" className="text-sm font-medium text-slate-100">Item Description</label>
                       <textarea
                           id="itemDescription"
                           name="itemDescription"
@@ -521,16 +525,16 @@ useEffect(() => {
                           onBlur={handleBlur}
                           aria-invalid={!!errors.itemDescription}
                           aria-describedby={errors.itemDescription ? "itemDescription-error" : undefined}
-                          className={errors.itemDescription ? 'input-error' : ''}
+                          className={inputClasses(!!errors.itemDescription)}
                           placeholder="Describe the items being shipped..."
                           rows={3}
                       />
-                      {errors.itemDescription && <span id="itemDescription-error" className="error-text" role="alert">{errors.itemDescription}</span>}
+                      {errors.itemDescription && <span id="itemDescription-error" className="text-red-500 text-xs -mt-1" role="alert">{errors.itemDescription}</span>}
                   </div>
 
-                  <div className="form-row">
-                      <div className="form-group half-width">
-                          <label htmlFor="weight">Weight (kg)</label>
+                  <div className="flex gap-6 sm:flex-col sm:gap-6">
+                      <div className="flex flex-col gap-2 flex-1">
+                          <label htmlFor="weight" className="text-sm font-medium text-slate-100">Weight (kg)</label>
                           <input
                               type="number"
                               id="weight"
@@ -540,16 +544,16 @@ useEffect(() => {
                               onBlur={handleBlur}
                               aria-invalid={!!errors.weight}
                               aria-describedby={errors.weight ? "weight-error" : undefined}
-                              className={errors.weight ? 'input-error' : ''}
+                              className={inputClasses(!!errors.weight)}
                               placeholder="0.00"
                               min="0"
                               step="0.01"
                           />
-                          {errors.weight && <span id="weight-error" className="error-text" role="alert">{errors.weight}</span>}
+                          {errors.weight && <span id="weight-error" className="text-red-500 text-xs -mt-1" role="alert">{errors.weight}</span>}
                       </div>
 
-                      <div className="form-group half-width">
-                          <label htmlFor="expectedDeliveryDate">Expected Delivery Date</label>
+                      <div className="flex flex-col gap-2 flex-1">
+                          <label htmlFor="expectedDeliveryDate" className="text-sm font-medium text-slate-100">Expected Delivery Date</label>
                           <input
                               type="date"
                               id="expectedDeliveryDate"
@@ -559,15 +563,15 @@ useEffect(() => {
                               onBlur={handleBlur}
                               aria-invalid={!!errors.expectedDeliveryDate}
                               aria-describedby={errors.expectedDeliveryDate ? "expectedDeliveryDate-error" : undefined}
-                              className={errors.expectedDeliveryDate ? 'input-error' : ''}
+                              className={inputClasses(!!errors.expectedDeliveryDate)}
                           />
-                          {errors.expectedDeliveryDate && <span id="expectedDeliveryDate-error" className="error-text" role="alert">{errors.expectedDeliveryDate}</span>}
+                          {errors.expectedDeliveryDate && <span id="expectedDeliveryDate-error" className="text-red-500 text-xs -mt-1" role="alert">{errors.expectedDeliveryDate}</span>}
                       </div>
                   </div>
 
-                  <div className="form-row">
-                      <div className="form-group half-width">
-                          <label htmlFor="recipientName">Recipient Name</label>
+                  <div className="flex gap-6 sm:flex-col sm:gap-6">
+                      <div className="flex flex-col gap-2 flex-1">
+                          <label htmlFor="recipientName" className="text-sm font-medium text-slate-100">Recipient Name</label>
                           <input
                               type="text"
                               id="recipientName"
@@ -577,14 +581,14 @@ useEffect(() => {
                               onBlur={handleBlur}
                               aria-invalid={!!errors.recipientName}
                               aria-describedby={errors.recipientName ? "recipientName-error" : undefined}
-                              className={errors.recipientName ? 'input-error' : ''}
+                              className={inputClasses(!!errors.recipientName)}
                               placeholder="John Doe"
                           />
-                          {errors.recipientName && <span id="recipientName-error" className="error-text" role="alert">{errors.recipientName}</span>}
+                          {errors.recipientName && <span id="recipientName-error" className="text-red-500 text-xs -mt-1" role="alert">{errors.recipientName}</span>}
                       </div>
 
-                      <div className="form-group half-width">
-                          <label htmlFor="recipientContact">Recipient Contact</label>
+                      <div className="flex flex-col gap-2 flex-1">
+                          <label htmlFor="recipientContact" className="text-sm font-medium text-slate-100">Recipient Contact</label>
                           <input
                               type="text"
                               id="recipientContact"
@@ -594,10 +598,10 @@ useEffect(() => {
                               onBlur={handleBlur}
                               aria-invalid={!!errors.recipientContact}
                               aria-describedby={errors.recipientContact ? "recipientContact-error" : undefined}
-                              className={errors.recipientContact ? 'input-error' : ''}
+                              className={inputClasses(!!errors.recipientContact)}
                               placeholder="Phone or Email"
                           />
-                          {errors.recipientContact && <span id="recipientContact-error" className="error-text" role="alert">{errors.recipientContact}</span>}
+                          {errors.recipientContact && <span id="recipientContact-error" className="text-red-500 text-xs -mt-1" role="alert">{errors.recipientContact}</span>}
                       </div>
                   </div>
 
@@ -607,23 +611,23 @@ useEffect(() => {
                     mode="estimate"
                 />
 
-                  <p className="draft-status" aria-live="polite">
+                  <p className="m-0 mt-1 text-xs text-slate-500" aria-live="polite">
                       {lastSavedAt
                           ? `Draft saved ${lastSavedAt.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`
                           : 'Your progress is saved automatically as you type.'}
                   </p>
 
-                  <div className="form-actions">
-                      <button type="button" className="cancel-btn" onClick={() => navigate(-1)} disabled={loading}>
+                  <div className="flex justify-end gap-4 mt-4 pt-6 border-t border-slate-800 sm:flex-col-reverse">
+                      <button type="button" className="bg-transparent border border-slate-800 text-slate-100 px-6 py-3 rounded-lg text-sm font-medium transition-all hover:bg-slate-800 disabled:opacity-60 disabled:cursor-not-allowed sm:w-full" onClick={() => navigate(-1)} disabled={loading}>
                           Cancel
                       </button>
-                      <button type="button" className="template-btn" onClick={handleOpenSaveModal} disabled={loading}>
+                      <button type="button" className="bg-transparent border border-slate-700 text-slate-300 px-6 py-3 rounded-lg text-sm font-medium transition-all hover:bg-slate-800 hover:text-slate-100 disabled:opacity-60 disabled:cursor-not-allowed sm:w-full flex items-center justify-center gap-2" onClick={handleOpenSaveModal} disabled={loading}>
                           Save as Template
                       </button>
-                      <button type="submit" className="submit-btn" disabled={loading}>
+                      <button type="submit" className="bg-blue-600 border border-blue-600 text-white px-6 py-3 rounded-lg text-sm font-medium transition-all hover:bg-blue-700 hover:border-blue-700 disabled:opacity-60 disabled:cursor-not-allowed sm:w-full flex items-center justify-center gap-2" disabled={loading}>
                           {loading ? (
                               <>
-                                  <Loader2 className="spinner" size={20} />
+                                  <Loader2 className="animate-spin" size={20} />
                                   <span>Processing...</span>
                               </>
                           ) : (
@@ -643,9 +647,9 @@ useEffect(() => {
           />
 
           <AddressBookPickerModal
-              isOpen={addressBookTarget !== null}
-              onClose={() => setAddressBookTarget(null)}
-              onSelect={handleAddressBookSelect}
+               isOpen={addressBookTarget !== null}
+               onClose={() => setAddressBookTarget(null)}
+               onSelect={handleAddressBookSelect}
           />
     </div>
   );
