@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
@@ -14,14 +15,18 @@ import * as Sentry from '@sentry/react';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
+import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
 import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
 import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
 import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
+import { RouteTransitionProvider } from './context/RouteTransitionContext';
+import RouteTransition from './components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
+import NotFoundPage from '@pages/NotFound/NotFoundPage';
 import './App.css';
 
 // Eagerly loaded (critical path)
@@ -48,6 +53,7 @@ const ShipmentHistory = lazy(() => import('./pages/dashboard/Customer/ShipmentHi
 const UserManagement = lazy(() => import('./pages/dashboard/Company/UserManagement/UserManagement'));
 const AcceptInvitation = lazy(() => import('./pages/auth/AcceptInvitation/AcceptInvitation'));
 const CalendarView = lazy(() => import('./pages/dashboard/Company/CalendarView/CalendarView'));
+const WhatsNewPage = lazy(() => import('./pages/WhatsNew/WhatsNewPage'));
 
 const S = (element: React.ReactNode) => (
   <Suspense fallback={<PageSkeleton />}>{element}</Suspense>
@@ -105,10 +111,13 @@ const router = createBrowserRouter([
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
           { path: '/dashboard/profile', element: <CustomerProfile /> },
+          { path: '/dashboard/*', element: <NotFoundPage /> },
+          { path: '/dashboard/whats-new', element: S(<WhatsNewPage />) },
         ],
       },
     ],
   },
+  { path: '*', element: <NotFoundPage /> },
 ]);
 
 function RealtimeManager() {
@@ -123,14 +132,19 @@ function RealtimeManager() {
 function App() {
   return (
     <AuthProvider>
-      <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
-        <ErrorBoundary>
-          <OfflineBanner />
-          <RealtimeManager />
-          <RouterProvider router={router} />
-          <PWAInstallPrompt />
-        </ErrorBoundary>
-      </Sentry.ErrorBoundary>
+      <RouteTransitionProvider>
+        <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
+          <ErrorBoundary>
+            <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
+            <RouteTransition />
+            <OfflineBanner />
+            <SlowConnectionBanner />
+            <RealtimeManager />
+            <RouterProvider router={router} />
+            <PWAInstallPrompt />
+          </ErrorBoundary>
+        </Sentry.ErrorBoundary>
+      </RouteTransitionProvider>
     </AuthProvider>
   );
 }

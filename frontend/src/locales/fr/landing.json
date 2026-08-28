@@ -1,0 +1,111 @@
+{
+  "hero": {
+    "titleLine1": "SUIVI",
+    "titleLine2": "TRANSPARENT",
+    "subtitle": "Notre plateforme utilise une technologie de nouvelle génération pour rendre vos livraisons plus rapides et plus fiables. Chaque étape est visible, chaque envoi est sécurisé.",
+    "cta": "Suivre votre envoi"
+  },
+  "logoStrip": {
+    "poweredBy": "Propulsé par et approuvé par"
+  },
+  "whyNavin": {
+    "heading": "Pourquoi",
+    "headingHighlight": "Navin ?",
+    "subtitle": "Une logistique propulsée par la blockchain qui privilégie la transparence, la rapidité et la sécurité.",
+    "transparency": {
+      "title": "Transparence totale",
+      "description": "Suivez le parcours de vos envois, à chaque étape."
+    },
+    "alerts": {
+      "title": "Alertes en temps réel",
+      "description": "Soyez informé instantanément en cas de retard ou de problème."
+    },
+    "deliveries": {
+      "title": "Livraisons sécurisées",
+      "description": "Une technologie inviolable prévient la fraude et les erreurs."
+    },
+    "fastService": {
+      "title": "Service plus rapide",
+      "description": "Des processus automatisés pour des livraisons plus rapides et plus fluides."
+    }
+  },
+  "coreFeatures": {
+    "heading": "Fonctionnalités",
+    "headingHighlight": "Clés",
+    "subtitle": "Construit sur la blockchain Stellar pour la transparence, la sécurité et l'automatisation",
+    "chartAriaLabel": "Visualisation illustrative de l'activité des envois sur la blockchain",
+    "tokenizedAssets": {
+      "label": "Actifs tokenisés",
+      "description": "Chaque envoi reçoit une identité numérique unique sur la blockchain Stellar, vous offrant une visibilité totale sur la chaîne, du retrait à la livraison."
+    },
+    "iotMilestones": {
+      "label": "Jalons vérifiés par IoT",
+      "description": "La localisation en temps réel et les données environnementales — température, humidité — sont hachées et ancrées sur la chaîne pour empêcher toute falsification à chaque point de contrôle."
+    },
+    "smartSettlements": {
+      "label": "Règlements intelligents",
+      "description": "Les fonds sont bloqués sous séquestre et libérés automatiquement par contrat intelligent dès qu'une livraison est vérifiée de manière cryptographique."
+    },
+    "parityDashboards": {
+      "label": "Tableaux de bord équitables",
+      "description": "Une source unique de vérité pour les rôles Entreprise, Transporteur, Client et Administrateur — chacun avec une visibilité adaptée et contrôlée. Ni arbitre, ni joueur en conflit."
+    },
+    "cta": "Suivre votre envoi"
+  },
+  "howItWorks": {
+    "headingPrefix": "Comment",
+    "headingHighlight": "Navin",
+    "headingSuffix": "fonctionne",
+    "subtitle": "Simple, transparent et propulsé par la blockchain. Suivez vos envois du retrait à la livraison.",
+    "pickup": {
+      "title": "Retrait intelligent",
+      "description": "Nous récupérons votre colis à l'endroit de votre choix ou dans un centre partenaire et l'enregistrons dans notre système pour une transparence totale dès le départ."
+    },
+    "tracking": {
+      "title": "Suivi en direct",
+      "description": "Suivez votre envoi en temps réel avec des mises à jour instantanées à chaque étape — de l'expédition à la livraison. Ne vous demandez plus où se trouve votre colis."
+    },
+    "delivery": {
+      "title": "Livraison sécurisée",
+      "description": "Dès l'arrivée de votre colis, vous recevrez une confirmation de livraison sécurisée, accompagnée d'une preuve de remise. Une tranquillité d'esprit garantie."
+    }
+  },
+  "faq": {
+    "heading": "Questions",
+    "headingHighlight": "Fréquentes",
+    "subtitle": "Tout ce que vous devez savoir sur la plateforme logistique de Navin propulsée par la blockchain.",
+    "whatIsNavin": {
+      "question": "Qu'est-ce que Navin ?",
+      "answer": "Navin est une plateforme logistique de nouvelle génération qui combine la technologie blockchain et le suivi IoT pour offrir une gestion des envois transparente et inviolable. Chaque étape est enregistrée sur la chaîne, garantissant la responsabilité du retrait à la livraison."
+    },
+    "stellarPayments": {
+      "question": "Comment fonctionnent les paiements Stellar sur Navin ?",
+      "answer": "Navin s'intègre à la blockchain Stellar pour gérer les paiements via des contrats intelligents. Lorsqu'un envoi est confirmé, les fonds sont bloqués sous séquestre et automatiquement libérés au transporteur dès la livraison réussie — aucun traitement manuel requis."
+    },
+    "iotTracking": {
+      "question": "Comment fonctionne le suivi IoT ?",
+      "answer": "Nos capteurs IoT fixés aux envois signalent en continu la position GPS, la température, l'humidité et les chocs. Ces données sont enregistrées en temps réel et ancrées sur la blockchain, vous offrant un enregistrement vérifiable et inviolable du parcours de votre envoi."
+    },
+    "getStarted": {
+      "question": "Comment démarrer avec Navin ?",
+      "answer": "Inscrivez-vous simplement, choisissez votre rôle (entreprise logistique ou client), et vous aurez un accès immédiat au tableau de bord. Vous pouvez créer votre premier envoi en quelques minutes — notre visite guidée vous accompagnera à chaque étape."
+    },
+    "dataSecure": {
+      "question": "Mes données sont-elles sécurisées sur Navin ?",
+      "answer": "Oui. Toutes les données sensibles sont chiffrées en transit et au repos. Les registres d'envois sont ancrés sur la blockchain Stellar, les rendant immuables et vérifiables. L'accès est contrôlé par des permissions basées sur les rôles, garantissant que seules les parties autorisées peuvent consulter ou modifier les détails des envois."
+    },
+    "walletsSupported": {
+      "question": "Quels portefeuilles sont pris en charge ?",
+      "answer": "Navin prend en charge Freighter et Albedo dès l'installation, LOBSTR étant disponible via un appairage WalletConnect. Vous pouvez connecter votre portefeuille directement depuis le tableau de bord pour gérer les paiements et consulter l'historique des transactions sur la chaîne."
+    }
+  },
+  "footer": {
+    "heading": "Commencez",
+    "headingHighlight": "Dès Aujourd'hui",
+    "subtitle": "Rejoignez plus de 500 entreprises leaders. Recevez les dernières actualités sur la logistique blockchain et la gestion de la chaîne d'approvisionnement zero-trust.",
+    "emailPlaceholder": "Entrez votre e-mail",
+    "subscribe": "S'abonner",
+    "tagline": "La nouvelle référence en matière de sécurité logistique",
+    "copyright": "Navin. Tous droits réservés."
+  }
+}

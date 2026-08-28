@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { AlertTriangle, Download, Trash2 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { apiClient } from '@services/api/client';
+import { useToast } from '../../../context/ToastContext';
+import { clearToken } from '../../../services/auth/tokenStorage';
 
 interface DangerZoneProps {
   userEmail: string;
@@ -11,12 +13,13 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
   const [confirmEmail, setConfirmEmail] = useState('');
   const [exporting, setExporting] = useState(false);
   const { isLoading, error, save } = useSettings();
+  const { addToast } = useToast();
 
   const handleDelete = async () => {
     if (confirmEmail !== userEmail) return;
     const ok = await save({ url: '/api/users/me', method: 'delete' });
     if (ok) {
-      localStorage.removeItem('authToken');
+      clearToken();
       window.location.href = '/';
     }
   };
@@ -31,6 +34,9 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
       a.download = 'navin-export.json';
       a.click();
       URL.revokeObjectURL(url);
+      addToast('Your data export has started downloading.', 'success');
+    } catch {
+      addToast('Could not export your data. Please try again.', 'error');
     } finally {
       setExporting(false);
     }

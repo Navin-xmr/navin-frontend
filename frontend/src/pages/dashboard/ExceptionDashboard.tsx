@@ -1,22 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarRange, Filter, RefreshCw, Search, TrendingUp } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { exceptionApi, ExceptionType, ShipmentException } from '@services/api/endpoints/exceptions';
 
-type ExceptionType = 'DELAYED' | 'DAMAGED' | 'LOST' | 'RETURNED' | 'CUSTOMS_HOLD';
-type ExceptionStatus = 'OPEN' | 'RESOLVING' | 'RESOLVED';
-
-type ExceptionItem = {
-  id: string;
-  shipmentId: string;
-  type: ExceptionType;
-  status: ExceptionStatus;
-  ageHours: number;
-  owner: string;
-  route: string;
-  openedAt: string;
-  resolutionHours: number;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH';
-};
+type ExceptionItem = ShipmentException;
 
 type FilterState = {
   type: 'ALL' | ExceptionType;
@@ -30,69 +17,6 @@ const EXCEPTION_TYPES: Array<{ value: ExceptionType; label: string; color: strin
   { value: 'LOST', label: 'Lost', color: '#f43f5e' },
   { value: 'RETURNED', label: 'Returned', color: '#a78bfa' },
   { value: 'CUSTOMS_HOLD', label: 'Customs Hold', color: '#34d399' },
-];
-
-const initialExceptions: ExceptionItem[] = [
-  {
-    id: 'EX-1021',
-    shipmentId: 'SHP-1042',
-    type: 'DELAYED',
-    status: 'OPEN',
-    ageHours: 38,
-    owner: 'Amina',
-    route: 'Lagos → Abuja',
-    openedAt: '2026-06-24',
-    resolutionHours: 12,
-    severity: 'HIGH',
-  },
-  {
-    id: 'EX-1022',
-    shipmentId: 'SHP-1127',
-    type: 'DAMAGED',
-    status: 'OPEN',
-    ageHours: 18,
-    owner: 'Bolanle',
-    route: 'Abuja → Kano',
-    openedAt: '2026-06-25',
-    resolutionHours: 8,
-    severity: 'MEDIUM',
-  },
-  {
-    id: 'EX-1023',
-    shipmentId: 'SHP-1188',
-    type: 'LOST',
-    status: 'RESOLVING',
-    ageHours: 72,
-    owner: 'Chris',
-    route: 'Port Harcourt → Enugu',
-    openedAt: '2026-06-22',
-    resolutionHours: 15,
-    severity: 'HIGH',
-  },
-  {
-    id: 'EX-1024',
-    shipmentId: 'SHP-1203',
-    type: 'RETURNED',
-    status: 'OPEN',
-    ageHours: 9,
-    owner: 'Dayo',
-    route: 'Ibadan → Lagos',
-    openedAt: '2026-06-26',
-    resolutionHours: 4,
-    severity: 'LOW',
-  },
-  {
-    id: 'EX-1025',
-    shipmentId: 'SHP-1291',
-    type: 'CUSTOMS_HOLD',
-    status: 'OPEN',
-    ageHours: 51,
-    owner: 'Nneka',
-    route: 'Lagos → Abuja',
-    openedAt: '2026-06-23',
-    resolutionHours: 10,
-    severity: 'MEDIUM',
-  },
 ];
 
 const generateTrendData = () => {
@@ -113,13 +37,37 @@ const generateTrendData = () => {
 };
 
 const ExceptionDashboard: React.FC = () => {
-  const [exceptions, setExceptions] = useState(initialExceptions);
+  const [exceptions, setExceptions] = useState<ExceptionItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({ type: 'ALL', dateRange: '30d', route: '' });
   const [sortKey, setSortKey] = useState<'age' | 'type' | 'owner'>('age');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [note, setNote] = useState('');
 
   const trendData = useMemo(() => generateTrendData(), []);
+
+  const fetchExceptions = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await exceptionApi.getAll({
+        type: filters.type === 'ALL' ? undefined : filters.type,
+        dateRange: filters.dateRange,
+        route: filters.route || undefined,
+      });
+      setExceptions(data);
+    } catch {
+      setError('Failed to load exceptions. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters.type, filters.dateRange, filters.route]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => { void fetchExceptions(); }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchExceptions]);
 
   const visibleExceptions = useMemo(() => {
     const now = new Date();
@@ -158,10 +106,16 @@ const ExceptionDashboard: React.FC = () => {
     setNote('');
   };
 
-  const submitResolution = (id: string) => {
-    setExceptions((current) => current.map((item) => (item.id === id ? { ...item, status: 'RESOLVED' } : item)));
-    setResolvingId(null);
-    setNote('');
+  const submitResolution = async (id: string) => {
+    try {
+      const updated = await exceptionApi.resolve(id, note);
+      setExceptions((current) => current.map((item) => (item.id === id ? updated : item)));
+    } catch {
+      setError('Failed to resolve exception. Please try again.');
+    } finally {
+      setResolvingId(null);
+      setNote('');
+    }
   };
 
   return (
@@ -173,12 +127,16 @@ const ExceptionDashboard: React.FC = () => {
             <h1 className="mt-2 text-2xl font-semibold text-white">Exception rate dashboard</h1>
             <p className="mt-2 text-sm text-slate-400">Monitor delays, damages, lost shipments, and customs holds across the network.</p>
           </div>
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-400">
+          <button
+            type="button"
+            onClick={() => fetchExceptions()}
+            className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm text-slate-400 transition hover:border-cyan-500/40 hover:text-cyan-300"
+          >
             <div className="flex items-center gap-2">
-              <RefreshCw size={16} className="text-cyan-400" />
-              Auto-refreshing every 5 min
+              <RefreshCw size={16} className={isLoading ? 'animate-spin text-cyan-400' : 'text-cyan-400'} />
+              {isLoading ? 'Refreshing...' : 'Refresh'}
             </div>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -260,6 +218,12 @@ const ExceptionDashboard: React.FC = () => {
           </div>
         </div>
 
+        {error && (
+          <div className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            {error}
+          </div>
+        )}
+
         <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="min-w-full text-sm">
             <thead className="bg-slate-950/70 text-left text-slate-400">
@@ -286,7 +250,17 @@ const ExceptionDashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {visibleExceptions.map((item) => (
+              {isLoading && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-slate-400">Loading exceptions...</td>
+                </tr>
+              )}
+              {!isLoading && visibleExceptions.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-slate-400">No exceptions found.</td>
+                </tr>
+              )}
+              {!isLoading && visibleExceptions.map((item) => (
                 <tr key={item.id} className="border-t border-slate-800/70 bg-slate-900/40">
                   <td className="px-4 py-3 text-white">{item.shipmentId}</td>
                   <td className="px-4 py-3">

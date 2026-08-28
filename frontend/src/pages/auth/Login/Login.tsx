@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { authApi } from "../../../services/api";
 
 interface FormErrors {
@@ -10,6 +11,7 @@ interface FormErrors {
 }
 
 const Login: React.FC = () => {
+    const { t } = useTranslation("auth");
     const navigate = useNavigate();
     const location = useLocation();
     const [formData, setFormData] = useState({ email: "", password: "" });
@@ -20,10 +22,10 @@ const Login: React.FC = () => {
 
     const validateField = (name: string, value: string) => {
         if (name === "email") {
-            if (!value) return "Email is required";
-            if (!/\S+@\S+\.\S+/.test(value)) return "Invalid email format";
+            if (!value) return t("login.errorEmailRequired");
+            if (!/\S+@\S+\.\S+/.test(value)) return t("login.errorEmailInvalid");
         } else if (name === "password") {
-            if (!value) return "Password is required";
+            if (!value) return t("login.errorPasswordRequired");
         }
         return "";
     };
@@ -58,7 +60,7 @@ const Login: React.FC = () => {
             const from = location.state?.from?.pathname ?? "/dashboard";
             navigate(from, { replace: true });
         } catch {
-            setErrors((prev) => ({ ...prev, general: "Invalid email or password. Please try again." }));
+            setErrors((prev) => ({ ...prev, general: t("login.errorInvalidCredentials") }));
         } finally {
             setLoading(false);
         }
@@ -87,10 +89,10 @@ const Login: React.FC = () => {
             <div className="bg-[rgba(20,20,20,0.7)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.1)] rounded-3xl p-10 w-full max-w-120 z-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)] sm:p-8 sm:rounded-none sm:min-h-screen sm:flex sm:flex-col sm:justify-center">
                 <div className="text-center mb-8">
                     <h2 className="text-[2rem] font-bold mb-2 bg-[linear-gradient(135deg,#fff_0%,#00DAC1_100%)] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
-                        Welcome Back
+                        {t("login.title")}
                     </h2>
                     <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem]">
-                        Enter your details to access your account
+                        {t("login.subtitle")}
                     </p>
                 </div>
 
@@ -110,13 +112,13 @@ const Login: React.FC = () => {
                             htmlFor="email"
                             className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1"
                         >
-                            Email Address
+                            {t("login.emailLabel")}
                         </label>
                         <input
                             type="email"
                             id="email"
                             name="email"
-                            placeholder="name@company.com"
+                            placeholder={t("login.emailPlaceholder")}
                             value={formData.email}
                             onChange={handleChange}
                             onBlur={handleBlur}
@@ -138,7 +140,7 @@ const Login: React.FC = () => {
                             htmlFor="password"
                             className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1"
                         >
-                            Password
+                            {t("login.passwordLabel")}
                         </label>
                         <div className="relative">
                             <input
@@ -160,8 +162,8 @@ const Login: React.FC = () => {
                                 onClick={() => setShowPassword(!showPassword)}
                                 aria-label={
                                     showPassword
-                                        ? "Hide password"
-                                        : "Show password"
+                                        ? t("login.hidePassword")
+                                        : t("login.showPassword")
                                 }
                             >
                                 {showPassword ? (
@@ -180,7 +182,7 @@ const Login: React.FC = () => {
                             to="/forgot-password"
                             className="self-end text-[0.8rem] text-[#00DAC1] no-underline -mt-1 transition-all hover:underline hover:opacity-80"
                         >
-                            Forgot Password?
+                            {t("login.forgotPassword")}
                         </Link>
                     </div>
 
@@ -192,31 +194,31 @@ const Login: React.FC = () => {
                         {loading ? (
                             <>
                                 <div className="w-5 h-5 border-2 border-[rgba(0,0,0,0.1)] border-t-black rounded-full animate-spin" />
-                                Logging in...
+                                {t("login.submitting")}
                             </>
                         ) : (
-                            "Log In"
+                            t("login.submit")
                         )}
                     </button>
                 </form>
 
                 <div className="flex flex-col gap-2 mt-6 text-center">
                     <p className="text-[0.9rem] text-[rgba(255,255,255,0.6)]">
-                        Don't have an account?{" "}
+                        {t("login.noAccount")}{" "}
                         <Link
                             to="/signup"
                             className="text-[#00DAC1] no-underline font-semibold hover:underline"
                         >
-                            Sign Up
+                            {t("login.signUp")}
                         </Link>
                     </p>
                     <p className="text-[0.9rem] text-[rgba(255,255,255,0.6)]">
-                        Registering a company?{" "}
+                        {t("login.registerCompany")}{" "}
                         <Link
                             to="/register/company"
                             className="text-[#00DAC1] no-underline font-semibold hover:underline"
                         >
-                            Create Company Account
+                            {t("login.createCompanyAccount")}
                         </Link>
                     </p>
                 </div>

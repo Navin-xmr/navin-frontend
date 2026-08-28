@@ -22,11 +22,16 @@ import {
   getRouteTotalCost,
   toChartRow,
 } from './costPerRouteUtils';
+import { ChartLoading } from '../../ui/ChartLoading';
+import { ChartError } from '../../ui/ChartError';
 
 type ViewMode = 'chart' | 'table';
 
 interface CostPerRouteWidgetProps {
   data?: RouteCostData[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 interface TooltipPayloadItem {
@@ -67,6 +72,9 @@ function RouteTooltip({ active, payload, label }: RouteTooltipProps) {
 
 const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
   data = MOCK_ROUTE_COST_DATA,
+  loading,
+  error,
+  onRetry,
 }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('chart');
   const [selectedRoute, setSelectedRoute] = useState<RouteCostData | null>(null);
@@ -84,6 +92,14 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
     const route = data.find((entry) => entry.route === routeName) ?? null;
     setSelectedRoute(route);
   };
+
+  if (loading) {
+    return <ChartLoading rows={8} height={520} label="Loading cost per route chart…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={520} />;
+  }
 
   return (
     <section className="rounded-2xl border border-[#1e293b] bg-[#14171e] p-6 shadow-sm h-full">
@@ -174,8 +190,7 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
                     stackId="cost"
                     fill={segment.color}
                     radius={segment.key === 'insurance' ? [0, 4, 4, 0] : [0, 0, 0, 0]}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onClick={(barData: any) => openRoute(String(barData.route || barData.payload?.route))}
+                    onClick={(barData: { route?: string; payload?: { route?: string } }) => openRoute(String(barData.route ?? barData.payload?.route ?? ''))}
                     className="cursor-pointer"
                   />
                 ))}

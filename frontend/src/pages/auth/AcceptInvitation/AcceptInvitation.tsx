@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { invitationsApi } from '@services/api';
 import type { UserRole } from '@services/api';
 import PasswordStrengthMeter from '../../../components/ui/PasswordStrengthMeter';
+import { setToken } from '../../../services/auth/tokenStorage';
 
 interface InviteInfo {
   companyName: string;
@@ -59,7 +60,7 @@ const AcceptInvitation: React.FC = () => {
     setSubmitError(null);
     try {
       const { token: authToken } = await invitationsApi.accept({ token, password, name: name.trim() });
-      localStorage.setItem('authToken', authToken);
+      setToken(authToken);
       setDone(true);
     } catch {
       setSubmitError('Failed to complete registration. The token may have expired.');

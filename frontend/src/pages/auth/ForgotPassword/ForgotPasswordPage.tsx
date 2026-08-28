@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { authApi } from "../../../services/api";
 
 const authCardClass = "min-h-screen flex items-center justify-center bg-[#050505] text-white relative overflow-hidden font-sans";
@@ -8,6 +9,7 @@ const cardInnerClass =
   "bg-[rgba(20,20,20,0.7)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.1)] rounded-3xl p-10 w-full max-w-[480px] z-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)] sm:p-8 sm:rounded-none sm:min-h-screen sm:flex sm:flex-col sm:justify-center";
 
 const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation("auth");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,8 +17,8 @@ const ForgotPasswordPage: React.FC = () => {
   const [touched, setTouched] = useState(false);
 
   const validateEmail = (value: string) => {
-    if (!value) return "Email is required";
-    if (!/\S+@\S+\.\S+/.test(value)) return "Invalid email format";
+    if (!value) return t("forgotPassword.errorEmailRequired");
+    if (!/\S+@\S+\.\S+/.test(value)) return t("forgotPassword.errorEmailInvalid");
     return "";
   };
 
@@ -82,17 +84,17 @@ const ForgotPasswordPage: React.FC = () => {
             </div>
             <div className="text-center mb-8">
               <h2 className="text-[2rem] font-bold mb-2 bg-[linear-gradient(135deg,#fff_0%,#00DAC1_100%)] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
-                Check your email
+                {t("forgotPassword.successTitle")}
               </h2>
               <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem]">
-                If that email exists, you'll receive a reset link shortly.
+                {t("forgotPassword.successSubtitle")}
               </p>
             </div>
             <Link
               to="/login"
               className="w-full mt-2 bg-[linear-gradient(135deg,#00DAC1_0%,#008B7B_100%)] text-black border-none rounded-xl py-4 text-base font-bold no-underline transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,218,193,0.4)]"
             >
-              <ArrowLeft size={20} /> Back to Login
+              <ArrowLeft size={20} /> {t("forgotPassword.backToLogin")}
             </Link>
           </div>
         </div>
@@ -107,24 +109,24 @@ const ForgotPasswordPage: React.FC = () => {
       <div className={cardInnerClass}>
         <div className="text-center mb-8">
           <h2 className="text-[2rem] font-bold mb-2 bg-[linear-gradient(135deg,#fff_0%,#00DAC1_100%)] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
-            Reset Password
+            {t("forgotPassword.title")}
           </h2>
           <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem]">
-            Enter your email address and we'll send you a link to reset your password.
+            {t("forgotPassword.subtitle")}
           </p>
         </div>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
           <div className="flex flex-col gap-2">
             <label htmlFor="email" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">
-              Email Address
+              {t("forgotPassword.emailLabel")}
             </label>
             <div className="relative">
               <input
                 type="email"
                 id="email"
                 name="email"
-                placeholder="name@company.com"
+                placeholder={t("forgotPassword.emailPlaceholder")}
                 value={email}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -152,18 +154,18 @@ const ForgotPasswordPage: React.FC = () => {
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-[rgba(0,0,0,0.1)] border-t-black rounded-full animate-spin" />
-                Sending Link...
+                {t("forgotPassword.submitting")}
               </>
             ) : (
-              "Send Reset Link"
+              t("forgotPassword.submit")
             )}
           </button>
         </form>
 
         <p className="text-center text-[0.9rem] text-[rgba(255,255,255,0.6)] mt-6">
-          Remember your password?{" "}
+          {t("forgotPassword.rememberPassword")}{" "}
           <Link to="/login" className="text-[#00DAC1] no-underline font-semibold hover:underline">
-            Back to Login
+            {t("forgotPassword.backToLogin")}
           </Link>
         </p>
       </div>

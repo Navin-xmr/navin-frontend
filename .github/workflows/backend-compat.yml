@@ -1,0 +1,107 @@
+name: Backend Compatibility Check
+
+# Issue #226 — Validate that the backend API contract described in
+# docs/backend-compatibility.json is still satisfied.
+#
+# This job runs in two situations:
+#   1. On every push / PR to `dev` (schema-only, no live server required).
+#   2. When the workflow is triggered manually (workflow_dispatch) — allows
+#      contributors to optionally supply a backend Swagger URL for a deeper
+#      spec check.
+#
+# In standard CI the job validates the checklist JSON structure itself and
+# runs the script in `--help` mode to confirm the tooling is intact.  When
+# a BACKEND_SWAGGER_URL secret (or workflow input) is provided the job also
+# validates the spec.
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - "docs/backend-compatibility.json"
+      - "scripts/check-backend-compat.mjs"
+      - ".github/workflows/backend-compat.yml"
+  pull_request:
+    branches: [dev]
+    paths:
+      - "docs/backend-compatibility.json"
+      - "scripts/check-backend-compat.mjs"
+      - ".github/workflows/backend-compat.yml"
+      - "frontend/src/services/api/endpoints/**"
+      - "frontend/src/utils/resolveNotificationLink.ts"
+  # Allow manual runs with an optional Swagger URL.
+  workflow_dispatch:
+    inputs:
+      swagger_url:
+        description: "OpenAPI/Swagger JSON URL to validate against (leave blank to skip spec check)"
+        required: false
+        default: ""
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compat-check:
+    name: Backend compatibility check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # -----------------------------------------------------------------------
+      # Step 1: Validate the checklist JSON is well-formed.
+      # -----------------------------------------------------------------------
+      - name: Validate checklist JSON structure
+        run: |
+          node -e "
+            const fs = require('fs');
+            const raw = fs.readFileSync('docs/backend-compatibility.json', 'utf8');
+            const doc = JSON.parse(raw);
+
+            if (!Array.isArray(doc.endpoints)) {
+              throw new Error('\"endpoints\" must be an array');
+            }
+            const ids = new Set();
+            for (const ep of doc.endpoints) {
+              if (!ep.id)     throw new Error('Missing \"id\" in endpoint: ' + JSON.stringify(ep));
+              if (!ep.method) throw new Error('Missing \"method\" in endpoint: ' + ep.id);
+              if (!ep.path)   throw new Error('Missing \"path\" in endpoint: ' + ep.id);
+              if (!Array.isArray(ep.expectedStatus)) {
+                throw new Error('\"expectedStatus\" must be an array in: ' + ep.id);
+              }
+              if (ids.has(ep.id)) throw new Error('Duplicate endpoint id: ' + ep.id);
+              ids.add(ep.id);
+            }
+            console.log('Checklist OK — ' + doc.endpoints.length + ' entries validated.');
+          "
+
+      # -----------------------------------------------------------------------
+      # Step 2: Smoke-test the script itself (--help must exit 0).
+      # -----------------------------------------------------------------------
+      - name: Smoke-test compatibility script
+        run: node scripts/check-backend-compat.mjs --help
+
+      # -----------------------------------------------------------------------
+      # Step 3: Run spec validation when a Swagger URL is available.
+      #
+      # The URL is sourced from (in priority order):
+      #   1. The `swagger_url` workflow_dispatch input
+      #   2. The BACKEND_SWAGGER_URL repository secret
+      #
+      # If neither is set this step is skipped — safe for forks and standard
+      # contributor PRs that don't have access to secrets.
+      # -----------------------------------------------------------------------
+      - name: Validate against Swagger spec
+        if: >
+          (github.event.inputs.swagger_url != '' && github.event.inputs.swagger_url != null)
+          || secrets.BACKEND_SWAGGER_URL != ''
+        env:
+          SWAGGER_URL: ${{ github.event.inputs.swagger_url || secrets.BACKEND_SWAGGER_URL }}
+        run: node scripts/check-backend-compat.mjs --swagger "$SWAGGER_URL"

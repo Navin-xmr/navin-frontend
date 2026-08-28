@@ -1,6 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 import { MOCK_VOLUME_DATA } from './mockVolumeData';
@@ -20,17 +26,22 @@ interface CustomTooltipProps {
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
+
   return (
     <div className="bg-[#1a1f2e] border border-border rounded-lg px-3.5 py-2.5">
-      <div className="text-text-secondary text-[11px] font-semibold uppercase mb-1">{label}</div>
+      <div className="text-text-secondary text-[11px] font-semibold uppercase mb-1">
+        {label}
+      </div>
       <div className="text-white text-sm font-bold">{payload[0].value} shipments</div>
     </div>
   );
 }
 
-export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: ShipmentVolumeChartProps) {
+export default function ShipmentVolumeChart({
+  data = MOCK_VOLUME_DATA,
+}: ShipmentVolumeChartProps) {
   const [activeRange, setActiveRange] = useState<Range>(30);
-  const chartData = data.slice(-activeRange);
+  const chartData = useMemo(() => data.slice(-activeRange), [data, activeRange]);
   const ranges: { value: Range; label: string }[] = [
     { value: 7, label: '7D' },
     { value: 30, label: '30D' },
@@ -39,7 +50,6 @@ export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: Shipmen
 
   return (
     <div className="p-0">
-      {/* Header */}
       <div className="px-6 py-5 border-b border-border flex justify-between items-center md:flex-col md:gap-3 md:items-start">
         <h2 className="text-base font-bold flex items-center gap-2.5">
           <BarChart3 size={18} className="text-accent-blue" />
@@ -50,24 +60,23 @@ export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: Shipmen
           role="group"
           aria-label="Time range"
         >
-          {ranges.map(r => (
+          {ranges.map((range) => (
             <button
-              key={r.value}
+              key={range.value}
               type="button"
               className={`border-none text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all ${
-                activeRange === r.value
+                activeRange === range.value
                   ? 'bg-accent-blue text-white'
                   : 'bg-transparent text-text-secondary hover:text-white'
               }`}
-              onClick={() => setActiveRange(r.value)}
+              onClick={() => setActiveRange(range.value)}
             >
-              {r.label}
+              {range.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Chart body */}
       <div className="pt-5 pr-4 pb-3 pl-0 h-[300px] md:h-[220px] md:pt-4 md:pr-2 md:pb-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
@@ -85,8 +94,16 @@ export default function ShipmentVolumeChart({ data = MOCK_VOLUME_DATA }: Shipmen
               axisLine={false}
               width={32}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.08)' }} />
-            <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={activeRange <= 7 ? 48 : 24} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: 'rgba(59, 130, 246, 0.08)' }}
+            />
+            <Bar
+              dataKey="count"
+              fill="#3b82f6"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={activeRange <= 7 ? 48 : 24}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>

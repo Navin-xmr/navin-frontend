@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Shield, ShieldCheck, Copy, Download, RefreshCw } from 'lucide-react';
 import { apiClient } from '@services/api/client';
+import { useToast } from '../../../../context/ToastContext';
 
 const TwoFactorSetup: React.FC = () => {
   const [enabled, setEnabled] = useState(false);
@@ -15,6 +16,7 @@ const TwoFactorSetup: React.FC = () => {
   const [disablePassword, setDisablePassword] = useState('');
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { addToast } = useToast();
 
   const handleEnable = async () => {
     setIsLoading(true);
@@ -24,7 +26,9 @@ const TwoFactorSetup: React.FC = () => {
       setQrUrl(res.data.data.qrCodeUrl);
       setEnabled(true);
     } catch {
-      setError('Could not start 2FA setup. Please try again.');
+      const message = 'Could not start 2FA setup. Please try again.';
+      setError(message);
+      addToast(message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -38,8 +42,11 @@ const TwoFactorSetup: React.FC = () => {
       const res = await apiClient.post<{ data: { backupCodes: string[] } }>('/api/auth/2fa/verify', { code });
       setBackupCodes(res.data.data.backupCodes);
       setShowBackupCodes(true);
+      addToast('Two-factor authentication verified.', 'success');
     } catch {
-      setError('Invalid code. Please try again.');
+      const message = 'Invalid code. Please try again.';
+      setError(message);
+      addToast(message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -51,10 +58,15 @@ const TwoFactorSetup: React.FC = () => {
     setVerified(true);
   };
 
-  const handleCopyBackupCodes = () => {
-    navigator.clipboard.writeText(backupCodes.join('\n'));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyBackupCodes = async () => {
+    try {
+      await navigator.clipboard.writeText(backupCodes.join('\n'));
+      setCopied(true);
+      addToast('Backup codes copied to clipboard', 'success');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      addToast('Failed to copy backup codes', 'error');
+    }
   };
 
   const handleDownloadBackupCodes = () => {
@@ -152,8 +164,8 @@ const TwoFactorSetup: React.FC = () => {
         <div className="space-y-4">
           <p className="text-sm text-yellow-400">Save these backup codes in a safe place. Each code can be used once.</p>
           <div className="grid grid-cols-2 gap-2 bg-slate-800/50 p-4 rounded-lg">
-            {backupCodes.map((code, index) => (
-              <div key={index} className="text-sm font-mono text-white bg-slate-700/50 px-3 py-2 rounded text-center">
+            {backupCodes.map((code) => (
+              <div key={code} className="text-sm font-mono text-white bg-slate-700/50 px-3 py-2 rounded text-center">
                 {code}
               </div>
             ))}

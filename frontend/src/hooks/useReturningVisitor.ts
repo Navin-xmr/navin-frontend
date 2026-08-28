@@ -1,53 +1,64 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const RETURNING_KEY = 'navin_returning_visitor';
-const COUNT_KEY = 'navin_visit_count';
+const RETURNING_VISITOR_KEY = 'navin_returning_visitor';
+const VISIT_COUNT_KEY = 'navin_visit_count';
 const LAST_VISIT_KEY = 'navin_last_visit';
 
-interface UseReturningVisitorReturn {
+export interface ReturningVisitorState {
   isReturning: boolean;
   visitCount: number;
   lastVisit: string | null;
   daysSinceLastVisit: number | null;
-  markVisited: () => void;
 }
 
-export function useReturningVisitor(): UseReturningVisitorReturn {
-  const [isReturning, setIsReturning] = useState(() => {
-    return localStorage.getItem(RETURNING_KEY) === 'true';
+/**
+ * Detects whether the current user is a returning visitor to the Navin platform.
+ * Stores visit data in localStorage and provides personalized state.
+ */
+export function useReturningVisitor(): ReturningVisitorState & { markVisited: () => void } {
+  const [state, setState] = useState<ReturningVisitorState>(() => {
+    try {
+      const isReturning = localStorage.getItem(RETURNING_VISITOR_KEY) === 'true';
+      const visitCount = parseInt(localStorage.getItem(VISIT_COUNT_KEY) || '0', 10);
+      const lastVisit = localStorage.getItem(LAST_VISIT_KEY);
+
+      let daysSinceLastVisit: number | null = null;
+      if (lastVisit) {
+        const last = new Date(lastVisit);
+        const now = new Date();
+        daysSinceLastVisit = Math.floor(
+          (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24),
+        );
+      }
+
+      return { isReturning, visitCount, lastVisit, daysSinceLastVisit };
+    } catch {
+      return { isReturning: false, visitCount: 0, lastVisit: null, daysSinceLastVisit: null };
+    }
   });
 
-  const [visitCount, setVisitCount] = useState(() => {
-    return parseInt(localStorage.getItem(COUNT_KEY) ?? '0', 10);
-  });
-
-  const [lastVisit, setLastVisit] = useState<string | null>(() => {
-    return localStorage.getItem(LAST_VISIT_KEY);
-  });
-
-  const markVisited = useCallback(() => {
-    const now = new Date().toISOString();
-    const prevCount = parseInt(localStorage.getItem(COUNT_KEY) ?? '0', 10);
-    const newCount = prevCount + 1;
-
-    localStorage.setItem(RETURNING_KEY, 'true');
-    localStorage.setItem(COUNT_KEY, String(newCount));
-    localStorage.setItem(LAST_VISIT_KEY, now);
-
-    setIsReturning(true);
-    setVisitCount(newCount);
-    setLastVisit(now);
-  }, []);
+  const markVisited = () => {
+    try {
+      const now = new Date().toISOString();
+      const currentCount = parseInt(localStorage.getItem(VISIT_COUNT_KEY) || '0', 10);
+      localStorage.setItem(RETURNING_VISITOR_KEY, 'true');
+      localStorage.setItem(VISIT_COUNT_KEY, String(currentCount + 1));
+      localStorage.setItem(LAST_VISIT_KEY, now);
+      setState({
+        isReturning: true,
+        visitCount: currentCount + 1,
+        lastVisit: now,
+        daysSinceLastVisit: 0,
+      });
+    } catch {
+      // localStorage unavailable (private browsing, etc.)
+    }
+  };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- record visit on mount
     markVisited();
-  }, [markVisited]);
+  }, []);
 
-  const daysSinceLastVisit: number | null = (() => {
-    if (!lastVisit) return null;
-    const diff = Date.now() - new Date(lastVisit).getTime();
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
-  })();
-
-  return { isReturning, visitCount, lastVisit, daysSinceLastVisit, markVisited };
+  return { ...state, markVisited };
 }

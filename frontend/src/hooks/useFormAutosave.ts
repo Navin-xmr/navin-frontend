@@ -1,82 +1,124 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type AutosaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-interface UseFormAutosaveOptions {
-  key: string;
+export interface UseFormAutosaveOptions<T> {
+  /** Storage key – scoped to the multi-step form (e.g. "create-shipment"). */
+  storageKey: string;
+  /** Current form data to persist. */
+  data: T;
+  /** How many ms after the last change to wait before saving. Defaults to 1500. */
   debounceMs?: number;
+  /** Called after a successful save (optional side-effect hook). */
+  onSave?: (data: T) => void;
 }
 
-interface UseFormAutosaveReturn {
+export interface UseFormAutosaveReturn<T> {
+  /** Current autosave status. */
   status: AutosaveStatus;
+  /** Timestamp of last successful save, or null. */
   lastSavedAt: Date | null;
-  loadDraft: <T>() => T | null;
+  /** Load previously autosaved data for this key, or null if none. */
+  loadDraft: () => T | null;
+  /** Manually clear the saved draft. */
   clearDraft: () => void;
-  saveNow: <T>(data: T) => void;
+  /** Imperatively trigger a save immediately (bypasses debounce). */
+  saveNow: () => void;
 }
 
-export function useFormAutosave(
-  data: unknown,
-  { key, debounceMs = 1500 }: UseFormAutosaveOptions,
-): UseFormAutosaveReturn {
+/**
+ * useFormAutosave
+ *
+ * Persists multi-step form state to localStorage with debouncing.
+ * Shows real-time autosave status so users can navigate between steps
+ * without fear of losing progress.
+ *
+ * @example
+ * const { status, lastSavedAt, loadDraft, clearDraft } = useFormAutosave({
+ *   storageKey: 'create-shipment',
+ *   data: formValues,
+ * });
+ */
+function useFormAutosave<T>({
+  storageKey,
+  data,
+  debounceMs = 1500,
+  onSave,
+}: UseFormAutosaveOptions<T>): UseFormAutosaveReturn<T> {
   const [status, setStatus] = useState<AutosaveStatus>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-  const isMountedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dataRef = useRef<T>(data);
+  const isMountedRef = useRef(false);
 
-  const persist = useCallback(
-    (payload: unknown) => {
-      try {
-        setStatus('saving');
-        localStorage.setItem(key, JSON.stringify({ data: payload, savedAt: new Date().toISOString() }));
-        const now = new Date();
-        setLastSavedAt(now);
-        setStatus('saved');
-      } catch {
-        setStatus('error');
-      }
-    },
-    [key],
-  );
+  // Keep the ref up to date so saveNow always uses the latest data
+  useEffect(() => {
+    dataRef.current = data;
+  });
 
+  const persistData = useCallback(() => {
+    setStatus('saving');
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(dataRef.current));
+      const now = new Date();
+      setLastSavedAt(now);
+      setStatus('saved');
+      onSave?.(dataRef.current);
+    } catch {
+      setStatus('error');
+    }
+  }, [storageKey, onSave]);
+
+  // Debounced autosave on data change (skip initial mount)
   useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
       return;
     }
-    if (timerRef.current) clearTimeout(timerRef.current);
+
+    setStatus('saving');
+
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+    }
+
     timerRef.current = setTimeout(() => {
-      persist(data);
+      persistData();
     }, debounceMs);
+
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+      }
     };
-  }, [data, debounceMs, persist]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, debounceMs]);
 
-  const saveNow = useCallback(
-    <T>(payload: T) => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      persist(payload);
-    },
-    [persist],
-  );
-
-  const loadDraft = useCallback(<T>(): T | null => {
+  const loadDraft = useCallback((): T | null => {
     try {
-      const raw = localStorage.getItem(key);
+      const raw = localStorage.getItem(storageKey);
       if (!raw) return null;
-      const parsed = JSON.parse(raw) as { data: T };
-      return parsed.data;
+      return JSON.parse(raw) as T;
     } catch {
       return null;
     }
-  }, [key]);
+  }, [storageKey]);
 
   const clearDraft = useCallback(() => {
-    localStorage.removeItem(key);
+    localStorage.removeItem(storageKey);
     setStatus('idle');
     setLastSavedAt(null);
-  }, [key]);
+  }, [storageKey]);
+
+  const saveNow = useCallback(() => {
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    persistData();
+  }, [persistData]);
 
   return { status, lastSavedAt, loadDraft, clearDraft, saveNow };
 }
+
+export default useFormAutosave;
