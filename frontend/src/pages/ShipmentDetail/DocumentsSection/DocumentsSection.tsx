@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { shipmentApi } from "../../../services/api/endpoints/shipments";
 import type { ShipmentDocument, DocumentType } from "../../../services/api/endpoints/shipments";
 import { useToast } from "../../../context/ToastContext";
+import { formatDate } from "../../../utils/localeFormat";
 
 interface DocumentsSectionProps {
   shipmentId: string;
@@ -53,14 +54,6 @@ function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 const DocumentIcon: React.FC<{ type: DocumentType }> = ({ type }) => {

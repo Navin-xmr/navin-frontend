@@ -531,17 +531,13 @@ const NotificationsPage = () => {
     (notification) => notification.isRead,
   );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const sortedUnreadNotifications = useMemo(
     () => sortNotifications(unreadNotifications),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [unreadNotifications, sortNotifications],
   );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const sortedReadNotifications = useMemo(
     () => sortNotifications(readNotifications),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [readNotifications, sortNotifications],
   );
 
