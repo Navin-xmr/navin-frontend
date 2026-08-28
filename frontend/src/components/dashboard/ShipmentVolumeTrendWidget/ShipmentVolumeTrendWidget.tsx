@@ -150,6 +150,7 @@ export default function ShipmentVolumeTrendWidget({
               <TrendIcon size={14} />
               <span>{percentage.toFixed(1)}%</span>
             </div>
+          </div>
 
           <div className="flex items-center gap-3">
             <WidgetRefreshIndicator
@@ -194,6 +195,7 @@ export default function ShipmentVolumeTrendWidget({
             </button>
           ))}
         </div>
+      </div>
 
       {/* Chart body */}
       <div className="pt-5 pr-4 pb-3 pl-0 h-[400px] md:h-[300px] md:pt-4 md:pr-2 md:pb-2">
@@ -273,5 +275,6 @@ export default function ShipmentVolumeTrendWidget({
           </AreaChart>
         </ResponsiveContainer>
       </div>
+    </div>
   );
 }

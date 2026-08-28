@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { apiClient } from '@services/api/client';
+import { useWallet } from '@context/WalletContext';
+import { useToast } from '../../../context/ToastContext';
 import { WalletConnectButton } from '../../../components/auth/WalletConnectButton/WalletConnectButton';
 import SettingsSection from '@components/settings/SettingsSection';
 
@@ -14,14 +16,38 @@ const WalletsSection: React.FC = () => {
   const [wallets, setWallets] = useState<WalletEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [removing, setRemoving] = useState<string | null>(null);
+  const { adapter } = useWallet();
+  const { addToast } = useToast();
+
+  const fetchWallets = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const r = await apiClient.get<{ data: WalletEntry[] }>('/api/users/me/wallets');
+      setWallets(r.data.data);
+    } catch {
+      setWallets([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    apiClient
-      .get<{ data: WalletEntry[] }>('/api/users/me/wallets')
-      .then((r) => setWallets(r.data.data))
-      .catch(() => setWallets([]))
-      .finally(() => setIsLoading(false));
-  }, []);
+    const timer = setTimeout(() => { void fetchWallets(); }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchWallets]);
+
+  const handleWalletConnect = async (publicKey: string) => {
+    try {
+      await apiClient.post('/api/users/me/wallets', {
+        publicKey,
+        label: adapter?.name ?? 'Wallet',
+      });
+      addToast('Wallet connected and saved.', 'success');
+      await fetchWallets();
+    } catch {
+      addToast('Wallet connected, but saving it to your account failed. Please try again.', 'error');
+    }
+  };
 
   const removeWallet = async (publicKey: string) => {
     setRemoving(publicKey);

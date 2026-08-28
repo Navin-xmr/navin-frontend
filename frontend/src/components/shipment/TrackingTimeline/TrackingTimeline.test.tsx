@@ -95,8 +95,10 @@ describe('TrackingTimeline', () => {
   it('renders connectors between milestones (n-1 connectors for n milestones)', () => {
     const { container } = render(<TrackingTimeline milestones={mockMilestones} />);
 
-    // Connectors are aria-hidden divs (not SVGs) between milestone items
-    const connectors = container.querySelectorAll('div[aria-hidden="true"]');
+    // Connectors are aria-hidden divs between milestone icons. The timeline
+    // also has other decorative aria-hidden elements (progress step dots,
+    // the "current" pulse ring), so scope to the connector's unique class.
+    const connectors = container.querySelectorAll('div[aria-hidden="true"].min-h-\\[48px\\]');
     expect(connectors.length).toBe(mockMilestones.length - 1);
   });
 

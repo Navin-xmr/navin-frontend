@@ -381,6 +381,9 @@ const ReleaseCard: React.FC<ReleaseCardProps> = ({
                       {style.label}
                     </span>
                     <div className="flex items-baseline gap-2 min-w-0">
+                      <span className="shrink-0" aria-hidden="true">
+                        {getSectionIcon(change.description)}
+                      </span>
                       <span className="text-sm text-[#cbd5e1] leading-relaxed">
                         {change.description}
                       </span>

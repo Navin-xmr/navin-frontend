@@ -292,7 +292,6 @@ const DashboardLayout: React.FC = () => {
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           ${isCollapsed ? 'w-16 px-2 py-6' : 'w-64 p-6'}
         `}
-        aria-label="Main navigation"
       >
         {/* Logo + collapse toggle */}
         <div className={`flex items-center mb-10 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
@@ -302,40 +301,6 @@ const DashboardLayout: React.FC = () => {
               <span>NAVIN</span>
             </div>
           )}
-        <div className="flex items-center gap-3 text-xl font-bold mb-12 text-teal-600 dark:text-[#62ffff]">
-          <img src="/images/logo.svg" alt="Navin Logo" className="w-8 h-8" />
-          <span>NAVIN</span>
-          <button
-            className="ml-auto flex lg:hidden bg-transparent border-none text-slate-400 cursor-pointer"
-            onClick={closeSidebar}
-            aria-label="Close sidebar"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {favoriteItems.length > 0 && (
-          <div className="mb-8" aria-label="Dashboard favorites">
-            <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">Favorites</h3>
-            <div className="flex flex-col gap-1">
-              {favoriteItems.map((item) => renderNavItem(item, false))}
-            </div>
-          </div>
-        )}
-
-        <div className="mb-8">
-          <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">Main Menu</h3>
-          <div className="flex flex-col gap-1">
-            {mainMenu.map((item) => renderNavItem(item))}
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">System</h3>
-          <div className="flex flex-col gap-1">
-            {systemMenu.map((item) => renderNavItem(item))}
-          </div>
-        </div>
           {isCollapsed && (
             <img src="/images/logo.svg" alt="Navin Logo" className="w-8 h-8" />
           )}
@@ -361,6 +326,15 @@ const DashboardLayout: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {favoriteItems.length > 0 && (
+          <div className="mb-8" aria-label="Dashboard favorites">
+            <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">Favorites</h3>
+            <div className="flex flex-col gap-1">
+              {favoriteItems.map((item) => renderNavItem(item, false))}
+            </div>
+          </div>
+        )}
 
         {/* Nav groups */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden" aria-label="Site navigation">

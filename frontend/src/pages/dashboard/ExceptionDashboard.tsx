@@ -32,6 +32,12 @@ const EXCEPTION_TYPES: Array<{ value: ExceptionType; label: string; color: strin
   { value: 'CUSTOMS_HOLD', label: 'Customs Hold', color: '#34d399' },
 ];
 
+const daysAgo = (n: number): string => {
+  const date = new Date();
+  date.setDate(date.getDate() - n);
+  return date.toISOString().slice(0, 10);
+};
+
 const initialExceptions: ExceptionItem[] = [
   {
     id: 'EX-1021',
@@ -41,7 +47,7 @@ const initialExceptions: ExceptionItem[] = [
     ageHours: 38,
     owner: 'Amina',
     route: 'Lagos → Abuja',
-    openedAt: '2026-06-24',
+    openedAt: daysAgo(2),
     resolutionHours: 12,
     severity: 'HIGH',
   },
@@ -53,7 +59,7 @@ const initialExceptions: ExceptionItem[] = [
     ageHours: 18,
     owner: 'Bolanle',
     route: 'Abuja → Kano',
-    openedAt: '2026-06-25',
+    openedAt: daysAgo(1),
     resolutionHours: 8,
     severity: 'MEDIUM',
   },
@@ -65,7 +71,7 @@ const initialExceptions: ExceptionItem[] = [
     ageHours: 72,
     owner: 'Chris',
     route: 'Port Harcourt → Enugu',
-    openedAt: '2026-06-22',
+    openedAt: daysAgo(4),
     resolutionHours: 15,
     severity: 'HIGH',
   },
@@ -77,7 +83,7 @@ const initialExceptions: ExceptionItem[] = [
     ageHours: 9,
     owner: 'Dayo',
     route: 'Ibadan → Lagos',
-    openedAt: '2026-06-26',
+    openedAt: daysAgo(0),
     resolutionHours: 4,
     severity: 'LOW',
   },
@@ -89,7 +95,7 @@ const initialExceptions: ExceptionItem[] = [
     ageHours: 51,
     owner: 'Nneka',
     route: 'Lagos → Abuja',
-    openedAt: '2026-06-23',
+    openedAt: daysAgo(3),
     resolutionHours: 10,
     severity: 'MEDIUM',
   },

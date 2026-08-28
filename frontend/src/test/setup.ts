@@ -36,6 +36,11 @@ const makeStorage = () => {
 Object.defineProperty(window, 'localStorage', { value: makeStorage(), writable: true, configurable: true });
 Object.defineProperty(window, 'sessionStorage', { value: makeStorage(), writable: true, configurable: true });
 
+// i18n reads localStorage at import time, so it must load after the storage
+// mocks above are in place — a static top-level import would be hoisted
+// ahead of them and crash against jsdom's unconfigured localStorage.
+await import('../i18n');
+
 afterEach(() => {
   cleanup();
 })

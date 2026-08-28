@@ -14,7 +14,6 @@ import { safeFormatDate } from '../../utils/safeFormat';
 import ShipmentsKanban from './KanbanView/ShipmentsKanban';
 import RouteMap from './RouteMap/RouteMap';
 import ShipmentFilters, {
-  type Priority,
   type ShipmentFiltersValues,
   type ShipmentStatus,
   type Priority,

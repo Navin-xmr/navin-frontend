@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, Download } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import html2pdf from "html2pdf.js";
@@ -80,6 +80,77 @@ const generateMockData = (startDate: Date, endDate: Date) => {
   };
 };
 
+// ─── Custom chart tooltips ────────────────────────────────────────────
+
+const MonthlyRevenueTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name?: string; value?: number; dataKey?: string }[];
+  label?: string;
+}> = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  const actual = payload.find((p) => p.dataKey === "actual")?.value ?? 0;
+  const target = payload.find((p) => p.dataKey === "target")?.value ?? 0;
+
+  const handleExport = () => {
+    console.info(`Export data for ${label}`);
+  };
+
+  return (
+    <RichChartTooltip
+      active={active}
+      title={label}
+      items={[
+        {
+          label: "Actual",
+          value: actual,
+          unit: "$",
+          color: "#3b82f6",
+          trend: actual >= target ? "up" : "down",
+          trendLabel: actual >= target ? "Met or exceeded target" : "Below target",
+        },
+        {
+          label: "Target",
+          value: target,
+          unit: "$",
+          color: "#10b981",
+        },
+      ]}
+      actions={[ExportAction(handleExport)]}
+    />
+  );
+};
+
+const ServiceTypeTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name?: string; value?: number }[];
+}> = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const item = payload[0];
+
+  return (
+    <RichChartTooltip
+      active={active}
+      title={item.name}
+      items={[{ label: "Revenue", value: item.value ?? 0, unit: "$" }]}
+    />
+  );
+};
+
+const RegionTooltip: React.FC<{
+  active?: boolean;
+  payload?: { name?: string; value?: number }[];
+  label?: string;
+}> = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <RichChartTooltip
+      active={active}
+      title={label}
+      items={[{ label: "Revenue", value: payload[0].value ?? 0, unit: "$", color: "#3b82f6" }]}
+    />
+  );
+};
+
 const RevenueAnalytics: React.FC = () => {
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -103,77 +174,6 @@ const RevenueAnalytics: React.FC = () => {
       clearTimeout(dataTimer);
     };
   }, [startDate, endDate]);
-
-  // ─── Custom chart tooltips ────────────────────────────────────────────
-
-  const MonthlyRevenueTooltip: React.FC<{
-    active?: boolean;
-    payload?: { name?: string; value?: number; dataKey?: string }[];
-    label?: string;
-  }> = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    const actual = payload.find((p) => p.dataKey === "actual")?.value ?? 0;
-    const target = payload.find((p) => p.dataKey === "target")?.value ?? 0;
-
-    const handleExport = useCallback(() => {
-      console.info(`Export data for ${label}`);
-    }, [label]);
-
-    return (
-      <RichChartTooltip
-        active={active}
-        title={label}
-        items={[
-          {
-            label: "Actual",
-            value: actual,
-            unit: "$",
-            color: "#3b82f6",
-            trend: actual >= target ? "up" : "down",
-            trendLabel: actual >= target ? "Met or exceeded target" : "Below target",
-          },
-          {
-            label: "Target",
-            value: target,
-            unit: "$",
-            color: "#10b981",
-          },
-        ]}
-        actions={[ExportAction(handleExport)]}
-      />
-    );
-  };
-
-  const ServiceTypeTooltip: React.FC<{
-    active?: boolean;
-    payload?: { name?: string; value?: number }[];
-  }> = ({ active, payload }) => {
-    if (!active || !payload?.length) return null;
-    const item = payload[0];
-
-    return (
-      <RichChartTooltip
-        active={active}
-        title={item.name}
-        items={[{ label: "Revenue", value: item.value ?? 0, unit: "$" }]}
-      />
-    );
-  };
-
-  const RegionTooltip: React.FC<{
-    active?: boolean;
-    payload?: { name?: string; value?: number }[];
-    label?: string;
-  }> = ({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    return (
-      <RichChartTooltip
-        active={active}
-        title={label}
-        items={[{ label: "Revenue", value: payload[0].value ?? 0, unit: "$", color: "#3b82f6" }]}
-      />
-    );
-  };
 
   const handleExportPDF = () => {
     const element = document.getElementById("revenue-dashboard");

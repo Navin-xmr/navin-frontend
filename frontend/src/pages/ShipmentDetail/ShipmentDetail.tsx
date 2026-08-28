@@ -3,9 +3,7 @@ import { useParams } from "react-router-dom";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { useShipmentDetail } from "../../hooks/useShipmentDetail";
-import Breadcrumb from "../../components/ui/Breadcrumb";
 import { useTranslation } from "react-i18next";
-import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import Breadcrumb from "@components/common/Breadcrumb";
 import MilestoneTimeline, { MilestoneDetail } from "../../components/shipment/MilestoneTimeline/MilestoneTimeline";
 import ShipmentDetailHeader from "./ShipmentDetailHeader/ShipmentDetailHeader";
@@ -34,6 +32,7 @@ import ShipmentComparison from "../../components/shipment/ShipmentComparison/Shi
 import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison/ShipmentComparison";
 import ShipmentStickyBar from "./ShipmentStickyBar";
 import { Zap } from "lucide-react";
+import type { ShipmentStatus } from "../../types/realtimeEvents";
 
 const ShipmentDetail: React.FC = () => {
   const { t } = useTranslation("shipments");
@@ -50,6 +49,7 @@ const ShipmentDetail: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<ShipmentStatus | "CREATED">(shipment?.status ?? "IN_TRANSIT");
 
   // Ref attached to the hero heading — IntersectionObserver in ShipmentStickyBar
   // watches this element and shows the bar once it scrolls out of the viewport.
@@ -167,8 +167,6 @@ const ShipmentDetail: React.FC = () => {
 
   const summaryPrintData: ShipmentSummaryPrintData = {
     shipmentId: id ? `#${id}` : "#SHP-992834",
-    trackingNumber: shipmentHeaderData.trackingNumber,
-    status: shipmentHeaderData.status,
     trackingNumber: id ?? "SHP-992834",
     status: currentStatus,
     priority: shipmentHeaderData.priority,
@@ -188,8 +186,8 @@ const ShipmentDetail: React.FC = () => {
       { label: "Weight Surcharge", amount: mockCostBreakdown.weightSurcharge },
       { label: "Fuel Surcharge", amount: mockCostBreakdown.fuelSurcharge },
       { label: "Insurance Fee", amount: mockCostBreakdown.insuranceFee },
-      { label: "Customs Duty", amount: mockCostBreakdown.customsDuty },
-      { label: "Discount", amount: mockCostBreakdown.discount, isDiscount: true },
+      { label: "Customs Duty", amount: mockCostBreakdown.customsDuty ?? 0 },
+      { label: "Discount", amount: mockCostBreakdown.discount ?? 0, isDiscount: true },
     ],
     totalCost: { amount: mockCostBreakdown.total, currency: mockCostBreakdown.currency },
     payment: mockPaymentData
@@ -235,9 +233,6 @@ const ShipmentDetail: React.FC = () => {
     );
   }
 
-  return (
-    <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
-      <div ref={contentRef} className="max-w-300 mx-auto relative z-10">
   // Mock comparison shipments for #508
   const comparisonShipments: ShipmentForComparison[] = [
     {
@@ -285,7 +280,7 @@ const ShipmentDetail: React.FC = () => {
         priority={shipmentHeaderData.priority}
       />
 
-      <div className="max-w-300 mx-auto relative z-10">
+      <div ref={contentRef} className="max-w-300 mx-auto relative z-10">
         <Breadcrumb
           items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Shipments", href: "/dashboard/shipments" }]}
           current={id ? `#${id}` : "#SHP-992834"}

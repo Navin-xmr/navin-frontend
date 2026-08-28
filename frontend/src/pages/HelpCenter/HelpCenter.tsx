@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resetTourFlag } from '@components/onboarding/OnboardingTour';
-import { HelpCircle, RotateCcw } from 'lucide-react';
 import Breadcrumb from '@components/common/Breadcrumb';
 import { resetChecklist } from '@components/onboarding/OnboardingChecklist';
 import EmptyState from '@components/ui/EmptyState/EmptyState';
@@ -121,7 +120,7 @@ const FAQ_ENTRIES: FaqEntry[] = [
   {
     question: 'How do I connect my Stellar wallet?',
     answer:
-      'Open Settings and choose "Connect Wallet". Select your wallet provider (Freighter, Lobstr, or Solar Wallet) and approve the connection request. Once connected, your wallet address is used to sign and verify settlement transactions.',
+      'Open Settings and choose "Connect Wallet". Select your wallet provider (Freighter, Albedo, or LOBSTR) and approve the connection request. Once connected, your wallet address is used to sign and verify settlement transactions.',
   },
   {
     question: 'What does each shipment status mean?',
@@ -208,10 +207,8 @@ const HelpCenter: React.FC = () => {
   ];
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-6 py-8">
-      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Help Center" />
-      <div className="flex items-center gap-3 mb-8">
     <div className="w-full max-w-3xl mx-auto px-6 py-8 max-md:px-4">
+      <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Help Center" />
       <div className="flex items-center gap-3 mb-2">
         <HelpCircle size={28} className="text-[#62ffff]" />
         <h1 className="text-2xl font-bold text-white m-0">Help Center</h1>

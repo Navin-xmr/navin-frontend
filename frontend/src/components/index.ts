@@ -71,8 +71,8 @@ export { default as CostPerRouteWidget } from './dashboard/CostPerRouteWidget';
 // Shipment
 export { default as TrackingTimeline } from './shipment/TrackingTimeline';
 export type { TrackingTimelineProps, Milestone } from './shipment/TrackingTimeline';
-export { default as MilestoneTimeline } from './shipment/MilestoneTimeline';
-export type { MilestoneDetail, MilestoneTimelineProps } from './shipment/MilestoneTimeline';
+export { default as MilestoneTimeline } from './shipment/MilestoneTimeline/MilestoneTimeline';
+export type { MilestoneDetail, MilestoneTimelineProps } from './shipment/MilestoneTimeline/MilestoneTimeline';
 export { default as EventAnnotation } from './shipment/EventAnnotation';
 export type { EventAnnotationProps, Annotation } from './shipment/EventAnnotation';
 export { default as StatusUpdate } from './shipment/StatusUpdate';
@@ -81,7 +81,7 @@ export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation
 export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation/DeliveryConfirmation';
 export { default as QuickActionPanel } from './shipment/QuickActionPanel';
 export type { QuickActionPanelProps, ActionType } from './shipment/QuickActionPanel';
-export { default as OverdueShipmentBadge } from './shipment/OverdueShipmentBadge';
+export { OverdueShipmentBadge } from './shipment/OverdueShipmentBadge';
 export type { OverdueShipmentBadgeProps } from './shipment/OverdueShipmentBadge';
 
 // Onboarding

@@ -58,8 +58,7 @@ describe('Modal', () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(<Modal {...defaultProps} onClose={onClose} closeOnOverlayClick />);
-    const overlays = document.querySelectorAll('[aria-hidden="true"]');
-    const overlay = overlays[1];
+    const overlay = document.querySelector('[role="presentation"]')!.firstElementChild as HTMLElement;
     await user.click(overlay);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -68,8 +67,7 @@ describe('Modal', () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(<Modal {...defaultProps} onClose={onClose} closeOnOverlayClick={false} />);
-    const overlays = document.querySelectorAll('[aria-hidden="true"]');
-    const overlay = overlays[1];
+    const overlay = document.querySelector('[role="presentation"]')!.firstElementChild as HTMLElement;
     await user.click(overlay);
     expect(onClose).not.toHaveBeenCalled();
   });

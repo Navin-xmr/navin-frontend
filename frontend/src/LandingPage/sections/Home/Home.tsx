@@ -1,6 +1,9 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const Home: React.FC = () => {
+  const { t } = useTranslation('landing');
+
   return (
     <section
       className="relative w-full min-h-screen flex items-center justify-center overflow-hidden"
@@ -44,16 +47,14 @@ const Home: React.FC = () => {
             fontSize: 'clamp(3rem, 9vw, 7rem)',
           }}
         >
-          TRANSPARENT <span className="text-[#00d4c8]">TRACKING</span>
+          {t('hero.titleLine1')} <span className="text-[#00d4c8]">{t('hero.titleLine2')}</span>
         </h1>
 
         <p
           className="font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-[580px]"
           style={{ fontSize: 'clamp(0.9rem, 2vw, 1.05rem)' }}
         >
-          Our platform uses next gen tech to make your deliveries faster and more reliable.
-          <br className="hidden sm:hidden" />
-          Every step is visible, every shipment secure.
+          {t('hero.subtitle')}
         </p>
 
         <div className="flex items-center gap-0 mt-2 w-full justify-center">
@@ -67,7 +68,7 @@ const Home: React.FC = () => {
             href="#track"
             className="inline-flex items-center gap-2.5 px-8 py-3.5 sm:px-6 sm:py-3 bg-[rgba(8,40,50,0.75)] text-white text-base sm:text-[0.9rem] font-medium no-underline border-[1.5px] border-[rgba(0,180,160,0.6)] rounded-full cursor-pointer backdrop-blur-[8px] whitespace-nowrap transition-all duration-[250ms] hover:bg-[rgba(0,120,110,0.35)] hover:border-[#00d4c8] hover:shadow-[0_0_24px_rgba(0,212,200,0.3),inset_0_0_12px_rgba(0,212,200,0.08)] hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-[#00d4c8] focus-visible:outline-offset-4"
           >
-            Track Your Shipment
+            {t('hero.cta')}
             <svg
               className="shrink-0 text-[#00d4c8]"
               width="22"

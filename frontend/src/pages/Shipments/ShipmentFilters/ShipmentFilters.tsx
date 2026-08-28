@@ -331,7 +331,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, origin: e.target.value }))
                 }
-                placeholder="Filter by origin…"
+                placeholder="Filter by origin…" aria-label="Origin City"
                 className={inputBase}
               />
             </div>
@@ -347,7 +347,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, destination: e.target.value }))
                 }
-                placeholder="Filter by destination…"
+                placeholder="Filter by destination…" aria-label="Destination City"
                 className={inputBase}
               />
             </div>
@@ -363,7 +363,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, carrier: e.target.value }))
                 }
-                placeholder="Filter by carrier…"
+                placeholder="Filter by carrier…" aria-label="Carrier"
                 className={inputBase}
               />
             </div>
@@ -381,7 +381,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                   onChange={(e) =>
                     setFilters((prev) => ({ ...prev, weightMin: e.target.value }))
                   }
-                  placeholder="Min"
+                  placeholder="Min" aria-label="Minimum weight"
                   className={inputBase}
                 />
                 <span className="text-slate-500 text-xs shrink-0">to</span>
@@ -392,7 +392,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                   onChange={(e) =>
                     setFilters((prev) => ({ ...prev, weightMax: e.target.value }))
                   }
-                  placeholder="Max"
+                  placeholder="Max" aria-label="Maximum weight"
                   className={inputBase}
                 />
               </div>
@@ -415,3 +415,5 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 };
 
 export default ShipmentFilters;
+
+

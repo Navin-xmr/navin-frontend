@@ -85,23 +85,4 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, variant = 'def
   <Tag label={status} variant={variant} size={size} dot className={className} />
 );
 
-// Status variant mapping for common statuses
-export const STATUS_VARIANT_MAP: Record<string, TagVariant> = {
-  active: 'success',
-  completed: 'success',
-  delivered: 'success',
-  released: 'success',
-  success: 'success',
-  pending: 'warning',
-  in_transit: 'info',
-  processing: 'info',
-  escrowed: 'accent',
-  failed: 'danger',
-  cancelled: 'danger',
-  disputed: 'danger',
-  error: 'danger',
-  idle: 'neutral',
-  draft: 'neutral',
-};
-
 export default Tag;

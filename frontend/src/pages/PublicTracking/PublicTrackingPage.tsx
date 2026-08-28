@@ -2,10 +2,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { CheckCircle2, Circle, Package, Truck, MapPin, Flag, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Circle, Package, Truck, MapPin, Flag, Share2, Copy, AlertTriangle } from 'lucide-react';
 import CopyToClipboard from '../../components/ui/CopyToClipboard';
 import { useLiveRegion } from '../../context/LiveRegionContext';
-import { CheckCircle2, Circle, Package, Truck, MapPin, Flag, Share2, Copy, AlertTriangle } from 'lucide-react';
 
 interface PublicMilestone {
   id: string;
@@ -63,8 +62,10 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
 
   useEffect(() => {
     if (!trackingNumber) {
-      setLoading(false);
-      setError('No tracking number was provided.');
+      Promise.resolve().then(() => {
+        setLoading(false);
+        setError('No tracking number was provided.');
+      });
       return;
     }
     let isActive = true;
@@ -82,21 +83,18 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
         } else {
           setError('Something went wrong while looking up this shipment. Please try again.');
         }
-          return;
-        }
-        setError('We could not load this public tracking summary. Check your connection and try again.');
       } finally {
         if (isActive) setLoading(false);
       }
     };
 
-    setShipment(null);
-    setNotFound(false);
-    setError(null);
-
-    // Defer setLoading to avoid synchronous setState warning
+    // Defer state resets to avoid synchronous setState warning
     Promise.resolve().then(() => {
-      if (isActive) setLoading(true);
+      if (!isActive) return;
+      setShipment(null);
+      setNotFound(false);
+      setError(null);
+      setLoading(true);
     }).then(() => fetchShipment());
 
     return () => {
@@ -224,17 +222,6 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
               className="inline-block px-5 py-2.5 bg-cyan-400 text-black font-semibold rounded-lg hover:bg-cyan-300 transition-colors text-sm"
             >
               Try Again
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <AlertTriangle className="w-8 h-8 text-amber-400" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2">Tracking Summary Unavailable</h1>
-            <p className="text-slate-400 mb-6">{error}</p>
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="inline-block px-5 py-2.5 bg-cyan-400 text-black font-semibold rounded-lg hover:bg-cyan-300 transition-colors text-sm"
-            >
-              Retry
             </button>
           </div>
         )}
