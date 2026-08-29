@@ -213,14 +213,14 @@ const RevenueAnalytics: React.FC = () => {
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="bg-transparent border-none text-white text-sm outline-none [color-scheme:dark]"
+              className="bg-transparent border-none text-white text-sm outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 rounded [color-scheme:dark]"
             />
             <span className="text-slate-400">—</span>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="bg-transparent border-none text-white text-sm outline-none [color-scheme:dark]"
+              className="bg-transparent border-none text-white text-sm outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 rounded [color-scheme:dark]"
             />
           </div>
 

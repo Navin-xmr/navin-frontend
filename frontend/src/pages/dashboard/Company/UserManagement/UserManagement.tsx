@@ -299,7 +299,7 @@ const UserManagement: React.FC = () => {
           <select
             value={roleFilter}
             onChange={(e) => { setRoleFilter(e.target.value); resetPage(); }}
-            className="bg-[#14171E] border border-[#1E293B] rounded-lg py-2.5 pl-10 pr-9 text-slate-100 text-sm appearance-none outline-none cursor-pointer h-full"
+            className="bg-[#14171E] border border-[#1E293B] rounded-lg py-2.5 pl-10 pr-9 text-slate-100 text-sm appearance-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:border-cyan-400 cursor-pointer h-full"
           >
             <option value="All">All Roles</option>
             <option value="Admin">Admin</option>

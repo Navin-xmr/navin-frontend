@@ -93,7 +93,7 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
             max={values.endDate || undefined}
             disabled={disabled}
             onChange={(e) => patch({ startDate: e.target.value })}
-            className="bg-transparent border-none text-white text-sm outline-none w-[130px] [color-scheme:dark] disabled:opacity-50"
+            className="bg-transparent border-none text-white text-sm outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 rounded w-[130px] [color-scheme:dark] disabled:opacity-50"
             aria-invalid={!!dateError}
             aria-describedby={dateError ? "analytics-date-error" : undefined}
           />
@@ -110,7 +110,7 @@ const AnalyticsFilters: React.FC<AnalyticsFiltersProps> = ({
             min={values.startDate || undefined}
             disabled={disabled}
             onChange={(e) => patch({ endDate: e.target.value })}
-            className="bg-transparent border-none text-white text-sm outline-none w-[130px] [color-scheme:dark] disabled:opacity-50"
+            className="bg-transparent border-none text-white text-sm outline-none focus-visible:ring-1 focus-visible:ring-cyan-400 rounded w-[130px] [color-scheme:dark] disabled:opacity-50"
             aria-invalid={!!dateError}
             aria-describedby={dateError ? "analytics-date-error" : undefined}
           />
