@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { toast } from 'react-hot-toast';
 import { useOnlineStatus } from '../../../hooks/useOnlineStatus';
+import { useToast } from '../../../context/ToastContext';
 
 const OfflineBanner: React.FC = () => {
   const isOnline = useOnlineStatus();
+  const { addToast } = useToast();
   const [dismissed, setDismissed] = useState(false);
   // Only announce "back online" once we've actually observed an offline
   // stretch in this session, so the toast doesn't fire on initial mount.
@@ -14,13 +15,13 @@ const OfflineBanner: React.FC = () => {
     setDismissed(false);
     if (isOnline) {
       if (wasOffline.current) {
-        toast.success("You're back online.", { id: 'connection-restored' });
+        addToast("You're back online.", "success", undefined, "connection-restored");
         wasOffline.current = false;
       }
     } else {
       wasOffline.current = true;
     }
-  }, [isOnline]);
+  }, [isOnline, addToast]);
 
   if (isOnline || dismissed) return null;
 

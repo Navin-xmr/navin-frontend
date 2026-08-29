@@ -1,5 +1,5 @@
 import { AxiosInstance, AxiosError } from "axios";
-import { toast } from "react-hot-toast";
+import { notifyToast } from "../../../context/toastBridge";
 import { clearToken } from "../../auth/tokenStorage";
 
 // This stops the app from showing multiple pop-ups at the same time if multiple requests fail at once
@@ -66,7 +66,7 @@ export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path:
                         : typeof navigator !== "undefined" && !navigator.onLine
                             ? "You're offline. This action didn't go through."
                             : "Network error — please check your connection and try again.";
-                toast.error(message, { id: "network-error" });
+                notifyToast(message, "error", "network-error");
                 return Promise.reject(error);
             }
 
@@ -79,7 +79,7 @@ export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path:
                         clearToken();
                         
                         // Show the exact toast message requested by the issue
-                        toast.error("Session expired, redirecting to login...");
+                        notifyToast("Session expired, redirecting to login...", "error");
                         
                         // Wait 2 seconds so the user can read it, then change pages cleanly
                         setTimeout(() => {
@@ -91,16 +91,16 @@ export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path:
 
                 case 403:
                     // Show insufficient permissions toast
-                    toast.error(message);
+                    notifyToast(message, "error");
                     break;
 
                 case 500:
                     // Show server error toast
-                    toast.error(message);
+                    notifyToast(message, "error");
                     break;
 
                 default:
-                    toast.error(message);
+                    notifyToast(message, "error");
                     console.error("API Error:", message);
             }
 

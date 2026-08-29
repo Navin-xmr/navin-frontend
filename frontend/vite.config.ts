@@ -15,7 +15,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "images/**/*"],
+      includeAssets: ["navin-logo.svg", "images/**/*"],
       manifest: {
         name: "Navin — Blockchain Logistics",
         short_name: "Navin",

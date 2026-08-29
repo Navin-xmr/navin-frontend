@@ -1,12 +1,13 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { toast } from 'react-hot-toast';
 import OfflineBanner from './OfflineBanner';
 
-vi.mock('react-hot-toast', () => ({
-  toast: {
-    success: vi.fn(),
-  },
+const { addToastMock } = vi.hoisted(() => ({
+  addToastMock: vi.fn(),
+}));
+
+vi.mock('../../../context/ToastContext', () => ({
+  useToast: () => ({ addToast: addToastMock }),
 }));
 
 function setOnline(value: boolean) {
@@ -64,12 +65,12 @@ describe('OfflineBanner', () => {
     });
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(toast.success).toHaveBeenCalledWith("You're back online.", { id: 'connection-restored' });
+    expect(addToastMock).toHaveBeenCalledWith("You're back online.", "success", undefined, "connection-restored");
   });
 
   it('does not announce reconnection on initial mount', () => {
     render(<OfflineBanner />);
-    expect(toast.success).not.toHaveBeenCalled();
+    expect(addToastMock).not.toHaveBeenCalled();
   });
 
   it('dismisses the banner without requiring the browser to go online', () => {
