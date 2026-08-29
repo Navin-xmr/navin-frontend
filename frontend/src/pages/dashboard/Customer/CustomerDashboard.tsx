@@ -7,17 +7,9 @@ import {
   DollarSign,
 } from 'lucide-react';
 import { shipmentApi, Shipment, ShipmentStatus } from '../../../services/api/endpoints/shipments';
+import { notificationsApi, Notification } from '../../../services/api/endpoints/notifications';
 import { getStatusBadgeClass, getStatusDisplayLabel } from '../../../utils/shipmentStatus';
 import { safeFormatDate, safeDateCompare } from '../../../utils/safeFormat';
-import { NotificationItem } from '../../../components/notifications/NotificationDropdown/NotificationDropdown';
-
-// No notifications API yet — use same mock as NotificationDropdown
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  { id: '1', type: 'shipment', message: 'Shipment #SH-2024-001 has been delivered successfully', timestamp: new Date(Date.now() - 2 * 3600000), read: false },
-  { id: '2', type: 'payment', message: 'Payment of 5,000 XLM received for shipment #SH-2024-002', timestamp: new Date(Date.now() - 5 * 3600000), read: false },
-  { id: '3', type: 'alert', message: 'Shipment #SH-2024-003 is delayed due to weather conditions', timestamp: new Date(Date.now() - 86400000), read: false },
-  { id: '4', type: 'shipment', message: 'New shipment #SH-2024-004 is awaiting pickup', timestamp: new Date(Date.now() - 2 * 86400000), read: true },
-];
 
 const STATUS_PROGRESS: Record<ShipmentStatus, number> = {
   CREATED: 25,
@@ -51,12 +43,12 @@ function getTimeAgo(timestamp: Date, t: (key: string, opts?: Record<string, unkn
   return t('customerDashboard.timeAgo.days', { count: diffDays });
 }
 
-function getNotificationIcon(type: NotificationItem['type']) {
+function getNotificationIcon(type: Notification['type']) {
   switch (type) {
-    case 'shipment': return <Package size={14} className="text-blue-400" />;
-    case 'payment':  return <DollarSign size={14} className="text-emerald-400" />;
-    case 'alert':    return <AlertTriangle size={14} className="text-amber-400" />;
-    default:         return <Bell size={14} className="text-slate-400" />;
+    case 'shipments': return <Package size={14} className="text-blue-400" />;
+    case 'settlements': return <DollarSign size={14} className="text-emerald-400" />;
+    case 'system': return <AlertTriangle size={14} className="text-amber-400" />;
+    default: return <Bell size={14} className="text-slate-400" />;
   }
 }
 
@@ -67,6 +59,7 @@ const CustomerDashboard: React.FC = () => {
   const [hasError, setHasError] = useState(false);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [pastSortOrder, setPastSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
     shipmentApi
@@ -74,6 +67,15 @@ const CustomerDashboard: React.FC = () => {
       .then(res => setShipments(res.data))
       .catch(() => setHasError(true))
       .finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    notificationsApi
+      .getAll({ limit: 10 })
+      .then(res => setNotifications(res.data))
+      .catch(() => {
+        // Non-critical — leave notifications empty on error
+      });
   }, []);
 
   const activeShipments = useMemo(
@@ -101,7 +103,10 @@ const CustomerDashboard: React.FC = () => {
     return shipments.filter(s => s.status === 'DELIVERED' && new Date(s.updatedAt) >= startOfMonth).length;
   }, [shipments]);
 
-  const unreadNotifications = MOCK_NOTIFICATIONS.filter(n => !n.read).slice(0, 3);
+  const unreadNotifications = useMemo(
+    () => notifications.filter(n => !n.isRead).slice(0, 3),
+    [notifications],
+  );
 
   if (hasError) {
     return (
@@ -369,10 +374,10 @@ const CustomerDashboard: React.FC = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] text-slate-200 leading-[1.4] m-0 line-clamp-2">
-                        {n.message}
+                        {n.description}
                       </p>
                       <span className="text-[11px] text-slate-500 mt-0.5 block">
-                        {getTimeAgo(n.timestamp, t)}
+                        {getTimeAgo(new Date(n.timestamp), t)}
                       </span>
                     </div>
                   </div>
