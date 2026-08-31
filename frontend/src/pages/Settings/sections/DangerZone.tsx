@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Download, Trash2 } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { apiClient } from '@services/api/client';
 import { useToast } from '../../../context/ToastContext';

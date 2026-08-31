@@ -138,6 +138,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ extraCommands = [] }) =
 
   // Keep activeIndex in bounds when filtered list changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setActiveIndex(0);
   }, [filteredCommands.length]);
 

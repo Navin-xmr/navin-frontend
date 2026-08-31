@@ -13,7 +13,7 @@ import {
 import type { LedgerBlock, MilestoneEvent, GetLedgerBlocksParams } from '@services/api/endpoints/ledger';
 import CopyToClipboard from '../../components/ui/CopyToClipboard';
 import Breadcrumb from '@components/common/Breadcrumb';
-import { Skeleton } from '@components';
+import { Skeleton } from '@components/ui/Skeleton';
 import ErrorFallback from '@components/ErrorFallback/ErrorFallback';
 import { useLedger } from './hooks/useLedger';
 

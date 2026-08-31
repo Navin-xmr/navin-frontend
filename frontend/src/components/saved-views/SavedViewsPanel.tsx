@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bookmark, Plus, Check, X, Pencil, Trash2 } from 'lucide-react';
 import { useSavedViews } from '@hooks/useSavedViews';
-import type { SavedView } from '@types/savedView';
+import type { SavedView } from '../../types/savedView';
 
 export interface SavedViewsPanelProps {
   currentFilters: Record<string, unknown>;
@@ -146,6 +146,7 @@ function ViewRow({ view, onLoad, onRename, onRemove }: ViewRowProps) {
 
   // Keep local rename input in sync if the view name changes externally
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!renaming) setRenameName(view.name);
   }, [view.name, renaming]);
 

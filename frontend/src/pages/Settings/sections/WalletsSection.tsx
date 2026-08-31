@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { apiClient } from '@services/api/client';
 import { useWallet } from '@context/WalletContext';
@@ -92,7 +92,7 @@ const WalletsSection: React.FC = () => {
         </ul>
       )}
 
-      <WalletConnectButton />
+      <WalletConnectButton onConnect={(pk) => void handleWalletConnect(pk)} />
     </SettingsSection>
   );
 };

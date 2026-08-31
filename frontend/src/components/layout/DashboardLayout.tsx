@@ -58,8 +58,6 @@ const DashboardLayout: React.FC = () => {
     'System': false,
   });
   const sidebarRef = useRef<HTMLElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const lastFocusedElement = useRef<HTMLElement | null>(null);
 
   const mainMenu: NavItem[] = [
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
