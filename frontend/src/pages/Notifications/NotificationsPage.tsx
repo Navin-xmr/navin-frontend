@@ -43,11 +43,11 @@ const isValidReadState = (value: string | null): value is ReadStateFilter =>
   value === "all" || value === "unread" || value === "read";
 
 const iconStyles: Record<string, string> = {
-  shipment: "bg-[rgba(37,99,235,0.1)] text-[#3b82f6]",
-  contract: "bg-[rgba(5,150,105,0.1)] text-[#10b981]",
-  alert: "bg-[rgba(220,38,38,0.1)] text-[#ef4444]",
-  system: "bg-[rgba(107,114,128,0.1)] text-[#9ca3af]",
-  invoice: "bg-[rgba(107,114,128,0.1)] text-[#9ca3af]",
+  shipment: "bg-[rgba(37,99,235,0.1)] text-accent-blue",
+  contract: "bg-[rgba(5,150,105,0.1)] text-accent-green",
+  alert: "bg-[rgba(220,38,38,0.1)] text-accent-red",
+  system: "bg-[rgba(107,114,128,0.1)] text-text-secondary",
+  invoice: "bg-[rgba(107,114,128,0.1)] text-text-secondary",
   payment: "bg-[rgba(74,222,128,0.1)] text-[#4ade80]",
 };
 
@@ -587,7 +587,7 @@ const NotificationsPage = () => {
     <div
       role="article"
       tabIndex={0}
-      className={`border rounded-xl flex gap-4 transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 focus-visible:ring-offset-[#101922] ${
+      className={`border rounded-xl flex gap-4 transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent-blue focus-visible:ring-offset-2 focus-visible:ring-offset-[#101922] ${
         compact ? "p-3" : "p-5"
       } ${
         notification.isRead
@@ -617,7 +617,7 @@ const NotificationsPage = () => {
       >
         {getIconComponent(notification.icon)}
         {!notification.isRead && (
-          <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-[#3b82f6] rounded-full" />
+          <div className="absolute top-0.5 right-0.5 w-2 h-2 bg-accent-blue rounded-full" />
         )}
       </div>
 
@@ -650,7 +650,7 @@ const NotificationsPage = () => {
         </div>
         {!compact && (
           <p
-            className={`text-sm leading-[1.5] m-0 ${notification.isRead ? "text-[#6b7280]" : "text-[#9ca3af]"}`}
+            className={`text-sm leading-[1.5] m-0 ${notification.isRead ? "text-[#6b7280]" : "text-text-secondary"}`}
           >
             {notification.description}
           </p>
@@ -661,7 +661,7 @@ const NotificationsPage = () => {
       <div className="flex items-center gap-2 shrink-0">
         {!notification.isRead && (
           <button
-            className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white focus-visible:outline-2 focus-visible:outline-[#3b82f6]"
+            className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white focus-visible:outline-2 focus-visible:outline-accent-blue"
             aria-label="Mark as read"
             onClick={(e) => {
               e.stopPropagation();
@@ -672,7 +672,7 @@ const NotificationsPage = () => {
           </button>
         )}
         <button
-          className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white focus-visible:outline-2 focus-visible:outline-[#3b82f6]"
+          className="w-9 h-9 rounded-md bg-transparent border border-[#374151] flex items-center justify-center cursor-pointer transition-all text-[#6b7280] hover:bg-[#374151] hover:border-[#4b5563] hover:text-white focus-visible:outline-2 focus-visible:outline-accent-blue"
           aria-label="Delete notification"
           onClick={(e) => {
             e.stopPropagation();
@@ -709,7 +709,7 @@ const NotificationsPage = () => {
             ].map((item) => (
               <span
                 key={item}
-                className="cursor-pointer text-sm text-[#9ca3af] hover:text-white transition-colors"
+                className="cursor-pointer text-sm text-text-secondary hover:text-white transition-colors"
               >
                 {item}
               </span>
@@ -728,7 +728,7 @@ const NotificationsPage = () => {
               <button
                 key={label}
                 aria-label={label}
-                className={`w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none ${active ? "bg-[#2563eb] text-white" : "bg-[#1f2937] text-[#9ca3af] hover:bg-[#374151]"}`}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer transition-colors border-none ${active ? "bg-[#2563eb] text-white" : "bg-[#1f2937] text-text-secondary hover:bg-[#374151]"}`}
               >
                 {icon}
               </button>
@@ -743,7 +743,7 @@ const NotificationsPage = () => {
             <h1 className="text-[32px] font-semibold m-0 mb-2">
               Notifications
             </h1>
-            <p className="text-[#9ca3af] text-sm m-0">
+            <p className="text-text-secondary text-sm m-0">
               Stay updated with your supply chain events and settlements.
             </p>
           </div>
@@ -764,7 +764,7 @@ const NotificationsPage = () => {
                 className={`px-4 py-2.5 border-none rounded-[20px] text-sm cursor-pointer transition-all flex items-center gap-2 ${
                   activeFilter === key
                     ? "bg-[#2563eb] text-white"
-                    : "bg-transparent text-[#9ca3af] hover:bg-[#1f2937] hover:text-white"
+                    : "bg-transparent text-text-secondary hover:bg-[#1f2937] hover:text-white"
                 }`}
                 onClick={() => handleFilterChange(key)}
               >
@@ -784,7 +784,7 @@ const NotificationsPage = () => {
                   className={`border-none text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1 ${
                     sortMode === opt.value
                       ? "bg-[#2563eb] text-white"
-                      : "bg-transparent text-[#9ca3af] hover:text-white"
+                      : "bg-transparent text-text-secondary hover:text-white"
                   }`}
                   onClick={() => setSortMode(opt.value)}
                 >
@@ -798,7 +798,7 @@ const NotificationsPage = () => {
               className={`px-4 py-2.5 border-none rounded-[20px] text-sm cursor-pointer transition-all ${
                 isGrouped
                   ? "bg-[#2563eb] text-white"
-                  : "bg-transparent text-[#9ca3af] hover:bg-[#1f2937] hover:text-white"
+                  : "bg-transparent text-text-secondary hover:bg-[#1f2937] hover:text-white"
               }`}
               onClick={() => setIsGrouped((prev) => !prev)}
             >
@@ -819,7 +819,7 @@ const NotificationsPage = () => {
                 className={`border-none text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1 ${
                   notifDensity === "comfortable"
                     ? "bg-[#2563eb] text-white"
-                    : "bg-transparent text-[#9ca3af] hover:text-white"
+                    : "bg-transparent text-text-secondary hover:text-white"
                 }`}
               >
                 <AlignJustify size={12} />
@@ -833,7 +833,7 @@ const NotificationsPage = () => {
                 className={`border-none text-xs font-semibold px-3 py-1.5 rounded-md cursor-pointer transition-all flex items-center gap-1 ${
                   notifDensity === "compact"
                     ? "bg-[#2563eb] text-white"
-                    : "bg-transparent text-[#9ca3af] hover:text-white"
+                    : "bg-transparent text-text-secondary hover:text-white"
                 }`}
               >
                 <ListIcon size={12} />
@@ -863,7 +863,7 @@ const NotificationsPage = () => {
               className={`px-3.5 py-2 rounded-lg text-sm cursor-pointer transition-all flex items-center gap-2 border ${
                 readStateFilter === key
                   ? "bg-[rgba(37,99,235,0.15)] border-[#2563eb] text-white"
-                  : "bg-transparent border-[#283039] text-[#9ca3af] hover:border-[#4b5563] hover:text-white"
+                  : "bg-transparent border-[#283039] text-text-secondary hover:border-[#4b5563] hover:text-white"
               }`}
               onClick={() => setReadStateFilter(key)}
             >
@@ -890,7 +890,7 @@ const NotificationsPage = () => {
             />
             <label
               htmlFor="select-all-notifications"
-              className="text-sm text-[#9ca3af] cursor-pointer select-none"
+              className="text-sm text-text-secondary cursor-pointer select-none"
             >
               {selectedCount > 0
                 ? `${selectedCount} selected`
@@ -953,7 +953,7 @@ const NotificationsPage = () => {
                       >
                         <button
                           type="button"
-                          className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left focus-visible:outline-2 focus-visible:outline-[#3b82f6] focus-visible:outline-offset-[-2px]"
+                          className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left focus-visible:outline-2 focus-visible:outline-accent-blue focus-visible:outline-offset-[-2px]"
                           onClick={() => toggleGroupExpansion(group.shipmentId)}
                           aria-expanded={expanded}
                         >
@@ -962,7 +962,7 @@ const NotificationsPage = () => {
                               <span className="text-base font-semibold text-white">
                                 {group.trackingNumber || group.shipmentId}
                               </span>
-                              <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-3 py-1 text-xs text-[#9ca3af]">
+                              <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-3 py-1 text-xs text-text-secondary">
                                 {group.notifications.length} updates
                               </span>
                               {group.unreadCount > 0 && (
@@ -971,14 +971,14 @@ const NotificationsPage = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="mt-3 text-sm text-[#9ca3af] truncate">
+                            <p className="mt-3 text-sm text-text-secondary truncate">
                               {group.mostRecentNotification.title}
                             </p>
                             <span className="text-xs text-[#6b7280]">
                               {group.mostRecentNotification.timestamp}
                             </span>
                           </div>
-                          <span className="text-sm text-[#9ca3af]">
+                          <span className="text-sm text-text-secondary">
                             {expanded ? "Collapse" : "Expand"}
                           </span>
                         </button>
@@ -1059,7 +1059,7 @@ const NotificationsPage = () => {
             >
               {isLoadingMore ? "Loading more..." : "Load more notifications"}
             </button>
-            <span className="text-xs text-[#9ca3af]">
+            <span className="text-xs text-text-secondary">
               Showing {notificationsList.length} of {meta.total} notifications
             </span>
           </div>

@@ -264,9 +264,9 @@ const RELEASE_NOTES: ReleaseNote[] = [
 
 const SECTION_ICONS: Record<string, React.ReactNode> = {
   Dashboard: <BarChart2 size={16} className="text-[#62ffff]" />,
-  Shipment: <Truck size={16} className="text-[#3b82f6]" />,
+  Shipment: <Truck size={16} className="text-accent-blue" />,
   Notification: <Bell size={16} className="text-[#f59e0b]" />,
-  Security: <Shield size={16} className="text-[#ef4444]" />,
+  Security: <Shield size={16} className="text-accent-red" />,
   Settings: <Settings size={16} className="text-[#94a3b8]" />,
 };
 
@@ -292,7 +292,7 @@ const ReleaseCard: React.FC<ReleaseCardProps> = ({
 
   return (
     <article
-      className="bg-[#14171e] border border-[rgba(30,41,59,0.7)] rounded-xl overflow-hidden transition-all"
+      className="bg-background-card border border-[rgba(30,41,59,0.7)] rounded-xl overflow-hidden transition-all"
       aria-label={`Release ${release.version}`}
     >
       {/* Card header */}
@@ -355,7 +355,7 @@ const ReleaseCard: React.FC<ReleaseCardProps> = ({
                   <li key={i} className="flex items-start gap-2.5 text-sm text-[#cbd5e1]">
                     <CheckCircle2
                       size={15}
-                      className="text-[#10b981] shrink-0 mt-[1px]"
+                      className="text-accent-green shrink-0 mt-[1px]"
                     />
                     {hl}
                   </li>
@@ -392,7 +392,7 @@ const ReleaseCard: React.FC<ReleaseCardProps> = ({
                           href={`https://github.com/Navin-xmr/navin-frontend/issues/${change.issueNumber}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="shrink-0 inline-flex items-center gap-0.5 text-xs text-[#3b82f6] no-underline hover:underline font-medium"
+                          className="shrink-0 inline-flex items-center gap-0.5 text-xs text-accent-blue no-underline hover:underline font-medium"
                           aria-label={`Issue #${change.issueNumber}`}
                         >
                           #{change.issueNumber}
@@ -473,7 +473,7 @@ const WhatsNewPage: React.FC = () => {
               <ul className="mt-3 space-y-1.5 m-0 pl-0 list-none">
                 {RELEASE_NOTES[0].highlights.slice(0, 3).map((hl, i) => (
                   <li key={i} className="flex items-center gap-2 text-xs text-[#cbd5e1]">
-                    <CheckCircle2 size={13} className="text-[#10b981] shrink-0" />
+                    <CheckCircle2 size={13} className="text-accent-green shrink-0" />
                     {hl}
                   </li>
                 ))}
@@ -492,8 +492,8 @@ const WhatsNewPage: React.FC = () => {
             onClick={() => setFilter(opt.value)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-all ${
               filter === opt.value
-                ? 'bg-[#3b82f6] border-[#3b82f6] text-white'
-                : 'bg-[#14171e] border-[#1e293b] text-[#94a3b8] hover:border-[#334155] hover:text-white'
+                ? 'bg-accent-blue border-accent-blue text-white'
+                : 'bg-background-card border-border text-[#94a3b8] hover:border-[#334155] hover:text-white'
             }`}
             aria-pressed={filter === opt.value}
           >
@@ -505,7 +505,7 @@ const WhatsNewPage: React.FC = () => {
       {/* Release notes list */}
       <div className="flex flex-col gap-4">
         {filteredReleases.length === 0 ? (
-          <div className="bg-[#14171e] border border-[rgba(30,41,59,0.7)] rounded-xl px-6 py-12 flex flex-col items-center text-center gap-3">
+          <div className="bg-background-card border border-[rgba(30,41,59,0.7)] rounded-xl px-6 py-12 flex flex-col items-center text-center gap-3">
             <Sparkles size={32} className="text-[#334155]" />
             <p className="text-sm text-[#94a3b8] m-0">
               No releases match this filter.
@@ -531,7 +531,7 @@ const WhatsNewPage: React.FC = () => {
             href="https://github.com/Navin-xmr/navin-frontend/issues"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#3b82f6] no-underline hover:underline font-medium"
+            className="text-accent-blue no-underline hover:underline font-medium"
           >
             GitHub
           </a>

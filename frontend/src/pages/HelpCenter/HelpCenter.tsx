@@ -228,7 +228,7 @@ const HelpCenter: React.FC = () => {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search common tasks…"
           aria-label="Search common tasks"
-          className="w-full rounded-lg border border-[#1e293b] bg-[#0b0e14] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-[#64748b] focus:border-[#62ffff] focus:outline-none"
+          className="w-full rounded-lg border border-border bg-[#0b0e14] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-[#64748b] focus:border-[#62ffff] focus:outline-none"
         />
       </div>
 
@@ -254,7 +254,7 @@ const HelpCenter: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate(task.path)}
-                  className="w-full h-full flex items-start gap-3 text-left rounded-xl border border-[#1e293b] bg-[#14171e] p-4 cursor-pointer transition-colors hover:border-[#62ffff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
+                  className="w-full h-full flex items-start gap-3 text-left rounded-xl border border-border bg-background-card p-4 cursor-pointer transition-colors hover:border-[#62ffff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
                 >
                   <span className="mt-0.5 text-[#62ffff]">{task.icon}</span>
                   <span className="flex-1 min-w-0">
@@ -271,7 +271,7 @@ const HelpCenter: React.FC = () => {
         )}
       </section>
 
-      <section className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 mb-6">
+      <section className="bg-background-card border border-border rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-white mb-2">Getting started again</h2>
         <p className="text-sm text-[#94a3b8] mb-4 leading-relaxed">
           Replay the guided introduction to Navin, or bring back the setup checklist on your
@@ -290,7 +290,7 @@ const HelpCenter: React.FC = () => {
           <button
             onClick={handleResetChecklist}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors
-              border border-[#1e293b] bg-transparent text-[#cbd5e1]
+              border border-border bg-transparent text-[#cbd5e1]
               hover:border-[#62ffff] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
           >
             <ListChecks size={16} />
@@ -312,7 +312,7 @@ const HelpCenter: React.FC = () => {
               <button
                 type="button"
                 onClick={link.onClick}
-                className="w-full h-full flex flex-col items-start gap-2 text-left rounded-xl border border-[#1e293b] bg-[#14171e] p-4 cursor-pointer transition-colors hover:border-[#62ffff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
+                className="w-full h-full flex flex-col items-start gap-2 text-left rounded-xl border border-border bg-background-card p-4 cursor-pointer transition-colors hover:border-[#62ffff] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
               >
                 <span className="text-[#62ffff]">{link.icon}</span>
                 <span className="text-sm font-semibold text-white">{link.label}</span>
@@ -336,7 +336,7 @@ const HelpCenter: React.FC = () => {
             return (
               <div
                 key={entry.question}
-                className="rounded-xl border border-[#1e293b] bg-[#14171e] overflow-hidden"
+                className="rounded-xl border border-border bg-background-card overflow-hidden"
               >
                 <button
                   type="button"
@@ -359,7 +359,7 @@ const HelpCenter: React.FC = () => {
         </div>
       </section>
 
-      <section aria-labelledby="shortcuts-heading" className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 mb-6">
+      <section aria-labelledby="shortcuts-heading" className="bg-background-card border border-border rounded-xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Keyboard size={18} className="text-[#62ffff]" />
           <h2 id="shortcuts-heading" className="text-lg font-semibold text-white m-0">
@@ -369,7 +369,7 @@ const HelpCenter: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-[#1e293b]">
+              <tr className="border-b border-border">
                 <th className="text-left font-semibold text-[#64748b] py-2 pr-4 whitespace-nowrap">
                   Shortcut key
                 </th>
@@ -378,7 +378,7 @@ const HelpCenter: React.FC = () => {
             </thead>
             <tbody>
               {SHORTCUT_ROWS.map((row) => (
-                <tr key={row.keys} className="border-b border-[#1e293b] last:border-b-0">
+                <tr key={row.keys} className="border-b border-border last:border-b-0">
                   <td className="py-2.5 pr-4 whitespace-nowrap">
                     <kbd className="text-xs font-mono bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.15)] rounded px-2 py-1 text-[#62ffff]">
                       {row.keys}
@@ -401,7 +401,7 @@ const HelpCenter: React.FC = () => {
         </h2>
         <div
           data-src="https://www.youtube.com/watch?v=REPLACE_ME"
-          className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#1e293b] bg-[#14171e] p-10 text-center"
+          className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background-card p-10 text-center"
         >
           <PlayCircle size={40} className="text-[#62ffff]" />
           <p className="text-sm font-semibold text-white m-0">Getting Started with Navin</p>
@@ -409,7 +409,7 @@ const HelpCenter: React.FC = () => {
         </div>
       </section>
 
-      <section className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6">
+      <section className="bg-background-card border border-border rounded-xl p-6">
         <h2 className="text-lg font-semibold text-white mb-2">Contact Support</h2>
         <p className="text-sm text-[#94a3b8] leading-relaxed">
           Need further assistance? Reach out to our team at{' '}

@@ -34,9 +34,16 @@ import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipm
 import CustomerProfile from './pages/dashboard/Customer/Profile/CustomerProfile';
 
 // Lazy loaded
-const PaginationDemo = lazy(() => import('./pages/ComponentDemos/PaginationDemo/PaginationDemo'));
-const ConfirmDialogDemo = lazy(() => import('./pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo'));
-const SkeletonDemo = lazy(() => import('./pages/ComponentDemos/SkeletonDemo/SkeletonDemo'));
+// Dev-only component demos (lazy-loaded; excluded from production bundle)
+const PaginationDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/PaginationDemo/PaginationDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
+const ConfirmDialogDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
+const SkeletonDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/SkeletonDemo/SkeletonDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
 const ShipmentDetail = lazy(() => import('./pages/ShipmentDetail/ShipmentDetail'));
 const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainLedger'));
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
