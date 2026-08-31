@@ -109,61 +109,46 @@ const ShipmentDetail: React.FC = () => {
     announce(t("shipmentDetail.disputeSubmitted", { ref: dispute.referenceNumber }));
   };
 
-  const mockPaymentData: PaymentData | null = {
-    amount: "1,500.00",
-    tokenSymbol: "XLM",
-    status: "escrowed",
-    payerAddress: "GBZXN7PIRZGNMHGA7MUUUF4GWPY5AYPV6LY4UV2GL6VJGIQRXFDNMADI",
-    payeeAddress: "GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB",
-    transactionHash: "a]b c9d4e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9",
-  };
+  // Derive payment data from real shipment stellar fields (null if not yet available)
+  const paymentData: PaymentData | null = shipment?.stellarTxHash
+    ? {
+        amount: (shipment.offChainMetadata?.paymentAmount as string | undefined) ?? "—",
+        tokenSymbol: (shipment.offChainMetadata?.tokenSymbol as string | undefined) ?? "XLM",
+        status: (shipment.offChainMetadata?.paymentStatus as PaymentData["status"] | undefined) ?? "pending",
+        payerAddress: (shipment.offChainMetadata?.payerAddress as string | undefined) ?? "",
+        payeeAddress: (shipment.offChainMetadata?.payeeAddress as string | undefined) ?? "",
+        transactionHash: shipment.stellarTxHash,
+      }
+    : null;
 
-  const mockSensorData: SensorData | null = {
-    temperature: { value: 22, unit: "°C", lastUpdated: "2026-02-23 09:15 AM EST" },
-    humidity: { value: 45, unit: "%", lastUpdated: "2026-02-23 09:15 AM EST" },
-    gps: { latitude: 42.3601, longitude: -71.0589, lastUpdated: "2026-02-23 09:10 AM EST" },
-    shockTilt: { eventCount: 2, lastUpdated: "2026-02-22 03:45 PM EST" },
-  };
+  // Sensor data: not stored on the Shipment object — passed as null until a telemetry API is wired
+  const sensorData: SensorData | null = null as SensorData | null;
 
-  const mockMilestones: MilestoneDetail[] = [
-    {
-      id: "1",
-      name: "Picked up by carrier",
-      timestamp: "2026-02-20 02:30 PM EST",
-      location: "New York Distribution Center, NY",
-      status: "completed",
-      blockchainAddress: "3389e9f0f5b3d4c2a1b0e9f8a7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8",
-    },
-    {
-      id: "2",
-      name: "In transit — Philadelphia hub",
-      timestamp: "2026-02-21 08:45 AM EST",
-      location: "Philadelphia Logistics Hub, PA",
-      status: "completed",
-      blockchainAddress: "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90",
-    },
-    {
-      id: "3",
-      name: "Customs cleared",
-      timestamp: "2026-02-22 07:10 AM EST",
-      location: "Boston Regional Facility, MA",
-      status: "completed",
-      blockchainAddress: "f1e2d3c4b5a60918273645546372819a0b1c2d3e4f5061728394a5b6c7d8e9f0",
-    },
-    { id: "4", name: "Out for delivery", timestamp: "2026-02-23 09:00 AM EST", location: "Boston, MA", status: "current", blockchainAddress: "pending..." },
-    { id: "5", name: "Delivered", timestamp: "Expected: 2026-02-23 05:00 PM EST", location: "Boston, MA", status: "upcoming", blockchainAddress: "" },
-  ];
+  // Map real shipment milestones to MilestoneDetail shape
+  const milestones: MilestoneDetail[] = shipment
+    ? shipment.milestones.map((m, index) => {
+        const isLast = index === shipment.milestones.length - 1;
+        const isCurrent = shipment.status === "IN_TRANSIT" && isLast;
+        const isDelivered = shipment.status === "DELIVERED";
+        return {
+          id: String(index + 1),
+          name: m.name,
+          timestamp: m.timestamp,
+          location: m.description ?? "",
+          status: isDelivered || (!isCurrent && index < shipment.milestones.length - 1)
+            ? "completed"
+            : isCurrent
+            ? "current"
+            : "upcoming",
+          blockchainAddress: "",
+        };
+      })
+    : [];
 
-  const mockCostBreakdown: CostBreakdownData = {
-    baseRate: 850.0,
-    weightSurcharge: 120.5,
-    fuelSurcharge: 64.75,
-    insuranceFee: 45.0,
-    customsDuty: 95.3,
-    discount: 25.0,
-    total: 1150.55,
-    currency: "USD",
-  };
+  // Cost breakdown: not stored on the Shipment object — passed as null until a billing API is wired
+  const costBreakdown: CostBreakdownData | null = shipment?.offChainMetadata?.costBreakdown
+    ? (shipment.offChainMetadata.costBreakdown as CostBreakdownData)
+    : null;
 
   const summaryPrintData: ShipmentSummaryPrintData = {
     shipmentId: id ? `#${id}` : t("shipmentDetail.unknownId"),
@@ -174,44 +159,46 @@ const ShipmentDetail: React.FC = () => {
     receiver: { name: "Customer", address: shipmentHeaderData.destinationAddress },
     createdAt: "2026-06-20",
     expectedDelivery: shipmentHeaderData.expectedDeliveryDate,
-    milestones: mockMilestones.map((m) => ({
+    milestones: milestones.map((m) => ({
       name: m.name,
       timestamp: m.timestamp,
       location: m.location,
       status: m.status,
       blockchainAddress: m.blockchainAddress,
     })),
-    costItems: [
-      { label: "Base Rate", amount: mockCostBreakdown.baseRate },
-      { label: "Weight Surcharge", amount: mockCostBreakdown.weightSurcharge },
-      { label: "Fuel Surcharge", amount: mockCostBreakdown.fuelSurcharge },
-      { label: "Insurance Fee", amount: mockCostBreakdown.insuranceFee },
-      { label: "Customs Duty", amount: mockCostBreakdown.customsDuty ?? 0 },
-      { label: "Discount", amount: mockCostBreakdown.discount ?? 0, isDiscount: true },
-    ],
-    totalCost: { amount: mockCostBreakdown.total, currency: mockCostBreakdown.currency },
-    payment: mockPaymentData
+    costItems: costBreakdown
+      ? [
+          { label: "Base Rate", amount: costBreakdown.baseRate },
+          { label: "Weight Surcharge", amount: costBreakdown.weightSurcharge },
+          { label: "Fuel Surcharge", amount: costBreakdown.fuelSurcharge },
+          { label: "Insurance Fee", amount: costBreakdown.insuranceFee },
+          { label: "Customs Duty", amount: costBreakdown.customsDuty ?? 0 },
+          { label: "Discount", amount: costBreakdown.discount ?? 0, isDiscount: true },
+        ]
+      : [],
+    totalCost: { amount: costBreakdown?.total ?? 0, currency: costBreakdown?.currency ?? "USD" },
+    payment: paymentData
       ? {
-          amount: mockPaymentData.amount,
-          tokenSymbol: mockPaymentData.tokenSymbol,
-          status: mockPaymentData.status,
-          transactionHash: mockPaymentData.transactionHash,
+          amount: paymentData!.amount,
+          tokenSymbol: paymentData!.tokenSymbol,
+          status: paymentData!.status,
+          transactionHash: paymentData!.transactionHash,
         }
       : undefined,
-    sensorSnapshot: mockSensorData
+    sensorSnapshot: sensorData
       ? {
-          temperature: mockSensorData.temperature
-            ? { value: mockSensorData.temperature.value, unit: mockSensorData.temperature.unit }
+          temperature: sensorData!.temperature
+            ? { value: sensorData!.temperature!.value, unit: sensorData!.temperature!.unit }
             : undefined,
-          humidity: mockSensorData.humidity
-            ? { value: mockSensorData.humidity.value, unit: mockSensorData.humidity.unit }
+          humidity: sensorData!.humidity
+            ? { value: sensorData!.humidity!.value, unit: sensorData!.humidity!.unit }
             : undefined,
-          location: mockSensorData.gps
-            ? { latitude: mockSensorData.gps.latitude, longitude: mockSensorData.gps.longitude }
+          location: sensorData!.gps
+            ? { latitude: sensorData!.gps!.latitude, longitude: sensorData!.gps!.longitude }
             : undefined,
         }
       : undefined,
-    stellarTxHash: mockPaymentData?.transactionHash,
+    stellarTxHash: paymentData?.transactionHash,
   };
 
   if (isLoading && !shipment) {
@@ -241,9 +228,9 @@ const ShipmentDetail: React.FC = () => {
       origin: shipmentHeaderData.originAddress,
       destination: shipmentHeaderData.destinationAddress,
       status: currentStatus,
-      milestones: mockMilestones,
+      milestones: milestones,
       expectedDelivery: shipmentHeaderData.expectedDeliveryDate,
-      createdAt: "2026-06-20",
+      createdAt: shipment?.createdAt ?? "2026-06-20",
     },
     {
       id: "2",
@@ -251,7 +238,7 @@ const ShipmentDetail: React.FC = () => {
       origin: "Los Angeles, CA 90001",
       destination: "San Francisco, CA 94101",
       status: "IN_TRANSIT",
-      milestones: mockMilestones.slice(0, 3),
+      milestones: milestones.slice(0, 3),
       expectedDelivery: "Oct 25, 2026 by 3:00 PM PST",
       createdAt: "2026-06-21",
     },
@@ -261,7 +248,7 @@ const ShipmentDetail: React.FC = () => {
       origin: "Chicago, IL 60601",
       destination: "Miami, FL 33101",
       status: "DELIVERED",
-      milestones: mockMilestones,
+      milestones: milestones,
       expectedDelivery: "Oct 20, 2026 by 2:00 PM EST",
       createdAt: "2026-06-19",
     },
@@ -313,11 +300,11 @@ const ShipmentDetail: React.FC = () => {
             originCoords={{ lat: 40.7128, lng: -74.006 }}
             destinationCoords={{ lat: 42.3601, lng: -71.0589 }}
             initialLocation={
-              mockSensorData?.gps
+              sensorData?.gps
                 ? {
-                    lat: mockSensorData.gps.latitude,
-                    lng: mockSensorData.gps.longitude,
-                    timestamp: mockSensorData.gps.lastUpdated,
+                    lat: sensorData.gps.latitude,
+                    lng: sensorData.gps.longitude,
+                    timestamp: sensorData.gps.lastUpdated,
                   }
                 : undefined
             }
@@ -353,12 +340,12 @@ const ShipmentDetail: React.FC = () => {
           <h2 className="font-['Bebas_Neue',sans-serif] text-[clamp(1.75rem,4vw,2.5rem)] font-normal tracking-[0.04em] leading-[1.2] text-white mt-10 mb-0 text-center md:mb-8">
             {t("shipmentDetail.milestoneTitlePart1")} <span className="text-[#00d4c8]">{t("shipmentDetail.milestoneTitlePart2")}</span>
           </h2>
-          <MilestoneTimeline milestones={mockMilestones} />
+          <MilestoneTimeline milestones={milestones} />
         </div>
 
-        <SensorDataCards sensorData={mockSensorData} />
-        <PaymentStatus payment={mockPaymentData} />
-        <CostBreakdown data={mockCostBreakdown} mode="confirmed" />
+        <SensorDataCards sensorData={sensorData} />
+        <PaymentStatus payment={paymentData} />
+        <CostBreakdown data={costBreakdown} mode="confirmed" />
         <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} />
 
         {can(role, "shipment:upload-proof") && <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />}
