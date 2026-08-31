@@ -245,24 +245,27 @@ Everything else belongs in `className`.
 
 ## 4. Legacy CSS — Migration Policy
 
-Several existing components were built before Tailwind was adopted. They still carry `.css` files:
+All previously-tracked legacy component `.css` files have been converted to Tailwind:
 
-| Component | Legacy CSS file |
-|---|---|
-| `layout/TopHeader` | `TopHeader.css` |
-| `auth/WalletConnectButton` | `WalletConnectButton.css` |
-| `notifications/NotificationDropdown` | `NotificationDropdown.css` |
-| `layout/DashboardLayout` | `DashboardLayout.css` |
-| `layout/Sidebar` | `Sidebar.css` |
-| `auth/ProtectedRoute` | `ProtectedRoute.css` |
-| `pages/dashboard` | `Dashboard.css` |
-| `pages/ShipmentDetail/ShipmentMap` | `ShipmentMap.css` |
-| `pages/Payments/PaymentDetailModal` | `PaymentDetailModal.css` |
-| `pages/Settings/NotificationPreferences` | `NotificationPreferences.css` |
+| Component | Legacy CSS file | Status |
+|---|---|---|
+| `layout/TopHeader` | `TopHeader.css` | Migrated |
+| `auth/WalletConnectButton` | `WalletConnectButton.css` | Migrated |
+| `notifications/NotificationDropdown` | `NotificationDropdown.css` | Migrated |
+| `layout/DashboardLayout` | `DashboardLayout.css` | Migrated |
+| `layout/Sidebar` | `Sidebar.css` | Migrated |
+| `auth/ProtectedRoute` | `ProtectedRoute.css` | Migrated |
+| `pages/dashboard` | `Dashboard.css` | Migrated |
+| `pages/ShipmentDetail/ShipmentMap` | `ShipmentMap.css` | Migrated |
+| `pages/Payments/PaymentDetailModal` | `PaymentDetailModal.css` | Migrated |
+| `pages/Settings/NotificationPreferences` | `NotificationPreferences.css` | Migrated |
 
-**These components are migration-bound.** Do not add new styles to their `.css` files.
+The only remaining legacy component stylesheet is
+`src/components/ui/StatusBadge/StatusBadge.css`, which is tracked separately as part
+of the StatusBadge consolidation effort rather than a pure CSS migration.
 
-When you refactor or touch one of these components:
+No new per-component `.css` files are to be created. When you refactor or touch a
+component that still carries a legacy `.css` file:
 1. Convert all CSS rules to Tailwind utility classes.
 2. Delete the `.css` file.
 3. Remove the CSS `import` from the `.tsx` file.

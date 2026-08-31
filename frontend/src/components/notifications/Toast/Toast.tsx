@@ -42,18 +42,27 @@ export const Toast: React.FC<ToastProps> = ({
       role={isAssertive ? "alert" : "status"}
       aria-live={isAssertive ? "assertive" : "polite"}
       aria-atomic="true"
-      onClick={handleClick}
-      className={`
+      className="
         pointer-events-auto flex items-center justify-between min-w-[320px] max-w-md 
         p-4 rounded-xl shadow-lg border animate-in slide-in-from-right-full duration-300
-        cursor-pointer transition-all hover:scale-[1.02]
         bg-background-card border-border
-      `}
+      "
     >
-      <div className="flex items-center gap-3">
-        {icons[type]}
-        <span className="text-sm font-medium text-primary">{message}</span>
-      </div>
+      {navigateTo ? (
+        <button
+          type="button"
+          onClick={handleClick}
+          className="flex items-center gap-3 flex-1 min-w-0 text-left bg-transparent border-none p-0 cursor-pointer transition-all hover:scale-[1.02]"
+        >
+          {icons[type]}
+          <span className="text-sm font-medium text-primary">{message}</span>
+        </button>
+      ) : (
+        <div className="flex items-center gap-3">
+          {icons[type]}
+          <span className="text-sm font-medium text-primary">{message}</span>
+        </div>
+      )}
 
       <button
         onClick={(e) => {

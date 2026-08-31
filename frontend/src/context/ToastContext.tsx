@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { Toast } from "../components/notifications/Toast";
 import { useLiveRegion } from "./LiveRegionContext";
+import { registerToastBridge } from "./toastBridge";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 
@@ -9,10 +10,11 @@ export interface ToastMessage {
   type: ToastType;
   message: string;
   navigateTo?: string;
+  key?: string;
 }
 
 interface ToastContextType {
-  addToast: (message: string, type: ToastType, navigateTo?: string) => void;
+  addToast: (message: string, type: ToastType, navigateTo?: string, key?: string) => void;
   removeToast: (id: string) => void;
 }
 
@@ -25,10 +27,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   const { announce } = useLiveRegion();
 
   const addToast = useCallback(
-    (message: string, type: ToastType, navigateTo?: string) => {
-      const id = Math.random().toString(36).substring(2, 9);
+    (message: string, type: ToastType, navigateTo?: string, key?: string) => {
+      const id = key ?? Math.random().toString(36).substring(2, 9);
       setToasts((prev) => {
-        const newList = [...prev, { id, type, message, navigateTo }];
+        const withoutKey = key ? prev.filter((t) => t.key !== key) : prev;
+        const newList = [...withoutKey, { id, type, message, navigateTo, key }];
         return newList.slice(-3);
       });
       const priority = type === "error" ? "assertive" : "polite";
@@ -40,6 +43,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  useEffect(() => {
+    registerToastBridge(addToast);
+    return () => registerToastBridge(undefined);
+  }, [addToast]);
 
   return (
     <ToastContext.Provider value={{ addToast, removeToast }}>

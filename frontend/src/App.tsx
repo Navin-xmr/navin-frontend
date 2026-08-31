@@ -1,6 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
@@ -135,7 +134,6 @@ function App() {
       <RouteTransitionProvider>
         <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
           <ErrorBoundary>
-            <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
             <RouteTransition />
             <OfflineBanner />
             <SlowConnectionBanner />
