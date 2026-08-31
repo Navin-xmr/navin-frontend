@@ -28,6 +28,13 @@ import OnboardingTour, {
 } from "@components/onboarding/OnboardingTour";
 import type { TourStep } from "@components/onboarding/OnboardingTour";
 import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
+import { shipmentApi } from "../../../services/api/endpoints/shipments";
+import type { RouteCostData } from "../../../components/dashboard/CostPerRouteWidget/mockCostPerRouteData";
+import DeliveryPerformanceWidget from "../../../components/dashboard/DeliveryPerformanceWidget/DeliveryPerformanceWidget";
+import type { DeliveryPerformanceWidgetProps } from "../../../components/dashboard/DeliveryPerformanceWidget/DeliveryPerformanceWidget";
+import { analyticsApi } from "../../../services/api/endpoints/analytics";
+import type { KpiSummary, TimePeriod } from "../../../components/dashboard/DeliveryPerformanceWidget/mockPerformanceData";
+
 
 const TrendIcon = ({ up }: { up: boolean }) => (
   <svg
@@ -93,7 +100,8 @@ type DashboardWidgetId =
   | "scorecard"
   | "targets"
   | "shipments"
-  | "activity";
+  | "activity"
+  | "delivery-performance";
 
 interface DashboardPreset {
   id: string;
@@ -133,6 +141,7 @@ const widgetLabels: Record<DashboardWidgetId, string> = {
   targets: "Revenue and route costs",
   shipments: "Recent shipments",
   activity: "Recent activity",
+  "delivery-performance": "Delivery performance",
 };
 
 const defaultWidgetIds = dashboardPresets[2].widgets;
@@ -144,6 +153,10 @@ const CompanyDashboard: React.FC = () => {
   const [showTour, setShowTour] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [routeCostData, setRouteCostData] = useState<RouteCostData[]>([]);
+  const [routeCostLoading, setRouteCostLoading] = useState(true);
+  const [routeCostError, setRouteCostError] = useState<string | null>(null);
+  const [deliveryPerformanceData, setDeliveryPerformanceData] = useState<DeliveryPerformanceWidgetProps['data'] | undefined>(undefined);
   const [activePresetId, setActivePresetId] = useState(() => {
     try {
       return localStorage.getItem(DASHBOARD_LAYOUT_KEY) ?? "overview";
@@ -218,6 +231,123 @@ const CompanyDashboard: React.FC = () => {
       }
     };
     void fetchDashboardData();
+  }, [refreshKey]);
+
+  // Fetch shipments and derive per-route cost aggregations for CostPerRouteWidget
+  useEffect(() => {
+    let cancelled = false;
+    setRouteCostLoading(true);
+    setRouteCostError(null);
+    shipmentApi
+      .getAll({ limit: 200 })
+      .then((res) => {
+        if (cancelled) return;
+        // Group shipments by origin → destination route
+        const routeMap = new Map<string, RouteCostData>();
+        for (const shipment of res.data) {
+          const routeKey = `${shipment.origin} → ${shipment.destination}`;
+          const meta = shipment.offChainMetadata ?? {};
+          const shipmentCost = typeof meta.totalCost === 'number' ? meta.totalCost : 0;
+          const shipmentRevenue = typeof meta.revenue === 'number' ? meta.revenue : 0;
+          if (!routeMap.has(routeKey)) {
+            routeMap.set(routeKey, {
+              route: routeKey,
+              origin: shipment.origin,
+              destination: shipment.destination,
+              base: 0,
+              fuel: 0,
+              customs: 0,
+              insurance: 0,
+              revenue: 0,
+              shipments: [],
+            });
+          }
+          const entry = routeMap.get(routeKey)!;
+          entry.revenue += shipmentRevenue;
+          entry.base += shipmentCost;
+          entry.shipments.push({
+            id: shipment._id,
+            trackingNumber: shipment.trackingNumber,
+            cost: shipmentCost,
+            revenue: shipmentRevenue,
+          });
+        }
+        setRouteCostData(Array.from(routeMap.values()));
+        setRouteCostLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRouteCostError('Failed to load route cost data.');
+          setRouteCostLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey]);
+
+  // Fetch analytics summary and derive DeliveryPerformanceWidget data
+  useEffect(() => {
+    analyticsApi
+      .getSummary()
+      .then((summary) => {
+        const makeTrend = (sparkline: number[]): { date: string; value: number }[] => {
+          const today = new Date();
+          return sparkline.map((value, i) => {
+            const d = new Date(today);
+            d.setDate(today.getDate() - (sparkline.length - 1 - i));
+            return { date: d.toISOString().slice(0, 10), value };
+          });
+        };
+
+        const onTimeTrend = makeTrend(summary.onTimeDeliverySparkline);
+        const transitTrend = makeTrend(summary.averageTransitDaysSparkline);
+        const disputeTrend = makeTrend(summary.disputeRateSparkline);
+        const volumeTrend = makeTrend(summary.totalShipmentsSparkline);
+
+        const buildKpis = (_period: TimePeriod): KpiSummary[] => [
+          {
+            key: 'onTimeRate',
+            label: 'On-Time Delivery Rate',
+            unit: '%',
+            current: summary.onTimeDeliveryRate,
+            previous: summary.onTimeDeliveryRatePrev,
+            trend: onTimeTrend,
+          },
+          {
+            key: 'avgDeliveryTime',
+            label: 'Average Delivery Time',
+            unit: 'days',
+            current: summary.averageTransitDays,
+            previous: summary.averageTransitDaysPrev,
+            trend: transitTrend,
+          },
+          {
+            key: 'exceptionRate',
+            label: 'Exception Rate',
+            unit: '%',
+            current: summary.disputeRate,
+            previous: summary.disputeRatePrev,
+            trend: disputeTrend,
+          },
+          {
+            key: 'firstAttemptRate',
+            label: 'First Attempt Success Rate',
+            unit: '%',
+            current: summary.totalShipmentsThisMonth,
+            previous: summary.totalShipmentsThisMonthPrev,
+            trend: volumeTrend,
+          },
+        ];
+        // All three periods use the same summary (API returns a single snapshot)
+        const periods: TimePeriod[] = ['7d', '30d', '90d'];
+        setDeliveryPerformanceData(
+          Object.fromEntries(periods.map((p) => [p, buildKpis(p)])) as Record<TimePeriod, KpiSummary[]>,
+        );
+      })
+      .catch(() => {
+        // Non-critical — widget falls back to its built-in mock default
+      });
   }, [refreshKey]);
 
   const refreshedLabel = useMemo(() => {
@@ -429,11 +559,19 @@ const CompanyDashboard: React.FC = () => {
       )}
       {isWidgetVisible("revenue") && <RevenueSummaryWidget />}
       {isWidgetVisible("scorecard") && <PerformanceScorecardWidget />}
+      {isWidgetVisible("delivery-performance") && (
+        <DeliveryPerformanceWidget data={deliveryPerformanceData} />
+      )}
 
       {isWidgetVisible("targets") && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <RevenueTargetWidget />
-          <CostPerRouteWidget />
+          <CostPerRouteWidget
+            data={routeCostData}
+            loading={routeCostLoading}
+            error={routeCostError}
+            onRetry={() => setRefreshKey((k) => k + 1)}
+          />
         </div>
       )}
 
