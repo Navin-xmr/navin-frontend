@@ -236,6 +236,7 @@ const CompanyDashboard: React.FC = () => {
   // Fetch shipments and derive per-route cost aggregations for CostPerRouteWidget
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRouteCostLoading(true);
     setRouteCostError(null);
     shipmentApi
