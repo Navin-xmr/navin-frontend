@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import DataTable from './DataTable';
-import type { ColumnDef, PaginationConfig } from './types';
+import type { ColumnDef, DataTableProps, PaginationConfig } from './types';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ const ROWS: Row[] = [
   { id: '3', name: 'Gamma', status: 'active', amount: 200 },
 ];
 
-function renderTable(props: Partial<Parameters<typeof DataTable>[0]> = {}) {
+function renderTable(props: Partial<DataTableProps<Row>> = {}) {
   return render(
     <DataTable<Row>
       columns={COLUMNS}

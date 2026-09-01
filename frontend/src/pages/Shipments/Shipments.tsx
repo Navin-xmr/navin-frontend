@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Download, LayoutGrid, List, Loader2, Map, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { shipmentApi, type Shipment, type ShipmentPriority } from '../../api/shipmentApi';
+import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import { BulkActionBar } from '../../components/shipment/BulkActionBar';
 import { BulkStatusModal } from '../../components/shipment/BulkStatusModal';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
-import SearchInput from '../../components/ui/SearchInput';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import type { ExportFormat } from '../../components/ui/ExportDropdown';
 import { useToast } from '../../context/ToastContext';
@@ -13,20 +12,24 @@ import { useBulkSelection, useDebounce } from '../../hooks';
 import { safeFormatDate } from '../../utils/safeFormat';
 import ShipmentsKanban from './KanbanView/ShipmentsKanban';
 import RouteMap from './RouteMap/RouteMap';
-import ShipmentFilters, {
-  type ShipmentFiltersValues,
-  type ShipmentStatus,
-} from './ShipmentFilters';
+
 import { useVirtualShipments } from './hooks/useVirtualShipments';
+import type { ShipmentFiltersValues, ShipmentStatus } from './ShipmentFilters';
+
+import ShipmentsEmptyState from './components/ShipmentsEmptyState';
+import ShipmentsExportButton from './components/ShipmentsExportButton';
+import {
+  ShipmentsFilterToolbar,
+  type TopPriorityFilter,
+  type TopStatusFilter,
+  type TopTimeframeFilter,
+} from './components/ShipmentsFilterToolbar';
+import { ShipmentsViewToggle, type ShipmentsView } from './components/ShipmentsViewToggle';
 
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
 const VIEW_KEY = 'shipments-view';
 
-type ShipmentsView = 'list' | 'kanban' | 'routeMap';
-type TopStatusFilter = 'ALL' | ShipmentStatus;
-type TopPriorityFilter = 'ALL' | ShipmentPriority;
-type TopTimeframeFilter = 'ALL' | '30' | '90';
 
 function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
   const headers = ['Tracking Number', 'Origin', 'Destination', 'Status', 'Created At'];
@@ -329,43 +332,13 @@ const Shipments: React.FC = () => {
       <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
         <h1 className="text-2xl font-semibold m-0">Shipments</h1>
         <div className="flex items-center gap-3">
-          <div
-            className="inline-flex items-center rounded-lg border border-[rgba(98,255,255,0.2)] bg-[rgba(19,186,186,0.05)] p-0.5"
-            role="group"
-            aria-label="Toggle shipments view"
-          >
-            {[
-              { value: 'list' as const, label: 'List', icon: <List size={14} /> },
-              { value: 'kanban' as const, label: 'Kanban', icon: <LayoutGrid size={14} /> },
-              { value: 'routeMap' as const, label: 'Map', icon: <Map size={14} /> },
-            ].map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => handleViewChange(option.value)}
-                aria-pressed={view === option.value}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
-                  view === option.value
-                    ? 'bg-[#62ffff] text-black'
-                    : 'text-[#94a3b8] hover:text-white'
-                }`}
-              >
-                {option.icon}
-                {option.label}
-              </button>
-            ))}
-          </div>
+          <ShipmentsViewToggle view={view} onViewChange={handleViewChange} />
 
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-transparent border border-[rgba(98,255,255,0.3)] rounded-lg text-[#62ffff] text-sm font-medium cursor-pointer transition-colors enabled:hover:bg-[rgba(98,255,255,0.08)] enabled:hover:border-[rgba(98,255,255,0.5)] disabled:opacity-[0.45] disabled:cursor-not-allowed"
-            onClick={handleExportCSV}
+          <ShipmentsExportButton
+            isExporting={isExporting}
             disabled={isExporting || filteredShipments.length === 0}
-            aria-label="Export shipments to CSV"
-          >
-            {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-            {isExporting ? 'Exporting' : 'Export CSV'}
-          </button>
+            onExport={handleExportCSV}
+          />
         </div>
       </div>
 
@@ -375,73 +348,25 @@ const Shipments: React.FC = () => {
         <RouteMap />
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-3 mb-6 bg-[rgba(255,255,255,0.02)] p-4 rounded-xl border border-[rgba(255,255,255,0.05)]">
-            <div className="flex-1 min-w-[280px]">
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder="Search by ID, origin, or destination..."
-              />
-            </div>
+          <ShipmentsFilterToolbar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            priorityFilter={priorityFilter}
+            onPriorityChange={setPriorityFilter}
+            timeframeFilter={timeframeFilter}
+            onTimeframeChange={setTimeframeFilter}
+            onAdvancedChange={setAdvancedFilters}
+          />
 
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as TopStatusFilter)}
-              className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#62ffff] cursor-pointer"
-              aria-label="Filter by status"
-            >
-              <option value="ALL" className="bg-[#121620]">All Statuses</option>
-              <option value="CREATED" className="bg-[#121620]">Created</option>
-              <option value="IN_TRANSIT" className="bg-[#121620]">In Transit</option>
-              <option value="DELIVERED" className="bg-[#121620]">Delivered</option>
-              <option value="CANCELLED" className="bg-[#121620]">Cancelled</option>
-            </select>
-
-            <select
-              value={priorityFilter}
-              onChange={(event) => setPriorityFilter(event.target.value as TopPriorityFilter)}
-              className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#62ffff] cursor-pointer"
-              aria-label="Filter by priority"
-            >
-              <option value="ALL" className="bg-[#121620]">All Priorities</option>
-              <option value="URGENT" className="bg-[#121620]">Urgent</option>
-              <option value="STANDARD" className="bg-[#121620]">Standard</option>
-              <option value="ECONOMY" className="bg-[#121620]">Economy</option>
-            </select>
-
-            <select
-              value={timeframeFilter}
-              onChange={(event) => setTimeframeFilter(event.target.value as TopTimeframeFilter)}
-              className="bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#62ffff] cursor-pointer"
-              aria-label="Filter by timeframe"
-            >
-              <option value="ALL" className="bg-[#121620]">All Time</option>
-              <option value="30" className="bg-[#121620]">Last 30 Days</option>
-              <option value="90" className="bg-[#121620]">Last 90 Days</option>
-            </select>
-
-            <ShipmentFilters onFilterChange={setAdvancedFilters} />
-          </div>
-
-          {error ? (
-            <div className="py-8 px-6 text-center text-[var(--text-secondary)]" role="alert">{error}</div>
-          ) : isEmpty ? (
-            <div className="py-8 px-6 text-center text-[var(--text-secondary)]">
-              <h3>No shipments available</h3>
-              <p>There are no shipments to show.</p>
-            </div>
-          ) : isFilterEmpty ? (
-            <div className="py-8 px-6 text-center text-[var(--text-secondary)]">
-              <h3>No results found</h3>
-              <p>No shipments match the selected filters.</p>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-transparent border border-[rgba(98,255,255,0.3)] rounded-lg text-[#62ffff] text-sm font-medium cursor-pointer transition-colors hover:bg-[rgba(98,255,255,0.08)] hover:border-[rgba(98,255,255,0.5)]"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </button>
-            </div>
+          {isEmpty || error || isFilterEmpty ? (
+            <ShipmentsEmptyState
+              error={error}
+              isEmpty={isEmpty}
+              isFilterEmpty={isFilterEmpty}
+              onClearFilters={clearFilters}
+            />
           ) : (
             <>
               <div className="text-sm text-[#94a3b8] mb-3">

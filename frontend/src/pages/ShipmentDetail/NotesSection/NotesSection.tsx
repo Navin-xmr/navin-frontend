@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import {
   shipmentApi,
   NoteResponse,
-} from "../../../../services/api/endpoints/shipments";
-import { useToast } from "../../../../context/ToastContext";
-import Avatar from "../../../../components/ui/Avatar";
+} from "../../../services/api/endpoints/shipments";
+import { useToast } from "../../../context/ToastContext";
+import Avatar from "../../../components/ui/Avatar";
 
 interface Note {
   id: string;

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { AlertTriangle, Upload, FileText, CheckCircle, X } from "lucide-react";
-import { apiClient } from "../../../../services/api/client";
+import { apiClient } from "../../../services/api/client";
 
 export type DisputeType = "WRONG_GOODS" | "DAMAGED" | "NOT_DELIVERED" | "PAYMENT_DISAGREEMENT" | "OTHER";
 
