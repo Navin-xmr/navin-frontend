@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, DollarSign, Truck, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { activityApi, type ActivityEvent } from '../../../api/activityApi';
@@ -121,7 +121,7 @@ const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
   const [error, setError] = useState(false);
   const refreshIntervalRef = useRef<number | null>(null);
 
-  const fetchActivity = useCallback(async () => {
+  const fetchActivity = async () => {
     try {
       const res = await activityApi.getActivity({ limit });
       setItems(res.data ?? []);
@@ -132,12 +132,12 @@ const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [limit]);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => { void fetchActivity(); }, 0);
     return () => clearTimeout(timer);
-  }, [fetchActivity]);
+  }, [limit]);
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
@@ -148,7 +148,7 @@ const RecentActivityPanel: React.FC<RecentActivityPanelProps> = ({
     return () => {
       if (refreshIntervalRef.current) window.clearInterval(refreshIntervalRef.current);
     };
-  }, [fetchActivity]);
+  }, [limit]);
 
   const grouped = useMemo(() => {
     const buckets: Record<'today' | 'yesterday' | 'earlier', ActivityEvent[]> = {

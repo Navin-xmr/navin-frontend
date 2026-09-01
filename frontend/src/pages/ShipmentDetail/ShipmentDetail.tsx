@@ -122,7 +122,7 @@ const ShipmentDetail: React.FC = () => {
     : null;
 
   // Sensor data: not stored on the Shipment object — passed as null until a telemetry API is wired
-  const sensorData = null as SensorData | null;
+  const sensorData: SensorData | null = null;
 
   // Map real shipment milestones to MilestoneDetail shape
   const milestones: MilestoneDetail[] = shipment
