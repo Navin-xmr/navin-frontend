@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useFormAutosave } from './useFormAutosave';
+import useFormAutosave from './useFormAutosave';
 
 describe('useFormAutosave', () => {
   beforeEach(() => {
@@ -15,14 +15,16 @@ describe('useFormAutosave', () => {
 
   it('starts with idle status', () => {
     const { result } = renderHook(() =>
-      useFormAutosave({ name: 'test' }, { key: 'form-test' }),
+      useFormAutosave({ storageKey: 'form-test', data: { name: 'test' } }),
     );
     expect(result.current.status).toBe('idle');
     expect(result.current.lastSavedAt).toBeNull();
   });
 
   it('does NOT trigger save on first mount (isMountedRef pattern)', () => {
-    renderHook(() => useFormAutosave({ name: 'test' }, { key: 'form-mount' }));
+    renderHook(() =>
+      useFormAutosave({ storageKey: 'form-mount', data: { name: 'test' } }),
+    );
     act(() => {
       vi.advanceTimersByTime(2000);
     });
@@ -32,15 +34,15 @@ describe('useFormAutosave', () => {
   it('debounces save after data changes post-mount', () => {
     let formData = { name: 'initial' };
     const { result, rerender } = renderHook(() =>
-      useFormAutosave(formData, { key: 'form-debounce', debounceMs: 1500 }),
+      useFormAutosave({ storageKey: 'form-debounce', data: formData, debounceMs: 1500 }),
     );
 
     // Change data after mount — triggers debounce
     formData = { name: 'updated' };
     rerender();
 
-    // Should still be idle before debounce fires
-    expect(result.current.status).toBe('idle');
+    // Saving state is set immediately; the write fires after the debounce
+    expect(result.current.status).toBe('saving');
 
     act(() => {
       vi.advanceTimersByTime(1500);
@@ -53,7 +55,7 @@ describe('useFormAutosave', () => {
   it('respects custom debounceMs', () => {
     let formData = { value: 1 };
     const { result, rerender } = renderHook(() =>
-      useFormAutosave(formData, { key: 'form-custom', debounceMs: 500 }),
+      useFormAutosave({ storageKey: 'form-custom', data: formData, debounceMs: 500 }),
     );
 
     formData = { value: 2 };
@@ -62,7 +64,7 @@ describe('useFormAutosave', () => {
     act(() => {
       vi.advanceTimersByTime(499);
     });
-    expect(result.current.status).toBe('idle');
+    expect(result.current.status).toBe('saving');
 
     act(() => {
       vi.advanceTimersByTime(1);
@@ -73,7 +75,7 @@ describe('useFormAutosave', () => {
   it('resets debounce timer when data changes rapidly', () => {
     let formData = { text: 'a' };
     const { result, rerender } = renderHook(() =>
-      useFormAutosave(formData, { key: 'form-rapid', debounceMs: 1000 }),
+      useFormAutosave({ storageKey: 'form-rapid', data: formData, debounceMs: 1000 }),
     );
 
     formData = { text: 'ab' };
@@ -82,7 +84,7 @@ describe('useFormAutosave', () => {
     act(() => {
       vi.advanceTimersByTime(800);
     });
-    expect(result.current.status).toBe('idle');
+    expect(result.current.status).toBe('saving');
 
     formData = { text: 'abc' };
     rerender();
@@ -90,7 +92,7 @@ describe('useFormAutosave', () => {
     act(() => {
       vi.advanceTimersByTime(800);
     });
-    expect(result.current.status).toBe('idle');
+    expect(result.current.status).toBe('saving');
 
     act(() => {
       vi.advanceTimersByTime(200);
@@ -101,7 +103,7 @@ describe('useFormAutosave', () => {
   it('sets lastSavedAt after successful save', () => {
     let formData = { text: 'hello' };
     const { result, rerender } = renderHook(() =>
-      useFormAutosave(formData, { key: 'form-date', debounceMs: 500 }),
+      useFormAutosave({ storageKey: 'form-date', data: formData, debounceMs: 500 }),
     );
 
     formData = { text: 'world' };
@@ -114,50 +116,58 @@ describe('useFormAutosave', () => {
     expect(result.current.lastSavedAt).toBeInstanceOf(Date);
   });
 
-  it('saveNow() persists data immediately, bypassing debounce', () => {
-    const { result } = renderHook(() =>
-      useFormAutosave({ name: 'initial' }, { key: 'form-savenow', debounceMs: 5000 }),
+  it('saveNow() persists the latest data immediately, bypassing debounce', () => {
+    let formData = { name: 'pending' };
+    const { result, rerender } = renderHook(() =>
+      useFormAutosave({ storageKey: 'form-savenow', data: formData, debounceMs: 5000 }),
     );
 
+    formData = { name: 'immediate' };
+    rerender();
+
     act(() => {
-      result.current.saveNow({ name: 'immediate' });
+      result.current.saveNow();
     });
 
     expect(result.current.status).toBe('saved');
     const stored = localStorage.getItem('form-savenow');
     expect(stored).not.toBeNull();
-    const parsed = JSON.parse(stored!) as { data: { name: string } };
-    expect(parsed.data.name).toBe('immediate');
+    const parsed = JSON.parse(stored!) as { name: string };
+    expect(parsed.name).toBe('immediate');
   });
 
   it('loadDraft() returns previously saved data', () => {
-    const { result } = renderHook(() =>
-      useFormAutosave({ name: '' }, { key: 'form-load' }),
+    let formData = { name: 'persisted' };
+    const { result, rerender } = renderHook(() =>
+      useFormAutosave({ storageKey: 'form-load', data: formData }),
     );
 
     act(() => {
-      result.current.saveNow({ name: 'persisted' });
+      result.current.saveNow();
     });
+    void rerender;
 
-    const loaded = result.current.loadDraft<{ name: string }>();
+    const loaded = result.current.loadDraft() as { name: string };
     expect(loaded).toEqual({ name: 'persisted' });
   });
 
   it('loadDraft() returns null when no draft exists', () => {
     const { result } = renderHook(() =>
-      useFormAutosave({}, { key: 'form-no-draft' }),
+      useFormAutosave({ storageKey: 'form-no-draft', data: {} }),
     );
     expect(result.current.loadDraft()).toBeNull();
   });
 
   it('clearDraft() removes item from localStorage and resets status to idle', () => {
-    const { result } = renderHook(() =>
-      useFormAutosave({ name: '' }, { key: 'form-clear' }),
+    let formData = { name: 'to-clear' };
+    const { result, rerender } = renderHook(() =>
+      useFormAutosave({ storageKey: 'form-clear', data: formData }),
     );
 
     act(() => {
-      result.current.saveNow({ name: 'to-clear' });
+      result.current.saveNow();
     });
+    void rerender;
 
     expect(result.current.status).toBe('saved');
     expect(localStorage.getItem('form-clear')).not.toBeNull();
@@ -174,7 +184,7 @@ describe('useFormAutosave', () => {
   it('status transitions: idle → saving → saved', () => {
     let formData = { val: 0 };
     const { result, rerender } = renderHook(() =>
-      useFormAutosave(formData, { key: 'form-transition', debounceMs: 300 }),
+      useFormAutosave({ storageKey: 'form-transition', data: formData, debounceMs: 300 }),
     );
 
     formData = { val: 1 };

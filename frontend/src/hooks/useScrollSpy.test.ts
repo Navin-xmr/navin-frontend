@@ -51,7 +51,7 @@ describe('useScrollSpy', () => {
   });
 
   it('does not create IntersectionObserver when sectionIds is empty', () => {
-    const constructorSpy = vi.spyOn(window, 'IntersectionObserver' as keyof Window);
+    const constructorSpy = vi.spyOn(window, 'IntersectionObserver');
     renderHook(() => useScrollSpy([]));
     expect(constructorSpy).not.toHaveBeenCalled();
     constructorSpy.mockRestore();
@@ -103,30 +103,28 @@ describe('useScrollSpy', () => {
 
   it('uses the default rootMargin (-40% 0px -55% 0px)', () => {
     createSection('section-margin');
-    const constructorSpy = vi.spyOn(window, 'IntersectionObserver' as keyof Window);
 
     renderHook(() => useScrollSpy(['section-margin']));
 
-    expect(constructorSpy).toHaveBeenCalledWith(
-      expect.any(Function),
+    const io = window.IntersectionObserver as unknown as {
+      lastOptions?: IntersectionObserverInit;
+    };
+    expect(io.lastOptions).toEqual(
       expect.objectContaining({ rootMargin: '-40% 0px -55% 0px' }),
     );
-
-    constructorSpy.mockRestore();
   });
 
   it('accepts a custom rootMargin', () => {
     createSection('section-custom-margin');
-    const constructorSpy = vi.spyOn(window, 'IntersectionObserver' as keyof Window);
 
     renderHook(() => useScrollSpy(['section-custom-margin'], '-20% 0px -30% 0px'));
 
-    expect(constructorSpy).toHaveBeenCalledWith(
-      expect.any(Function),
+    const io = window.IntersectionObserver as unknown as {
+      lastOptions?: IntersectionObserverInit;
+    };
+    expect(io.lastOptions).toEqual(
       expect.objectContaining({ rootMargin: '-20% 0px -30% 0px' }),
     );
-
-    constructorSpy.mockRestore();
   });
 
   it('re-observes when sectionIds change', () => {

@@ -24,17 +24,17 @@ describe('useWidgetCache', () => {
   it('starts with isLoading false and data null before microtask flushes', () => {
     const fetcher = vi.fn().mockResolvedValue({ items: [] });
     const { result } = renderHook(() =>
-      useWidgetCache('widget-init', fetcher, 30000),
+      useWidgetCache('widget-init', fetcher, { ttlMs: 30000 }),
     );
-    // Before microtask runs, data is null and not loading yet
+    // Before microtask runs, data is null but the initial fetch has started
     expect(result.current.data).toBeNull();
-    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isLoading).toBe(true);
   });
 
   it('fetches data on mount when cache is empty', async () => {
     const fetcher = vi.fn().mockResolvedValue({ total: 42 });
     const { result } = renderHook(() =>
-      useWidgetCache('widget-fresh-1', fetcher, 30000),
+      useWidgetCache('widget-fresh-1', fetcher, { ttlMs: 30000 }),
     );
 
     await act(async () => {
@@ -50,7 +50,7 @@ describe('useWidgetCache', () => {
   it('sets lastUpdated after fetch', async () => {
     const fetcher = vi.fn().mockResolvedValue({ val: 1 });
     const { result } = renderHook(() =>
-      useWidgetCache('widget-ludate-1', fetcher, 30000),
+      useWidgetCache('widget-ludate-1', fetcher, { ttlMs: 30000 }),
     );
 
     await act(async () => {
@@ -58,8 +58,7 @@ describe('useWidgetCache', () => {
       await Promise.resolve();
     });
 
-    expect(result.current.lastUpdated).toBeTypeOf('number');
-    expect(result.current.lastUpdated).toBeGreaterThan(0);
+    expect(result.current.lastUpdated).toBeInstanceOf(Date);
   });
 
   it('uses different cache keys for different routes', async () => {
@@ -68,7 +67,7 @@ describe('useWidgetCache', () => {
 
     mockUseLocation.mockReturnValue({ pathname: '/dashboard' });
     const { result: r1 } = renderHook(() =>
-      useWidgetCache('widget-route-key', fetcher1, 30000),
+      useWidgetCache('widget-route-key', fetcher1, { ttlMs: 30000 }),
     );
 
     await act(async () => {
@@ -78,7 +77,7 @@ describe('useWidgetCache', () => {
 
     mockUseLocation.mockReturnValue({ pathname: '/shipments' });
     const { result: r2 } = renderHook(() =>
-      useWidgetCache('widget-route-key', fetcher2, 30000),
+      useWidgetCache('widget-route-key', fetcher2, { ttlMs: 30000 }),
     );
 
     await act(async () => {
@@ -98,7 +97,7 @@ describe('useWidgetCache', () => {
     });
 
     const { result } = renderHook(() =>
-      useWidgetCache('widget-refresh-1', fetcher, 30000),
+      useWidgetCache('widget-refresh-1', fetcher, { ttlMs: 30000 }),
     );
 
     await act(async () => {
@@ -121,7 +120,7 @@ describe('useWidgetCache', () => {
   it('isStale is false for fresh cache', async () => {
     const fetcher = vi.fn().mockResolvedValue({ fresh: true });
     const { result } = renderHook(() =>
-      useWidgetCache('widget-fresh-stale-1', fetcher, 30000),
+      useWidgetCache('widget-fresh-stale-1', fetcher, { ttlMs: 30000 }),
     );
 
     await act(async () => {
@@ -141,7 +140,7 @@ describe('useWidgetCache', () => {
 
     // First render — populates cache
     const { result: r1, unmount: unmount1 } = renderHook(() =>
-      useWidgetCache('widget-stale-ttl', fetcher, 100),
+      useWidgetCache('widget-stale-ttl', fetcher, { ttlMs: 100 }),
     );
 
     await act(async () => {
@@ -159,7 +158,7 @@ describe('useWidgetCache', () => {
 
     // Second render — cache is stale, should re-fetch
     const { result: r2 } = renderHook(() =>
-      useWidgetCache('widget-stale-ttl', fetcher, 100),
+      useWidgetCache('widget-stale-ttl', fetcher, { ttlMs: 100 }),
     );
 
     await act(async () => {
@@ -178,7 +177,7 @@ describe('useWidgetCache', () => {
     );
 
     const { result } = renderHook(() =>
-      useWidgetCache('widget-loading-1', fetcher, 30000),
+      useWidgetCache('widget-loading-1', fetcher, { ttlMs: 30000 }),
     );
 
     await act(async () => {

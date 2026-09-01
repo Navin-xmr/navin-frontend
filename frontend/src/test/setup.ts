@@ -9,11 +9,30 @@ Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
 });
 
 // jsdom does not implement IntersectionObserver — provide a no-op stub.
+// The mock methods live on the prototype (not instance fields) so tests can
+// reset call history with `IntersectionObserver.prototype.observe.mockClear()`.
+// NOTE: no `observe/unobserve/disconnect` class fields may be declared next to
+// these — with `useDefineForClassFields`, a field without an initializer would
+// shadow the prototype method with `undefined` on every instance.
+type IOMock = IntersectionObserverMock & {
+  observe: ReturnType<typeof vi.fn>;
+  unobserve: ReturnType<typeof vi.fn>;
+  disconnect: ReturnType<typeof vi.fn>;
+};
 class IntersectionObserverMock {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
+  static lastOptions: IntersectionObserverInit | undefined;
+  callback: IntersectionObserverCallback;
+  options?: IntersectionObserverInit;
+  constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+    this.callback = callback;
+    this.options = options;
+    IntersectionObserverMock.lastOptions = options;
+  }
 }
+const ioProto = IntersectionObserverMock.prototype as IOMock;
+ioProto.observe = vi.fn();
+ioProto.unobserve = vi.fn();
+ioProto.disconnect = vi.fn();
 Object.defineProperty(window, 'IntersectionObserver', {
   value: IntersectionObserverMock,
   writable: true,

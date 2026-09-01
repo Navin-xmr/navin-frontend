@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useRealtimeEvents } from './useRealtimeEvents';
+import type { RealtimeEventType } from '../types/realtimeEvents';
 
 vi.mock('@services/realtime/realtimeService', () => ({
   realtimeService: {
@@ -127,11 +128,11 @@ describe('useRealtimeEvents', () => {
 
   it('does not resubscribe when the hook re-renders with the same event types array reference change', () => {
     const { rerender } = renderHook(({ types }) => useRealtimeEvents(types), {
-      initialProps: { types: ['shipment:status'] as const },
+      initialProps: { types: ['shipment:status'] satisfies RealtimeEventType[] },
     });
 
     mockSubscribe.mockClear();
-    rerender({ types: ['shipment:status'] as const });
+    rerender({ types: ['shipment:status'] satisfies RealtimeEventType[] });
 
     expect(mockSubscribe).not.toHaveBeenCalled();
   });
