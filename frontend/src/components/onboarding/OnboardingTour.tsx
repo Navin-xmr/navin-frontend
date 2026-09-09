@@ -247,15 +247,27 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [visible, setVisible] = useState(false);
 
-  // Only show if tour is not completed
+  // Only show if tour is not completed and has valid steps
   useEffect(() => {
-    if (!isTourComplete()) {
+    if (!isTourComplete() && steps.length > 0) {
       // Short delay to let the DOM settle after route render
       const timer = setTimeout(() => setVisible(true), 400);
-      return () => clearTimeout(timer);
+
+      // Auto-close tour after 10 minutes to prevent stuck state
+      const autoCloseTimer = setTimeout(() => {
+        console.warn('[OnboardingTour] Auto-closing due to timeout');
+        markTourComplete();
+        setVisible(false);
+        onClose?.();
+      }, 10 * 60 * 1000);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(autoCloseTimer);
+      };
     }
     return undefined;
-  }, []);
+  }, [steps.length, onClose]);
 
   // Keyboard handler: Escape closes, Arrow keys navigate
   useEffect(() => {
@@ -326,6 +338,12 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
   if (!visible) return null;
 
   const step = steps[currentStep];
+  if (!step) {
+    // Safety: if step is missing, close tour
+    console.error('[OnboardingTour] Current step missing, closing tour');
+    handleSkip();
+    return null;
+  }
 
   return (
     <>
@@ -339,12 +357,23 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
         {`Step ${currentStep + 1} of ${steps.length}: ${step.heading}`}
       </div>
 
-      {/* Full-screen click-to-skip overlay */}
+      {/* Full-screen click-to-skip overlay with safety close button */}
       <div
         style={{ position: 'fixed', inset: 0, zIndex: 9997 }}
         onClick={handleSkip}
         aria-hidden="true"
+        role="presentation"
       />
+
+      {/* Emergency close button (hidden but accessible) */}
+      <button
+        onClick={handleSkip}
+        style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 10000 }}
+        className="sr-only focus:not-sr-only"
+        aria-label="Close tour"
+      >
+        Close Tour (ESC)
+      </button>
 
       {/* Spotlight cutout */}
       <SpotlightOverlay rect={targetRect} />
