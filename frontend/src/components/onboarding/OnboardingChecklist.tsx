@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, X } from 'lucide-react';
-import { useSafeNavigate } from '../../hooks/useSafeNavigate';
 
 // === Types
 
@@ -110,7 +110,7 @@ const OnboardingChecklist: React.FC<OnboardingChecklistProps> = ({
   tasks = DEFAULT_CHECKLIST_TASKS,
   onDismiss,
 }) => {
-  const navigate = useSafeNavigate();
+  const navigate = useNavigate();
   const [state, setState] = useState<ChecklistState>(() => readChecklistState());
 
   const persist = useCallback((next: ChecklistState) => {

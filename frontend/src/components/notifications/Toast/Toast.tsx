@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { ToastType } from "../../../context/ToastContext";
 
@@ -24,15 +23,14 @@ export const Toast: React.FC<ToastProps> = ({
   navigateTo,
   onClose,
 }) => {
-  const navigate = useNavigate();
-
   useEffect(() => {
     const timer = setTimeout(onClose, 5000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
+  // ToastProvider mounts outside RouterProvider, so router hooks are unavailable here.
   const handleClick = () => {
-    if (navigateTo) navigate(navigateTo);
+    if (navigateTo) window.location.assign(navigateTo);
   };
 
   const isAssertive = type === "error";
