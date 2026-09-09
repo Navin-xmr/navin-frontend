@@ -86,6 +86,15 @@ export default defineConfig({
       },
     }),
   ], // tailwindcss() removed temporarily for CI
+  server: {
+    proxy: {
+      // Backend mounts its routers under /api, so the prefix is preserved.
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
+    }
+  },
   build: {
     rollupOptions: {
       output: {
