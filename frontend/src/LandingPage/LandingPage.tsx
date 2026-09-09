@@ -5,7 +5,6 @@ import Home from "./sections/Home/Home";
 import HowItWorks from "./sections/HowItWorks/HowItWorks";
 import WhyNavin from "./sections/WhyNavin/WhyNavin";
 import FAQSection from "./sections/FAQSection/FAQSection";
-import LogoStrip from "./sections/LogoStrip/LogoStrip";
 import CoreFeatures from "./sections/CoreFeatures/CoreFeatures";
 import Footer from "./sections/Footer/Footer";
 import { useReturningVisitor } from "@hooks/useReturningVisitor";
@@ -47,7 +46,6 @@ const LandingPage: React.FC = () => {
       <section id="home">
         <Home />
       </section>
-      <LogoStrip />
       <section id="why-navin">
         <WhyNavin />
       </section>
