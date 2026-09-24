@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Save } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 
@@ -18,7 +18,17 @@ const ProfileSection: React.FC<{ isCompany: boolean }> = ({ isCompany }) => {
   const [form, setForm] = useState<ProfileData>(initial);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const prevAvatarUrlRef = useRef<string | null>(null);
   const { isLoading, error, success, save } = useSettings();
+
+  // Revoke the blob URL when a new file is chosen or when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (prevAvatarUrlRef.current) {
+        URL.revokeObjectURL(prevAvatarUrlRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -26,7 +36,13 @@ const ProfileSection: React.FC<{ isCompany: boolean }> = ({ isCompany }) => {
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setAvatarPreview(URL.createObjectURL(file));
+    if (!file) return;
+    if (prevAvatarUrlRef.current) {
+      URL.revokeObjectURL(prevAvatarUrlRef.current);
+    }
+    const url = URL.createObjectURL(file);
+    prevAvatarUrlRef.current = url;
+    setAvatarPreview(url);
   };
 
   const handleSave = () => {
