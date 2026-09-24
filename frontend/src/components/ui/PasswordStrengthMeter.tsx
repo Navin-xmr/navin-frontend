@@ -1,41 +1,20 @@
 import React from 'react';
+import {
+  PASSWORD_MIN_LENGTH,
+  validatePassword,
+  getPasswordStrengthLevel,
+} from '../../utils/passwordPolicy';
 
 export interface PasswordStrengthMeterProps {
   password: string;
 }
 
-interface Criterion {
-  label: string;
-  met: boolean;
-}
-
-interface Level {
-  label: string;
-  segments: number;
-  color: string;
-  textColor: string;
-}
-
-function getLevel(criteria: Criterion[]): Level {
-  const met = criteria.filter((c) => c.met).length;
-  if (met === 0) return { label: 'Weak', segments: 1, color: 'bg-red-500', textColor: 'text-red-400' };
-  if (met === 1) return { label: 'Weak', segments: 1, color: 'bg-red-500', textColor: 'text-red-400' };
-  if (met === 2) return { label: 'Fair', segments: 2, color: 'bg-orange-400', textColor: 'text-orange-400' };
-  if (met === 3) return { label: 'Good', segments: 3, color: 'bg-yellow-400', textColor: 'text-yellow-400' };
-  return { label: 'Strong', segments: 4, color: 'bg-green-400', textColor: 'text-green-400' };
-}
-
 const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({ password }) => {
   if (!password) return null;
 
-  const criteria: Criterion[] = [
-    { label: 'At least 12 characters', met: password.length >= 12 },
-    { label: 'An uppercase letter', met: /[A-Z]/.test(password) },
-    { label: 'A number', met: /[0-9]/.test(password) },
-    { label: 'A special character', met: /[^A-Za-z0-9]/.test(password) },
-  ];
-
-  const level = getLevel(criteria);
+  const validation = validatePassword(password);
+  const criteria = validation.rules;
+  const level = getPasswordStrengthLevel(validation.score);
   const unmet = criteria.filter((c) => !c.met);
 
   return (

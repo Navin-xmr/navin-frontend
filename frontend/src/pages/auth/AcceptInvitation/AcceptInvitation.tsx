@@ -5,6 +5,7 @@ import { Eye, EyeOff, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { invitationsApi } from '@services/api';
 import type { UserRole } from '@services/api';
 import PasswordStrengthMeter from '../../../components/ui/PasswordStrengthMeter';
+import { PASSWORD_MIN_LENGTH } from '../../../utils/passwordPolicy';
 import { setToken } from '../../../services/auth/tokenStorage';
 
 interface InviteInfo {
@@ -61,7 +62,7 @@ const AcceptInvitation: React.FC = () => {
       .finally(() => setInfoLoading(false));
   }, [token, t]);
 
-  const passwordStrong = password.length >= 8;
+  const passwordStrong = password.length >= PASSWORD_MIN_LENGTH;
   const passwordsMatch = password === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {

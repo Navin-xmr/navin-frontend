@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import ResetPasswordPage from './ResetPasswordPage';
 import { ToastProvider } from '../../../context/ToastContext';
 import { LiveRegionProvider } from '../../../context/LiveRegionContext';
@@ -88,5 +88,48 @@ describe('ResetPasswordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
 
     expect(await screen.findByText(/invalid or expired/i)).toBeInTheDocument();
+  });
+
+  it('removes token from the URL to prevent leakage and retains it in state', async () => {
+    let currentLocation: { pathname: string; search: string } | null = null;
+    const LocationWatcher = () => {
+      const location = useLocation();
+      currentLocation = location;
+      return null;
+    };
+
+    mockAuthApi.resetPassword.mockResolvedValueOnce({});
+
+    render(
+      <MemoryRouter initialEntries={['/reset-password?token=secret-token-123']}>
+        <LiveRegionProvider>
+          <ToastProvider>
+            <LocationWatcher />
+            <Routes>
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/login" element={<div>Login Page</div>} />
+            </Routes>
+          </ToastProvider>
+        </LiveRegionProvider>
+      </MemoryRouter>
+    );
+
+    // After mount, searchParams must be stripped from the URL
+    await waitFor(() => {
+      expect(currentLocation?.search).toBe('');
+      expect(currentLocation?.pathname).toBe('/reset-password');
+    });
+
+    // The token is still remembered and usable for submitting
+    fireEvent.change(screen.getByLabelText(/new password/i), { target: { value: validPassword } });
+    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: validPassword } });
+    fireEvent.click(screen.getByRole('button', { name: /reset password/i }));
+
+    await waitFor(() => {
+      expect(mockAuthApi.resetPassword).toHaveBeenCalledWith({
+        token: 'secret-token-123',
+        newPassword: validPassword,
+      });
+    });
   });
 });
