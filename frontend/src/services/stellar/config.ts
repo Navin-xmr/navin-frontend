@@ -1,3 +1,7 @@
+const VALID_NETWORKS = ['testnet', 'mainnet'] as const;
+
+export type StellarNetwork = typeof VALID_NETWORKS[number];
+
 import { Networks } from '@stellar/stellar-sdk';
 
 const VALID_NETWORKS = ['testnet', 'mainnet'] as const;

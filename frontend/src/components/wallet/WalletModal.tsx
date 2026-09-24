@@ -30,11 +30,28 @@ function friendlyError(err: unknown): string {
   return msg.length > 120 ? `${msg.slice(0, 117)}…` : msg;
 }
 
-/** No per-wallet artwork ships with the app, so fall back to a recognizable lucide icon per adapter. */
+function AdapterIconImg({ id }: { id: WalletAdapter['id'] }): React.ReactNode {
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  if (loadFailed) {
+    if (id === 'albedo') return <Globe size={16} aria-hidden="true" />;
+    if (id === 'lobstr') return <Smartphone size={16} aria-hidden="true" />;
+    return <Wallet size={16} aria-hidden="true" />;
+  }
+
+  return (
+    <img
+      src={`/images/wallets/${id}.svg`}
+      alt=""
+      aria-hidden="true"
+      className="w-4 h-4"
+      onError={() => setLoadFailed(true)}
+    />
+  );
+}
+
 function adapterIcon(id: WalletAdapter['id']): React.ReactNode {
-  if (id === 'albedo') return <Globe size={16} aria-hidden="true" />;
-  if (id === 'lobstr') return <Smartphone size={16} aria-hidden="true" />;
-  return <Wallet size={16} aria-hidden="true" />;
+  return <AdapterIconImg id={id} />;
 }
 
 function statusBadge(id: WalletAdapter['id'], available: boolean | undefined): React.ReactNode {
