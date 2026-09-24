@@ -4,6 +4,7 @@ import Modal from '../../common/Modal/Modal';
 import { useToast } from '../../../context/ToastContext';
 import { authApi } from '../../../services/api/endpoints/auth';
 import { getToken, clearToken } from '../../../services/auth/tokenStorage';
+import { useWallet } from '../../../context/WalletContext';
 
 /** Minutes before expiry to show the warning modal. */
 const WARN_BEFORE_MS = 2 * 60 * 1000; // 2 minutes
@@ -28,6 +29,7 @@ export interface SessionTimeoutModalProps {
 const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExtended }) => {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { disconnect } = useWallet();
 
   const [isOpen, setIsOpen] = useState(false);
   const [countdown, setCountdown] = useState(WARN_BEFORE_MS / 1000);
@@ -46,6 +48,7 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
   const performLogout = (expired: boolean) => {
     clearTimers();
     setIsOpen(false);
+    void disconnect();
     clearToken();
     if (expired) {
       addToast('Your session has expired. Please sign in again.', 'error');

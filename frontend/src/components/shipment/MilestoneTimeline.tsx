@@ -8,6 +8,7 @@ import {
   ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
+import { getStellarExpertTxUrl } from '@utils/stellar';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -39,8 +40,6 @@ export interface MilestoneTimelineProps {
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-
-const STELLAR_EXPERT_TX_BASE = 'https://stellar.expert/explorer/public/tx';
 
 const EVENT_ICONS: Record<MilestoneEventType, LucideIcon> = {
   PICKED_UP: Truck,
@@ -153,7 +152,7 @@ function MilestoneNode({ milestone, isLast }: NodeProps) {
         {/* Blockchain verification badge */}
         {milestone.txHash && (
           <a
-            href={`${STELLAR_EXPERT_TX_BASE}/${milestone.txHash}`}
+            href={getStellarExpertTxUrl(milestone.txHash)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-medium transition-colors hover:border-emerald-400/60 hover:bg-emerald-500/20"
