@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowUpDown,
   ExternalLink,
@@ -15,6 +16,7 @@ import {
   Settlement,
   SettlementStatus,
   SettlementDetail,
+  RevenueSummaryResponse,
 } from "@services/api/endpoints/settlements";
 import { SettlementDetailModal } from "./components";
 import { useRealtimeEvents } from "../../hooks/useRealtimeEvents";
@@ -23,15 +25,12 @@ import { useAuthContext } from "../../context/AuthContext";
 import { useLiveRegion } from "../../context/LiveRegionContext";
 import Breadcrumb from "@components/common/Breadcrumb";
 
+import { getStellarExpertTxUrl } from "@utils/stellar";
+
 // Local lightweight table formatting (kept inline to avoid coupling)
 const truncateHash = (hash?: string) => {
   if (!hash) return "-";
   return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
-};
-
-const getStellarExplorerUrl = (hash?: string) => {
-  if (!hash) return undefined;
-  return `https://stellar.expert/explorer/public/tx/${hash}`;
 };
 
 const statusClasses: Record<SettlementStatus, string> = {
@@ -82,6 +81,9 @@ export default function Settlements() {
   );
   const [isModalLoading, setIsModalLoading] = useState(false);
 
+  // Global summary fetched from the backend — not page-scoped.
+  const [summary, setSummary] = useState<RevenueSummaryResponse | null>(null);
+
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const abortRef = useRef<AbortController | null>(null);
@@ -128,6 +130,14 @@ export default function Settlements() {
     };
   }, [load]);
 
+  // Fetch the global summary once on mount. The summary is independent of
+  // pagination so it reflects all settlements, not just the current page.
+  useEffect(() => {
+    settlementsApi.getSummary().then(setSummary).catch(() => {
+      // Non-critical — summary cards will show placeholder values
+    });
+  }, []);
+
   // Apply realtime settlement status updates
   useEffect(() => {
     const event = realtimeEvents["settlement:status"];
@@ -153,25 +163,6 @@ export default function Settlements() {
     });
   }, [realtimeEvents, announce]);
 
-  const summary = useMemo(() => {
-    // Aggregate from current page (fallback). If backend summary is desired, extend endpoint.
-    const totalSettledAmount = settlements
-      .filter((s) => s.status === "RELEASED")
-      .reduce((sum, s) => sum + (s.amount ?? 0), 0);
-
-    const pendingCount = settlements.filter(
-      (s) => s.status === "PENDING",
-    ).length;
-    const disputedCount = settlements.filter(
-      (s) => s.status === "DISPUTED",
-    ).length;
-
-    return {
-      totalSettledAmount,
-      pendingCount,
-      disputedCount,
-    };
-  }, [settlements]);
 
   const onOpen = async (s: Settlement) => {
     setSelected(s);
@@ -267,16 +258,17 @@ export default function Settlements() {
         </div>
       </div>
 
-      {/* Summary cards (simple; designed to be replaced with PaymentSummaryCards integration) */}
+      {/* Summary cards — totals are sourced from GET /settlements/summary, not the
+          current page, so they remain stable as the user pages through the table. */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
           <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
             Total settled
           </div>
           <div className="text-2xl sm:text-[32px] font-bold leading-none">
-            {summary.totalSettledAmount.toLocaleString(undefined, {
-              maximumFractionDigits: 2,
-            })}
+            {summary
+              ? summary.totalReleased.toLocaleString(undefined, { maximumFractionDigits: 2 })
+              : "—"}
           </div>
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
@@ -284,15 +276,19 @@ export default function Settlements() {
             Pending
           </div>
           <div className="text-2xl sm:text-[32px] font-bold leading-none">
-            {summary.pendingCount}
+            {summary
+              ? summary.totalPending.toLocaleString(undefined, { maximumFractionDigits: 2 })
+              : "—"}
           </div>
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
           <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            Disputed
+            In escrow
           </div>
           <div className="text-2xl sm:text-[32px] font-bold leading-none">
-            {summary.disputedCount}
+            {summary
+              ? summary.totalInEscrow.toLocaleString(undefined, { maximumFractionDigits: 2 })
+              : "—"}
           </div>
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
@@ -372,7 +368,7 @@ export default function Settlements() {
               </thead>
               <tbody>
                 {settlements.map((s) => {
-                  const url = getStellarExplorerUrl(s.stellarTxHash);
+                  const url = getStellarExpertTxUrl(s.stellarTxHash);
                   return (
                     <tr
                       key={s._id}
@@ -465,7 +461,7 @@ export default function Settlements() {
           {/* Mobile card view */}
           <div className="md:hidden flex flex-col gap-3">
             {settlements.map((s) => {
-              const url = getStellarExplorerUrl(s.stellarTxHash);
+              const url = getStellarExpertTxUrl(s.stellarTxHash);
               const hasActions =
                 can(role, "settlement:release-payment") ||
                 can(role, "settlement:dispute");

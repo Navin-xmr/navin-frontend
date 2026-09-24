@@ -163,7 +163,7 @@ describe('BlockchainLedger page', () => {
       await waitFor(() => {
         const links = screen.getAllByRole('link');
         const txLinks = links.filter((l) =>
-          l.getAttribute('href')?.includes('stellar.expert/explorer/public/tx'),
+          l.getAttribute('href')?.includes('stellar.expert/explorer/testnet/tx'),
         );
         expect(txLinks.length).toBeGreaterThan(0);
       });
@@ -176,7 +176,7 @@ describe('BlockchainLedger page', () => {
       await waitFor(() => {
         const links = screen.getAllByRole('link');
         const txLinks = links.filter((l) =>
-          l.getAttribute('href')?.includes('stellar.expert/explorer/public/tx'),
+          l.getAttribute('href')?.includes('stellar.expert/explorer/testnet/tx'),
         );
         expect(txLinks.length).toBeGreaterThan(0);
         txLinks.forEach((link) => {

@@ -168,7 +168,7 @@ describe('PaymentHistory', () => {
     expect(txLinks.length).toBeGreaterThanOrEqual(1);
     expect(txLinks[0]).toHaveAttribute(
       'href',
-      'https://stellar.expert/explorer/public/tx/abc1234567890defgh',
+      'https://stellar.expert/explorer/testnet/tx/abc1234567890defgh',
     );
 
     await user.click(screen.getByRole('button', { name: 'Close' }));

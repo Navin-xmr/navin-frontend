@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import RoleGuard from './RoleGuard';
 import { AuthProvider } from '../../context/AuthContext';
+import { WalletProvider } from '../../context/WalletContext';
 
 // Helper to create a valid-looking JWT (not cryptographically signed, just for testing)
 function makeToken(payload: Record<string, unknown>): string {
@@ -17,18 +18,20 @@ function renderWithAuth(token: string | null, path: string) {
 
   return render(
     <MemoryRouter initialEntries={[path]}>
-      <AuthProvider>
-        <Routes>
-          <Route
-            element={<RoleGuard allowedRoles={['company']} />}
-          >
-            <Route path="/company" element={<div>Company Page</div>} />
-          </Route>
-          <Route path="/dashboard" element={<div>Dashboard</div>} />
-          <Route path="/dashboard/customer" element={<div>Customer Dashboard</div>} />
-          <Route path="/login" element={<div>Login</div>} />
-        </Routes>
-      </AuthProvider>
+      <WalletProvider>
+        <AuthProvider>
+          <Routes>
+            <Route
+              element={<RoleGuard allowedRoles={['company']} />}
+            >
+              <Route path="/company" element={<div>Company Page</div>} />
+            </Route>
+            <Route path="/dashboard" element={<div>Dashboard</div>} />
+            <Route path="/dashboard/customer" element={<div>Customer Dashboard</div>} />
+            <Route path="/login" element={<div>Login</div>} />
+          </Routes>
+        </AuthProvider>
+      </WalletProvider>
     </MemoryRouter>,
   );
 }

@@ -19,6 +19,7 @@ import {
   SettlementStatus,
   SettlementDetail,
 } from "@services/api/endpoints/settlements";
+import { getStellarExpertTxUrl } from "@utils/stellar";
 
 const statusClasses: Record<SettlementStatus, string> = {
   PENDING:
@@ -40,16 +41,11 @@ const statusDotClasses: Record<SettlementStatus, string> = {
   DISPUTED: "bg-error",
   FAILED: "bg-error",
 };
-
 const truncateHash = (hash?: string) => {
   if (!hash) return "-";
   return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 };
-
-const getStellarExplorerUrl = (hash?: string) => {
-  if (!hash) return undefined;
-  return `https://stellar.expert/explorer/public/tx/${hash}`;
-};
+import { getStellarExpertTxUrl } from "@utils/stellar";
 
 interface PaymentDetailModalProps {
   isOpen: boolean;
@@ -136,7 +132,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
               <dd className="text-right">
                 {effective.stellarTxHash ? (
                   <a
-                    href={getStellarExplorerUrl(effective.stellarTxHash)}
+                    href={getStellarExpertTxUrl(effective.stellarTxHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-primary inline-flex items-center gap-1 hover:underline"
@@ -160,7 +156,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
           </button>
           {effective.stellarTxHash && (
             <a
-              href={getStellarExplorerUrl(effective.stellarTxHash)}
+              href={getStellarExpertTxUrl(effective.stellarTxHash)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 px-3 py-2 rounded-lg bg-primary text-background text-center text-sm font-semibold hover:bg-primary/90 transition-colors"
@@ -414,6 +410,33 @@ const PaymentHistory: React.FC = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="font-mono text-xs text-primary inline-flex items-center gap-1 hover:underline"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusClasses[payment.status]}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${statusDotClasses[payment.status]}`}
+                          />
+                          {payment.status}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        {payment.stellarTxHash ? (
+                          <a
+                            href={getStellarExpertTxUrl(payment.stellarTxHash)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-xs text-primary inline-flex items-center gap-1 hover:underline"
+                          >
+                            {truncateHash(payment.stellarTxHash)}
+                            <ExternalLink size={11} aria-hidden="true" />
+                          </a>
+                        ) : (
+                          <span className="text-text-secondary text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => openPaymentDetail(payment)}
+                          className="text-xs text-primary hover:underline"
                         >
                           {truncateHash(payment.stellarTxHash)}
                           <ExternalLink size={11} aria-hidden="true" />

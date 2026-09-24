@@ -14,6 +14,7 @@ import { LiveRegionProvider } from "../../context/LiveRegionContext";
 const api = vi.hoisted(() => ({
   getSettlements: vi.fn(),
   getSettlementById: vi.fn(),
+  getSummary: vi.fn(),
 }));
 
 vi.mock("@services/api/endpoints/settlements", () => ({
@@ -106,6 +107,12 @@ describe("Settlements", () => {
     mockAuthContextValue.mockReturnValue(authValue());
     api.getSettlements.mockResolvedValue(response());
     api.getSettlementById.mockResolvedValue(detail);
+    api.getSummary.mockResolvedValue({
+      totalReleased: 1200,
+      totalInEscrow: 500,
+      totalPending: 1,
+      sparkline: [],
+    });
   });
 
   it("loads settlements and renders summary totals and status badges", async () => {
@@ -120,11 +127,10 @@ describe("Settlements", () => {
     expect(screen.getAllByText("RELEASED").length).toBeGreaterThan(0);
     expect(screen.getAllByText("PENDING").length).toBeGreaterThan(0);
 
-    // Total settled aggregates only RELEASED rows (1,200 from settlement-2).
+    // Total settled and pending come from the backend summary endpoint, not the current page.
     expect(
       screen.getByText("Total settled").nextElementSibling,
     ).toHaveTextContent("1,200");
-    // Pending count reflects the single PENDING row.
     expect(screen.getByText("Pending").nextElementSibling).toHaveTextContent(
       "1",
     );
@@ -241,7 +247,7 @@ describe("Settlements", () => {
       await screen.findByRole("link", { name: /Verify on Blockchain/i }),
     ).toHaveAttribute(
       "href",
-      "https://stellar.expert/explorer/public/tx/abc1234567890defgh",
+      "https://stellar.expert/explorer/testnet/tx/abc1234567890defgh",
     );
 
     const closeButtons = screen.getAllByRole("button", { name: "Close" });

@@ -5,7 +5,6 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 import { VitePWA } from "vite-plugin-pwa";
-// import tailwindcss from '@tailwindcss/vite'
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -40,8 +39,25 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,woff2}"],
+        globIgnores: ["**/html2pdf*", "**/*-*.png", "**/*-*.svg"],
         runtimeCaching: [
+          {
+            urlPattern: /^.*\.png$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images",
+              expiration: { maxEntries: 50, maxAgeSeconds: 604800 },
+            },
+          },
+          {
+            urlPattern: /^.*\.svg$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "vectors",
+              expiration: { maxEntries: 50, maxAgeSeconds: 604800 },
+            },
+          },
           {
             urlPattern: /\/api\/shipments\/[^/]+\/telemetry\/latest/,
             handler: "NetworkFirst",
@@ -85,7 +101,7 @@ export default defineConfig({
         ],
       },
     }),
-  ], // tailwindcss() removed temporarily for CI
+  ],
   server: {
     proxy: {
       // Backend mounts its routers under /api, so the prefix is preserved.
@@ -99,9 +115,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'stellar-sdk': ['@stellar/stellar-sdk'],
+          'react-vendor': ['react', 'react-dom', 'react-dom/client'],
+          'i18n': ['i18next', 'react-i18next'],
           'sentry': ['@sentry/react'],
-          'recharts': ['recharts'],
           'react-router': ['react-router-dom'],
         },
       },
