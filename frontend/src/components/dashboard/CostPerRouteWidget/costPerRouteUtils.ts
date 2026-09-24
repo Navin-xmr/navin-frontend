@@ -1,4 +1,4 @@
-import type { RouteCostData } from './mockCostPerRouteData';
+import type { RouteCostData } from './types';
 
 export const COST_SEGMENTS = [
   { key: 'base', label: 'Base', color: '#3b82f6' },

@@ -1,8 +1,4 @@
-export interface DeliveryOutcome {
-  status: string;
-  count: number;
-  color: string;
-}
+import type { DeliveryOutcome } from './types';
 
 /**
  * Mock data for delivery success breakdown.

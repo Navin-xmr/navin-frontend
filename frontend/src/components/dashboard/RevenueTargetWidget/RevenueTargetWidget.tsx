@@ -1,10 +1,9 @@
 import React, { memo, useMemo } from 'react';
 import { Target } from 'lucide-react';
 import { RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
-import {
-  buildRevenueTargetData,
-  type RevenueTargetData,
-} from './mockRevenueTargetData';
+import { buildRevenueTargetData } from './mockRevenueTargetData';
+import type { RevenueTargetData } from './types';
+
 import {
   buildSparklinePath,
   formatCurrency,

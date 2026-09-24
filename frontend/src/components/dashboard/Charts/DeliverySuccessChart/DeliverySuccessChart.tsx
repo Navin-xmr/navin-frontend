@@ -1,7 +1,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 import { MOCK_DELIVERY_DATA, calculateSuccessRate } from './mockDeliveryData';
-import type { DeliveryOutcome } from './mockDeliveryData';
+import type { DeliveryOutcome } from './types';
 
 interface DeliverySuccessChartProps {
   data?: DeliveryOutcome[];

@@ -10,10 +10,9 @@ import {
 } from 'recharts';
 import { BarChart3, Table2 } from 'lucide-react';
 import RouteShipmentsModal from './RouteShipmentsModal';
-import {
-  MOCK_ROUTE_COST_DATA,
-  type RouteCostData,
-} from './mockCostPerRouteData';
+import { MOCK_ROUTE_COST_DATA } from './mockCostPerRouteData';
+import type { RouteCostData } from './types';
+
 import {
   COST_SEGMENTS,
   formatCurrency,

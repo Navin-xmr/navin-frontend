@@ -1,7 +1,4 @@
-export interface DailyVolume {
-  date: string;
-  count: number;
-}
+import type { DailyVolume } from './types';
 
 /**
  * Generate deterministic mock daily-volume data using a simple seeded PRNG.

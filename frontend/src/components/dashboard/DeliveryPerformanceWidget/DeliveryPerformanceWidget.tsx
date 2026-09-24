@@ -23,7 +23,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { MOCK_KPI_DATA, getOnTimeStatusColor } from './mockPerformanceData';
-import type { KpiSummary, TimePeriod, KpiKey } from './mockPerformanceData';
+import type { KpiSummary, TimePeriod, KpiKey } from './types';
 
 export interface DeliveryPerformanceWidgetProps {
   data?: Record<TimePeriod, KpiSummary[]>;

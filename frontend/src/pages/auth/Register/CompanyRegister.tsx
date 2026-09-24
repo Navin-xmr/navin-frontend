@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, ChevronLeft, Pencil } from "lucide-react";
 import { authApi } from "../../../services/api";
 import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
@@ -99,19 +100,6 @@ const selectBase =
 const labelClass = "text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1";
 const errorClass = "text-[#FF4D4D] text-[0.75rem] mt-1 ml-1";
 
-const REGISTER_STEPS: StepDef[] = [
-  { label: 'Company', description: 'Tell us about your company' },
-  { label: 'Admin', description: 'Set up your admin credentials' },
-  { label: 'Review', description: 'Confirm your details' },
-];
-
-const STEP_TITLES = ["Company Info", "Admin Account", "Review & Submit"];
-const STEP_DESCRIPTIONS = [
-  "Tell us about your company",
-  "Set up your admin credentials",
-  "Confirm your details before submitting",
-];
-
 const SelectWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="relative">
     {children}
@@ -124,8 +112,27 @@ const SelectWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const CompanyRegister: React.FC = () => {
+  const { t } = useTranslation("auth");
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1);
+
+  const registerSteps: StepDef[] = [
+    { label: t("companyRegister.stepCompany"), description: t("companyRegister.stepCompanyDesc") },
+    { label: t("companyRegister.stepAdmin"), description: t("companyRegister.stepAdminDesc") },
+    { label: t("companyRegister.stepReview"), description: t("companyRegister.stepReviewDesc") },
+  ];
+
+  const stepTitles = [
+    t("companyRegister.step1Title"),
+    t("companyRegister.step2Title"),
+    t("companyRegister.step3Title"),
+  ];
+
+  const stepDescriptions = [
+    t("companyRegister.step1Desc"),
+    t("companyRegister.step2Desc"),
+    t("companyRegister.step3Desc"),
+  ];
 
   const [step1, setStep1] = useState<Step1Data>({
     companyName: "",
@@ -156,22 +163,22 @@ const CompanyRegister: React.FC = () => {
 
   const validateStep1 = (): boolean => {
     const errs: Step1Errors = {};
-    if (!step1.companyName.trim()) errs.companyName = "Company name is required";
-    if (!step1.industry) errs.industry = "Please select an industry";
-    if (!step1.country) errs.country = "Please select a country";
-    if (!step1.companySize) errs.companySize = "Please select a company size";
+    if (!step1.companyName.trim()) errs.companyName = t("companyRegister.errorCompanyNameRequired");
+    if (!step1.industry) errs.industry = t("companyRegister.errorIndustryRequired");
+    if (!step1.country) errs.country = t("companyRegister.errorCountryRequired");
+    if (!step1.companySize) errs.companySize = t("companyRegister.errorCompanySizeRequired");
     setStep1Errors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const validateStep2 = (): boolean => {
     const errs: Step2Errors = {};
-    if (!step2.fullName.trim()) errs.fullName = "Full name is required";
-    if (!step2.email) errs.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(step2.email)) errs.email = "Invalid email format";
-    if (!step2.password) errs.password = "Password is required";
-    else if (step2.password.length < 8) errs.password = "Minimum 8 characters required";
-    if (step2.password !== step2.confirmPassword) errs.confirmPassword = "Passwords do not match";
+    if (!step2.fullName.trim()) errs.fullName = t("companyRegister.errorFullNameRequired");
+    if (!step2.email) errs.email = t("companyRegister.errorEmailRequired");
+    else if (!/\S+@\S+\.\S+/.test(step2.email)) errs.email = t("companyRegister.errorEmailInvalid");
+    if (!step2.password) errs.password = t("companyRegister.errorPasswordRequired");
+    else if (step2.password.length < 8) errs.password = t("companyRegister.errorPasswordMinLength");
+    if (step2.password !== step2.confirmPassword) errs.confirmPassword = t("companyRegister.errorPasswordsMismatch");
     setStep2Errors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -200,26 +207,23 @@ const CompanyRegister: React.FC = () => {
       clearDraft();
       navigate("/register/verify-email", { state: { email: step2.email } });
     } catch {
-      setGeneralError("Registration failed. Please try again.");
+      setGeneralError(t("companyRegister.errorRegistrationFailed"));
     } finally {
       setLoading(false);
     }
   };
 
-
-
-
-
-
   const renderStep1 = () => (
     <div className="flex flex-col gap-5">
       {/* Company Name */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="companyName" className={labelClass}>Company Name</label>
+        <label htmlFor="companyName" className={labelClass}>
+          {t("companyRegister.companyNameLabel")}
+        </label>
         <input
           type="text"
           id="companyName"
-          placeholder="Acme Corporation"
+          placeholder={t("companyRegister.companyNamePlaceholder")}
           value={step1.companyName}
           onChange={(e) => {
             setStep1((p) => ({ ...p, companyName: e.target.value }));
@@ -236,7 +240,9 @@ const CompanyRegister: React.FC = () => {
 
       {/* Industry */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="industry" className={labelClass}>Industry</label>
+        <label htmlFor="industry" className={labelClass}>
+          {t("companyRegister.industryLabel")}
+        </label>
         <SelectWrapper>
           <select
             id="industry"
@@ -249,7 +255,9 @@ const CompanyRegister: React.FC = () => {
             aria-describedby={step1Errors.industry ? "industry-error" : undefined}
             className={`${selectBase} ${step1Errors.industry ? "border-[#FF4D4D]" : ""} ${!step1.industry ? "text-[rgba(255,255,255,0.4)]" : ""}`}
           >
-            <option value="" disabled className="bg-[#121620] text-[rgba(255,255,255,0.4)]">Select industry</option>
+            <option value="" disabled className="bg-[#121620] text-[rgba(255,255,255,0.4)]">
+              {t("companyRegister.selectIndustry")}
+            </option>
             {INDUSTRIES.map((ind) => (
               <option key={ind} value={ind} className="bg-[#121620] text-white">{ind}</option>
             ))}
@@ -262,7 +270,9 @@ const CompanyRegister: React.FC = () => {
 
       {/* Country */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="country" className={labelClass}>Country</label>
+        <label htmlFor="country" className={labelClass}>
+          {t("companyRegister.countryLabel")}
+        </label>
         <SelectWrapper>
           <select
             id="country"
@@ -275,7 +285,9 @@ const CompanyRegister: React.FC = () => {
             aria-describedby={step1Errors.country ? "country-error" : undefined}
             className={`${selectBase} ${step1Errors.country ? "border-[#FF4D4D]" : ""} ${!step1.country ? "text-[rgba(255,255,255,0.4)]" : ""}`}
           >
-            <option value="" disabled className="bg-[#121620] text-[rgba(255,255,255,0.4)]">Select country</option>
+            <option value="" disabled className="bg-[#121620] text-[rgba(255,255,255,0.4)]">
+              {t("companyRegister.selectCountry")}
+            </option>
             {COUNTRIES.map((c) => (
               <option key={c} value={c} className="bg-[#121620] text-white">{c}</option>
             ))}
@@ -288,7 +300,9 @@ const CompanyRegister: React.FC = () => {
 
       {/* Company Size */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="companySize" className={labelClass}>Company Size</label>
+        <label htmlFor="companySize" className={labelClass}>
+          {t("companyRegister.companySizeLabel")}
+        </label>
         <SelectWrapper>
           <select
             id="companySize"
@@ -301,9 +315,13 @@ const CompanyRegister: React.FC = () => {
             aria-describedby={step1Errors.companySize ? "companySize-error" : undefined}
             className={`${selectBase} ${step1Errors.companySize ? "border-[#FF4D4D]" : ""} ${!step1.companySize ? "text-[rgba(255,255,255,0.4)]" : ""}`}
           >
-            <option value="" disabled className="bg-[#121620] text-[rgba(255,255,255,0.4)]">Select company size</option>
+            <option value="" disabled className="bg-[#121620] text-[rgba(255,255,255,0.4)]">
+              {t("companyRegister.selectCompanySize")}
+            </option>
             {COMPANY_SIZES.map((s) => (
-              <option key={s} value={s} className="bg-[#121620] text-white">{s} employees</option>
+              <option key={s} value={s} className="bg-[#121620] text-white">
+                {s} {t("companyRegister.employees")}
+              </option>
             ))}
           </select>
         </SelectWrapper>
@@ -317,7 +335,7 @@ const CompanyRegister: React.FC = () => {
         onClick={handleNextStep1}
         className="mt-3 bg-[linear-gradient(135deg,#00DAC1_0%,#008B7B_100%)] text-black border-none rounded-xl py-4 text-base font-bold cursor-pointer transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,218,193,0.4)]"
       >
-        Continue
+        {t("companyRegister.continue")}
       </button>
     </div>
   );
@@ -326,11 +344,13 @@ const CompanyRegister: React.FC = () => {
     <div className="flex flex-col gap-5">
       {/* Full Name */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="fullName" className={labelClass}>Full Name</label>
+        <label htmlFor="fullName" className={labelClass}>
+          {t("companyRegister.fullNameLabel")}
+        </label>
         <input
           type="text"
           id="fullName"
-          placeholder="John Doe"
+          placeholder={t("companyRegister.fullNamePlaceholder")}
           value={step2.fullName}
           onChange={(e) => {
             setStep2((p) => ({ ...p, fullName: e.target.value }));
@@ -347,11 +367,13 @@ const CompanyRegister: React.FC = () => {
 
       {/* Business Email */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="bizEmail" className={labelClass}>Business Email</label>
+        <label htmlFor="bizEmail" className={labelClass}>
+          {t("companyRegister.bizEmailLabel")}
+        </label>
         <input
           type="email"
           id="bizEmail"
-          placeholder="you@company.com"
+          placeholder={t("companyRegister.bizEmailPlaceholder")}
           value={step2.email}
           onChange={(e) => {
             setStep2((p) => ({ ...p, email: e.target.value }));
@@ -369,7 +391,9 @@ const CompanyRegister: React.FC = () => {
 
       {/* Password */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="password" className={labelClass}>Password</label>
+        <label htmlFor="password" className={labelClass}>
+          {t("companyRegister.passwordLabel")}
+        </label>
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
@@ -389,7 +413,7 @@ const CompanyRegister: React.FC = () => {
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 border-none bg-transparent text-[rgba(255,255,255,0.6)] cursor-pointer flex items-center justify-center p-2 rounded-lg transition-all hover:text-[#00DAC1] hover:bg-[rgba(255,255,255,0.05)]"
-            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-label={showPassword ? t("companyRegister.hidePassword") : t("companyRegister.showPassword")}
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
@@ -402,7 +426,9 @@ const CompanyRegister: React.FC = () => {
 
       {/* Confirm Password */}
       <div className="flex flex-col gap-2">
-        <label htmlFor="confirmPassword" className={labelClass}>Confirm Password</label>
+        <label htmlFor="confirmPassword" className={labelClass}>
+          {t("companyRegister.confirmPasswordLabel")}
+        </label>
         <div className="relative">
           <input
             type={showConfirmPassword ? "text" : "password"}
@@ -422,7 +448,7 @@ const CompanyRegister: React.FC = () => {
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 border-none bg-transparent text-[rgba(255,255,255,0.6)] cursor-pointer flex items-center justify-center p-2 rounded-lg transition-all hover:text-[#00DAC1] hover:bg-[rgba(255,255,255,0.05)]"
-            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+            aria-label={showConfirmPassword ? t("companyRegister.hideConfirmPassword") : t("companyRegister.showConfirmPassword")}
           >
             {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
@@ -438,14 +464,14 @@ const CompanyRegister: React.FC = () => {
           onClick={() => setStep(1)}
           className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-xl py-4 text-base font-semibold cursor-pointer transition-all flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.1)]"
         >
-          <ChevronLeft size={18} /> Back
+          <ChevronLeft size={18} /> {t("companyRegister.back")}
         </button>
         <button
           type="button"
           onClick={handleNextStep2}
           className="flex-[2] bg-[linear-gradient(135deg,#00DAC1_0%,#008B7B_100%)] text-black border-none rounded-xl py-4 text-base font-bold cursor-pointer transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,218,193,0.4)]"
         >
-          Review & Submit
+          {t("companyRegister.reviewAndSubmit")}
         </button>
       </div>
     </div>
@@ -466,23 +492,23 @@ const CompanyRegister: React.FC = () => {
       <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <span className="text-[0.75rem] font-semibold text-[rgba(255,255,255,0.4)] uppercase tracking-wider">
-            Company Information
+            {t("companyRegister.companyInfoSummary")}
           </span>
           <button
             type="button"
             onClick={() => setStep(1)}
             className="flex items-center gap-1 text-[0.8rem] text-[#00DAC1] font-medium bg-transparent border-none cursor-pointer hover:underline"
           >
-            <Pencil size={13} /> Edit
+            <Pencil size={13} /> {t("companyRegister.edit")}
           </button>
         </div>
         <dl className="flex flex-col gap-2.5">
           {(
             [
-              ["Company Name", step1.companyName],
-              ["Industry", step1.industry],
-              ["Country", step1.country],
-              ["Company Size", step1.companySize ? `${step1.companySize} employees` : ""],
+              [t("companyRegister.companyNameLabel"), step1.companyName],
+              [t("companyRegister.industryLabel"), step1.industry],
+              [t("companyRegister.countryLabel"), step1.country],
+              [t("companyRegister.companySizeLabel"), step1.companySize ? `${step1.companySize} ${t("companyRegister.employees")}` : ""],
             ] as [string, string][]
           ).map(([label, value]) => (
             <div key={label} className="flex justify-between text-[0.9rem]">
@@ -497,22 +523,22 @@ const CompanyRegister: React.FC = () => {
       <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-2xl p-5">
         <div className="flex items-center justify-between mb-4">
           <span className="text-[0.75rem] font-semibold text-[rgba(255,255,255,0.4)] uppercase tracking-wider">
-            Admin Account
+            {t("companyRegister.adminAccountSummary")}
           </span>
           <button
             type="button"
             onClick={() => setStep(2)}
             className="flex items-center gap-1 text-[0.8rem] text-[#00DAC1] font-medium bg-transparent border-none cursor-pointer hover:underline"
           >
-            <Pencil size={13} /> Edit
+            <Pencil size={13} /> {t("companyRegister.edit")}
           </button>
         </div>
         <dl className="flex flex-col gap-2.5">
           {(
             [
-              ["Full Name", step2.fullName],
-              ["Email", step2.email],
-              ["Password", "••••••••"],
+              [t("companyRegister.fullNameLabel"), step2.fullName],
+              [t("companyRegister.bizEmailLabel"), step2.email],
+              [t("companyRegister.passwordLabel"), "••••••••"],
             ] as [string, string][]
           ).map(([label, value]) => (
             <div key={label} className="flex justify-between text-[0.9rem]">
@@ -529,7 +555,7 @@ const CompanyRegister: React.FC = () => {
           onClick={() => setStep(2)}
           className="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] text-white rounded-xl py-4 text-base font-semibold cursor-pointer transition-all flex items-center justify-center gap-2 hover:bg-[rgba(255,255,255,0.1)]"
         >
-          <ChevronLeft size={18} /> Back
+          <ChevronLeft size={18} /> {t("companyRegister.back")}
         </button>
         <button
           type="button"
@@ -540,10 +566,10 @@ const CompanyRegister: React.FC = () => {
           {loading ? (
             <>
               <div className="w-5 h-5 border-2 border-[rgba(0,0,0,0.1)] border-t-black rounded-full animate-spin" />
-              Submitting...
+              {t("companyRegister.submitting")}
             </>
           ) : (
-            "Create Company Account"
+            t("companyRegister.createAccount")
           )}
         </button>
       </div>
@@ -564,10 +590,10 @@ const CompanyRegister: React.FC = () => {
       <div className="bg-[rgba(20,20,20,0.7)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.1)] rounded-3xl p-10 w-full max-w-[480px] z-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)] sm:p-8 sm:rounded-none sm:min-h-screen sm:flex sm:flex-col sm:justify-center">
         <div className="text-center mb-8">
           <h2 className="text-[2rem] font-bold mb-2 bg-[linear-gradient(135deg,#fff_0%,#00DAC1_100%)] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
-            {STEP_TITLES[step - 1]}
+            {stepTitles[step - 1]}
           </h2>
           <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem]">
-            {STEP_DESCRIPTIONS[step - 1]}
+            {stepDescriptions[step - 1]}
           </p>
           {step < 3 && (
             <div className="mt-2 flex justify-center">
@@ -576,16 +602,16 @@ const CompanyRegister: React.FC = () => {
           )}
         </div>
 
-        <ProgressStepper steps={REGISTER_STEPS} currentStep={step} className="mb-8" />
+        <ProgressStepper steps={registerSteps} currentStep={step} className="mb-8" />
 
         {step === 1 && renderStep1()}
         {step === 2 && renderStep2()}
         {step === 3 && renderStep3()}
 
         <p className="text-center text-[0.9rem] text-[rgba(255,255,255,0.6)] mt-6">
-          Already have an account?{" "}
+          {t("companyRegister.alreadyHaveAccount")}{" "}
           <Link to="/login" className="text-[#00DAC1] no-underline font-semibold hover:underline">
-            Sign in
+            {t("companyRegister.signIn")}
           </Link>
         </p>
       </div>
