@@ -12,6 +12,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { getAddress, signTransaction } from "@stellar/freighter-api";
 import { validateNetwork } from "./config";
+import { validateNetwork, getNetworkPassphrase } from "./config";
 
 const SOROBAN_RPC_URL =
   import.meta.env.VITE_SOROBAN_RPC_URL ??
@@ -20,6 +21,12 @@ const NETWORK = validateNetwork(import.meta.env.VITE_STELLAR_NETWORK);
 const NETWORK_PASSPHRASE = NETWORK === 'mainnet'
   ? Networks.PUBLIC_NETWORK_PASSPHRASE
   : Networks.TESTNET_NETWORK_PASSPHRASE;
+const NETWORK_PASSPHRASE = getNetworkPassphrase(NETWORK);
+
+export interface TransactionSigner {
+  publicKey: string;
+  signTransaction: (xdr: string) => Promise<string>;
+}
 
 let server: rpc.Server | null = null;
 
@@ -43,9 +50,10 @@ const TX_POLL_INTERVAL_MS = 1000;
 export async function callContractMethod(
   contractId: string,
   method: ContractMethod,
+  signer: TransactionSigner,
   args: xdr.ScVal[] = [],
 ): Promise<string> {
-  const { address: pubKey } = await getAddress();
+  const pubKey = signer.publicKey;
   const contract = new Contract(contractId);
   const sorobanServer = getServer();
 
@@ -61,9 +69,7 @@ export async function callContractMethod(
 
   const preparedTx = await sorobanServer.prepareTransaction(tx);
 
-  const { signedTxXdr } = await signTransaction(preparedTx.toXDR(), {
-    networkPassphrase: NETWORK_PASSPHRASE,
-  });
+  const signedTxXdr = await signer.signTransaction(preparedTx.toXDR());
 
   const signedTx = TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE);
 

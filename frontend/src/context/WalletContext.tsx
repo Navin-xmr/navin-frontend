@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { WalletAdapter } from '../services/stellar/adapters/types';
@@ -15,6 +16,9 @@ const PUBLIC_KEY_KEY = 'navin-wallet-public-key';
 const NETWORK = validateNetwork(import.meta.env.VITE_STELLAR_NETWORK);
 const STELLAR_PUBLIC_KEY_PATTERN = /^G[A-Z2-7]{55}$/;
 
+/** How often (ms) to poll the wallet extension for account/network changes. */
+const POLL_INTERVAL_MS = 4_000;
+
 export interface WalletContextValue {
   adapter: WalletAdapter | null;
   publicKey: string | null;
@@ -22,6 +26,12 @@ export interface WalletContextValue {
   isModalOpen: boolean;
   network: 'testnet' | 'mainnet';
   lastAdapterId: string | null;
+  /**
+   * True when the wallet extension is connected to a different network than
+   * the one configured via VITE_STELLAR_NETWORK. Signing is blocked while
+   * this flag is set.
+   */
+  networkMismatch: boolean;
   openModal: () => void;
   closeModal: () => void;
   connect: (adapterId: WalletAdapter['id']) => Promise<void>;
@@ -43,8 +53,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   });
   const [isConnecting, setIsConnecting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [networkMismatch, setNetworkMismatch] = useState(false);
 
   const lastAdapterId = useMemo(() => localStorage.getItem(LAST_ADAPTER_KEY), []);
+
+  // Keep a ref to the adapter so the polling interval always sees the latest
+  // value without being re-created every time adapter state changes.
+  const adapterRef = useRef<WalletAdapter | null>(null);
+  adapterRef.current = adapter;
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);
@@ -64,27 +80,73 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       localStorage.setItem(LAST_ADAPTER_KEY, adapterId);
       localStorage.setItem(PUBLIC_KEY_KEY, pk);
       setIsModalOpen(false);
+      setNetworkMismatch(false);
     } finally {
       setIsConnecting(false);
     }
   }, []);
 
   const disconnect = useCallback(async () => {
-    if (adapter) await adapter.disconnect();
+    if (adapterRef.current) await adapterRef.current.disconnect();
     setAdapter(null);
     setPublicKey(null);
+    setNetworkMismatch(false);
     localStorage.removeItem(LAST_ADAPTER_KEY);
     localStorage.removeItem(PUBLIC_KEY_KEY);
-  }, [adapter]);
+  }, []);
 
   const signTransaction = useCallback(
     async (xdr: string) => {
       if (!adapter) throw new Error('No wallet connected');
+      if (networkMismatch) {
+        throw new Error(
+          `Network mismatch: your wallet is connected to a different network than this app (${NETWORK}). Please switch your wallet to the correct network before signing.`,
+        );
+      }
       return adapter.signTransaction(xdr, NETWORK);
     },
-    [adapter],
+    [adapter, networkMismatch],
   );
 
+  // Poll the wallet extension while a wallet is connected and the window is
+  // focused. Detects account switches and network switches in Freighter.
+  useEffect(() => {
+    const poll = async () => {
+      const currentAdapter = adapterRef.current;
+      if (!currentAdapter) return;
+
+      try {
+        // Check for account change
+        const latestKey = await currentAdapter.getPublicKey();
+        if (isValidPublicKey(latestKey)) {
+          setPublicKey((prev) => {
+            if (prev !== latestKey) {
+              localStorage.setItem(PUBLIC_KEY_KEY, latestKey);
+            }
+            return latestKey;
+          });
+        }
+
+        // Check for network change (only adapters that support it, e.g. Freighter)
+        if (typeof currentAdapter.getNetwork === 'function') {
+          const walletNetwork = await currentAdapter.getNetwork();
+          setNetworkMismatch(walletNetwork !== NETWORK);
+        }
+      } catch {
+        // Extension may be locked / unavailable — leave state as-is
+      }
+    };
+
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        void poll();
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(id);
+  }, []);
+
+  // Restore last adapter ID so the UI can prompt reconnection
   useEffect(() => {
     const restored = localStorage.getItem(LAST_ADAPTER_KEY);
     if (restored && publicKey && !adapter) {
@@ -112,13 +174,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       isModalOpen,
       network: NETWORK,
       lastAdapterId,
+      networkMismatch,
       openModal,
       closeModal,
       connect,
       disconnect,
       signTransaction,
     }),
-    [adapter, publicKey, isConnecting, isModalOpen, lastAdapterId, openModal, closeModal, connect, disconnect, signTransaction],
+    [adapter, publicKey, isConnecting, isModalOpen, lastAdapterId, networkMismatch, openModal, closeModal, connect, disconnect, signTransaction],
   );
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;

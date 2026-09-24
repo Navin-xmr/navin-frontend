@@ -38,6 +38,18 @@ vi.mock('../../../../context/ToastContext', () => ({
   useToast: () => ({ addToast }),
 }));
 
+// Default: no logged-in user matches any fixture user
+const mockUseAuthContext = vi.fn(() => ({
+  userId: null as string | null,
+  role: 'Admin' as const,
+  isAuthenticated: true,
+  isLoading: false,
+  logout: vi.fn(),
+}));
+vi.mock('../../../../context/AuthContext', () => ({
+  useAuthContext: () => mockUseAuthContext(),
+}));
+
 vi.mock('../../../../hooks/useFocusTrap', () => ({
   useFocusTrap: vi.fn(),
 }));
@@ -50,6 +62,18 @@ vi.mock('../../../../components/ui/Avatar', () => ({
 
 vi.mock('@components/common/Breadcrumb', () => ({
   default: () => <nav aria-label="breadcrumb" />,
+}));
+
+vi.mock('@components/ui/ConfirmDialog', () => ({
+  default: ({ isOpen, onConfirm, onClose, title }: {
+    isOpen: boolean; onConfirm: () => void; onClose: () => void; title: string;
+  }) =>
+    isOpen ? (
+      <div role="dialog" aria-label={title}>
+        <button onClick={onConfirm}>Confirm</button>
+        <button onClick={onClose}>Cancel dialog</button>
+      </div>
+    ) : null,
 }));
 
 import UserManagement from './UserManagement';
@@ -89,6 +113,8 @@ function setupDefaultMocks() {
 describe('UserManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset to default: no logged-in user matches any fixture, so self-guard never fires
+    mockUseAuthContext.mockReturnValue({ userId: null, role: 'Admin' as const, isAuthenticated: true, isLoading: false, logout: vi.fn() });
     setupDefaultMocks();
   });
 
@@ -233,6 +259,10 @@ describe('UserManagement', () => {
     await userEvent.click(menuTriggers[0]);
     await userEvent.click(screen.getByRole('button', { name: /deactivate/i }));
 
+    // Confirm in the dialog
+    await waitFor(() => screen.getByRole('dialog', { name: /deactivate user/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
+
     await waitFor(() => expect(mockDeactivate).toHaveBeenCalledWith('u1'));
     expect(addToast).toHaveBeenCalledWith(expect.stringContaining('deactivated'), 'success');
   });
@@ -351,6 +381,112 @@ describe('UserManagement', () => {
     expect(addToast).toHaveBeenCalledWith(
       expect.stringContaining('carol@example.com'),
       'success',
+    );
+  });
+
+  // ── Self-guard (#889) ─────────────────────────────────────────────────────
+
+  it('disables the role select for the currently signed-in user', async () => {
+    mockUseAuthContext.mockReturnValue({ userId: 'u1', role: 'Admin', isAuthenticated: true, isLoading: false, logout: vi.fn() });
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    // The role dropdown for the current user should be disabled
+    const roleSelects = screen.getAllByRole('combobox');
+    const selfSelect = roleSelects.find((s) => (s as HTMLSelectElement).value === 'Admin');
+    expect(selfSelect).toBeDefined();
+    expect(selfSelect).toBeDisabled();
+  });
+
+  it('shows an error toast when trying to change own role (extra guard)', async () => {
+    mockUseAuthContext.mockReturnValue({ userId: 'u1', role: 'Admin', isAuthenticated: true, isLoading: false, logout: vi.fn() });
+    mockUpdateRole.mockResolvedValue({});
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    // Directly trigger handleRoleChange by enabling select and changing it
+    // In practice the select is disabled, but we test the function guard anyway
+    // by finding the disabled select and forcefully firing a change event
+    const roleSelects = screen.getAllByRole('combobox');
+    const selfSelect = roleSelects.find((s) => (s as HTMLSelectElement).value === 'Admin')!;
+    // Remove disabled attribute temporarily and fire change
+    selfSelect.removeAttribute('disabled');
+    await userEvent.selectOptions(selfSelect, 'Viewer');
+
+    await waitFor(() =>
+      expect(addToast).toHaveBeenCalledWith('You cannot change your own role.', 'error'),
+    );
+    expect(mockUpdateRole).not.toHaveBeenCalled();
+  });
+
+  it('shows confirm dialog before deactivating another user', async () => {
+    mockDeactivate.mockResolvedValue({});
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    const menuTriggers = screen.getAllByRole('button').filter(
+      (b) => b.querySelector('svg') && !b.textContent?.trim(),
+    );
+    await userEvent.click(menuTriggers[0]);
+    await userEvent.click(screen.getByRole('button', { name: /deactivate/i }));
+
+    // ConfirmDialog should now be open
+    await waitFor(() =>
+      expect(screen.getByRole('dialog', { name: /deactivate user/i })).toBeInTheDocument(),
+    );
+    // API not called yet
+    expect(mockDeactivate).not.toHaveBeenCalled();
+  });
+
+  it('deactivates user after confirmation', async () => {
+    mockDeactivate.mockResolvedValue({});
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    const menuTriggers = screen.getAllByRole('button').filter(
+      (b) => b.querySelector('svg') && !b.textContent?.trim(),
+    );
+    await userEvent.click(menuTriggers[0]);
+
+    // Click Deactivate to open confirm dialog
+    const deactivateBtn = await waitFor(() => screen.getByRole('button', { name: /deactivate/i }));
+    await userEvent.click(deactivateBtn);
+
+    // Confirm in the dialog
+    await waitFor(() => screen.getByRole('dialog', { name: /deactivate user/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
+
+    await waitFor(() => expect(mockDeactivate).toHaveBeenCalledWith('u1'));
+    expect(addToast).toHaveBeenCalledWith(expect.stringContaining('deactivated'), 'success');
+  });
+
+  it('shows last-admin error toast on 409 role change', async () => {
+    // Set up: two users, current user is u2 so Alice (u1) is not blocked by self-guard
+    mockUseAuthContext.mockReturnValue({ userId: 'u2', role: 'Admin', isAuthenticated: true, isLoading: false, logout: vi.fn() });
+    mockGetAll.mockResolvedValue({
+      data: [
+        makeUser(),
+        makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Admin' }),
+      ],
+      page: 1, limit: 8, total: 2,
+    });
+    mockInvList.mockResolvedValue([]);
+    const err = Object.assign(new Error('last admin'), { response: { status: 409 } });
+    mockUpdateRole.mockRejectedValue(err);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    // Change Alice's role — she's u1, current user is u2, so self-guard doesn't fire
+    const roleSelects = screen.getAllByRole('combobox');
+    // Find Alice's select (not disabled, first Admin select)
+    const aliceSelect = roleSelects.find(
+      (s) => (s as HTMLSelectElement).value === 'Admin' && !s.hasAttribute('disabled'),
+    )!;
+    await userEvent.selectOptions(aliceSelect, 'Viewer');
+
+    await waitFor(() =>
+      expect(addToast).toHaveBeenCalledWith('Cannot demote the last admin.', 'error'),
     );
   });
 });

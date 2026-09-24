@@ -1,5 +1,6 @@
 import Modal from "@components/common/Modal";
 import { Settlement, SettlementDetail } from "@services/api/endpoints/settlements";
+import { getStellarExpertTxUrl } from "@utils/stellar";
 
 interface SettlementDetailModalProps {
     isOpen: boolean;
@@ -13,11 +14,6 @@ const truncate = (s?: string) => {
     if (!s) return "-";
     if (s.length <= 16) return s;
     return `${s.slice(0, 12)}...${s.slice(-8)}`;
-};
-
-const getStellarExplorerUrl = (hash?: string) => {
-    if (!hash) return undefined;
-    return `https://stellar.expert/explorer/public/tx/${hash}`;
 };
 
 /**
@@ -38,7 +34,7 @@ export default function SettlementDetailModal({
     const effective = detail?.settlement ?? settlement;
     if (!effective) return null;
 
-    const url = getStellarExplorerUrl(effective.stellarTxHash);
+    const url = getStellarExpertTxUrl(effective.stellarTxHash);
 
     const conditionDescription = effective.escrowRelease?.conditionDescription;
     const releasedAt = effective.escrowRelease?.releasedAt;

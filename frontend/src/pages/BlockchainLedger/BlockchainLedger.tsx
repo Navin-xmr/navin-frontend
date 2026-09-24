@@ -15,10 +15,10 @@ import { ledgerApi } from '@services/api/endpoints/ledger';
 import type { LedgerBlock, MilestoneEvent, GetLedgerBlocksParams } from '@services/api/endpoints/ledger';
 import CopyToClipboard from '../../components/ui/CopyToClipboard';
 import Breadcrumb from '@components/common/Breadcrumb';
+import { getStellarExpertTxUrl, STELLAR_NETWORK } from '@utils/stellar';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STELLAR_EXPERT_TX_BASE = 'https://stellar.expert/explorer/public/tx';
 const PAGE_LIMIT = 15;
 
 const MILESTONE_LABELS: Record<MilestoneEvent, string> = {
@@ -109,7 +109,7 @@ function StatsBar({ total, hasMore }: { total?: number; hasMore: boolean }) {
         },
         {
           label: 'Network',
-          value: 'Stellar Mainnet',
+          value: STELLAR_NETWORK === 'mainnet' ? 'Stellar Mainnet' : 'Stellar Testnet',
           icon: <Hash size={16} className="text-purple-400" />,
         },
         {
@@ -238,7 +238,7 @@ function LedgerTable({ blocks, loading }: LedgerTableProps) {
                 text: 'text-text-secondary',
               };
               const label = MILESTONE_LABELS[block.milestoneEvent] ?? block.milestoneEvent;
-              const explorerUrl = `${STELLAR_EXPERT_TX_BASE}/${block.transactionHash}`;
+              const explorerUrl = getStellarExpertTxUrl(block.transactionHash);
 
               return (
                 <tr
