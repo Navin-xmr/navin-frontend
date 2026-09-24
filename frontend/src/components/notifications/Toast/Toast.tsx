@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { ToastType } from "../../../context/ToastContext";
 
@@ -24,31 +23,44 @@ export const Toast: React.FC<ToastProps> = ({
   navigateTo,
   onClose,
 }) => {
-  const navigate = useNavigate();
-
   useEffect(() => {
     const timer = setTimeout(onClose, 5000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
+  // ToastProvider mounts outside RouterProvider, so router hooks are unavailable here.
   const handleClick = () => {
-    if (navigateTo) navigate(navigateTo);
+    if (navigateTo) window.location.assign(navigateTo);
   };
+
+  const isAssertive = type === "error";
 
   return (
     <div
-      onClick={handleClick}
-      className={`
+      role={isAssertive ? "alert" : "status"}
+      aria-live={isAssertive ? "assertive" : "polite"}
+      aria-atomic="true"
+      className="
         pointer-events-auto flex items-center justify-between min-w-[320px] max-w-md 
         p-4 rounded-xl shadow-lg border animate-in slide-in-from-right-full duration-300
-        cursor-pointer transition-all hover:scale-[1.02]
         bg-background-card border-border
-      `}
+      "
     >
-      <div className="flex items-center gap-3">
-        {icons[type]}
-        <span className="text-sm font-medium text-primary">{message}</span>
-      </div>
+      {navigateTo ? (
+        <button
+          type="button"
+          onClick={handleClick}
+          className="flex items-center gap-3 flex-1 min-w-0 text-left bg-transparent border-none p-0 cursor-pointer transition-all hover:scale-[1.02]"
+        >
+          {icons[type]}
+          <span className="text-sm font-medium text-primary">{message}</span>
+        </button>
+      ) : (
+        <div className="flex items-center gap-3">
+          {icons[type]}
+          <span className="text-sm font-medium text-primary">{message}</span>
+        </div>
+      )}
 
       <button
         onClick={(e) => {

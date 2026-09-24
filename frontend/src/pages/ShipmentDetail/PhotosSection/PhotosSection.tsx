@@ -151,9 +151,17 @@ const Lightbox: React.FC<{
     };
     document.addEventListener("keydown", handler);
     document.body.style.overflow = "hidden";
+
+    // Auto-close after 30 minutes to prevent stuck overlays
+    const autoCloseTimer = setTimeout(() => {
+      console.warn('[PhotosSection] Auto-closing lightbox due to timeout');
+      onClose();
+    }, 30 * 60 * 1000);
+
     return () => {
       document.removeEventListener("keydown", handler);
       document.body.style.overflow = "";
+      clearTimeout(autoCloseTimer);
     };
   }, [onClose, onPrev, onNext]);
 
@@ -506,6 +514,20 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({ shipmentId, canDelete }) 
   const closeLightbox = () => setLightboxOpen(false);
   const goPrev = () => setLightboxIndex((i) => (i - 1 + activeLightboxItems.length) % activeLightboxItems.length);
   const goNext = () => setLightboxIndex((i) => (i + 1) % activeLightboxItems.length);
+
+  // ── Safety: Reset body.overflow if lightbox closes or component unmounts ────
+  useEffect(() => {
+    if (lightboxOpen) return;
+    // Ensure body overflow is reset when lightbox is closed
+    document.body.style.overflow = "";
+  }, [lightboxOpen]);
+
+  // Safety: Ensure cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (

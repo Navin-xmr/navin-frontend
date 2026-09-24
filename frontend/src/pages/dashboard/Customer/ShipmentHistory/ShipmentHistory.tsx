@@ -1,7 +1,8 @@
 import { safeFormatDate, safeDateCompare, safeRating } from '../../../../utils/safeFormat';
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ArrowUpDown, Search, Star, Eye, Package } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowUpDown, Search, Star, Eye, Package, AlertTriangle } from "lucide-react";
+import { shipmentApi, Shipment, ShipmentStatus } from '../../../../services/api/endpoints/shipments';
 
 interface HistoricalShipment {
   id: string;
@@ -11,20 +12,13 @@ interface HistoricalShipment {
   rating: number | null; // 1-5 stars, null if not rated
 }
 
-const MOCK_SHIPMENT_HISTORY: HistoricalShipment[] = [
-  { id: "SHP-7001", origin: "Singapore", destination: "Los Angeles", deliveredDate: "2026-02-20", rating: 5 },
-  { id: "SHP-6892", origin: "Dubai", destination: "London", deliveredDate: "2026-02-18", rating: 4 },
-  { id: "SHP-6754", origin: "Shanghai", destination: "Rotterdam", deliveredDate: "2026-02-15", rating: 5 },
-  { id: "SHP-6621", origin: "Mumbai", destination: "New York", deliveredDate: "2026-02-12", rating: 3 },
-  { id: "SHP-6503", origin: "Tokyo", destination: "Sydney", deliveredDate: "2026-02-10", rating: null },
-  { id: "SHP-6412", origin: "Hong Kong", destination: "Vancouver", deliveredDate: "2026-02-08", rating: 5 },
-  { id: "SHP-6298", origin: "Seoul", destination: "Hamburg", deliveredDate: "2026-02-05", rating: 4 },
-  { id: "SHP-6187", origin: "Bangkok", destination: "Miami", deliveredDate: "2026-02-02", rating: 5 },
-  { id: "SHP-6054", origin: "Jakarta", destination: "Seattle", deliveredDate: "2026-01-28", rating: 2 },
-  { id: "SHP-5921", origin: "Manila", destination: "Chicago", deliveredDate: "2026-01-25", rating: 4 },
-  { id: "SHP-5803", origin: "Taipei", destination: "Boston", deliveredDate: "2026-01-22", rating: 5 },
-  { id: "SHP-5692", origin: "Ho Chi Minh", destination: "San Francisco", deliveredDate: "2026-01-18", rating: null },
-];
+const mapToHistorical = (shipment: Shipment): HistoricalShipment => ({
+  id: shipment.trackingNumber || shipment.id || shipment._id,
+  origin: shipment.origin,
+  destination: shipment.destination,
+  deliveredDate: shipment.updatedAt,
+  rating: (shipment.offChainMetadata?.rating as number | undefined) ?? null,
+});
 
 const StarRating: React.FC<{ rating: number | null }> = ({ rating }) => {
   if (rating === null) {
@@ -45,21 +39,31 @@ const StarRating: React.FC<{ rating: number | null }> = ({ rating }) => {
 
 const ShipmentHistory: React.FC = () => {
   const navigate = useNavigate();
-  const [isLoading] = useState(false);
+  const [shipments, setShipments] = useState<HistoricalShipment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Filter by search query (shipment ID)
+  useEffect(() => {
+    shipmentApi
+      .getAll({ status: 'DELIVERED' as ShipmentStatus, limit: 100 })
+      .then((res) => {
+        setShipments(res.data.map(mapToHistorical));
+      })
+      .catch(() => setHasError(true))
+      .finally(() => setIsLoading(false));
+  }, []);
+
   const filteredShipments = useMemo(() => {
-    if (!searchQuery.trim()) return MOCK_SHIPMENT_HISTORY;
-    return MOCK_SHIPMENT_HISTORY.filter((shipment) =>
+    if (!searchQuery.trim()) return shipments;
+    return shipments.filter((shipment) =>
       shipment.id.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, shipments]);
 
-  // Sort by delivered date
   const sortedShipments = useMemo(() => {
     return [...filteredShipments].sort((a, b) => {
       const diff = safeDateCompare(a.deliveredDate, b.deliveredDate);
@@ -67,12 +71,10 @@ const ShipmentHistory: React.FC = () => {
     });
   }, [filteredShipments, sortOrder]);
 
-  // Pagination
   const totalPages = Math.max(1, Math.ceil(sortedShipments.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedShipments = sortedShipments.slice(startIndex, startIndex + itemsPerPage);
 
-  // Reset to page 1 when search changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
@@ -89,14 +91,19 @@ const ShipmentHistory: React.FC = () => {
     "text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]";
   const tdClass = "px-6 py-4 text-sm border-b border-[rgba(98,255,255,0.2)]";
 
-  // Loading state
+  // Single page-level heading shared by every render state (loading / error /
+  // empty / loaded) so the page always exposes just one top-level heading.
+  const pageHeader = (
+    <div>
+      <h1 className="text-2xl font-bold mb-1 sm:text-xl">Shipment History</h1>
+      <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="p-6 md:p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Shipment History</h1>
-          <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
-        </div>
+        <div className="mb-6">{pageHeader}</div>
         <div className={`${tableContainerClass} p-6`}>
           {[...Array(10)].map((_, i) => (
             <div key={i} className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_0.5fr] gap-6 mb-4">
@@ -110,14 +117,34 @@ const ShipmentHistory: React.FC = () => {
     );
   }
 
-  // Empty state
+  if (hasError) {
+    return (
+      <div className="p-6 md:p-4">
+        <div className="mb-6">{pageHeader}</div>
+        <div className={`${tableContainerClass} px-10 py-20 text-center`}>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(239,68,68,0.1)] flex items-center justify-center">
+            <AlertTriangle size={32} className="text-[#ef4444]" />
+          </div>
+          <h2 className="text-xl font-bold mb-2 text-[#ef4444]">Failed to Load</h2>
+          <p className="text-text-secondary text-sm max-w-md mx-auto mb-4">
+            Unable to fetch shipment history. Please try again later.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (sortedShipments.length === 0 && !searchQuery) {
     return (
       <div className="p-6 md:p-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Shipment History</h1>
-          <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
-        </div>
+        <div className="mb-6">{pageHeader}</div>
         <div className={`${tableContainerClass} px-10 py-20 text-center`}>
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[rgba(98,255,255,0.1)] flex items-center justify-center">
             <Package size={32} className="text-[#62ffff]" />
@@ -135,10 +162,7 @@ const ShipmentHistory: React.FC = () => {
     <div className="p-6 md:p-4">
       {/* Header */}
       <div className="flex justify-between items-start mb-6 lg:flex-col lg:gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1 sm:text-xl">Shipment History</h1>
-          <p className="text-text-secondary text-sm">View all your past delivered shipments</p>
-        </div>
+        {pageHeader}
 
         {/* Search */}
         <div className="relative lg:w-full">
@@ -265,6 +289,3 @@ const ShipmentHistory: React.FC = () => {
 };
 
 export default ShipmentHistory;
-
-
-

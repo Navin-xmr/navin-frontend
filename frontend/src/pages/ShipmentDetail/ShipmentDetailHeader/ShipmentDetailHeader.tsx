@@ -135,7 +135,6 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
                     value={editOrigin}
                     onSave={async (newValue) => {
                       setEditOrigin(newValue);
-                      console.log('Origin updated to:', newValue);
                     }}
                     label="Origin Address"
                     isEditable={true}
@@ -149,7 +148,6 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
                     value={editDestination}
                     onSave={async (newValue) => {
                       setEditDestination(newValue);
-                      console.log('Destination updated to:', newValue);
                     }}
                     label="Destination Address"
                     isEditable={true}

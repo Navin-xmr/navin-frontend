@@ -5,6 +5,7 @@ import axios from 'axios';
 import { CheckCircle2, Circle, Package, Truck, MapPin, Flag, Share2, Copy, AlertTriangle } from 'lucide-react';
 import CopyToClipboard from '../../components/ui/CopyToClipboard';
 import { useLiveRegion } from '../../context/LiveRegionContext';
+import { getStatusBadgeClass } from '../../utils/shipmentStatus';
 
 interface PublicMilestone {
   id: string;
@@ -24,13 +25,6 @@ interface PublicShipment {
   expectedDelivery: string;
   milestones: PublicMilestone[];
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  CREATED: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-  IN_TRANSIT: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  DELIVERED: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  CANCELLED: 'bg-red-500/10 text-red-400 border border-red-500/20',
-};
 
 const STATUS_LABELS: Record<string, string> = {
   CREATED: 'Pending',
@@ -183,13 +177,13 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
               <Package className="w-8 h-8 text-red-400" />
             </div>
-            <h1
+            <h2
               ref={headingRef}
               tabIndex={-1}
               className="text-2xl font-bold mb-2 outline-none"
             >
               Shipment Not Found
-            </h1>
+            </h2>
             <p className="text-slate-400 mb-6">
               No shipment matches tracking number <span className="text-white font-mono">{trackingNumber}</span>.
               Please check the number and try again.
@@ -208,13 +202,13 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
               <AlertTriangle className="w-8 h-8 text-red-400" />
             </div>
-            <h1
+            <h2
               ref={headingRef}
               tabIndex={-1}
               className="text-2xl font-bold mb-2 outline-none"
             >
               Unable to Load Shipment
-            </h1>
+            </h2>
             <p className="text-slate-400 mb-6">{error}</p>
             <button
               type="button"
@@ -244,7 +238,7 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
                     <CopyToClipboard value={shipment.trackingNumber} label="Copy" size="sm" />
                   </div>
                 </div>
-                <span className={`self-start sm:self-center px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${STATUS_COLORS[shipment.status] ?? 'bg-white/5 text-slate-300'}`}>
+                <span className={`self-start sm:self-center px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wide ${getStatusBadgeClass(shipment.status)}`}>
                   {STATUS_LABELS[shipment.status] ?? shipment.status}
                 </span>
               </div>

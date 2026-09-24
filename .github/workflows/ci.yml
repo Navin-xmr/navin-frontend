@@ -34,6 +34,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check locale keys
+        working-directory: .
+        run: node scripts/check-locales.mjs
+
       - name: Lint
         run: pnpm run lint
 

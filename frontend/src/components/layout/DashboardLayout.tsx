@@ -24,7 +24,7 @@ import AnimatedPage from './AnimatedPage';
 import { SessionTimeoutModal } from '../auth/SessionTimeoutModal';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import ShortcutsHelpModal from '../common/ShortcutsHelpModal/ShortcutsHelpModal';
+import ShortcutsHelpModal from '../common/ShortcutsHelpModal';
 
 interface NavItem {
   name: string;

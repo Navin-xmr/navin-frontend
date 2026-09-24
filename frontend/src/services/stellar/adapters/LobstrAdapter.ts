@@ -8,7 +8,11 @@ export class LobstrAdapter implements WalletAdapter {
   private _publicKey: string | null = null;
 
   async isAvailable(): Promise<boolean> {
-    return true;
+    // LOBSTR Vault requires WalletConnect (QR pairing), which is not integrated
+    // yet (#711). Keep it unavailable so users can't select a wallet option
+    // that is guaranteed to fail. Flip this to true once the WalletConnect SDK
+    // is wired up in connect()/signTransaction()/getPublicKey().
+    return false;
   }
 
   async connect(): Promise<{ publicKey: string }> {

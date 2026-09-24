@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { getStatusColorHex } from '../../../utils/shipmentStatus';
 
 export interface PrintMilestone {
   name: string;
@@ -53,17 +54,6 @@ export interface ShipmentSummaryPrintProps {
   onClose: () => void;
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  DELIVERED: '#10B981',
-  IN_TRANSIT: '#3B82F6',
-  CREATED: '#9CA3AF',
-  CANCELLED: '#EF4444',
-};
-
-function getStatusColor(status: string): string {
-  return STATUS_COLOR[status.toUpperCase()] ?? '#9CA3AF';
-}
-
 function formatStatus(status: string): string {
   return status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
@@ -93,7 +83,7 @@ const ShipmentSummaryPrint: React.FC<ShipmentSummaryPrintProps> = ({ data, onClo
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const statusColor = getStatusColor(data.status);
+  const statusColor = getStatusColorHex(data.status.toUpperCase());
   const printDate = new Date().toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'long',

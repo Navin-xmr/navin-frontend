@@ -31,6 +31,10 @@ const PROGRESS_BAR_COLOR: Record<ShipmentStatus, string> = {
   IN_TRANSIT: 'bg-blue-500',
   DELIVERED: 'bg-emerald-500',
   CANCELLED: 'bg-red-500',
+  CREATED: 'bg-[#f59e0b]',
+  IN_TRANSIT: 'bg-[#3b82f6]',
+  DELIVERED: 'bg-accent-green',
+  CANCELLED: 'bg-accent-red',
 };
 
 function getMilestoneProgress(shipment: Shipment): number {
@@ -108,10 +112,13 @@ const CustomerDashboard: React.FC = () => {
       <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6">
         <div className="flex flex-col items-center justify-center p-12 bg-background-card border border-dashed border-red-500 rounded-xl text-center">
           <AlertTriangle size={48} className="text-red-500 mb-4" />
+        <div className="flex flex-col items-center justify-center p-12 bg-background-card border border-dashed border-accent-red rounded-xl text-center">
+          <AlertTriangle size={48} className="text-accent-red mb-4" />
           <h3 className="text-lg font-semibold mb-2">{t('customerDashboard.errorTitle')}</h3>
           <p className="text-text-secondary text-sm mb-4">{t('customerDashboard.errorBody')}</p>
           <button
             className="bg-red-500 text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
+            className="bg-accent-red text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
             onClick={() => window.location.reload()}
           >
             {t('customerDashboard.retry')}
@@ -144,6 +151,7 @@ const CustomerDashboard: React.FC = () => {
                 <>
                   <div className="bg-background-card border border-border rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
                     <div className="flex items-center gap-2 text-text-secondary text-[11px] font-semibold uppercase tracking-[0.05em]">
+                    <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
                       <Package size={15} /> {t('customerDashboard.stats.totalShipments')}
                     </div>
                     <div className="text-[28px] font-semibold">{shipments.length}</div>
@@ -159,6 +167,16 @@ const CustomerDashboard: React.FC = () => {
                       <CheckCircle2 size={15} /> {t('customerDashboard.stats.deliveredThisMonth')}
                     </div>
                     <div className="text-[28px] font-semibold text-emerald-500 dark:text-emerald-400">{deliveredThisMonth}</div>
+                    <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
+                      <Truck size={15} /> {t('customerDashboard.stats.inTransit')}
+                    </div>
+                    <div className="text-[28px] font-semibold text-accent-blue">{inTransitCount}</div>
+                  </div>
+                  <div className="bg-background-card border border-border rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
+                    <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
+                      <CheckCircle2 size={15} /> {t('customerDashboard.stats.deliveredThisMonth')}
+                    </div>
+                    <div className="text-[28px] font-semibold text-accent-green">{deliveredThisMonth}</div>
                   </div>
                 </>
               )}
@@ -198,6 +216,60 @@ const CustomerDashboard: React.FC = () => {
                         <div className="font-semibold text-text-primary mb-1">{shipment.trackingNumber}</div>
                         <div className="text-text-secondary text-xs">
                           {shipment.origin} → {shipment.destination}
+              <div className="bg-background-card border border-dashed border-border rounded-xl p-10 text-center">
+                <Package size={32} className="text-[#334155] mx-auto mb-3" />
+                <p className="text-[#94a3b8] text-sm">{t('customerDashboard.noActiveShipments')}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+                {activeShipments.map(shipment => {
+                  const progress = getMilestoneProgress(shipment);
+                  const barColor = PROGRESS_BAR_COLOR[shipment.status] ?? 'bg-[#62ffff]';
+                  const eta = (shipment.offChainMetadata?.estimatedDelivery as string | undefined) ?? shipment.updatedAt;
+                  return (
+                    <div
+                      key={shipment._id}
+                      data-testid="active-shipment-card"
+                      role="button"
+                      tabIndex={0}
+                      className="bg-background-card border border-border rounded-xl p-5 flex flex-col gap-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:border-[#334155] hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] focus-visible:outline-2 focus-visible:outline-[#62ffff] focus-visible:outline-offset-2"
+                      onClick={() => navigate(`/dashboard/shipments/${shipment._id}`)}
+                      onKeyDown={e => e.key === 'Enter' && navigate(`/dashboard/shipments/${shipment._id}`)}
+                    >
+                      {/* Header row */}
+                      <div className="flex justify-between items-start gap-2">
+                        <span className="text-sm font-semibold font-mono text-[#62ffff] truncate">
+                          {shipment.trackingNumber}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap ${getStatusBadgeClass(shipment.status)}`}>
+                          {getStatusDisplayLabel(shipment.status)}
+                        </span>
+                      </div>
+
+                      {/* Route */}
+                      <div className="flex items-center gap-2 text-sm text-[#94a3b8]">
+                        <span className="truncate">{shipment.origin}</span>
+                        <span className="text-[#334155] shrink-0">→</span>
+                        <span className="truncate">{shipment.destination}</span>
+                      </div>
+
+                      {/* ETA */}
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-[11px] text-[#64748b] uppercase tracking-[0.05em]">{t('customerDashboard.estDelivery')}</span>
+                        <span className="text-sm font-medium">{safeFormatDate(eta)}</span>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[11px] text-[#64748b]">{t('customerDashboard.milestoneProgress')}</span>
+                          <span className="text-[11px] font-semibold text-[#94a3b8]">{progress}%</span>
+                        </div>
+                        <div className="h-1.5 bg-[#1e293b] rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                            style={{ width: `${progress}%` }}
+                          />
                         </div>
                       </div>
                       <span className={getStatusBadgeClass(shipment.status)}>
@@ -284,6 +356,20 @@ const CustomerDashboard: React.FC = () => {
               </span>
             )}
           </div>
+        {/* ── Right sidebar: Notifications ── */}
+        <aside className="max-md:hidden">
+          <div className="bg-background-card border border-border rounded-xl overflow-hidden sticky top-6">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Bell size={15} className="text-[#94a3b8]" />
+                <h3 className="text-sm font-semibold m-0">{t('customerDashboard.notifications')}</h3>
+              </div>
+              {unreadNotifications.length > 0 && (
+                <span className="bg-blue-500/20 text-blue-400 text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                  {t('customerDashboard.newCount', { count: unreadNotifications.length })}
+                </span>
+              )}
+            </div>
 
           {unreadNotifications.length === 0 ? (
             <p className="text-text-secondary text-sm m-0">{t('customerDashboard.notifications.empty')}</p>
@@ -307,6 +393,15 @@ const CustomerDashboard: React.FC = () => {
           >
             {t('customerDashboard.notifications.viewAll')}
           </button>
+            <div className="px-4 py-3 border-t border-border">
+              <button
+                className="w-full py-2 bg-transparent border-none text-blue-500 text-[12px] font-semibold cursor-pointer rounded-md hover:bg-blue-500/10 transition-colors text-center"
+                onClick={() => navigate('/dashboard/notifications')}
+              >
+                {t('customerDashboard.viewAllNotifications')}
+              </button>
+            </div>
+          </div>
         </aside>
 
       </div>

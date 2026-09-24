@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { AlertTriangle, Download, Trash2 } from 'lucide-react';
 import { useSettings } from '../hooks/useSettings';
 import { apiClient } from '@services/api/client';
 import { useToast } from '../../../context/ToastContext';
+import { clearToken } from '../../../services/auth/tokenStorage';
 
 interface DangerZoneProps {
   userEmail: string;
@@ -11,6 +12,7 @@ interface DangerZoneProps {
 const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
   const [confirmEmail, setConfirmEmail] = useState('');
   const [exporting, setExporting] = useState(false);
+  const confirmEmailId = useId();
   const { isLoading, error, save } = useSettings();
   const { addToast } = useToast();
 
@@ -18,7 +20,7 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
     if (confirmEmail !== userEmail) return;
     const ok = await save({ url: '/api/users/me', method: 'delete' });
     if (ok) {
-      localStorage.removeItem('authToken');
+      clearToken();
       window.location.href = '/';
     }
   };
@@ -77,10 +79,14 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
           This action is permanent and cannot be undone. All your data will be erased.
         </p>
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label
+            htmlFor={confirmEmailId}
+            className="block text-xs font-medium text-slate-400 mb-1.5"
+          >
             Type <span className="text-white font-mono">{userEmail}</span> to confirm
           </label>
           <input
+            id={confirmEmailId}
             value={confirmEmail}
             onChange={(e) => setConfirmEmail(e.target.value)}
             placeholder={userEmail}

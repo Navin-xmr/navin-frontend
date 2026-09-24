@@ -16,6 +16,7 @@ import type { DailyVolume } from '../../components/dashboard/Charts/ShipmentVolu
 import type { DeliveryOutcome } from '../../components/dashboard/Charts/DeliverySuccessChart/mockDeliveryData';
 import AnalyticsFilters, { type AnalyticsFiltersValues } from './AnalyticsFilters';
 import { useAnalytics } from './hooks/useAnalytics';
+import { getStatusColorHex } from '../../utils/shipmentStatus';
 
 const defaultFilters = (): AnalyticsFiltersValues => {
   const end = new Date();
@@ -35,14 +36,6 @@ function formatDelta(current: number, previous: number, suffix = ''): string {
   const sign = delta > 0 ? '+' : '';
   return `${sign}${delta.toLocaleString()}${suffix}`;
 }
-
-const statusColors: Record<string, string> = {
-  DELIVERED: '#10b981',
-  IN_TRANSIT: '#3b82f6',
-  CREATED: '#94a3b8',
-  CANCELLED: '#ef4444',
-  DELAYED: '#f59e0b',
-};
 
 const Analytics: React.FC = () => {
   const [filters, setFilters] = useState<AnalyticsFiltersValues>(defaultFilters);
@@ -73,7 +66,7 @@ const Analytics: React.FC = () => {
       performance?.shipmentsByStatus.map((item) => ({
         status: item.status,
         count: item.total,
-        color: statusColors[item.status] ?? '#64748b',
+        color: getStatusColorHex(item.status),
       })) ?? [],
     [performance],
   );

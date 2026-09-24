@@ -1,2 +1,2 @@
-export { default as PaymentDetailModal } from "./PaymentDetailModal";
+export { default as SettlementDetailModal } from "./SettlementDetailModal";
 

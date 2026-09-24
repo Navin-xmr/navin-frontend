@@ -14,6 +14,46 @@ This repository is the **React frontend** of the Navin platform — built with *
 
 ---
 
+## Security Headers
+
+The Vercel deployment (`frontend/vercel.json`) sets security headers on every response. Because the app keeps the auth token in `localStorage` and signs Stellar transactions, these headers are a defense-in-depth layer against XSS and clickjacking.
+
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `Content-Security-Policy` | see below | Restricts which origins can load scripts, styles, fonts, images, and connections |
+| `X-Frame-Options` | `DENY` | Prevents clickjacking of wallet-signing flows (legacy fallback for `frame-ancestors`) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Keeps password-reset tokens (in query strings) out of cross-origin `Referer` headers |
+| `X-Content-Type-Options` | `nosniff` | Blocks MIME-type sniffing |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Disables browser features the app does not use |
+
+### Content-Security-Policy
+
+The policy allows only the origins the app actually talks to:
+
+- `'self'` — the app bundle and its own assets
+- **API origin** — the Navin backend (`VITE_API_URL`)
+- **Soroban RPC** — Stellar RPC endpoint used for contract calls
+- **Sentry ingest** — `https://*.ingest.sentry.io` for error reporting
+- **Google Fonts** — `https://fonts.googleapis.com` (styles) and `https://fonts.gstatic.com` (font files)
+- **OpenStreetMap tiles** — `https://*.tile.openstreetmap.org` for Leaflet maps
+
+```
+default-src 'self';
+base-uri 'self';
+object-src 'none';
+frame-ancestors 'none';
+form-action 'self';
+script-src 'self';
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+font-src 'self' https://fonts.gstatic.com data:;
+img-src 'self' data: blob: https://*.tile.openstreetmap.org;
+connect-src 'self' https://*.ingest.sentry.io;
+```
+
+> **Note:** The API and Soroban RPC origins are environment-specific. Add them to `connect-src` in `frontend/vercel.json` for each deployment (e.g. `https://api.navin.example https://soroban-testnet.stellar.org`). If you need to roll out a change safely, switch the header name to `Content-Security-Policy-Report-Only` first, confirm there are no violations in the browser console, then rename it back to `Content-Security-Policy`.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Why |
@@ -175,15 +215,11 @@ Have questions or want to discuss ideas?
 
 ## Star the Project ⭐
 
-If you find Navin useful, interesting, or want to support decentralized logistics infrastructure —
-**please give us a star on GitHub!**
-It helps us attract more contributors and grow the community.
+If you find Navin useful, 
 
-[**⭐ Star Navin Frontend on GitHub**](https://github.com/Navin-xmr/navin-frontend)
+This project is licensed under the [MIT License](LICENSE).
 
----
-
-## License
+## Handsoff notes
 
 This project is licensed under the [MIT License](LICENSE).
 
@@ -191,3 +227,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 <!-- handsoff-issue-907 -->
 - #907: [Refactor] Remove the `Promise.resolve().then(() => setState(...))` workaround used in effects
+<!-- handsoff-issue-903 -->
+- #903: [Theme] NotificationsPage and UserManagement use hardcoded dark colours and look broken in light theme
+/* … truncated 333 chars — edit only what you need near the top … */
