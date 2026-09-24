@@ -35,9 +35,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'Avenir', 'Helvetica', 'Arial', 'sans-serif'],
-        display: ['Bricolage Grotesque', 'sans-serif'],
-        albert: ['Albert Sans', 'sans-serif'],
+        sans: ['system-ui', 'Avenir', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['Georgia', 'Garamond', 'serif'],
+        albert: ['system-ui', 'Avenir', 'Helvetica', 'Arial', 'sans-serif'],
       },
       backgroundImage: {
         'gradient-primary': 'linear-gradient(135deg, #00D9FF 0%, #0099CC 100%)',
