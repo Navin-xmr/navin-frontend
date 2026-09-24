@@ -134,13 +134,16 @@ describe("Settlements", () => {
     expect(screen.getByText("Pending").nextElementSibling).toHaveTextContent(
       "1",
     );
-    expect(api.getSettlements).toHaveBeenCalledWith({
-      page: 1,
-      limit: 10,
-      status: undefined,
-      sortBy: "createdAt",
-      sortOrder: "desc",
-    });
+    expect(api.getSettlements).toHaveBeenCalledWith(
+      {
+        page: 1,
+        limit: 10,
+        status: undefined,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      },
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
 
     // A company-role user can release the one escrowed settlement (desktop
     // row only — the mobile card labels the same action "Release Payment")
@@ -194,26 +197,32 @@ describe("Settlements", () => {
       "ESCROWED",
     );
     await waitFor(() =>
-      expect(api.getSettlements).toHaveBeenLastCalledWith({
-        page: 1,
-        limit: 10,
-        status: "ESCROWED",
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      }),
+      expect(api.getSettlements).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          status: "ESCROWED",
+          sortBy: "createdAt",
+          sortOrder: "desc",
+        },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
     );
 
     await user.click(
       screen.getByRole("button", { name: "Sort by date newest first" }),
     );
     await waitFor(() =>
-      expect(api.getSettlements).toHaveBeenLastCalledWith({
-        page: 1,
-        limit: 10,
-        status: "ESCROWED",
-        sortBy: "createdAt",
-        sortOrder: "asc",
-      }),
+      expect(api.getSettlements).toHaveBeenLastCalledWith(
+        {
+          page: 1,
+          limit: 10,
+          status: "ESCROWED",
+          sortBy: "createdAt",
+          sortOrder: "asc",
+        },
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
     );
     expect(
       screen.getByRole("button", { name: "Sort by date oldest first" }),
@@ -261,4 +270,5 @@ describe("Settlements", () => {
       screen.queryByRole("button", { name: "Dispute" }),
     ).not.toBeInTheDocument();
   });
+
 });

@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Package } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { shipmentApi, type Shipment } from '../../api/shipmentApi';
 import { BulkActionBar } from '../../components/shipment/BulkActionBar';
 import { BulkStatusModal } from '../../components/shipment/BulkStatusModal';
@@ -80,15 +80,72 @@ const initialAdvancedFilters: ShipmentFiltersValues = {
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // ── URL-backed filter state (persisted in the query string) ───────────────
+  const searchQuery = searchParams.get('q') ?? '';
+  const statusFilter = (searchParams.get('status') as TopStatusFilter) ?? 'ALL';
+  const priorityFilter = (searchParams.get('priority') as TopPriorityFilter) ?? 'ALL';
+  const timeframeFilter = (searchParams.get('timeframe') as TopTimeframeFilter) ?? 'ALL';
+  const currentPage = Number(searchParams.get('page') ?? '1');
+
+  // Advanced filters come from the ShipmentFilters panel; stored as individual
+  // params so the full URL is copyable/bookmarkable.
+  const advancedFilters: ShipmentFiltersValues = {
+    status: searchParams.getAll('af_status') as ShipmentFiltersValues['status'],
+    dateFrom: searchParams.get('af_dateFrom') ?? '',
+    dateTo: searchParams.get('af_dateTo') ?? '',
+    carrier: searchParams.get('af_carrier') ?? '',
+    origin: searchParams.get('af_origin') ?? '',
+    destination: searchParams.get('af_destination') ?? '',
+    weightMin: searchParams.get('af_weightMin') ?? '',
+    weightMax: searchParams.get('af_weightMax') ?? '',
+    priority: searchParams.getAll('af_priority') as ShipmentFiltersValues['priority'],
+  };
+
+  /** Update one or more search params, always resetting page to 1 unless explicitly set. */
+  const updateFilters = useCallback(
+    (updates: Record<string, string | string[] | null>, resetPage = true) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [key, value] of Object.entries(updates)) {
+            if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+              next.delete(key);
+            } else if (Array.isArray(value)) {
+              next.delete(key);
+              for (const v of value) next.append(key, v);
+            } else {
+              next.set(key, value);
+            }
+          }
+          if (resetPage) next.delete('page');
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const setCurrentPage = useCallback(
+    (page: number) => {
+      updateFilters({ page: page > 1 ? String(page) : null }, false);
+    },
+    [updateFilters],
+  );
+
+  // ── Server data ───────────────────────────────────────────────────────────
   const [shipments, setShipments] = useState<Shipment[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  const loadingRef = useRef(false);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const {
     selectedIds,
@@ -107,115 +164,94 @@ const Shipments: React.FC = () => {
       return 'list';
     }
   });
-  const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
-  const [statusFilter, setStatusFilter] = useState<TopStatusFilter>('ALL');
-  const [priorityFilter, setPriorityFilter] = useState<TopPriorityFilter>('ALL');
-  const [timeframeFilter, setTimeframeFilter] = useState<TopTimeframeFilter>('ALL');
-  const [advancedFilters, setAdvancedFilters] =
-    useState<ShipmentFiltersValues>(initialAdvancedFilters);
+
+  // Compute the effective date range from the timeframe shortcut.
+  const timeframeDateFrom = (() => {
+    if (timeframeFilter === 'ALL') return '';
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - Number(timeframeFilter));
+    return cutoff.toISOString().slice(0, 10);
+  })();
+
+  // Effective date range merges the timeframe shortcut and advanced dateFrom.
+  const effectiveDateFrom = advancedFilters.dateFrom || timeframeDateFrom;
+  const effectiveDateTo = advancedFilters.dateTo;
 
   const hasMore = shipments.length < total;
 
   useEffect(() => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
+    // Cancel any previous in-flight request.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     setError(null);
 
+    // Merge advanced-filter status array with the top-level status dropdown.
+    // Backend receives a single status value; advanced multi-select is treated
+    // as a refinement. When both conflict, the advanced selection wins.
+    const effectiveStatus =
+      advancedFilters.status.length > 0
+        ? undefined                      // let advanced statuses pass through
+        : statusFilter !== 'ALL'
+          ? (statusFilter as import('../../api/shipmentApi').ShipmentStatus)
+          : undefined;
+
+    const effectivePriority =
+      advancedFilters.priority.length > 0
+        ? undefined
+        : priorityFilter !== 'ALL'
+          ? (priorityFilter as import('../../api/shipmentApi').ShipmentPriority)
+          : undefined;
+
     shipmentApi
-      .getAll({ limit: PAGE_SIZE, page: currentPage })
+      .getAll({
+        limit: PAGE_SIZE,
+        page: currentPage,
+        search: debouncedSearchQuery || undefined,
+        status: effectiveStatus,
+        priority: effectivePriority,
+        dateFrom: effectiveDateFrom || undefined,
+        dateTo: effectiveDateTo || undefined,
+        origin: advancedFilters.origin || undefined,
+        destination: advancedFilters.destination || undefined,
+        signal: controller.signal,
+      })
       .then((response) => {
+        if (controller.signal.aborted) return;
         setShipments((previous) =>
           currentPage === 1 ? response.data : [...previous, ...response.data],
         );
         setTotal(response.meta.total);
       })
       .catch((caught: Error) => {
+        if (controller.signal.aborted) return;
         setError(caught.message || 'Unable to load shipments.');
       })
       .finally(() => {
-        setIsLoading(false);
-        loadingRef.current = false;
+        if (!controller.signal.aborted) setIsLoading(false);
       });
-  }, [currentPage]);
 
-  const filteredShipments = useMemo(() => {
-    const query = debouncedSearchQuery.trim().toLowerCase();
-    let result = shipments;
-
-    if (query) {
-      result = result.filter(
-        (shipment) =>
-          shipment.id.toLowerCase().includes(query) ||
-          shipment.origin.toLowerCase().includes(query) ||
-          shipment.destination.toLowerCase().includes(query),
-      );
-    }
-
-    if (statusFilter !== 'ALL') {
-      result = result.filter((shipment) => shipment.status === statusFilter);
-    }
-
-    if (priorityFilter !== 'ALL') {
-      result = result.filter((shipment) => shipment.priority === priorityFilter);
-    }
-
-    if (timeframeFilter !== 'ALL') {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - Number(timeframeFilter));
-      result = result.filter((shipment) => new Date(shipment.createdAt) >= cutoff);
-    }
-
-    const { status, dateFrom, dateTo, origin, destination, priority } = advancedFilters;
-
-    if (status.length > 0) {
-      result = result.filter((shipment) => status.includes(shipment.status));
-    }
-
-    if (priority.length > 0) {
-      result = result.filter(
-        (shipment) => shipment.priority !== undefined && priority.includes(shipment.priority),
-      );
-    }
-
-    if (dateFrom) {
-      const from = new Date(dateFrom);
-      result = result.filter((shipment) => new Date(shipment.createdAt) >= from);
-    }
-
-    if (dateTo) {
-      const to = new Date(dateTo);
-      to.setHours(23, 59, 59, 999);
-      result = result.filter((shipment) => new Date(shipment.createdAt) <= to);
-    }
-
-    if (origin) {
-      const originQuery = origin.toLowerCase();
-      result = result.filter((shipment) => shipment.origin.toLowerCase().includes(originQuery));
-    }
-
-    if (destination) {
-      const destinationQuery = destination.toLowerCase();
-      result = result.filter((shipment) =>
-        shipment.destination.toLowerCase().includes(destinationQuery),
-      );
-    }
-
-    return result;
+    return () => controller.abort();
   }, [
-    shipments,
+    currentPage,
     debouncedSearchQuery,
     statusFilter,
     priorityFilter,
     timeframeFilter,
-    advancedFilters,
-  ]);
+    effectiveDateFrom,
+    effectiveDateTo,
+    advancedFilters.origin,
+    advancedFilters.destination,
+    advancedFilters.status.join(','),
+    advancedFilters.priority.join(','),
+  ]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const visibleIds = useMemo(
-    () => filteredShipments.map((shipment) => shipment.id),
-    [filteredShipments],
-  );
+  // filteredShipments == shipments (server already filtered)
+  const filteredShipments = shipments;
+
+  const visibleIds = shipments.map((shipment) => shipment.id);
   const allVisibleSelected =
     visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
   const someVisibleSelected =
@@ -223,7 +259,7 @@ const Shipments: React.FC = () => {
 
   const { parentRef, virtualizer, handleScroll, scrollToIndex } = useVirtualShipments({
     shipments: filteredShipments,
-    onLoadMore: () => setCurrentPage((page) => page + 1),
+    onLoadMore: () => setCurrentPage(currentPage + 1),
     hasMore,
   });
 
@@ -303,11 +339,7 @@ const Shipments: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('ALL');
-    setPriorityFilter('ALL');
-    setTimeframeFilter('ALL');
-    setAdvancedFilters(initialAdvancedFilters);
+    setSearchParams({}, { replace: true });
   };
 
   const isAnyFilterActive =
@@ -321,9 +353,8 @@ const Shipments: React.FC = () => {
     advancedFilters.origin !== '' ||
     advancedFilters.destination !== '' ||
     advancedFilters.priority.length > 0;
-  const isEmpty = !isLoading && !error && shipments.length === 0;
-  const isFilterEmpty =
-    !isLoading && !error && shipments.length > 0 && filteredShipments.length === 0;
+  const isEmpty = !isLoading && !error && total === 0;
+  const isFilterEmpty = false; // server handles filtering — no local empty-after-filter state
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
 
@@ -350,14 +381,24 @@ const Shipments: React.FC = () => {
         <>
           <ShipmentsFilterToolbar
             searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+            onSearchChange={(q) => updateFilters({ q: q || null })}
             statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
+            onStatusChange={(s) => updateFilters({ status: s === 'ALL' ? null : s })}
             priorityFilter={priorityFilter}
-            onPriorityChange={setPriorityFilter}
+            onPriorityChange={(p) => updateFilters({ priority: p === 'ALL' ? null : p })}
             timeframeFilter={timeframeFilter}
-            onTimeframeChange={setTimeframeFilter}
-            onAdvancedChange={setAdvancedFilters}
+            onTimeframeChange={(t) => updateFilters({ timeframe: t === 'ALL' ? null : t })}
+            onAdvancedChange={(af) => updateFilters({
+              af_status: af.status,
+              af_dateFrom: af.dateFrom || null,
+              af_dateTo: af.dateTo || null,
+              af_carrier: af.carrier || null,
+              af_origin: af.origin || null,
+              af_destination: af.destination || null,
+              af_weightMin: af.weightMin || null,
+              af_weightMax: af.weightMax || null,
+              af_priority: af.priority,
+            })}
           />
 
           {isEmpty || error || isFilterEmpty ? (
@@ -371,7 +412,7 @@ const Shipments: React.FC = () => {
             <>
               <div className="text-sm text-[#94a3b8] mb-3">
                 Showing {filteredShipments.length}
-                {isAnyFilterActive ? ` of ${shipments.length} loaded` : ` of ${total}`} shipments
+                {` of ${total}`} shipments
               </div>
 
               <table

@@ -212,19 +212,31 @@ async function fetchAllShipmentPages(params?: Record<string, string | number | b
 }
 
 export const shipmentApi = {
-  async getAll(params: { limit?: number; page?: number } = {}): Promise<ShipmentsResponse> {
-    const queryParams = new URLSearchParams();
+  async getAll(params: {
+    limit?: number;
+    page?: number;
+    search?: string;
+    status?: ShipmentStatus;
+    priority?: ShipmentPriority;
+    dateFrom?: string;
+    dateTo?: string;
+    origin?: string;
+    destination?: string;
+    signal?: AbortSignal;
+  } = {}): Promise<ShipmentsResponse> {
+    const { signal, ...queryParams } = params;
 
-    if (typeof params.limit === 'number') {
-      queryParams.set('limit', String(params.limit));
-    }
-
-    if (typeof params.page === 'number') {
-      queryParams.set('page', String(params.page));
+    // Strip undefined/empty values so they don't pollute the query string.
+    const cleanParams: Record<string, string | number> = {};
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined && value !== '' && value !== null) {
+        cleanParams[key] = value as string | number;
+      }
     }
 
     const response = await axios.get<BackendResponse>('/api/shipments', {
-      params: Object.fromEntries(queryParams.entries()),
+      params: cleanParams,
+      signal,
     });
 
     const payload = response.data ?? {};
