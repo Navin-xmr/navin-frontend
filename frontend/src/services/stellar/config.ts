@@ -3,9 +3,13 @@ import { Networks } from '@stellar/stellar-sdk';
 const VALID_NETWORKS = ['testnet', 'mainnet'] as const;
 export type StellarNetwork = typeof VALID_NETWORKS[number];
 
+// Literal passphrases (same values as the SDK's Networks enum) so this module,
+// which the app shell imports, doesn't pull @stellar/stellar-sdk into the entry chunk.
 export const NETWORK_PASSPHRASES: Record<StellarNetwork, string> = {
   testnet: Networks.TESTNET,
   mainnet: Networks.PUBLIC,
+  testnet: 'Test SDF Network ; September 2015',
+  mainnet: 'Public Global Stellar Network ; September 2015',
 };
 
 export function validateNetwork(value: string | undefined): StellarNetwork {

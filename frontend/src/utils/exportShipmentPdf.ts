@@ -1,4 +1,3 @@
-import html2pdf from "html2pdf.js";
 import type React from "react";
 
 export async function exportShipmentPdf(
@@ -18,6 +17,7 @@ export async function exportShipmentPdf(
   };
 
   try {
+    const { default: html2pdf } = await import("html2pdf.js");
     await html2pdf().set(options).from(containerRef.current).save();
   } catch (err) {
     throw new Error(err instanceof Error ? err.message : "Failed to generate shipment PDF.");
