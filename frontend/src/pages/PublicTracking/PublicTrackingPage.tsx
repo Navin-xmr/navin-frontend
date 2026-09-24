@@ -6,25 +6,8 @@ import { CheckCircle2, Circle, Package, Truck, MapPin, Flag, Share2, Copy, Alert
 import CopyToClipboard from '../../components/ui/CopyToClipboard';
 import { useLiveRegion } from '../../context/LiveRegionContext';
 import { getStatusBadgeClass } from '../../utils/shipmentStatus';
-
-interface PublicMilestone {
-  id: string;
-  label: string;
-  status: string;
-  timestamp: string;
-  location?: string;
-  isCompleted: boolean;
-  isCurrent?: boolean;
-}
-
-interface PublicShipment {
-  trackingNumber: string;
-  status: string;
-  originCity: string;
-  destinationCity: string;
-  expectedDelivery: string;
-  milestones: PublicMilestone[];
-}
+import { publicTrackingApi } from '@services/api/endpoints/publicTracking';
+import type { PublicMilestone, PublicShipment } from '@services/api/endpoints/publicTracking';
 
 const STATUS_LABELS: Record<string, string> = {
   CREATED: 'Pending',
@@ -68,8 +51,8 @@ const PublicTrackingPage: React.FC<PublicTrackingPageProps> = () => {
       try {
         setNotFound(false);
         setError(null);
-        const res = await axios.get<{ data: PublicShipment }>(`/api/public/shipments/${trackingNumber}`);
-        if (isActive) setShipment(res.data.data);
+        const data = await publicTrackingApi.getByTrackingNumber(trackingNumber);
+        if (isActive) setShipment(data);
       } catch (err: unknown) {
         if (!isActive) return;
         if (axios.isAxiosError(err) && err.response?.status === 404) {
