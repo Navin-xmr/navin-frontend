@@ -6,10 +6,12 @@ import {
 import { usersApi, invitationsApi } from '@services/api';
 import type { User as ApiUser, UserRole, Invitation } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
+import { useAuthContext } from '../../../../context/AuthContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
 import { usePagination } from '../../../../hooks/usePagination';
 import Avatar from '../../../../components/ui/Avatar';
 import Breadcrumb from '@components/common/Breadcrumb';
+import ConfirmDialog from '@components/ui/ConfirmDialog';
 
 interface MappedUser {
   id: string;
@@ -36,6 +38,7 @@ type InviteStep = 'form' | 'success';
 
 const UserManagement: React.FC = () => {
   const { addToast } = useToast();
+  const { userId: currentUserId } = useAuthContext();
   const [users, setUsers] = useState<MappedUser[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +51,7 @@ const UserManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [inviteStep, setInviteStep] = useState<InviteStep>('form');
+  const [confirmDeactivate, setConfirmDeactivate] = useState<{ id: string; name: string } | null>(null);
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('Viewer');
@@ -114,32 +118,71 @@ const UserManagement: React.FC = () => {
   );
 
   const handleRoleChange = async (id: string, newRole: UserRole) => {
+    if (id === currentUserId) {
+      addToast('You cannot change your own role.', 'error');
+      return;
+    }
     const prev = users;
     setUsers(users.map(u => u.id === id ? { ...u, role: newRole } : u));
     setActiveMenu(null);
     try {
       await usersApi.updateRole(id, newRole);
       addToast(`User role updated to ${newRole}`, 'success');
-    } catch {
+    } catch (err: unknown) {
       setUsers(prev);
-      addToast('Failed to update role', 'error');
+      const isLastAdmin =
+        (typeof err === 'object' && err !== null && 'response' in err &&
+          typeof (err as { response?: { status?: number } }).response === 'object' &&
+          (err as { response: { status: number } }).response.status === 409);
+      addToast(isLastAdmin ? 'Cannot demote the last admin.' : 'Failed to update role', 'error');
     }
   };
 
   const toggleUserStatus = async (id: string) => {
     const user = users.find(u => u.id === id);
     if (!user) return;
+
+    if (id === currentUserId) {
+      addToast('You cannot deactivate your own account.', 'error');
+      setActiveMenu(null);
+      return;
+    }
+
+    if (user.status === 'Active') {
+      // Deactivation requires confirmation
+      setConfirmDeactivate({ id, name: user.name });
+      setActiveMenu(null);
+      return;
+    }
+
+    // Activate immediately (no confirmation needed)
     const prev = users;
-    const newStatus = user.status === 'Active' ? 'Inactive' as const : 'Active' as const;
-    setUsers(users.map(u => u.id === id ? { ...u, status: newStatus } : u));
+    setUsers(users.map(u => u.id === id ? { ...u, status: 'Active' as const } : u));
     setActiveMenu(null);
     try {
-      if (newStatus === 'Inactive') { await usersApi.deactivate(id); }
-      else { await usersApi.activate(id); }
-      addToast(`User ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully`, 'success');
+      await usersApi.activate(id);
+      addToast('User activated successfully', 'success');
     } catch {
       setUsers(prev);
       addToast('Failed to update user status', 'error');
+    }
+  };
+
+  const confirmDeactivateAndExecute = async () => {
+    if (!confirmDeactivate) return;
+    const { id } = confirmDeactivate;
+    const prev = users;
+    setUsers(users.map(u => u.id === id ? { ...u, status: 'Inactive' as const } : u));
+    setActionLoading('deactivate');
+    try {
+      await usersApi.deactivate(id);
+      addToast('User deactivated successfully', 'success');
+    } catch {
+      setUsers(prev);
+      addToast('Failed to update user status', 'error');
+    } finally {
+      setActionLoading(null);
+      setConfirmDeactivate(null);
     }
   };
 
@@ -342,8 +385,10 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 border-b border-[#1E293B] align-middle">
                       <select
-                        className="bg-transparent text-slate-200 border border-transparent px-2 py-1.5 rounded-md text-sm cursor-pointer outline-none transition-all hover:bg-[#1E293B] hover:border-[#334155] focus:bg-[#1E293B] focus:border-[#334155] [&>option]:bg-[#14171E] [&>option]:text-slate-100"
+                        className={`bg-transparent text-slate-200 border border-transparent px-2 py-1.5 rounded-md text-sm outline-none transition-all hover:bg-[#1E293B] hover:border-[#334155] focus:bg-[#1E293B] focus:border-[#334155] [&>option]:bg-[#14171E] [&>option]:text-slate-100 ${user.id === currentUserId ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                         value={user.role}
+                        disabled={user.id === currentUserId}
+                        title={user.id === currentUserId ? 'You cannot change your own role' : undefined}
                         onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                       >
                         <option value="Admin">Admin</option>
@@ -372,7 +417,9 @@ const UserManagement: React.FC = () => {
                         {activeMenu === user.id && (
                           <div className="absolute right-0 top-full mt-1 bg-[#14171E] border border-[#1E293B] rounded-lg p-1 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.3)] z-10 min-w-[140px]">
                             <button
-                              className="block w-full text-left px-3 py-2 bg-transparent border-none text-slate-300 text-[13px] cursor-pointer rounded hover:bg-[#1E293B]"
+                              className="block w-full text-left px-3 py-2 bg-transparent border-none text-slate-300 text-[13px] cursor-pointer rounded hover:bg-[#1E293B] disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={user.id === currentUserId}
+                              title={user.id === currentUserId ? 'You cannot deactivate your own account' : undefined}
                               onClick={() => toggleUserStatus(user.id)}
                             >
                               {user.status === 'Active' ? 'Deactivate' : 'Activate'}
@@ -531,6 +578,17 @@ const UserManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDeactivate !== null}
+        onClose={() => setConfirmDeactivate(null)}
+        onConfirm={() => void confirmDeactivateAndExecute()}
+        title="Deactivate User"
+        message={`Are you sure you want to deactivate ${confirmDeactivate?.name ?? ''}? They will lose access immediately.`}
+        confirmLabel="Deactivate"
+        variant="danger"
+        isLoading={actionLoading === 'deactivate'}
+      />
     </div>
   );
 };
