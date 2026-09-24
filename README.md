@@ -186,3 +186,8 @@ It helps us attract more contributors and grow the community.
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+## Handsoff notes
+
+<!-- handsoff-issue-907 -->
+- #907: [Refactor] Remove the `Promise.resolve().then(() => setState(...))` workaround used in effects
