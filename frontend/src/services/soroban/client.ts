@@ -10,17 +10,12 @@ import {
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { getAddress, signTransaction } from "@stellar/freighter-api";
-import { validateNetwork } from "./config";
-import { validateNetwork, getNetworkPassphrase } from "./config";
+import { validateNetwork, getNetworkPassphrase } from "../stellar/config";
 
 const SOROBAN_RPC_URL =
   import.meta.env.VITE_SOROBAN_RPC_URL ??
   "https://soroban-testnet.stellar.org";
 const NETWORK = validateNetwork(import.meta.env.VITE_STELLAR_NETWORK);
-const NETWORK_PASSPHRASE = NETWORK === 'mainnet'
-  ? Networks.PUBLIC_NETWORK_PASSPHRASE
-  : Networks.TESTNET_NETWORK_PASSPHRASE;
 const NETWORK_PASSPHRASE = getNetworkPassphrase(NETWORK);
 
 export interface TransactionSigner {
