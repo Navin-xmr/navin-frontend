@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ShipmentVolumeTrendWidget from './ShipmentVolumeTrendWidget';
 import type { ShipmentVolumeTrendWidgetProps } from './ShipmentVolumeTrendWidget';
-import type { TimeRange, Granularity, TrendDataPoint } from './mockTrendData';
+import type { TimeRange, Granularity, TrendDataPoint } from './types';
 
 // Mock Recharts components to avoid canvas issues in tests
 vi.mock('recharts', async () => {

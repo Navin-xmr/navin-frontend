@@ -8,7 +8,7 @@ import MyTemplatesSection from '../../../Settings/sections/MyTemplatesSection';
 import { useTranslation } from 'react-i18next';
 
 const CompanySettings: React.FC = () => {
-    const { t, i18n } = useTranslation('common');
+    const { t } = useTranslation('common');
     const [profile, setProfile] = useState({ name: '', address: '' });
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -90,28 +90,10 @@ const CompanySettings: React.FC = () => {
   return (
  <div className="py-5 px-4 sm:py-8 sm:px-6 max-w-[900px] mx-auto min-h-[calc(100vh-80px)] text-[#F1F5F9]">
     <div className="mb-8">
-    <div className="flex justify-between items-center">
-        <div>
-            <h1 className="text-[28px] font-semibold mb-2">{t('settings')}</h1>
-            <p className="text-[15px] text-[#94A3B8]">
-                Manage your company profile, notifications, and connected wallets.
-            </p>
-        </div>
-
-        <select
-            value={i18n.language}
-            onChange={(e) => {
-                const lang = e.target.value;
-                i18n.changeLanguage(lang);
-                localStorage.setItem('language', lang);
-            }}
-            className="border rounded-md px-3 py-2"
-        >
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="es">Español</option>
-        </select>
-    </div>
+        <h1 className="text-[28px] font-semibold mb-2">{t('settings')}</h1>
+        <p className="text-[15px] text-[#94A3B8]">
+            Manage your company profile, notifications, and connected wallets.
+        </p>
     </div>
 
 

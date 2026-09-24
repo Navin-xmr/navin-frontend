@@ -1,8 +1,10 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { CheckCircle2, ArrowLeft, Mail } from "lucide-react";
 
 const EmailVerification: React.FC = () => {
+  const { t } = useTranslation("auth");
   const location = useLocation();
   const email = location.state?.email as string | undefined;
 
@@ -24,11 +26,11 @@ const EmailVerification: React.FC = () => {
           </div>
 
           <h2 className="text-[2rem] font-bold mb-2 bg-[linear-gradient(135deg,#fff_0%,#00DAC1_100%)] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
-            Check your email
+            {t("emailVerification.title")}
           </h2>
 
           <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem] mb-2">
-            We sent a verification link to
+            {t("emailVerification.subtitle")}
           </p>
 
           {email && (
@@ -39,23 +41,23 @@ const EmailVerification: React.FC = () => {
           )}
 
           <p className="text-[rgba(255,255,255,0.5)] text-[0.875rem] mb-8 leading-relaxed">
-            Click the link in your inbox to verify your email address and activate your company account. The link expires in 24 hours.
+            {t("emailVerification.description")}
           </p>
 
           <Link
             to="/login"
             className="w-full bg-[linear-gradient(135deg,#00DAC1_0%,#008B7B_100%)] text-black border-none rounded-xl py-4 text-base font-bold no-underline transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 hover:shadow-[0_4px_15px_rgba(0,218,193,0.4)]"
           >
-            <ArrowLeft size={20} /> Back to Login
+            <ArrowLeft size={20} /> {t("emailVerification.backToLogin")}
           </Link>
 
           <p className="text-[rgba(255,255,255,0.4)] text-[0.8rem] mt-6">
-            Didn't receive it?{" "}
+            {t("emailVerification.didntReceive")}{" "}
             <Link
               to="/register/company"
               className="text-[#00DAC1] no-underline font-semibold hover:underline"
             >
-              Try again
+              {t("emailVerification.tryAgain")}
             </Link>
           </p>
         </div>

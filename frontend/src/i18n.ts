@@ -66,10 +66,6 @@ import esSettings from "./locales/es/settings.json";
 import esLanding from "./locales/es/landing.json";
 
 
-const savedLanguage =
-  typeof window !== "undefined"
-    ? localStorage.getItem("language") || "en"
-    : "en";
 i18n.use(initReactI18next).init({
   lng: getInitialLanguage(),
   fallbackLng: "en",
@@ -110,6 +106,13 @@ i18n.use(initReactI18next).init({
 
   partialBundledLanguages: true,
 });
+
+if (typeof document !== "undefined") {
+  document.documentElement.lang = i18n.language || "en";
+  i18n.on("languageChanged", (lng: string) => {
+    document.documentElement.lang = lng;
+  });
+}
 
 // Lazy-load the active language's namespaces when it is not the bundled fallback.
 const activeLanguage = i18n.language as SupportedLanguage;

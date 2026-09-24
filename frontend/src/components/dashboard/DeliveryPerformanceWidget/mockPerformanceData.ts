@@ -3,19 +3,8 @@
  * Provides KPI summaries and 30-day trend series for each metric.
  */
 
-export type TimePeriod = '7d' | '30d' | '90d';
+import type { TimePeriod, KpiKey, KpiSummary } from './types';
 
-export type KpiKey = 'onTimeRate' | 'avgDeliveryTime' | 'exceptionRate' | 'firstAttemptRate';
-
-export interface KpiSummary {
-  key: KpiKey;
-  label: string;
-  unit: string;
-  current: number;
-  previous: number;
-  /** 30-day trend series (oldest -> newest). */
-  trend: { date: string; value: number }[];
-}
 
 /**
  * Generate a deterministic-ish 30-day trend series around a baseline value.

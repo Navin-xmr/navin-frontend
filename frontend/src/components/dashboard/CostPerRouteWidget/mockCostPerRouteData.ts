@@ -1,21 +1,4 @@
-export interface RouteShipment {
-  id: string;
-  trackingNumber: string;
-  cost: number;
-  revenue: number;
-}
-
-export interface RouteCostData {
-  route: string;
-  origin: string;
-  destination: string;
-  base: number;
-  fuel: number;
-  customs: number;
-  insurance: number;
-  revenue: number;
-  shipments: RouteShipment[];
-}
+import type { RouteShipment, RouteCostData } from './types';
 
 export const MOCK_ROUTE_COST_DATA: RouteCostData[] = [
   {

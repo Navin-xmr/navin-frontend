@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from '../../common/Modal/Modal';
-import type { RouteCostData } from './mockCostPerRouteData';
+import type { RouteCostData } from './types';
 import { formatCurrency, getRouteMarginPercent, getRouteTotalCost, getMarginColorClass } from './costPerRouteUtils';
 
 interface RouteShipmentsModalProps {
