@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { decodeJwt } from 'jose';
-import type { UserRole } from '@utils/rbac';
+import { toUserRole, type UserRole } from '@utils/rbac';
 
 const AUTH_STORAGE_KEY = 'authToken';
 const AUTH_CHECK_DELAY_MS = 150;
@@ -16,7 +16,7 @@ function parseToken(token: string): { role: UserRole | null; userId: string | nu
   try {
     const payload = decodeJwt(token);
     const expired = typeof payload.exp === 'number' && Date.now() / 1000 > payload.exp;
-    const role = (payload.role as UserRole) || null;
+    const role = toUserRole(payload.role);
     const userId = (payload.sub ?? (payload.userId as string | undefined) ?? null) as string | null;
     return { role, userId, expired, valid: true };
   } catch {
@@ -46,6 +46,16 @@ export function useAuth(): AuthState {
 
       if (!parsed.valid || parsed.expired) {
         localStorage.removeItem(AUTH_STORAGE_KEY);
+        setIsAuthenticated(false);
+        setRole(null);
+        setUserId(null);
+      } else if (!parsed.role) {
+        // A structurally valid token whose role this build does not recognise.
+        // Nothing is authorised for it, so it must not be reported as an
+        // authenticated session — that is what would let it reach a guarded
+        // route. The token stays in storage on purpose: it is not malformed,
+        // and clearing it would sign the user out of an account whose role
+        // this frontend is simply behind on.
         setIsAuthenticated(false);
         setRole(null);
         setUserId(null);

@@ -124,6 +124,54 @@ describe('useAuth', () => {
     expect(result.current.userId).toBeNull();
   });
 
+  it('treats an unrecognised role as unauthenticated and leaves the token alone', () => {
+    const token = makeToken({ sub: 'user-1', role: 'admin', exp: Math.floor(Date.now() / 1000) + 3600 });
+    localStorage.setItem(AUTH_STORAGE_KEY, token);
+
+    const { result } = renderHook(() => useAuth());
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(result.current).toEqual({
+      isLoading: false,
+      isAuthenticated: false,
+      role: null,
+      userId: null,
+    });
+    // Unrecognised, not malformed: signing the user out of it would be wrong.
+    expect(localStorage.getItem(AUTH_STORAGE_KEY)).toBe(token);
+  });
+
+  it('normalises a role the backend sends in a different case', () => {
+    const token = makeToken({ sub: 'user-1', role: 'COMPANY', exp: Math.floor(Date.now() / 1000) + 3600 });
+    localStorage.setItem(AUTH_STORAGE_KEY, token);
+
+    const { result } = renderHook(() => useAuth());
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.role).toBe('company');
+  });
+
+  it('treats a token without a role claim as unauthenticated', () => {
+    const token = makeToken({ sub: 'user-1', exp: Math.floor(Date.now() / 1000) + 3600 });
+    localStorage.setItem(AUTH_STORAGE_KEY, token);
+
+    const { result } = renderHook(() => useAuth());
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.role).toBeNull();
+  });
+
   it('starts with loading set to true', () => {
     const { result } = renderHook(() => useAuth());
 
