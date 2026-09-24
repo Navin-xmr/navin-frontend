@@ -1,4 +1,5 @@
 import { callContractMethod, readContractState, toScVal } from "./client";
+import type { TransactionSigner } from "./client";
 
 const ESCROW_CONTRACT_ID =
   import.meta.env.VITE_ESCROW_CONTRACT_ID ?? "";
@@ -20,11 +21,12 @@ export const escrowContract = {
     payer: string,
     payee: string,
     amount: number,
+    signer: TransactionSigner,
   ): Promise<string> => {
     if (!ESCROW_CONTRACT_ID) {
       throw new Error("VITE_ESCROW_CONTRACT_ID is not configured");
     }
-    return callContractMethod(ESCROW_CONTRACT_ID, "initialize", [
+    return callContractMethod(ESCROW_CONTRACT_ID, "initialize", signer, [
       toScVal(escrowId),
       toScVal(payer),
       toScVal(payee),
@@ -35,21 +37,25 @@ export const escrowContract = {
   confirmMilestone: async (
     escrowId: string,
     milestoneId: string,
+    signer: TransactionSigner,
   ): Promise<string> => {
     if (!ESCROW_CONTRACT_ID) {
       throw new Error("VITE_ESCROW_CONTRACT_ID is not configured");
     }
-    return callContractMethod(ESCROW_CONTRACT_ID, "confirm_milestone", [
+    return callContractMethod(ESCROW_CONTRACT_ID, "confirm_milestone", signer, [
       toScVal(escrowId),
       toScVal(milestoneId),
     ]);
   },
 
-  releasePayment: async (escrowId: string): Promise<string> => {
+  releasePayment: async (
+    escrowId: string,
+    signer: TransactionSigner,
+  ): Promise<string> => {
     if (!ESCROW_CONTRACT_ID) {
       throw new Error("VITE_ESCROW_CONTRACT_ID is not configured");
     }
-    return callContractMethod(ESCROW_CONTRACT_ID, "release", [
+    return callContractMethod(ESCROW_CONTRACT_ID, "release", signer, [
       toScVal(escrowId),
     ]);
   },

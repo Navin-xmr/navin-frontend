@@ -1,15 +1,11 @@
-const VALID_NETWORKS = ['testnet', 'mainnet'] as const;
-
-export type StellarNetwork = typeof VALID_NETWORKS[number];
-
 import { Networks } from '@stellar/stellar-sdk';
 
 const VALID_NETWORKS = ['testnet', 'mainnet'] as const;
 export type StellarNetwork = typeof VALID_NETWORKS[number];
 
 export const NETWORK_PASSPHRASES: Record<StellarNetwork, string> = {
-  testnet: Networks.TESTNET_NETWORK_PASSPHRASE,
-  mainnet: Networks.PUBLIC_NETWORK_PASSPHRASE,
+  testnet: Networks.TESTNET,
+  mainnet: Networks.PUBLIC,
 };
 
 export function validateNetwork(value: string | undefined): StellarNetwork {
