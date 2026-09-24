@@ -143,7 +143,12 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
         </div>
       </div>
 
-      {viewMode === 'chart' ? (
+      {sortedRoutes.length === 0 ? (
+        <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed border-[#1e293b] p-6 text-center text-[#94a3b8]">
+          <p className="text-sm font-medium">No route cost data available</p>
+          <p className="mt-1 text-xs text-[#64748b]">Route cost breakdown will appear here once shipments are created.</p>
+        </div>
+      ) : viewMode === 'chart' ? (
         <>
           <div className="mb-3 flex flex-wrap gap-3">
             {COST_SEGMENTS.map((segment) => (

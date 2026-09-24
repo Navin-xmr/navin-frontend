@@ -54,10 +54,11 @@ describe('GlobalSearch', () => {
     navigateMock.mockReset();
     getAllMock.mockReset();
     localStorage.clear();
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 
   afterEach(() => {
+    vi.runOnlyPendingTimers();
     vi.useRealTimers();
   });
 

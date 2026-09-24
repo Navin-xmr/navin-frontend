@@ -40,7 +40,7 @@ const CustomerDashboard = lazy(() => import('./pages/dashboard/Customer/Customer
 const AnomalyAlertPanel = lazy(() => import('./pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel'));
 const Shipments = lazy(() => import('./pages/Shipments/Shipments'));
 const CreateShipment = lazy(() => import('./pages/dashboard/Company/CreateShipment/CreateShipment'));
-const CustomerProfile = lazy(() => import('./pages/dashboard/Customer/Profile/CustomerProfile'));
+const ProfileDispatcher = lazy(() => import('./pages/dashboard/ProfileDispatcher/ProfileDispatcher'));
 const ShipmentDetail = lazy(() => import('./pages/ShipmentDetail/ShipmentDetail'));
 const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainLedger'));
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
@@ -113,7 +113,7 @@ const router = createBrowserRouter([
           { path: '/dashboard/settings', element: S(<Settings />) },
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
-          { path: '/dashboard/profile', element: S(<CustomerProfile />) },
+          { path: '/dashboard/profile', element: S(<ProfileDispatcher />) },
           { path: '/dashboard/*', element: <NotFoundPage /> },
           { path: '/dashboard/whats-new', element: S(<WhatsNewPage />) },
         ],
