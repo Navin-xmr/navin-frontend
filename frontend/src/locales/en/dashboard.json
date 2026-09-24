@@ -134,5 +134,299 @@
       "humidityBelowMin": "Humidity Below Min",
       "batteryLow": "Battery Low"
     }
+  },
+  "settlements": {
+    "title": "Settlements",
+    "subtitle": "Track escrow releases and settlement outcomes",
+    "filterAriaLabel": "Filter by settlement status",
+    "allStatus": "All Status",
+    "sortByDate": "Sort by date {{order}}",
+    "newestFirst": "newest first",
+    "oldestFirst": "oldest first",
+    "date": "Date",
+    "newest": "Newest",
+    "oldest": "Oldest",
+    "totalSettled": "Total settled",
+    "pending": "Pending",
+    "inEscrow": "In escrow",
+    "totalRecords": "Total records",
+    "table": {
+      "date": "Date",
+      "shipmentId": "Shipment ID",
+      "amount": "Amount",
+      "status": "Status",
+      "stellarTx": "Stellar Tx",
+      "actions": "Actions",
+      "release": "Release",
+      "dispute": "Dispute",
+      "releasePayment": "Release Payment"
+    },
+    "mobile": {
+      "shipment": "Shipment",
+      "amount": "Amount",
+      "tx": "Tx"
+    },
+    "pagination": {
+      "pageOf": "Page {{current}} of {{total}}",
+      "prev": "Previous page",
+      "next": "Next page"
+    },
+    "modal": {
+      "title": "Escrow Details",
+      "close": "Close",
+      "verifyOnBlockchain": "Verify on Blockchain",
+      "loading": "Loading escrow information...",
+      "shipment": "Shipment",
+      "amount": "Amount",
+      "status": "Status",
+      "stellarTx": "Stellar Tx",
+      "releaseConditions": "Release conditions",
+      "releasedAt": "Released at",
+      "disputedAt": "Disputed at",
+      "disputeReason": "Dispute reason",
+      "payer": "Payer",
+      "payee": "Payee"
+    },
+    "empty": {
+      "title": "No Settlements Found",
+      "description": "No settlement records match your criteria. Settlements will appear here once escrow contracts are triggered on the Stellar blockchain."
+    },
+    "error": {
+      "title": "Failed to load settlements",
+      "retry": "Retry"
+    },
+    "statusUpdated": "Settlement status updated to {{status}}"
+  },
+  "paymentHistory": {
+    "title": "Payment History",
+    "subtitle": "Track all payment transactions on the blockchain",
+    "filterAriaLabel": "Filter by payment status",
+    "allStatus": "All Status",
+    "sortByDate": "Sort by date {{order}}",
+    "newestFirst": "newest first",
+    "oldestFirst": "oldest first",
+    "date": "Date",
+    "newest": "Newest",
+    "oldest": "Oldest",
+    "table": {
+      "shipment": "Shipment",
+      "date": "Date",
+      "amount": "Amount",
+      "status": "Status",
+      "txHash": "Tx Hash",
+      "actions": "Actions",
+      "view": "View"
+    },
+    "modal": {
+      "title": "Payment Details",
+      "closeAriaLabel": "Close payment details",
+      "shipmentId": "Shipment ID",
+      "date": "Date",
+      "amount": "Amount",
+      "status": "Status",
+      "txHash": "Tx Hash",
+      "close": "Close",
+      "verifyOnChain": "Verify on Chain"
+    },
+    "empty": {
+      "title": "No payments found",
+      "description": "Your escrow settlements will appear here once created."
+    },
+    "error": {
+      "title": "Failed to load payment history",
+      "retry": "Retry"
+    },
+    "summary": {
+      "totalPayments": "Total Payments",
+      "totalValue": "Total Value",
+      "pendingPayments": "Pending Payments",
+      "releasedPayments": "Released Payments"
+    }
+  },
+  "blockchainLedger": {
+    "title": "Blockchain Ledger",
+    "subtitle": "Immutable on-chain milestone history for all shipment events",
+    "refresh": "Refresh",
+    "refreshAriaLabel": "Refresh ledger data",
+    "stats": {
+      "totalBlocks": "Total Blocks",
+      "network": "Network",
+      "status": "Status",
+      "syncing": "Syncing",
+      "upToDate": "Up to date",
+      "stellarMainnet": "Stellar Mainnet",
+      "stellarTestnet": "Stellar Testnet"
+    },
+    "filter": {
+      "label": "Filter:",
+      "allEvents": "All Events"
+    },
+    "table": {
+      "ariaLabel": "Blockchain ledger events table",
+      "blockNumber": "Block #",
+      "timestamp": "Timestamp",
+      "shipmentRef": "Shipment Ref",
+      "milestone": "Milestone",
+      "txHash": "Tx Hash",
+      "status": "Status",
+      "verified": "Verified",
+      "pending": "Pending"
+    },
+    "empty": {
+      "title": "No blocks found",
+      "description": "No on-chain events match your current filter. Try selecting a different milestone type or clearing the filter."
+    },
+    "error": {
+      "title": "Error loading ledger",
+      "default": "Failed to load blockchain ledger data. Please try again."
+    },
+    "pagination": {
+      "prev": "Previous",
+      "prevAria": "Previous page",
+      "next": "Next",
+      "nextAria": "Load next page",
+      "pageOfTotal": "Page {{page}} · {{total}} total blocks",
+      "pageOnly": "Page {{page}}"
+    }
+  },
+  "userManagement": {
+    "title": "Team Management",
+    "subtitle": "Manage access, roles, and invite new members to your organization.",
+    "inviteMember": "Invite Member",
+    "pendingInvitations": "Pending Invitations",
+    "loading": "Loading…",
+    "loadingTeamMembers": "Loading team members...",
+    "resend": "Resend",
+    "revoke": "Revoke",
+    "searchPlaceholder": "Search by name or email...",
+    "allRoles": "All Roles",
+    "admin": "Admin",
+    "manager": "Manager",
+    "viewer": "Viewer",
+    "table": {
+      "user": "User",
+      "role": "Role",
+      "status": "Status",
+      "lastLogin": "Last Login",
+      "actions": "Actions",
+      "deactivate": "Deactivate",
+      "activate": "Activate",
+      "edit": "Edit",
+      "noUsersFound": "No users found matching your criteria."
+    },
+    "pagination": {
+      "showing": "Showing {{start}} to {{end}} of {{total}} entries",
+      "prevAria": "Previous page",
+      "nextAria": "Next page"
+    },
+    "modal": {
+      "title": "Invite Team Member",
+      "successTitle": "Invitation Sent!",
+      "successBody": "An invitation has been sent to {{email}}. They'll receive an email with a link to create their account.",
+      "close": "Close",
+      "inviteAnother": "Invite Another",
+      "emailLabel": "Email Address *",
+      "roleLabel": "Role *",
+      "adminDesc": "Admin — Full access",
+      "managerDesc": "Manager — Edit & View",
+      "viewerDesc": "Viewer — Read only",
+      "messageLabel": "Personal Message (optional)",
+      "messagePlaceholder": "Add a personal note to the invitation email…",
+      "cancel": "Cancel",
+      "sendInvite": "Send Invite",
+      "sending": "Sending…"
+    },
+    "confirmDialog": {
+      "title": "Deactivate User",
+      "message": "Are you sure you want to deactivate {{name}}? They will lose access immediately.",
+      "confirm": "Deactivate"
+    },
+    "toasts": {
+      "ownRoleError": "You cannot change your own role.",
+      "roleUpdated": "User role updated to {{role}}",
+      "lastAdminError": "Cannot demote the last admin.",
+      "roleUpdateFailed": "Failed to update role",
+      "ownAccountDeactivateError": "You cannot deactivate your own account.",
+      "userActivated": "User activated successfully",
+      "statusUpdateFailed": "Failed to update user status",
+      "userDeactivated": "User deactivated successfully",
+      "inviteSentFailed": "Failed to send invitation",
+      "inviteResent": "Invitation resent to {{email}}",
+      "inviteResentFailed": "Failed to resend invitation",
+      "inviteRevoked": "Invitation to {{email}} revoked",
+      "inviteRevokeFailed": "Failed to revoke invitation"
+    },
+    "error": {
+      "title": "Failed to load users",
+      "retry": "Retry"
+    }
+  },
+  "calendarView": {
+    "dashboard": "Dashboard",
+    "calendar": "Calendar",
+    "prevMonthAria": "Previous month",
+    "nextMonthAria": "Next month",
+    "today": "Today",
+    "loading": "Loading shipments…",
+    "noShipments": "No shipments expected.",
+    "days": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    }
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "description": "The page you're looking for doesn't exist or may have been moved.",
+    "dashboard": "Go to Dashboard",
+    "home": "Go Home"
+  },
+  "publicTracking": {
+    "appName": "Navin",
+    "loadingAria": "Loading shipment",
+    "loadingText": "Loading shipment…",
+    "notFoundTitle": "Shipment Not Found",
+    "notFoundMessage": "No shipment matches tracking number {{trackingNumber}}. Please check the number and try again.",
+    "createAccount": "Create a Navin Account",
+    "errorTitle": "Unable to Load Shipment",
+    "tryAgain": "Try Again",
+    "trackingNumber": "Tracking Number",
+    "copy": "Copy",
+    "copyLink": "Copy tracking link",
+    "publicSummary": "Public Summary",
+    "publicSummaryDesc": "Share this read-only page with customers or partners for status, route, ETA, and milestone updates.",
+    "shareLink": "Share link",
+    "from": "From",
+    "to": "To",
+    "expectedDelivery": "Expected Delivery: ",
+    "trackingTimeline": "Tracking Timeline",
+    "poweredBy": "Powered by Navin Logistics",
+    "ctaDesc": "Blockchain-verified shipment tracking. Create an account to access full analytics, IoT data, and automated settlements.",
+    "createFreeAccount": "Create a Free Account",
+    "shareOpened": "Share sheet opened.",
+    "linkCopied": "Public tracking link copied.",
+    "shareFallback": "Copy the page URL from your browser to share this tracking summary.",
+    "announceFound": "Shipment {{number}} found. Status: {{status}}.",
+    "announceNotFound": "No shipment found for tracking number {{number}}.",
+    "noTrackingNumber": "No tracking number was provided.",
+    "defaultLookupError": "Something went wrong while looking up this shipment. Please try again."
   }
 }

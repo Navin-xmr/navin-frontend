@@ -134,5 +134,299 @@
       "humidityBelowMin": "Humidité sous le minimum",
       "batteryLow": "Batterie faible"
     }
+  },
+  "settlements": {
+    "title": "Règlements",
+    "subtitle": "Suivez les libérations d'entiercement et les résultats des règlements",
+    "filterAriaLabel": "Filtrer par statut de règlement",
+    "allStatus": "Tous les statuts",
+    "sortByDate": "Trier par date {{order}}",
+    "newestFirst": "plus récent d'abord",
+    "oldestFirst": "plus ancien d'abord",
+    "date": "Date",
+    "newest": "Plus récent",
+    "oldest": "Plus ancien",
+    "totalSettled": "Total réglé",
+    "pending": "En attente",
+    "inEscrow": "Sous séquestre",
+    "totalRecords": "Total des enregistrements",
+    "table": {
+      "date": "Date",
+      "shipmentId": "ID de l'expédition",
+      "amount": "Montant",
+      "status": "Statut",
+      "stellarTx": "Tx Stellar",
+      "actions": "Actions",
+      "release": "Libérer",
+      "dispute": "Contester",
+      "releasePayment": "Libérer le paiement"
+    },
+    "mobile": {
+      "shipment": "Expédition",
+      "amount": "Montant",
+      "tx": "Tx"
+    },
+    "pagination": {
+      "pageOf": "Page {{current}} sur {{total}}",
+      "prev": "Page précédente",
+      "next": "Page suivante"
+    },
+    "modal": {
+      "title": "Détails du séquestre",
+      "close": "Fermer",
+      "verifyOnBlockchain": "Vérifier sur la Blockchain",
+      "loading": "Chargement des informations du séquestre...",
+      "shipment": "Expédition",
+      "amount": "Montant",
+      "status": "Statut",
+      "stellarTx": "Tx Stellar",
+      "releaseConditions": "Conditions de libération",
+      "releasedAt": "Libéré le",
+      "disputedAt": "Contesté le",
+      "disputeReason": "Motif de contestation",
+      "payer": "Payeur",
+      "payee": "Bénéficiaire"
+    },
+    "empty": {
+      "title": "Aucun règlement trouvé",
+      "description": "Aucun enregistrement ne correspond à vos critères. Les règlements apparaîtront ici une fois les contrats d'entiercement déclenchés sur la blockchain Stellar."
+    },
+    "error": {
+      "title": "Échec du chargement des règlements",
+      "retry": "Réessayer"
+    },
+    "statusUpdated": "Statut du règlement mis à jour à {{status}}"
+  },
+  "paymentHistory": {
+    "title": "Historique des paiements",
+    "subtitle": "Suivez toutes les transactions de paiement sur la blockchain",
+    "filterAriaLabel": "Filtrer par statut de paiement",
+    "allStatus": "Tous les statuts",
+    "sortByDate": "Trier par date {{order}}",
+    "newestFirst": "plus récent d'abord",
+    "oldestFirst": "plus ancien d'abord",
+    "date": "Date",
+    "newest": "Plus récent",
+    "oldest": "Plus ancien",
+    "table": {
+      "shipment": "Expédition",
+      "date": "Date",
+      "amount": "Montant",
+      "status": "Statut",
+      "txHash": "Hachage Tx",
+      "actions": "Actions",
+      "view": "Voir"
+    },
+    "modal": {
+      "title": "Détails du paiement",
+      "closeAriaLabel": "Fermer les détails du paiement",
+      "shipmentId": "ID de l'expédition",
+      "date": "Date",
+      "amount": "Montant",
+      "status": "Statut",
+      "txHash": "Hachage Tx",
+      "close": "Fermer",
+      "verifyOnChain": "Vérifier sur la chaîne"
+    },
+    "empty": {
+      "title": "Aucun paiement trouvé",
+      "description": "Vos règlements d'entiercement apparaîtront ici une fois créés."
+    },
+    "error": {
+      "title": "Échec du chargement de l'historique des paiements",
+      "retry": "Réessayer"
+    },
+    "summary": {
+      "totalPayments": "Paiements totaux",
+      "totalValue": "Valeur totale",
+      "pendingPayments": "Paiements en attente",
+      "releasedPayments": "Paiements libérés"
+    }
+  },
+  "blockchainLedger": {
+    "title": "Grand livre Blockchain",
+    "subtitle": "Historique immuable des jalons pour tous les événements d'expédition",
+    "refresh": "Actualiser",
+    "refreshAriaLabel": "Actualiser les données du grand livre",
+    "stats": {
+      "totalBlocks": "Total des blocs",
+      "network": "Réseau",
+      "status": "Statut",
+      "syncing": "Synchronisation",
+      "upToDate": "À jour",
+      "stellarMainnet": "Stellar Mainnet",
+      "stellarTestnet": "Stellar Testnet"
+    },
+    "filter": {
+      "label": "Filtre :",
+      "allEvents": "Tous les événements"
+    },
+    "table": {
+      "ariaLabel": "Tableau des événements du grand livre blockchain",
+      "blockNumber": "Bloc #",
+      "timestamp": "Horodatage",
+      "shipmentRef": "Réf. expédition",
+      "milestone": "Jalon",
+      "txHash": "Hachage Tx",
+      "status": "Statut",
+      "verified": "Vérifié",
+      "pending": "En attente"
+    },
+    "empty": {
+      "title": "Aucun bloc trouvé",
+      "description": "Aucun événement ne correspond à votre filtre actuel. Essayez de sélectionner un autre type de jalon ou effacez le filtre."
+    },
+    "error": {
+      "title": "Erreur lors du chargement du grand livre",
+      "default": "Échec du chargement des données du grand livre. Veuillez réessayer."
+    },
+    "pagination": {
+      "prev": "Précédent",
+      "prevAria": "Page précédente",
+      "next": "Suivant",
+      "nextAria": "Charger la page suivante",
+      "pageOfTotal": "Page {{page}} · {{total}} blocs au total",
+      "pageOnly": "Page {{page}}"
+    }
+  },
+  "userManagement": {
+    "title": "Gestion d'équipe",
+    "subtitle": "Gérez les accès, les rôles et invitez de nouveaux membres dans votre organisation.",
+    "inviteMember": "Inviter un membre",
+    "pendingInvitations": "Invitations en attente",
+    "loading": "Chargement…",
+    "loadingTeamMembers": "Chargement des membres de l'équipe...",
+    "resend": "Renvoyer",
+    "revoke": "Révoquer",
+    "searchPlaceholder": "Rechercher par nom ou email...",
+    "allRoles": "Tous les rôles",
+    "admin": "Administrateur",
+    "manager": "Gestionnaire",
+    "viewer": "Lecteur",
+    "table": {
+      "user": "Utilisateur",
+      "role": "Rôle",
+      "status": "Statut",
+      "lastLogin": "Dernière connexion",
+      "actions": "Actions",
+      "deactivate": "Désactiver",
+      "activate": "Activer",
+      "edit": "Modifier",
+      "noUsersFound": "Aucun utilisateur trouvé correspondant à vos critères."
+    },
+    "pagination": {
+      "showing": "Affichage de {{start}} à {{end}} sur {{total}} entrées",
+      "prevAria": "Page précédente",
+      "nextAria": "Page suivante"
+    },
+    "modal": {
+      "title": "Inviter un membre de l'équipe",
+      "successTitle": "Invitation envoyée !",
+      "successBody": "Une invitation a été envoyée à {{email}}. Il recevra un email avec un lien pour créer son compte.",
+      "close": "Fermer",
+      "inviteAnother": "Inviter un autre",
+      "emailLabel": "Adresse e-mail *",
+      "roleLabel": "Rôle *",
+      "adminDesc": "Administrateur — Accès complet",
+      "managerDesc": "Gestionnaire — Modifier & voir",
+      "viewerDesc": "Lecteur — Lecture seule",
+      "messageLabel": "Message personnalisé (facultatif)",
+      "messagePlaceholder": "Ajoutez une note personnelle à l'email d'invitation…",
+      "cancel": "Annuler",
+      "sendInvite": "Envoyer l'invitation",
+      "sending": "Envoi en cours…"
+    },
+    "confirmDialog": {
+      "title": "Désactiver l'utilisateur",
+      "message": "Êtes-vous sûr de vouloir désactiver {{name}} ? Il perdra immédiatement ses accès.",
+      "confirm": "Désactiver"
+    },
+    "toasts": {
+      "ownRoleError": "Vous ne pouvez pas modifier votre propre rôle.",
+      "roleUpdated": "Rôle mis à jour en {{role}}",
+      "lastAdminError": "Impossible de rétrograder le dernier administrateur.",
+      "roleUpdateFailed": "Échec de la mise à jour du rôle",
+      "ownAccountDeactivateError": "Vous ne pouvez pas désactiver votre propre compte.",
+      "userActivated": "Utilisateur activé avec succès",
+      "statusUpdateFailed": "Échec de la mise à jour du statut",
+      "userDeactivated": "Utilisateur désactivé avec succès",
+      "inviteSentFailed": "Échec de l'envoi de l'invitation",
+      "inviteResent": "Invitation renvoyée à {{email}}",
+      "inviteResentFailed": "Échec du renvoi de l'invitation",
+      "inviteRevoked": "Invitation à {{email}} révoquée",
+      "inviteRevokeFailed": "Échec de la révocation de l'invitation"
+    },
+    "error": {
+      "title": "Échec du chargement des utilisateurs",
+      "retry": "Réessayer"
+    }
+  },
+  "calendarView": {
+    "dashboard": "Tableau de bord",
+    "calendar": "Calendrier",
+    "prevMonthAria": "Mois précédent",
+    "nextMonthAria": "Mois suivant",
+    "today": "Aujourd'hui",
+    "loading": "Chargement des expéditions…",
+    "noShipments": "Aucune expédition prévue.",
+    "days": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    },
+    "months": {
+      "january": "Janvier",
+      "february": "Février",
+      "march": "Mars",
+      "april": "Avril",
+      "may": "Mai",
+      "june": "Juin",
+      "july": "Juillet",
+      "august": "Août",
+      "september": "Septembre",
+      "october": "Octobre",
+      "november": "Novembre",
+      "december": "Décembre"
+    }
+  },
+  "notFound": {
+    "title": "Page non trouvée",
+    "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "dashboard": "Aller au tableau de bord",
+    "home": "Aller à l'accueil"
+  },
+  "publicTracking": {
+    "appName": "Navin",
+    "loadingAria": "Chargement de l'expédition",
+    "loadingText": "Chargement de l'expédition…",
+    "notFoundTitle": "Expédition non trouvée",
+    "notFoundMessage": "Aucune expédition ne correspond au numéro de suivi {{trackingNumber}}. Veuillez vérifier le numéro et réessayer.",
+    "createAccount": "Créer un compte Navin",
+    "errorTitle": "Impossible de charger l'expédition",
+    "tryAgain": "Réessayer",
+    "trackingNumber": "Numéro de suivi",
+    "copy": "Copier",
+    "copyLink": "Copier le lien de suivi",
+    "publicSummary": "Résumé public",
+    "publicSummaryDesc": "Partagez cette page en lecture seule avec vos clients ou partenaires pour consulter le statut, l'itinéraire, l'ETA et les jalons.",
+    "shareLink": "Partager le lien",
+    "from": "De",
+    "to": "À",
+    "expectedDelivery": "Livraison prévue : ",
+    "trackingTimeline": "Chronologie de suivi",
+    "poweredBy": "Propulsé par Navin Logistics",
+    "ctaDesc": "Suivi des expéditions vérifié sur la blockchain. Créez un compte pour accéder aux analyses complètes, données IoT et règlements automatisés.",
+    "createFreeAccount": "Créer un compte gratuit",
+    "shareOpened": "Feuille de partage ouverte.",
+    "linkCopied": "Lien de suivi public copié.",
+    "shareFallback": "Copiez l'URL de la page depuis votre navigateur pour partager ce résumé.",
+    "announceFound": "Expédition {{number}} trouvée. Statut : {{status}}.",
+    "announceNotFound": "Aucune expédition trouvée pour le numéro de suivi {{number}}.",
+    "noTrackingNumber": "Aucun numéro de suivi n'a été fourni.",
+    "defaultLookupError": "Une erreur est survenue lors de la recherche de cette expédition. Veuillez réessayer."
   }
 }

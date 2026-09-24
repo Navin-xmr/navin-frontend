@@ -437,6 +437,8 @@ describe('UserManagement', () => {
       ),
     );
     await waitFor(() => expect(screen.getByText('User 9')).toBeInTheDocument());
+  });
+
   // ── Self-guard (#889) ─────────────────────────────────────────────────────
 
   it('disables the role select for the currently signed-in user', async () => {
