@@ -11,12 +11,15 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { getAddress, signTransaction } from "@stellar/freighter-api";
+import { validateNetwork } from "./config";
 
 const SOROBAN_RPC_URL =
   import.meta.env.VITE_SOROBAN_RPC_URL ??
   "https://soroban-testnet.stellar.org";
-const NETWORK_PASSPHRASE =
-  import.meta.env.VITE_STELLAR_NETWORK ?? Networks.TESTNET;
+const NETWORK = validateNetwork(import.meta.env.VITE_STELLAR_NETWORK);
+const NETWORK_PASSPHRASE = NETWORK === 'mainnet'
+  ? Networks.PUBLIC_NETWORK_PASSPHRASE
+  : Networks.TESTNET_NETWORK_PASSPHRASE;
 
 let server: rpc.Server | null = null;
 
@@ -33,6 +36,9 @@ export type ContractMethod =
   | "release"
   | "get_state"
   | "record_milestone";
+
+const TX_POLL_TIMEOUT_MS = 120000;
+const TX_POLL_INTERVAL_MS = 1000;
 
 export async function callContractMethod(
   contractId: string,
@@ -61,8 +67,30 @@ export async function callContractMethod(
 
   const signedTx = TransactionBuilder.fromXDR(signedTxXdr, NETWORK_PASSPHRASE);
 
-  const result = await sorobanServer.sendTransaction(signedTx);
-  return result.hash;
+  const submitResult = await sorobanServer.sendTransaction(signedTx);
+
+  if (submitResult.status === 'ERROR') {
+    throw new Error(`Transaction submission failed: ${submitResult.errorResultXdr}`);
+  }
+
+  const hash = submitResult.hash;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < TX_POLL_TIMEOUT_MS) {
+    const txResult = await sorobanServer.getTransaction(hash);
+
+    if (txResult.status === 'SUCCESS') {
+      return hash;
+    }
+
+    if (txResult.status === 'FAILED') {
+      throw new Error(`Transaction failed: ${txResult.resultXdr}`);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, TX_POLL_INTERVAL_MS));
+  }
+
+  throw new Error(`Transaction polling timeout after ${TX_POLL_TIMEOUT_MS}ms`);
 }
 
 export async function readContractState<T>(
@@ -84,8 +112,12 @@ export async function readContractState<T>(
 
   const result = await sorobanServer.simulateTransaction(tx);
 
+  if (rpc.Api.isSimulationError(result)) {
+    throw new Error(`Simulation error for ${method}: ${result.error}`);
+  }
+
   if (!("result" in result) || !result.result) {
-    throw new Error(`Simulation failed for ${method}`);
+    throw new Error(`Simulation failed for ${method}: no result returned`);
   }
 
   return scValToNative(result.result.retval) as T;

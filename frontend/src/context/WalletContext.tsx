@@ -8,10 +8,11 @@ import React, {
 } from 'react';
 import type { WalletAdapter } from '../services/stellar/adapters/types';
 import { WALLET_ADAPTERS } from '../services/stellar/adapters';
+import { validateNetwork } from '../services/stellar/config';
 
 const LAST_ADAPTER_KEY = 'navin-last-wallet';
 const PUBLIC_KEY_KEY = 'navin-wallet-public-key';
-const NETWORK = (import.meta.env.VITE_STELLAR_NETWORK as 'testnet' | 'mainnet') ?? 'testnet';
+const NETWORK = validateNetwork(import.meta.env.VITE_STELLAR_NETWORK);
 const STELLAR_PUBLIC_KEY_PATTERN = /^G[A-Z2-7]{55}$/;
 
 export interface WalletContextValue {
@@ -84,10 +85,24 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     [adapter],
   );
 
-  // Restore last adapter ID so the UI can prompt reconnection
   useEffect(() => {
-    // intentionally not auto-connecting — user must confirm
-  }, []);
+    const restored = localStorage.getItem(LAST_ADAPTER_KEY);
+    if (restored && publicKey && !adapter) {
+      const found = WALLET_ADAPTERS.find((a) => a.id === restored);
+      if (found) {
+        (async () => {
+          try {
+            const pk = await found.getPublicKey();
+            if (pk === publicKey) {
+              setAdapter(found);
+            }
+          } catch {
+            // Extension not available or user hasn't granted access; stay disconnected
+          }
+        })();
+      }
+    }
+  }, [publicKey]);
 
   const value: WalletContextValue = useMemo(
     () => ({
