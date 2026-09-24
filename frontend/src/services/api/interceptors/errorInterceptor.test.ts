@@ -1,11 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { setupErrorInterceptor } from "./errorInterceptor";
-import { toast } from "react-hot-toast";
+import { notifyToast } from "../../../context/toastBridge";
 
-vi.mock("react-hot-toast", () => ({
-    toast: {
-        error: vi.fn(),
-    },
+vi.mock("../../../context/toastBridge", () => ({
+    notifyToast: vi.fn(),
 }));
 
 describe("Error Interceptor Unit Tests", () => {
@@ -43,7 +41,7 @@ describe("Error Interceptor Unit Tests", () => {
         const mockError = { response: { status: 401 }, message: "Unauthorized" };
         const promise = responseErrorInterceptorCallback(mockError);
 
-        expect(toast.error).toHaveBeenCalledWith("Session expired, redirecting to login...");
+        expect(notifyToast).toHaveBeenCalledWith("Session expired, redirecting to login...", "error");
         vi.advanceTimersByTime(2000);
 
         expect(mockNavigate).toHaveBeenCalledWith("/login");
@@ -54,7 +52,7 @@ describe("Error Interceptor Unit Tests", () => {
         const mockError = { response: { status: 403 }, message: "Forbidden" };
         const promise = responseErrorInterceptorCallback(mockError);
 
-        expect(toast.error).toHaveBeenCalledWith("Insufficient permissions");
+        expect(notifyToast).toHaveBeenCalledWith("Insufficient permissions", "error");
         expect(mockNavigate).not.toHaveBeenCalled();
         await expect(promise).rejects.toEqual(mockError);
     });
@@ -63,7 +61,7 @@ describe("Error Interceptor Unit Tests", () => {
         const mockError = { response: { status: 500 }, message: "Internal Server Error" };
         const promise = responseErrorInterceptorCallback(mockError);
 
-        expect(toast.error).toHaveBeenCalledWith("Server error — please try again later");
+        expect(notifyToast).toHaveBeenCalledWith("Server error — please try again later", "error");
         await expect(promise).rejects.toEqual(mockError);
     });
 });

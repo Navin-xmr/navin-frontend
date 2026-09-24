@@ -12,15 +12,15 @@ export interface AuthState {
   userId: string | null;
 }
 
-function parseToken(token: string): { role: UserRole | null; userId: string | null; expired: boolean } {
+function parseToken(token: string): { role: UserRole | null; userId: string | null; expired: boolean; valid: boolean } {
   try {
     const payload = decodeJwt(token);
     const expired = typeof payload.exp === 'number' && Date.now() / 1000 > payload.exp;
     const role = (payload.role as UserRole) || null;
     const userId = (payload.sub ?? (payload.userId as string | undefined) ?? null) as string | null;
-    return { role, userId, expired };
+    return { role, userId, expired, valid: true };
   } catch {
-    return { role: null, userId: null, expired: false };
+    return { role: null, userId: null, expired: false, valid: false };
   }
 }
 
@@ -36,15 +36,19 @@ export function useAuth(): AuthState {
 
       if (!token) {
         setIsAuthenticated(false);
+        setRole(null);
+        setUserId(null);
         setIsLoading(false);
         return;
       }
 
       const parsed = parseToken(token);
 
-      if (parsed.expired) {
+      if (!parsed.valid || parsed.expired) {
         localStorage.removeItem(AUTH_STORAGE_KEY);
         setIsAuthenticated(false);
+        setRole(null);
+        setUserId(null);
       } else {
         setIsAuthenticated(true);
         setRole(parsed.role);

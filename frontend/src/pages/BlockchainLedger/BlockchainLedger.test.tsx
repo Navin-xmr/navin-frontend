@@ -1,6 +1,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { ToastProvider } from '../../context/ToastContext';
 import { LiveRegionProvider } from '../../context/LiveRegionContext';
 import BlockchainLedger from './BlockchainLedger';
@@ -62,11 +63,13 @@ const emptyResponse: PaginatedLedgerBlocks = {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const renderPage = () => render(
-  <LiveRegionProvider>
-    <ToastProvider>
-      <BlockchainLedger />
-    </ToastProvider>
-  </LiveRegionProvider>
+  <MemoryRouter>
+    <LiveRegionProvider>
+      <ToastProvider>
+        <BlockchainLedger />
+      </ToastProvider>
+    </LiveRegionProvider>
+  </MemoryRouter>
 );
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -172,7 +175,11 @@ describe('BlockchainLedger page', () => {
 
       await waitFor(() => {
         const links = screen.getAllByRole('link');
-        links.forEach((link) => {
+        const txLinks = links.filter((l) =>
+          l.getAttribute('href')?.includes('stellar.expert/explorer/public/tx'),
+        );
+        expect(txLinks.length).toBeGreaterThan(0);
+        txLinks.forEach((link) => {
           expect(link).toHaveAttribute('target', '_blank');
           expect(link).toHaveAttribute('rel', 'noopener noreferrer');
         });

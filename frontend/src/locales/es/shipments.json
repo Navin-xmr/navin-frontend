@@ -64,6 +64,8 @@
     "milestoneTitlePart2": "DE HITOS",
     "statusUpdated": "El estado del envío se actualizó a {{status}}",
     "disputeSubmitted": "Disputa enviada. Número de referencia: {{ref}}",
-    "offlineBanner": "Subir comprobantes requiere conexión a internet."
+    "offlineBanner": "Subir comprobantes requiere conexión a internet.",
+    "unknownId": "Envío desconocido",
+    "trackingUnavailable": "Número de seguimiento no disponible"
   }
 }

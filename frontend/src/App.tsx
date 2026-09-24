@@ -1,6 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home/Home';
 import Signup from './pages/auth/Signup/Signup';
 import Login from './pages/auth/Login/Login';
@@ -17,9 +16,6 @@ import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
 import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
-import PaginationDemo from './pages/ComponentDemos/PaginationDemo/PaginationDemo';
-import ConfirmDialogDemo from './pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo';
-import SkeletonDemo from './pages/ComponentDemos/SkeletonDemo/SkeletonDemo';
 import PageSkeleton from './components/ui/PageSkeleton';
 import { AuthProvider } from './context/AuthContext';
 import { RouteTransitionProvider } from './context/RouteTransitionContext';
@@ -38,6 +34,16 @@ import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipm
 import CustomerProfile from './pages/dashboard/Customer/Profile/CustomerProfile';
 
 // Lazy loaded
+// Dev-only component demos (lazy-loaded; excluded from production bundle)
+const PaginationDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/PaginationDemo/PaginationDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
+const ConfirmDialogDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/ConfirmDialogDemo/ConfirmDialogDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
+const SkeletonDemo = import.meta.env.DEV
+  ? lazy(() => import('./pages/ComponentDemos/SkeletonDemo/SkeletonDemo'))
+  : lazy(() => Promise.resolve({ default: () => null }));
 const ShipmentDetail = lazy(() => import('./pages/ShipmentDetail/ShipmentDetail'));
 const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainLedger'));
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
@@ -68,9 +74,9 @@ const router = createBrowserRouter([
   { path: '/register/company', element: <CompanyRegister /> },
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
-  { path: '/pagination-demo', element: <PaginationDemo /> },
-  { path: '/confirm-demo', element: <ConfirmDialogDemo /> },
-  { path: '/skeleton-demo', element: <SkeletonDemo /> },
+  { path: '/pagination-demo', element: S(<PaginationDemo />) },
+  { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
+  { path: '/skeleton-demo', element: S(<SkeletonDemo />) },
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,
@@ -122,6 +128,12 @@ const router = createBrowserRouter([
 
 function RealtimeManager() {
   useEffect(() => {
+    // Disable realtime service in development if environment variable is set
+    if (import.meta.env.VITE_DISABLE_REALTIME === 'true') {
+      console.log('Realtime service disabled in development mode');
+      return;
+    }
+    
     realtimeService.reset();
     realtimeService.connect();
     return () => realtimeService.disconnect();
@@ -135,7 +147,6 @@ function App() {
       <RouteTransitionProvider>
         <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
           <ErrorBoundary>
-            <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
             <RouteTransition />
             <OfflineBanner />
             <SlowConnectionBanner />

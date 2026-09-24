@@ -52,7 +52,9 @@ function useFormAutosave<T>({
   const isMountedRef = useRef(false);
 
   // Keep the ref up to date so saveNow always uses the latest data
-  dataRef.current = data;
+  useEffect(() => {
+    dataRef.current = data;
+  });
 
   const persistData = useCallback(() => {
     setStatus('saving');

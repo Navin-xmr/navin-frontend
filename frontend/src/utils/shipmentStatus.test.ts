@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from './shipmentStatus';
+import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass, getStatusColorHex } from './shipmentStatus';
 
 // ---------------------------------------------------------------------------
 // getStatusDisplayLabel
@@ -100,5 +100,39 @@ describe('getStatusDotClass', () => {
 
   it('returns fallback class for empty string', () => {
     expect(getStatusDotClass('')).toBe('bg-text-secondary');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getStatusColorHex
+// ---------------------------------------------------------------------------
+
+describe('getStatusColorHex', () => {
+  it('returns the data-viz hex color for CREATED', () => {
+    expect(getStatusColorHex('CREATED')).toBe('#94a3b8');
+  });
+
+  it('returns the data-viz hex color for IN_TRANSIT', () => {
+    expect(getStatusColorHex('IN_TRANSIT')).toBe('#3b82f6');
+  });
+
+  it('returns the data-viz hex color for DELIVERED', () => {
+    expect(getStatusColorHex('DELIVERED')).toBe('#10b981');
+  });
+
+  it('returns the data-viz hex color for CANCELLED', () => {
+    expect(getStatusColorHex('CANCELLED')).toBe('#ef4444');
+  });
+
+  it('returns the data-viz hex color for DELAYED', () => {
+    expect(getStatusColorHex('DELAYED')).toBe('#f59e0b');
+  });
+
+  it('returns the fallback hex for an unknown status', () => {
+    expect(getStatusColorHex('UNKNOWN_STATUS')).toBe('#64748b');
+  });
+
+  it('returns the fallback hex for empty string', () => {
+    expect(getStatusColorHex('')).toBe('#64748b');
   });
 });

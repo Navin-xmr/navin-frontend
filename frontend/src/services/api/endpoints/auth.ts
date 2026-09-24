@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/react";
 import { apiClient } from "../client";
+import { setToken, clearToken } from "../../auth/tokenStorage";
 
 export interface SignupRequest {
     email: string;
@@ -39,7 +40,7 @@ export const authApi = {
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/login", data);
         const { token, user } = res.data.data;
-        localStorage.setItem("authToken", token);
+        setToken(token);
         Sentry.setUser({ id: user.id, email: user.email, username: user.role });
         return res.data.data;
     },
@@ -47,7 +48,7 @@ export const authApi = {
     signup: async (data: SignupRequest): Promise<AuthResponse> => {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/signup", data);
         const { token, user } = res.data.data;
-        localStorage.setItem("authToken", token);
+        setToken(token);
         Sentry.setUser({ id: user.id, email: user.email, username: user.role });
         return res.data.data;
     },
@@ -58,18 +59,20 @@ export const authApi = {
 
     logout: async (): Promise<void> => {
         await apiClient.post("/auth/logout");
-        localStorage.removeItem("authToken");
+        clearToken();
         Sentry.setUser(null);
     },
 
     refresh: async (): Promise<void> => {
         const res = await apiClient.post<{ data: { token: string } }>("/auth/refresh");
-        localStorage.setItem("authToken", res.data.data.token);
+        setToken(res.data.data.token);
     },
+
     forgotPassword: async (data: { email: string }): Promise<void> => {
         await apiClient.post('/auth/forgot-password', data);
     },
 
     resetPassword: async (data: { token: string; newPassword: string }): Promise<void> => {
         await apiClient.post('/auth/reset-password', data);
-    },};
+    },
+};

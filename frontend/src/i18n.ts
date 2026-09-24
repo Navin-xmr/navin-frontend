@@ -6,16 +6,19 @@ import enAuth from "./locales/en/auth.json";
 import enDashboard from "./locales/en/dashboard.json";
 import enShipments from "./locales/en/shipments.json";
 import enSettings from "./locales/en/settings.json";
-import frCommon from "./locales/fr/common.json";    
+import enLanding from "./locales/en/landing.json";
+import frCommon from "./locales/fr/common.json";
 import frAuth from "./locales/fr/auth.json";
 import frDashboard from "./locales/fr/dashboard.json";
 import frShipments from "./locales/fr/shipments.json";
 import frSettings from "./locales/fr/settings.json";
+import frLanding from "./locales/fr/landing.json";
 import esCommon from "./locales/es/common.json";
 import esAuth from "./locales/es/auth.json";
 import esDashboard from "./locales/es/dashboard.json";
 import esShipments from "./locales/es/shipments.json";
-import esSettings from "./locales/es/settings.json";        
+import esSettings from "./locales/es/settings.json";
+import esLanding from "./locales/es/landing.json";
 
 
 const savedLanguage =
@@ -38,6 +41,7 @@ i18n.use(initReactI18next).init({
       dashboard: enDashboard,
       shipments: enShipments,
       settings: enSettings,
+      landing: enLanding,
     },
     fr: {
       common: frCommon,
@@ -45,6 +49,7 @@ i18n.use(initReactI18next).init({
       dashboard: frDashboard,
       shipments: frShipments,
       settings: frSettings,
+      landing: frLanding,
     },
     es: {
       common: esCommon,
@@ -52,6 +57,7 @@ i18n.use(initReactI18next).init({
       dashboard: esDashboard,
       shipments: esShipments,
       settings: esSettings,
+      landing: esLanding,
     },
   },
 });

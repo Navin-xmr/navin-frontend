@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { getStatusDisplayLabel, getStatusBadgeClass } from '../../../../utils/shipmentStatus';
+import { formatDate } from '../../../../utils/localeFormat';
 
 interface ActiveShipment {
   id: string;
@@ -16,9 +17,6 @@ const MOCK_ACTIVE_SHIPMENTS: ActiveShipment[] = [
   { id: 'SHP-2003', status: 'CREATED', origin: 'Shanghai', destination: 'Rotterdam', estimatedDelivery: '2026-03-05' },
   { id: 'SHP-2004', status: 'CREATED', origin: 'Mumbai', destination: 'New York', estimatedDelivery: '2026-03-02' },
 ];
-
-const formatDate = (dateString: string) =>
-  new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateString));
 
 const ActiveShipments: React.FC = () => {
   const navigate = useNavigate();

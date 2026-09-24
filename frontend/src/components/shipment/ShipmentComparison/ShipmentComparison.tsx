@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, ChevronRight } from 'lucide-react';
 import { MilestoneDetail } from '../MilestoneTimeline/MilestoneTimeline';
+import StatusBadge from '../../ui/StatusBadge/StatusBadge';
 
 export interface ShipmentForComparison {
   id: string;
@@ -39,15 +40,7 @@ const ShipmentComparison: React.FC<ShipmentComparisonProps> = ({ shipments, onCl
       },
       {
         label: 'Status',
-        values: selected.map(s => (
-          <span className={`px-2 py-1 rounded text-xs font-medium ${
-            s.status === 'DELIVERED' ? 'bg-green-500/20 text-green-400' :
-            s.status === 'IN_TRANSIT' ? 'bg-blue-500/20 text-blue-400' :
-            'bg-yellow-500/20 text-yellow-400'
-          }`}>
-            {s.status}
-          </span>
-        )),
+        values: selected.map(s => <StatusBadge key={s.shipmentId} status={s.status} />),
       },
       {
         label: 'Origin',

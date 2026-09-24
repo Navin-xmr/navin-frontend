@@ -39,6 +39,7 @@ function ErrorFallback({ error, resetError }: ErrorFallbackProps): React.ReactEl
           </button>
         )}
       </div>
+    </div>
   );
 }
 

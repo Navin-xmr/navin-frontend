@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useCallback } from 'react';
 import { useAuth } from '@hooks/useAuth';
 import type { UserRole } from '@utils/rbac';
+import { clearToken } from '../services/auth/tokenStorage';
 
 export interface AuthContextValue {
   isLoading: boolean;
@@ -16,7 +17,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const auth = useAuth();
 
   const logout = useCallback(() => {
-    localStorage.removeItem('authToken');
+    clearToken();
     window.location.href = '/login';
   }, []);
 

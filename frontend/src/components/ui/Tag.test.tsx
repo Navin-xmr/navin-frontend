@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import Tag, { StatusBadge, STATUS_VARIANT_MAP } from './Tag';
+import Tag, { StatusBadge } from './Tag';
+import { STATUS_VARIANT_MAP } from './statusVariantMap';
 
 describe('Tag', () => {
   it('renders the requested variant, size, icon and remove button', () => {

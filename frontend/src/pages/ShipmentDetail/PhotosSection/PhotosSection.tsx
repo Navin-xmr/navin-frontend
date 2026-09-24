@@ -121,11 +121,11 @@ const Lightbox: React.FC<{
   onNavigate?: (idx: number) => void;
 }> = ({ items, index, onClose, onPrev, onNext, onNavigate }) => {
   // ── Zoom / loading state ──────────────────────────────────────────────
+  // Remounted per `index` (see `key` at the call site) so zoom/loaded/error
+  // reset automatically when navigating to a different photo.
   const [zoom, setZoom] = useState(1);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
-
-  useEffect(() => { setZoom(1); setImgLoaded(false); setImgError(false); }, [index]);
 
   // ── Touch swipe ───────────────────────────────────────────────────────
   const touchStartX = useRef<number | null>(null);
@@ -151,9 +151,17 @@ const Lightbox: React.FC<{
     };
     document.addEventListener("keydown", handler);
     document.body.style.overflow = "hidden";
+
+    // Auto-close after 30 minutes to prevent stuck overlays
+    const autoCloseTimer = setTimeout(() => {
+      console.warn('[PhotosSection] Auto-closing lightbox due to timeout');
+      onClose();
+    }, 30 * 60 * 1000);
+
     return () => {
       document.removeEventListener("keydown", handler);
       document.body.style.overflow = "";
+      clearTimeout(autoCloseTimer);
     };
   }, [onClose, onPrev, onNext]);
 
@@ -507,6 +515,20 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({ shipmentId, canDelete }) 
   const goPrev = () => setLightboxIndex((i) => (i - 1 + activeLightboxItems.length) % activeLightboxItems.length);
   const goNext = () => setLightboxIndex((i) => (i + 1) % activeLightboxItems.length);
 
+  // ── Safety: Reset body.overflow if lightbox closes or component unmounts ────
+  useEffect(() => {
+    if (lightboxOpen) return;
+    // Ensure body overflow is reset when lightbox is closed
+    document.body.style.overflow = "";
+  }, [lightboxOpen]);
+
+  // Safety: Ensure cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
@@ -805,7 +827,7 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({ shipmentId, canDelete }) 
 
       {/* ── Lightbox (portal) ── */}
       {lightboxOpen && activeLightboxItems.length > 0 && (
-        <Lightbox items={activeLightboxItems} index={lightboxIndex} onClose={closeLightbox} onPrev={goPrev} onNext={goNext} onNavigate={setLightboxIndex} />
+        <Lightbox key={lightboxIndex} items={activeLightboxItems} index={lightboxIndex} onClose={closeLightbox} onPrev={goPrev} onNext={goNext} onNavigate={setLightboxIndex} />
       )}
 
       {/* ── Delete confirmation ── */}

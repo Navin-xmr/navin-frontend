@@ -29,8 +29,8 @@ const STATUS_PROGRESS: Record<ShipmentStatus, number> = {
 const PROGRESS_BAR_COLOR: Record<ShipmentStatus, string> = {
   CREATED: 'bg-[#f59e0b]',
   IN_TRANSIT: 'bg-[#3b82f6]',
-  DELIVERED: 'bg-[#10b981]',
-  CANCELLED: 'bg-[#ef4444]',
+  DELIVERED: 'bg-accent-green',
+  CANCELLED: 'bg-accent-red',
 };
 
 function getMilestoneProgress(shipment: Shipment): number {
@@ -106,12 +106,12 @@ const CustomerDashboard: React.FC = () => {
   if (hasError) {
     return (
       <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6">
-        <div className="flex flex-col items-center justify-center p-12 bg-[#14171e] border border-dashed border-[#ef4444] rounded-xl text-center">
-          <AlertTriangle size={48} className="text-[#ef4444] mb-4" />
+        <div className="flex flex-col items-center justify-center p-12 bg-background-card border border-dashed border-accent-red rounded-xl text-center">
+          <AlertTriangle size={48} className="text-accent-red mb-4" />
           <h3 className="text-lg font-semibold mb-2">{t('customerDashboard.errorTitle')}</h3>
           <p className="text-[#94a3b8] text-sm mb-4">{t('customerDashboard.errorBody')}</p>
           <button
-            className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
+            className="bg-accent-red text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer"
             onClick={() => window.location.reload()}
           >
             {t('customerDashboard.retry')}
@@ -142,23 +142,23 @@ const CustomerDashboard: React.FC = () => {
               ? [1, 2, 3].map(i => <div key={i} className="h-[100px] rounded-xl animate-shimmer" />)
               : (
                 <>
-                  <div className="bg-[#14171e] border border-[#1e293b] rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
+                  <div className="bg-background-card border border-border rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
                     <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
                       <Package size={15} /> {t('customerDashboard.stats.totalShipments')}
                     </div>
                     <div className="text-[28px] font-semibold">{shipments.length}</div>
                   </div>
-                  <div className="bg-[#14171e] border border-[#1e293b] rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
+                  <div className="bg-background-card border border-border rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
                     <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
                       <Truck size={15} /> {t('customerDashboard.stats.inTransit')}
                     </div>
-                    <div className="text-[28px] font-semibold text-[#3b82f6]">{inTransitCount}</div>
+                    <div className="text-[28px] font-semibold text-accent-blue">{inTransitCount}</div>
                   </div>
-                  <div className="bg-[#14171e] border border-[#1e293b] rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
+                  <div className="bg-background-card border border-border rounded-xl p-5 flex flex-col gap-2 transition-transform hover:-translate-y-0.5">
                     <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em]">
                       <CheckCircle2 size={15} /> {t('customerDashboard.stats.deliveredThisMonth')}
                     </div>
-                    <div className="text-[28px] font-semibold text-[#10b981]">{deliveredThisMonth}</div>
+                    <div className="text-[28px] font-semibold text-accent-green">{deliveredThisMonth}</div>
                   </div>
                 </>
               )}
@@ -182,7 +182,7 @@ const CustomerDashboard: React.FC = () => {
                 {[1, 2].map(i => <div key={i} className="h-[190px] rounded-xl animate-shimmer" />)}
               </div>
             ) : activeShipments.length === 0 ? (
-              <div className="bg-[#14171e] border border-dashed border-[#1e293b] rounded-xl p-10 text-center">
+              <div className="bg-background-card border border-dashed border-border rounded-xl p-10 text-center">
                 <Package size={32} className="text-[#334155] mx-auto mb-3" />
                 <p className="text-[#94a3b8] text-sm">{t('customerDashboard.noActiveShipments')}</p>
               </div>
@@ -198,7 +198,7 @@ const CustomerDashboard: React.FC = () => {
                       data-testid="active-shipment-card"
                       role="button"
                       tabIndex={0}
-                      className="bg-[#14171e] border border-[#1e293b] rounded-xl p-5 flex flex-col gap-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:border-[#334155] hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] focus-visible:outline-2 focus-visible:outline-[#62ffff] focus-visible:outline-offset-2"
+                      className="bg-background-card border border-border rounded-xl p-5 flex flex-col gap-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:border-[#334155] hover:shadow-[0_4px_20px_rgba(0,0,0,0.3)] focus-visible:outline-2 focus-visible:outline-[#62ffff] focus-visible:outline-offset-2"
                       onClick={() => navigate(`/dashboard/shipments/${shipment._id}`)}
                       onKeyDown={e => e.key === 'Enter' && navigate(`/dashboard/shipments/${shipment._id}`)}
                     >
@@ -339,8 +339,8 @@ const CustomerDashboard: React.FC = () => {
 
         {/* ── Right sidebar: Notifications ── */}
         <aside className="max-md:hidden">
-          <div className="bg-[#14171e] border border-[#1e293b] rounded-xl overflow-hidden sticky top-6">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#1e293b]">
+          <div className="bg-background-card border border-border rounded-xl overflow-hidden sticky top-6">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div className="flex items-center gap-2">
                 <Bell size={15} className="text-[#94a3b8]" />
                 <h3 className="text-sm font-semibold m-0">{t('customerDashboard.notifications')}</h3>
@@ -380,7 +380,7 @@ const CustomerDashboard: React.FC = () => {
               )}
             </div>
 
-            <div className="px-4 py-3 border-t border-[#1e293b]">
+            <div className="px-4 py-3 border-t border-border">
               <button
                 className="w-full py-2 bg-transparent border-none text-blue-500 text-[12px] font-semibold cursor-pointer rounded-md hover:bg-blue-500/10 transition-colors text-center"
                 onClick={() => navigate('/dashboard/notifications')}

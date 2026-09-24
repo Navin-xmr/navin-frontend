@@ -66,6 +66,7 @@ function RouteTooltip({ active, payload, label }: RouteTooltipProps) {
       <div className="mt-2 border-t border-[#334155] pt-2 text-sm font-semibold text-white">
         Total cost: {formatCurrency(total)}
       </div>
+    </div>
   );
 }
 
@@ -141,6 +142,7 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
             Table
           </button>
         </div>
+      </div>
 
       {viewMode === 'chart' ? (
         <>
@@ -188,8 +190,7 @@ const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
                     stackId="cost"
                     fill={segment.color}
                     radius={segment.key === 'insurance' ? [0, 4, 4, 0] : [0, 0, 0, 0]}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onClick={(barData: any) => openRoute(String(barData.route || barData.payload?.route))}
+                    onClick={(barData: { route?: string; payload?: { route?: string } }) => openRoute(String(barData.route ?? barData.payload?.route ?? ''))}
                     className="cursor-pointer"
                   />
                 ))}

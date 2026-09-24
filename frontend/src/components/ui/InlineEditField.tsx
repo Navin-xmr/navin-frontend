@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useId } from 'react';
 import { Edit2, Check, X } from 'lucide-react';
 
 export interface InlineEditFieldProps {
@@ -29,6 +29,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const fieldId = useId();
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -83,9 +84,14 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
   if (isEditing) {
     return (
       <div className={`flex flex-col gap-2 ${className}`}>
-        {label && <label className="text-sm font-medium text-text-secondary">{label}</label>}
+        {label && (
+          <label htmlFor={fieldId} className="text-sm font-medium text-text-secondary">
+            {label}
+          </label>
+        )}
         {multiline ? (
           <textarea
+            id={fieldId}
             ref={inputRef as React.Ref<HTMLTextAreaElement>}
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
@@ -96,6 +102,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
           />
         ) : (
           <input
+            id={fieldId}
             ref={inputRef as React.Ref<HTMLInputElement>}
             type="text"
             value={editValue}
@@ -133,7 +140,7 @@ const InlineEditField: React.FC<InlineEditFieldProps> = ({
 
   return (
     <div className={`group flex items-center gap-2 ${className}`}>
-      {label && <label className="text-sm font-medium text-text-secondary block w-full">{label}</label>}
+      {label && <span className="text-sm font-medium text-text-secondary block w-full">{label}</span>}
       <div className="flex items-center gap-2 w-full">
         <span className="flex-1 text-text-primary break-words">{value || placeholder}</span>
         {isEditable && !readOnly && (

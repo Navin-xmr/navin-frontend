@@ -86,7 +86,9 @@ export function useFormDraft<T extends object>(
     if (disabled || hasPendingDraft.current) return;
 
     if (isEmpty(values)) {
-      clearDraft();
+      // Defer out of the effect body so the setState inside clearDraft()
+      // isn't called synchronously during the effect.
+      queueMicrotask(() => clearDraft());
       return;
     }
 
