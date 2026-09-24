@@ -7,6 +7,7 @@ import Breadcrumb from "@components/common/Breadcrumb";
 import RichChartTooltip, { ExportAction } from "../../components/ui/RichChartTooltip";
 import { analyticsApi } from "../../services/api/endpoints/analytics";
 import { shipmentApi } from "../../services/api/endpoints/shipments";
+import { exportToCsv } from "@utils/exportCsv";
 
 interface MonthlyData {
   month: string;
@@ -44,7 +45,15 @@ const MonthlyRevenueTooltip: React.FC<{
   const target = payload.find((p) => p.dataKey === "target")?.value ?? 0;
 
   const handleExport = () => {
-    console.info(`Export data for ${label}`);
+    const csvData = [
+      {
+        month: label || "Unknown",
+        actual,
+        target,
+        performance: actual >= target ? "Met or exceeded target" : "Below target",
+      },
+    ];
+    exportToCsv(csvData, `revenue-${label || "monthly"}.csv`);
   };
 
   return (
