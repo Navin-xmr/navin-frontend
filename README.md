@@ -217,4 +217,10 @@ Have questions or want to discuss ideas?
 
 If you find Navin useful, 
 
+This project is licensed under the [MIT License](LICENSE).
+
+## Handsoff notes
+
+<!-- handsoff-issue-903 -->
+- #903: [Theme] NotificationsPage and UserManagement use hardcoded dark colours and look broken in light theme
 /* … truncated 333 chars — edit only what you need near the top … */
