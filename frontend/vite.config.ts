@@ -99,9 +99,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'stellar-sdk': ['@stellar/stellar-sdk'],
+          'react-vendor': ['react', 'react-dom', 'react-dom/client'],
+          'i18n': ['i18next', 'react-i18next'],
           'sentry': ['@sentry/react'],
-          'recharts': ['recharts'],
           'react-router': ['react-router-dom'],
         },
       },
