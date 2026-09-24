@@ -3,11 +3,48 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0d1117" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <title>Stellar App</title>
+
+    <title>Navin — Blockchain Logistics Platform</title>
+    <meta
+      name="description"
+      content="Track shipments, verify on-chain milestones, and automate settlements in real-time powered by Stellar Soroban smart contracts."
+    />
+
+    <!-- Favicon & Touch Icons -->
+    <link rel="icon" type="image/svg+xml" href="/navin-logo.svg" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/images/icon-512.png" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Navin" />
+    <meta property="og:title" content="Navin — Blockchain Logistics Platform" />
+    <meta
+      property="og:description"
+      content="Track shipments, verify on-chain milestones, and automate settlements in real-time powered by Stellar Soroban smart contracts."
+    />
+    <meta property="og:image" content="/images/tracking-visualization.png" />
+    <meta property="og:image:alt" content="Navin Blockchain Logistics Platform" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Navin — Blockchain Logistics Platform" />
+    <meta
+      name="twitter:description"
+      content="Track shipments, verify on-chain milestones, and automate settlements in real-time powered by Stellar Soroban smart contracts."
+    />
+    <meta name="twitter:image" content="/images/tracking-visualization.png" />
   </head>
   <body>
+    <noscript>
+      <div style="padding: 2rem; text-align: center; color: #ffffff; background-color: #0d1117; font-family: sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>We're sorry, but Navin requires JavaScript enabled to provide real-time shipment tracking and blockchain settlements.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
