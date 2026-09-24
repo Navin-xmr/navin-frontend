@@ -54,11 +54,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       {children}
       {/* Toast Container for Positioning */}
       <div className="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none">
-        {toasts.map((toast) => (
+        {toasts.map(({ key: _toastKey, ...toastProps }) => (
           <Toast
-            key={toast.id}
-            {...toast}
-            onClose={() => removeToast(toast.id)}
+            key={toastProps.id}
+            {...toastProps}
+            onClose={() => removeToast(toastProps.id)}
           />
         ))}
       </div>
