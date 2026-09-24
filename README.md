@@ -221,6 +221,12 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Handsoff notes
 
+This project is licensed under the [MIT License](LICENSE).
+
+## Handsoff notes
+
+<!-- handsoff-issue-907 -->
+- #907: [Refactor] Remove the `Promise.resolve().then(() => setState(...))` workaround used in effects
 <!-- handsoff-issue-903 -->
 - #903: [Theme] NotificationsPage and UserManagement use hardcoded dark colours and look broken in light theme
 /* … truncated 333 chars — edit only what you need near the top … */

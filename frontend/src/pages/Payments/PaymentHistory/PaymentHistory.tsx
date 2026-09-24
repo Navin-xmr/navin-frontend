@@ -22,23 +22,23 @@ import {
 
 const statusClasses: Record<SettlementStatus, string> = {
   PENDING:
-    "bg-[rgba(245,158,11,0.15)] text-[#fbbf24] border border-[rgba(245,158,11,0.3)]",
+    "bg-warning/15 text-warning border border-warning/30",
   ESCROWED:
-    "bg-[rgba(98,255,255,0.15)] text-[#62ffff] border border-[rgba(98,255,255,0.3)]",
+    "bg-primary/15 text-primary border border-primary/30",
   RELEASED:
-    "bg-[rgba(16,185,129,0.15)] text-[#34d399] border border-[rgba(16,185,129,0.3)]",
+    "bg-success/15 text-success border border-success/30",
   DISPUTED:
-    "bg-[rgba(239,68,68,0.15)] text-[#f87171] border border-[rgba(239,68,68,0.3)]",
+    "bg-error/15 text-error border border-error/30",
   FAILED:
-    "bg-[rgba(239,68,68,0.15)] text-[#f87171] border border-[rgba(239,68,68,0.3)]",
+    "bg-error/15 text-error border border-error/30",
 };
 
 const statusDotClasses: Record<SettlementStatus, string> = {
-  PENDING: "bg-[#fbbf24]",
-  ESCROWED: "bg-[#62ffff]",
-  RELEASED: "bg-[#34d399]",
-  DISPUTED: "bg-[#f87171]",
-  FAILED: "bg-[#f87171]",
+  PENDING: "bg-warning",
+  ESCROWED: "bg-primary",
+  RELEASED: "bg-success",
+  DISPUTED: "bg-error",
+  FAILED: "bg-error",
 };
 
 const truncateHash = (hash?: string) => {
@@ -92,15 +92,15 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="payment-detail-title"
-        className="bg-[rgba(8,40,50,0.95)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-6 w-full max-w-md shadow-xl mx-4"
+        className="bg-background-card border border-border rounded-2xl p-6 w-full max-w-md shadow-xl mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 id="payment-detail-title" className="text-lg font-bold text-[#62ffff]">Payment Details</h2>
+          <h2 id="payment-detail-title" className="text-lg font-bold text-primary">Payment Details</h2>
           <button
             onClick={onClose}
             aria-label="Close payment details"
-            className="text-text-secondary hover:text-white transition-colors p-1 rounded-md focus-visible:outline-2 focus-visible:outline-[#62ffff]"
+            className="text-text-secondary hover:text-text-primary transition-colors p-1 rounded-md focus-visible:outline-2 focus-visible:outline-primary"
           >
             <X size={20} />
           </button>
@@ -108,7 +108,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-5 rounded bg-[rgba(98,255,255,0.1)] animate-pulse" />
+              <div key={i} className="h-5 rounded bg-primary/10 animate-pulse" />
             ))}
           </div>
         ) : (
@@ -126,7 +126,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
             ).map(([label, value]) => (
               <div key={label} className="flex justify-between gap-4">
                 <dt className="text-text-secondary">{label}</dt>
-                <dd className="text-white font-medium break-all text-right">
+                <dd className="text-text-primary font-medium break-all text-right">
                   {value}
                 </dd>
               </div>
@@ -139,7 +139,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                     href={getStellarExplorerUrl(effective.stellarTxHash)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-mono text-xs text-[#62ffff] inline-flex items-center gap-1 hover:underline"
+                    className="font-mono text-xs text-primary inline-flex items-center gap-1 hover:underline"
                   >
                     {truncateHash(effective.stellarTxHash)}
                     <ExternalLink size={11} aria-hidden="true" />
@@ -154,7 +154,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
         <div className="mt-5 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-3 py-2 rounded-lg border border-[rgba(98,255,255,0.2)] text-text-primary hover:border-[#62ffff] hover:text-[#62ffff] text-sm transition-colors"
+            className="flex-1 px-3 py-2 rounded-lg border border-border text-text-primary hover:border-primary hover:text-primary text-sm transition-colors"
           >
             Close
           </button>
@@ -163,7 +163,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
               href={getStellarExplorerUrl(effective.stellarTxHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 px-3 py-2 rounded-lg bg-[#00d4c8] text-black text-center text-sm font-semibold hover:bg-[#13baba] transition-colors"
+              className="flex-1 px-3 py-2 rounded-lg bg-primary text-background text-center text-sm font-semibold hover:bg-primary/90 transition-colors"
             >
               Verify on Chain
             </a>
@@ -231,18 +231,41 @@ const PaymentHistory: React.FC = () => {
       const detail = await settlementsApi.getSettlementById(payment._id);
       setSelectedDetail(detail);
     } catch {
-      // Keep modal open with the list-row data already shown
+      setSelectedDetail(null);
     } finally {
       setIsModalLoading(false);
     }
   };
 
-  const tableContainerClass =
-    "bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl overflow-hidden mb-5 shadow-[inset_0_0_20px_0px_rgba(0,128,128,0.3)]";
-  const thClass =
-    "text-left px-6 py-4 text-[11px] font-semibold text-[#62ffff] uppercase border-b border-[rgba(98,255,255,0.2)]";
-  const tdClass = "px-6 py-4 text-sm border-b border-[rgba(98,255,255,0.2)]";
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedPayment(null);
+    setSelectedDetail(null);
+  };
 
+  const handleSortToggle = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (status: SettlementStatus | "All") => {
+    setFilterStatus(status);
+    setCurrentPage(1);
+  };
+
+  return (
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto flex flex-col gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">Payment History</h1>
+            <p className="text-sm text-text-secondary mt-1">
+              Track your escrow settlements and on-chain payments.
+            </p>
+          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
   // Single page-level heading shared by every render state (error / empty /
   // loaded) so the page always exposes just one top-level heading.
   const pageHeader = (
@@ -324,232 +347,173 @@ const PaymentHistory: React.FC = () => {
             aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
             aria-pressed={sortOrder === "desc"}
           >
-            Date
-            <ArrowUpDown size={14} aria-hidden="true" />
-            <span className="text-text-secondary max-md:hidden">
-              {sortOrder === "desc" ? "Newest" : "Oldest"}
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Payment Summary Cards */}
-      <PaymentSummaryCards />
-
-      {/* Desktop table — hidden on mobile */}
-      <div className={`${tableContainerClass} hidden md:block overflow-x-auto`}>
-        <table className="w-full border-collapse min-w-[700px]">
-          <thead className="bg-[rgba(19,186,186,0.1)]">
-            <tr>
-              <th
-                className={`${thClass} cursor-pointer select-none`}
-                onClick={() =>
-                  setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
-                }
-                aria-sort={sortOrder === "desc" ? "descending" : "ascending"}
-              >
-                <span className="inline-flex items-center gap-2">
-                  Date <ArrowUpDown size={14} aria-hidden="true" />
-                </span>
-              </th>
-              <th className={thClass}>Shipment ID</th>
-              <th className={thClass}>Amount</th>
-              <th className={thClass}>Status</th>
-              <th className={thClass}>Transaction Hash</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <TableRowSkeleton count={itemsPerPage} />
-            ) : (
-              payments.map((payment) => (
-                <tr
-                  key={payment._id}
-                  className="hover:bg-[rgba(98,255,255,0.05)] transition-colors last:border-b-0 cursor-pointer"
-                  onClick={() => void openPaymentDetail(payment)}
-                >
-                  <td className={`${tdClass} font-medium text-text-secondary`}>
-                    {new Date(payment.createdAt).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                  <td className={tdClass}>
-                    <Link
-                      to={`/dashboard/shipments/${payment.shipmentId}`}
-                      className="text-[#62ffff] font-semibold no-underline hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {payment.shipmentId}
-                    </Link>
-                  </td>
-                  <td className={tdClass}>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-sm">
-                        {payment.amount.toLocaleString()}
-                      </span>
-                      <span className="text-[11px] text-text-secondary uppercase">
-                        {payment.token}
-                      </span>
-                    </div>
-                  </td>
-                  <td className={tdClass}>
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase inline-block ${statusClasses[payment.status]}`}
-                    >
-                      {payment.status}
-                    </span>
-                  </td>
-                  <td className={`${tdClass} font-mono text-xs`}>
-                    {payment.stellarTxHash ? (
-                      <a
-                        href={getStellarExplorerUrl(payment.stellarTxHash)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-text-secondary no-underline inline-flex items-center gap-1.5 transition-colors hover:text-[#62ffff]"
-                      >
-                        {truncateHash(payment.stellarTxHash)}
-                        <ExternalLink size={12} className="text-[#62ffff]" aria-hidden="true" />
-                      </a>
-                    ) : (
-                      <span className="text-text-secondary">-</span>
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile card list — hidden on md+ */}
-      <div className="md:hidden flex flex-col gap-3 mb-5">
-        {isLoading
-          ? [...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="h-28 rounded-2xl bg-[rgba(98,255,255,0.05)] border border-[rgba(98,255,255,0.2)] animate-pulse"
-              />
-            ))
-          : payments.map((payment) => (
-              <button
-                key={payment._id}
-                type="button"
-                onClick={() => void openPaymentDetail(payment)}
-                className="w-full text-left bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-4 shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] transition-all active:bg-[rgba(19,186,186,0.1)] focus-visible:outline-2 focus-visible:outline-[#62ffff]"
-              >
-                {/* Top row: status badge + date */}
-                <div className="flex items-center justify-between mb-3">
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase ${statusClasses[payment.status]}`}
-                  >
-                    <span
-                      className={`inline-block w-1.5 h-1.5 rounded-full ${statusDotClasses[payment.status]}`}
-                      aria-hidden="true"
-                    />
-                    {payment.status}
-                  </span>
-                  <span className="text-xs text-text-secondary">
-                    {new Date(payment.createdAt).toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-
-                {/* Middle row: shipment ID + amount */}
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div>
-                    <p className="text-[11px] text-text-secondary uppercase tracking-wide mb-0.5">
-                      Shipment
-                    </p>
-                    <Link
-                      to={`/dashboard/shipments/${payment.shipmentId}`}
-                      className="text-[#62ffff] font-semibold text-sm no-underline hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {payment.shipmentId}
-                    </Link>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[11px] text-text-secondary uppercase tracking-wide mb-0.5">
-                      Amount
-                    </p>
-                    <p className="font-semibold text-sm text-white">
-                      {payment.amount.toLocaleString()}{" "}
-                      <span className="text-[11px] text-text-secondary font-normal uppercase">
-                        {payment.token}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Bottom row: tx hash */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-[rgba(98,255,255,0.1)]">
-                  <span className="text-[11px] text-text-secondary">Tx Hash</span>
-                  {payment.stellarTxHash ? (
-                    <a
-                      href={getStellarExplorerUrl(payment.stellarTxHash)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="font-mono text-xs text-text-secondary inline-flex items-center gap-1 hover:text-[#62ffff] transition-colors"
-                    >
-                      {truncateHash(payment.stellarTxHash)}
-                      <ExternalLink size={11} className="text-[#62ffff]" aria-hidden="true" />
-                    </a>
-                  ) : (
-                    <span className="font-mono text-xs text-text-secondary">-</span>
-                  )}
-                </div>
-              </button>
-            ))}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-between items-center px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] max-md:flex-col max-md:gap-4">
-        <div className="text-sm text-text-secondary">
-          Page {currentPage} of {totalPages} &middot; {total} total
-        </div>
-        <div className="flex gap-2 max-md:w-full max-md:justify-center flex-wrap">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-            className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
-          >
             <ChevronLeft size={16} />
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
+            Back to Dashboard
+          </Link>
+        </div>
+
+        <PaymentSummaryCards />
+
+        <div className="bg-background-card border border-border rounded-2xl p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="status-filter" className="text-sm text-text-secondary">
+                Status
+              </label>
+              <div className="relative">
+                <select
+                  id="status-filter"
+                  value={filterStatus}
+                  onChange={(e) =>
+                    handleFilterChange(e.target.value as SettlementStatus | "All")
+                  }
+                  className="appearance-none bg-background-card border border-border rounded-lg pl-3 pr-8 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
+                >
+                  <option value="All">All</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="ESCROWED">Escrowed</option>
+                  <option value="RELEASED">Released</option>
+                  <option value="DISPUTED">Disputed</option>
+                  <option value="FAILED">Failed</option>
+                </select>
+                <ChevronDown
+                  size={16}
+                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary"
+                />
+              </div>
+            </div>
             <button
-              key={i + 1}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`border px-3 py-2 rounded-md text-sm font-semibold cursor-pointer min-w-9 transition-all ${
-                currentPage === i + 1
-                  ? "bg-[#62ffff] border-[#62ffff] text-black"
-                  : "bg-transparent border-[rgba(98,255,255,0.2)] text-text-primary hover:bg-[rgba(98,255,255,0.1)] hover:border-[#62ffff] hover:text-[#62ffff]"
-              }`}
+              onClick={handleSortToggle}
+              className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
-              {i + 1}
+              <ArrowUpDown size={16} />
+              Date {sortOrder === "asc" ? "Ascending" : "Descending"}
             </button>
-          ))}
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-            }
-            disabled={currentPage === totalPages}
-            className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronRight size={16} />
-          </button>
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-error bg-error/10 border border-error/30 rounded-lg p-3 mb-4">
+              <AlertTriangle size={16} />
+              {error}
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="flex flex-col gap-2">
+              {[...Array(5)].map((_, i) => (
+                <TableRowSkeleton key={i} />
+              ))}
+            </div>
+          ) : payments.length === 0 ? (
+            <EmptyState
+              title="No payments found"
+              description="Your escrow settlements will appear here once created."
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-text-secondary border-b border-border">
+                    <th className="py-3 pr-4 font-medium">Shipment</th>
+                    <th className="py-3 pr-4 font-medium">Date</th>
+                    <th className="py-3 pr-4 font-medium">Amount</th>
+                    <th className="py-3 pr-4 font-medium">Status</th>
+                    <th className="py-3 pr-4 font-medium">Tx Hash</th>
+                    <th className="py-3 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((payment) => (
+                    <tr
+                      key={payment._id}
+                      className="border-b border-border last:border-0 hover:bg-background-hover transition-colors"
+                    >
+                      <td className="py-3 pr-4 text-text-primary">
+                        {payment.shipmentId}
+                      </td>
+                      <td className="py-3 pr-4 text-text-secondary">
+                        {new Date(payment.createdAt).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="py-3 pr-4 text-text-primary font-medium">
+                        {payment.amount.toLocaleString()} {payment.token}
+                      </td>
+                      <td className="py-3 pr-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusClasses[payment.status]}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${statusDotClasses[payment.status]}`}
+                          />
+                          {payment.status}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-4">
+                        {payment.stellarTxHash ? (
+                          <a
+                            href={getStellarExplorerUrl(payment.stellarTxHash)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-xs text-primary inline-flex items-center gap-1 hover:underline"
+                          >
+                            {truncateHash(payment.stellarTxHash)}
+                            <ExternalLink size={11} aria-hidden="true" />
+                          </a>
+                        ) : (
+                          <span className="text-text-secondary text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => openPaymentDetail(payment)}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {!isLoading && payments.length > 0 && (
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-xs text-text-secondary">
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <PaymentDetailModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
         settlement={selectedPayment}
         detail={selectedDetail}
         isLoading={isModalLoading}

@@ -210,17 +210,17 @@ const HelpCenter: React.FC = () => {
     <div className="w-full max-w-3xl mx-auto px-6 py-8 max-md:px-4">
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Help Center" />
       <div className="flex items-center gap-3 mb-2">
-        <HelpCircle size={28} className="text-[#62ffff]" />
-        <h1 className="text-2xl font-bold text-white m-0">Help Center</h1>
+        <HelpCircle size={28} className="text-primary" />
+        <h1 className="text-2xl font-bold text-text-primary m-0">Help Center</h1>
       </div>
-      <p className="text-sm text-[#94a3b8] mb-8">
+      <p className="text-sm text-text-secondary mb-8">
         Jump straight to the task you need, or restart the guided introduction.
       </p>
 
       <div className="relative mb-6">
         <Search
           size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
         />
         <input
           type="search"
@@ -228,6 +228,7 @@ const HelpCenter: React.FC = () => {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search common tasks…"
           aria-label="Search common tasks"
+          className="w-full rounded-lg border border-border bg-background-card py-2.5 pl-9 pr-3 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:outline-none"
           className="w-full rounded-lg border border-border bg-[#0b0e14] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-[#64748b] focus:border-[#62ffff] focus:outline-none"
         />
       </div>
@@ -235,21 +236,29 @@ const HelpCenter: React.FC = () => {
       <section aria-labelledby="common-tasks-heading" className="mb-8">
         <h2
           id="common-tasks-heading"
-          className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#64748b] mb-3"
+          className="text-[13px] font-semibold uppercase tracking-wide text-text-secondary mb-3"
         >
           Common tasks
         </h2>
-
         {filteredTasks.length === 0 ? (
           <EmptyState
             icon={<Search size={24} />}
             title="No matching tasks"
-            description="Try a different keyword, or contact support below."
-            action={{ label: 'Clear search', onClick: () => setQuery('') }}
+            description="Try a different search term, or browse the FAQ below."
           />
         ) : (
-          <ul className="list-none m-0 p-0 grid grid-cols-2 gap-3 max-md:grid-cols-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {filteredTasks.map((task) => (
+              <button
+                key={task.id}
+                type="button"
+                onClick={() => navigate(task.path)}
+                className="group flex items-start gap-3 rounded-lg border border-border bg-background-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-background-hover"
+              >
+                <span className="mt-0.5 text-primary">{task.icon}</span>
+                <span className="flex-1">
+                  <span className="block text-sm font-semibold text-text-primary">
+                    {task.title}
               <li key={task.id}>
                 <button
                   type="button"
@@ -263,14 +272,21 @@ const HelpCenter: React.FC = () => {
                       {task.description}
                     </span>
                   </span>
-                  <ChevronRight size={16} className="mt-0.5 text-[#64748b] shrink-0" />
-                </button>
-              </li>
+                  <span className="mt-1 block text-xs text-text-secondary">
+                    {task.description}
+                  </span>
+                </span>
+                <ChevronRight
+                  size={16}
+                  className="mt-0.5 text-text-muted transition-transform group-hover:translate-x-0.5"
+                />
+              </button>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 
+      <section aria-labelledby="quick-links-heading" className="mb-8">
       <section className="bg-background-card border border-border rounded-xl p-6 mb-6">
         <h2 className="text-lg font-semibold text-white mb-2">Getting started again</h2>
         <p className="text-sm text-[#94a3b8] mb-4 leading-relaxed">
@@ -302,12 +318,28 @@ const HelpCenter: React.FC = () => {
       <section aria-labelledby="quick-links-heading" className="mb-6">
         <h2
           id="quick-links-heading"
-          className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#64748b] mb-3"
+          className="text-[13px] font-semibold uppercase tracking-wide text-text-secondary mb-3"
         >
           Quick links
         </h2>
-        <ul className="list-none m-0 p-0 grid grid-cols-3 gap-3 max-md:grid-cols-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {quickLinks.map((link) => (
+            <button
+              key={link.id}
+              type="button"
+              onClick={link.onClick}
+              className="group flex items-start gap-3 rounded-lg border border-border bg-background-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-background-hover"
+            >
+              <span className="mt-0.5 text-primary">{link.icon}</span>
+              <span className="flex-1">
+                <span className="block text-sm font-semibold text-text-primary">
+                  {link.label}
+                </span>
+                <span className="mt-1 block text-xs text-text-secondary">
+                  {link.description}
+                </span>
+              </span>
+            </button>
             <li key={link.id}>
               <button
                 type="button"
@@ -320,20 +352,21 @@ const HelpCenter: React.FC = () => {
               </button>
             </li>
           ))}
-        </ul>
+        </div>
       </section>
 
-      <section aria-labelledby="faq-heading" className="mb-6">
+      <section aria-labelledby="faq-heading" className="mb-8">
         <h2
           id="faq-heading"
-          className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#64748b] mb-3"
+          className="text-[13px] font-semibold uppercase tracking-wide text-text-secondary mb-3"
         >
           Frequently asked questions
         </h2>
-        <div className="flex flex-col gap-2">
+        <div className="divide-y divide-border rounded-lg border border-border bg-background-card">
           {FAQ_ENTRIES.map((entry, index) => {
             const isOpen = openFaqIndex === index;
             return (
+              <div key={entry.question}>
               <div
                 key={entry.question}
                 className="rounded-xl border border-border bg-background-card overflow-hidden"
@@ -342,16 +375,16 @@ const HelpCenter: React.FC = () => {
                   type="button"
                   onClick={() => setOpenFaqIndex(isOpen ? null : index)}
                   aria-expanded={isOpen}
-                  className="w-full flex items-center justify-between gap-4 px-4 py-3.5 text-left cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#62ffff]"
+                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
                 >
-                  <span className="text-sm font-semibold text-white">{entry.question}</span>
+                  <span className="text-sm font-medium text-text-primary">{entry.question}</span>
                   <ChevronDown
                     size={16}
-                    className={`shrink-0 text-[#64748b] transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    className={`shrink-0 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
                 {isOpen && (
-                  <p className="px-4 pb-4 text-sm text-[#94a3b8] leading-relaxed">{entry.answer}</p>
+                  <p className="px-4 pb-4 text-sm text-text-secondary">{entry.answer}</p>
                 )}
               </div>
             );
@@ -359,6 +392,23 @@ const HelpCenter: React.FC = () => {
         </div>
       </section>
 
+      <section aria-labelledby="shortcuts-heading" className="mb-8">
+        <h2
+          id="shortcuts-heading"
+          className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-text-secondary mb-3"
+        >
+          <Keyboard size={14} />
+          Keyboard shortcuts
+        </h2>
+        <div className="divide-y divide-border rounded-lg border border-border bg-background-card">
+          {SHORTCUT_ROWS.map((row) => (
+            <div key={row.keys} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <span className="text-sm text-text-secondary">{row.action}</span>
+              <kbd className="rounded border border-border bg-background-hover px-2 py-0.5 text-xs font-medium text-text-primary">
+                {row.keys}
+              </kbd>
+            </div>
+          ))}
       <section aria-labelledby="shortcuts-heading" className="bg-background-card border border-border rounded-xl p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Keyboard size={18} className="text-[#62ffff]" />
@@ -392,13 +442,56 @@ const HelpCenter: React.FC = () => {
         </div>
       </section>
 
-      <section aria-labelledby="video-heading" className="mb-6">
+      <section aria-labelledby="setup-heading" className="mb-8">
         <h2
-          id="video-heading"
-          className="text-[13px] font-semibold uppercase tracking-[0.05em] text-[#64748b] mb-3"
+          id="setup-heading"
+          className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-text-secondary mb-3"
         >
-          Video guide
+          <ListChecks size={14} />
+          Setup & onboarding
         </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-background-card p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-text-primary">Setup checklist</p>
+            <p className="mt-1 text-xs text-text-secondary">
+              Restore the getting-started checklist on your dashboard.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleResetChecklist}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background-hover px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-primary/50"
+          >
+            <RotateCcw size={14} />
+            Restore checklist
+          </button>
+        </div>
+      </section>
+
+      <section aria-labelledby="tour-heading">
+        <h2
+          id="tour-heading"
+          className="flex items-center gap-2 text-[13px] font-semibold uppercase tracking-wide text-text-secondary mb-3"
+        >
+          <PlayCircle size={14} />
+          Guided tour
+        </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-background-card p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-text-primary">Onboarding tour</p>
+            <p className="mt-1 text-xs text-text-secondary">
+              Replay the guided introduction to Navin.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleRestartTour}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background-hover px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:border-primary/50"
+          >
+            <RotateCcw size={14} />
+            Restart tour
+          </button>
+        </div>
         <div
           data-src="https://www.youtube.com/watch?v=REPLACE_ME"
           className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background-card p-10 text-center"
