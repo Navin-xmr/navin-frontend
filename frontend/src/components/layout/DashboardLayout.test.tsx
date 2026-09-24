@@ -56,6 +56,7 @@ vi.mock('../../context/WalletContext', () => ({
     publicKey: null,
     isConnecting: false,
     network: 'testnet',
+    networkMismatch: false,
   }),
 }));
 

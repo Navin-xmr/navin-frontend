@@ -6,6 +6,7 @@ import {
     SettlementStatus,
 } from "@services/api/endpoints/settlements";
 import Skeleton from "@components/ui/Skeleton/Skeleton";
+import { getStellarExpertTxUrl } from "@utils/stellar";
 
 export interface EscrowStatusProps {
     shipmentId: string;
@@ -26,9 +27,6 @@ const STATUS_STYLES: Record<SettlementStatus, string> = {
 
 const truncateHash = (hash: string) =>
     hash.length <= 12 ? hash : `${hash.slice(0, 6)}...${hash.slice(-4)}`;
-
-const getStellarExplorerUrl = (hash: string) =>
-    `https://stellar.expert/explorer/testnet/tx/${hash}`;
 
 const EscrowStatus: React.FC<EscrowStatusProps> = ({ shipmentId }) => {
     const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -124,7 +122,7 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ shipmentId }) => {
                                         Tx Hash:
                                     </span>
                                     <a
-                                        href={getStellarExplorerUrl(s.stellarTxHash)}
+                                        href={getStellarExpertTxUrl(s.stellarTxHash)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center gap-1.5 text-[#00d4c8] font-mono hover:text-[#1fffff] transition-colors"

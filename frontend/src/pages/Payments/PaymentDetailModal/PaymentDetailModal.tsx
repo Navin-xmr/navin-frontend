@@ -2,6 +2,7 @@
 import React, { useRef } from "react";
 import { X, ExternalLink, ShieldCheck, MapPin } from "lucide-react";
 import { useFocusTrap } from "@hooks/useFocusTrap";
+import { getStellarExpertTxUrl } from "@utils/stellar";
 
 interface PaymentDetailModalProps {
     isOpen: boolean;
@@ -28,9 +29,6 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
     useFocusTrap(dialogRef, isOpen, onClose);
 
     if (!isOpen || !payment) return null;
-
-    const getStellarExplorerUrl = (hash: string) =>
-        `https://stellar.expert/explorer/public/tx/${hash}`;
 
     const statusSteps = [
         {
@@ -114,7 +112,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                         <div className="flex justify-between items-center">
                             <span className="text-[0.7rem] font-bold text-[#62ffff]/40 tracking-widest">TRANSACTION</span>
                             <a
-                                href={getStellarExplorerUrl(payment.txHash)}
+                                href={getStellarExpertTxUrl(payment.txHash)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-[#62ffff] no-underline font-semibold hover:underline text-[0.9rem] flex items-center gap-2 font-mono"
@@ -169,7 +167,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
                         CLOSE
                     </button>
                     <a
-                        href={getStellarExplorerUrl(payment.txHash)}
+                        href={getStellarExpertTxUrl(payment.txHash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="font-['Bebas_Neue',sans-serif] flex-1 p-3 rounded-xl text-[1.1rem] tracking-wider cursor-pointer transition-all duration-200 text-center no-underline bg-[#00d4c8] text-black border border-[#00d4c8] hover:bg-[#62ffff] hover:border-[#62ffff]"
