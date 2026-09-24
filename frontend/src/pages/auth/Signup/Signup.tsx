@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { WalletConnectButton } from "../../../components/auth/WalletConnectButton/WalletConnectButton";
 import { authApi } from "../../../services/api";
-import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import PasswordStrengthMeter from '@components/ui/PasswordStrengthMeter';
 import { PASSWORD_MIN_LENGTH } from "../../../utils/passwordPolicy";
 
 interface FormErrors {

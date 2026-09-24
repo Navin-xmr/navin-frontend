@@ -10,7 +10,7 @@ import { useAuthContext } from '../../../../context/AuthContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
 import { useDebounce } from '../../../../hooks/useDebounce';
 import { usePagination } from '../../../../hooks/usePagination';
-import Avatar from '../../../../components/ui/Avatar';
+import Avatar from '@components/ui/Avatar';
 import Breadcrumb from '@components/common/Breadcrumb';
 import ConfirmDialog from '@components/ui/ConfirmDialog';
 

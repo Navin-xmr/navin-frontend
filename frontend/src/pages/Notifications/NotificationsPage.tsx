@@ -16,7 +16,7 @@ import {
   List as ListIcon,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import SearchInput from "../../components/ui/SearchInput";
+import SearchInput from '@components/ui/SearchInput';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   notificationsApi,

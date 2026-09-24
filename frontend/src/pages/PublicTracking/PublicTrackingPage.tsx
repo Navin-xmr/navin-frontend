@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { CheckCircle2, Circle, Package, Truck, MapPin, Flag, Share2, Copy, AlertTriangle } from 'lucide-react';
-import CopyToClipboard from '../../components/ui/CopyToClipboard';
+import CopyToClipboard from '@components/ui/CopyToClipboard';
 import { useLiveRegion } from '../../context/LiveRegionContext';
 import { getStatusBadgeClass } from '../../utils/shipmentStatus';
 import { publicTrackingApi } from '@services/api/endpoints/publicTracking';

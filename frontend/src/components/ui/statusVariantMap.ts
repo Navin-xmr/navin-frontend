@@ -1,4 +1,4 @@
-import type { TagVariant } from './Tag';
+import type { TagVariant } from './Tag/Tag';
 
 // Status variant mapping for common statuses
 export const STATUS_VARIANT_MAP: Record<string, TagVariant> = {

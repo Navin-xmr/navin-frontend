@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { AxiosError } from "axios";
 import { useToast } from "../../../context/ToastContext";
 import { authApi } from "../../../services/api";
-import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import PasswordStrengthMeter from '@components/ui/PasswordStrengthMeter';
 import { validatePassword } from "../../../utils/passwordPolicy";
 
 const authCardClass = "min-h-screen flex items-center justify-center bg-[#050505] text-white relative overflow-hidden font-sans";

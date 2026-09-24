@@ -1,5 +1,5 @@
 import type { ShipmentPriority } from '../../../api/shipmentApi';
-import SearchInput from '../../../components/ui/SearchInput';
+import SearchInput from '@components/ui/SearchInput';
 import ShipmentFilters, { type ShipmentFiltersValues, type ShipmentStatus } from '../ShipmentFilters';
 
 export type TopStatusFilter = 'ALL' | ShipmentStatus;

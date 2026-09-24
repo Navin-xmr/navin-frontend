@@ -4,7 +4,7 @@ import {
   NoteResponse,
 } from "../../../services/api/endpoints/shipments";
 import { useToast } from "../../../context/ToastContext";
-import Avatar from "../../../components/ui/Avatar";
+import Avatar from '@components/ui/Avatar';
 
 interface Note {
   id: string;
