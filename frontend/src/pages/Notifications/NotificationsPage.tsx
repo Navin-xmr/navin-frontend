@@ -418,83 +418,83 @@ const NotificationsPage = () => {
     }
 
     setIsBulkProcessing(true);
-    const results = await Promise.allSettled(
-      ids.map((id) => notificationsApi.markAsRead(id)),
-    );
-    const succeededIds = ids.filter(
-      (_, index) => results[index].status === "fulfilled",
-    );
-    const failedCount = results.length - succeededIds.length;
+    try {
+      const { succeeded, failed } = await notificationsApi.markManyAsRead(ids);
+      const succeededIds = succeeded;
+      const failedCount = failed.length;
 
-    if (succeededIds.length > 0) {
-      setNotificationsList((prev) =>
-        prev.map((notification) =>
-          succeededIds.includes(notification.id)
-            ? { ...notification, isRead: true }
-            : notification,
-        ),
-      );
-      setUnreadCount((prev) => Math.max(0, prev - succeededIds.length));
-    }
+      if (succeededIds.length > 0) {
+        setNotificationsList((prev) =>
+          prev.map((notification) =>
+            succeededIds.includes(notification.id)
+              ? { ...notification, isRead: true }
+              : notification,
+          ),
+        );
+        setUnreadCount((prev) => Math.max(0, prev - succeededIds.length));
+      }
 
-    if (failedCount === 0) {
-      addToast(
-        `Marked ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"} as read.`,
-        "success",
-      );
-      clearSelection();
-    } else if (succeededIds.length > 0) {
-      addToast(
-        `Marked ${succeededIds.length} as read, ${failedCount} failed. Please try again.`,
-        "warning",
-      );
-      succeededIds.forEach((id) => {
-        if (isSelected(id)) toggleOne(id);
-      });
-    } else {
+      if (failedCount === 0) {
+        addToast(
+          `Marked ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"} as read.`,
+          "success",
+        );
+        clearSelection();
+      } else if (succeededIds.length > 0) {
+        addToast(
+          `Marked ${succeededIds.length} as read, ${failedCount} failed. Please try again.`,
+          "warning",
+        );
+        succeededIds.forEach((id) => {
+          if (isSelected(id)) toggleOne(id);
+        });
+      } else {
+        addToast("Unable to mark notifications as read. Please try again.", "error");
+      }
+    } catch {
       addToast("Unable to mark notifications as read. Please try again.", "error");
+    } finally {
+      setIsBulkProcessing(false);
     }
-
-    setIsBulkProcessing(false);
   };
 
   const handleBulkDeleteConfirm = async () => {
     const ids = [...selectedIds];
     setIsBulkProcessing(true);
-    const results = await Promise.allSettled(
-      ids.map((id) => notificationsApi.deleteOne(id)),
-    );
-    const succeededIds = ids.filter(
-      (_, index) => results[index].status === "fulfilled",
-    );
-    const failedCount = results.length - succeededIds.length;
+    try {
+      const { succeeded, failed } = await notificationsApi.deleteMany(ids);
+      const succeededIds = succeeded;
+      const failedCount = failed.length;
 
-    if (succeededIds.length > 0) {
-      setNotificationsList((prev) =>
-        prev.filter((notification) => !succeededIds.includes(notification.id)),
-      );
-    }
+      if (succeededIds.length > 0) {
+        setNotificationsList((prev) =>
+          prev.filter((notification) => !succeededIds.includes(notification.id)),
+        );
+      }
 
-    if (failedCount === 0) {
-      addToast(
-        `Deleted ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"}.`,
-        "success",
-      );
-      clearSelection();
-    } else if (succeededIds.length > 0) {
-      addToast(
-        `Deleted ${succeededIds.length}, ${failedCount} failed. Please try again.`,
-        "warning",
-      );
-      succeededIds.forEach((id) => {
-        if (isSelected(id)) toggleOne(id);
-      });
-    } else {
+      if (failedCount === 0) {
+        addToast(
+          `Deleted ${succeededIds.length} notification${succeededIds.length === 1 ? "" : "s"}.`,
+          "success",
+        );
+        clearSelection();
+      } else if (succeededIds.length > 0) {
+        addToast(
+          `Deleted ${succeededIds.length}, ${failedCount} failed. Please try again.`,
+          "warning",
+        );
+        succeededIds.forEach((id) => {
+          if (isSelected(id)) toggleOne(id);
+        });
+      } else {
+        addToast("Unable to delete notifications. Please try again.", "error");
+      }
+    } catch {
       addToast("Unable to delete notifications. Please try again.", "error");
+    } finally {
+      setIsBulkProcessing(false);
+      setIsBulkDeleteOpen(false);
     }
-
-    setIsBulkProcessing(false);
-    setIsBulkDeleteOpen(false);
   };
 
   const filterCounts = useMemo(

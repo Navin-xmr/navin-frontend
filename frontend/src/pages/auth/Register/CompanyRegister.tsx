@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, ChevronLeft, Pencil } from "lucide-react";
 import { authApi } from "../../../services/api";
 import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import { PASSWORD_MIN_LENGTH } from "../../../utils/passwordPolicy";
 import { ProgressStepper, type StepDef } from "../../../components/ui/ProgressStepper";
 import useFormAutosave from "../../../hooks/useFormAutosave";
 import { AutosaveBanner } from "../../../components/ui/AutosaveBanner";
@@ -177,7 +178,7 @@ const CompanyRegister: React.FC = () => {
     if (!step2.email) errs.email = t("companyRegister.errorEmailRequired");
     else if (!/\S+@\S+\.\S+/.test(step2.email)) errs.email = t("companyRegister.errorEmailInvalid");
     if (!step2.password) errs.password = t("companyRegister.errorPasswordRequired");
-    else if (step2.password.length < 8) errs.password = t("companyRegister.errorPasswordMinLength");
+    else if (step2.password.length < PASSWORD_MIN_LENGTH) errs.password = t("companyRegister.errorPasswordMinLength");
     if (step2.password !== step2.confirmPassword) errs.confirmPassword = t("companyRegister.errorPasswordsMismatch");
     setStep2Errors(errs);
     return Object.keys(errs).length === 0;

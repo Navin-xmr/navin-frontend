@@ -280,4 +280,44 @@ describe('authApi endpoint', () => {
       ).rejects.toThrow('Reset token expired');
     });
   });
+
+  describe('verifyEmail', () => {
+    it('posts the verification token to /auth/verify-email', async () => {
+      mockApiClient.post.mockResolvedValueOnce({ data: {} });
+
+      await authApi.verifyEmail({ token: 'valid-verify-token' });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/verify-email', {
+        token: 'valid-verify-token',
+      });
+    });
+
+    it('propagates a rejection when verification fails or token is expired', async () => {
+      mockApiClient.post.mockRejectedValueOnce(new Error('Verification token expired'));
+
+      await expect(
+        authApi.verifyEmail({ token: 'expired-token' })
+      ).rejects.toThrow('Verification token expired');
+    });
+  });
+
+  describe('resendVerification', () => {
+    it('posts email to /auth/resend-verification', async () => {
+      mockApiClient.post.mockResolvedValueOnce({ data: {} });
+
+      await authApi.resendVerification({ email: 'jane@navin.io' });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/resend-verification', {
+        email: 'jane@navin.io',
+      });
+    });
+
+    it('propagates a rejection on error', async () => {
+      mockApiClient.post.mockRejectedValueOnce(new Error('Rate limit exceeded'));
+
+      await expect(
+        authApi.resendVerification({ email: 'jane@navin.io' })
+      ).rejects.toThrow('Rate limit exceeded');
+    });
+  });
 });

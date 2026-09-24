@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { WalletConnectButton } from "../../../components/auth/WalletConnectButton/WalletConnectButton";
 import { authApi } from "../../../services/api";
 import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import { PASSWORD_MIN_LENGTH } from "../../../utils/passwordPolicy";
 
 interface FormErrors {
   fullName?: string;
@@ -37,7 +38,7 @@ const Signup: React.FC = () => {
     if (!formData.email) newErrors.email = t("signup.errorEmailRequired");
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = t("signup.errorEmailInvalid");
     if (!formData.password) newErrors.password = t("signup.errorPasswordRequired");
-    else if (formData.password.length < 8) newErrors.password = t("signup.errorPasswordMinLength");
+    else if (formData.password.length < PASSWORD_MIN_LENGTH) newErrors.password = t("signup.errorPasswordMinLength");
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t("signup.errorPasswordsMismatch");
     if (!formData.terms) newErrors.terms = t("signup.errorTermsRequired");
     setErrors(newErrors);
