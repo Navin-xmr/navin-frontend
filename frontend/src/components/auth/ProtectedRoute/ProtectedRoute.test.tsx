@@ -3,6 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 
+// Helper to create a valid-looking JWT (not cryptographically signed, just for testing)
+function makeToken(payload: Record<string, unknown>): string {
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+  const body = btoa(JSON.stringify(payload));
+  return `${header}.${body}.signature`;
+}
+
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -49,7 +56,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('renders protected content for authenticated users', () => {
-    localStorage.setItem('authToken', 'test-token');
+    localStorage.setItem('authToken', makeToken({ sub: 'user-1', role: 'company' }));
 
     render(
       <MemoryRouter initialEntries={['/dashboard']}>

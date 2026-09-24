@@ -7,7 +7,6 @@ import CopyToClipboard from "../../../components/ui/CopyToClipboard";
 import ETACountdown from "../../../components/shipment/ETACountdown";
 import InlineEditField from "../../../components/ui/InlineEditField";
 import RoleAccessInfo from "../../../components/ui/RoleAccessInfo";
-import AccessRestrictedBadge from "../../../components/ui/AccessRestrictedBadge";
 import type { ShipmentStatus } from "../../../services/api/endpoints/shipments";
 
 export type UserRole = "company" | "customer";
@@ -136,7 +135,6 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
                     value={editOrigin}
                     onSave={async (newValue) => {
                       setEditOrigin(newValue);
-                      console.log('Origin updated to:', newValue);
                     }}
                     label="Origin Address"
                     isEditable={true}
@@ -150,7 +148,6 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
                     value={editDestination}
                     onSave={async (newValue) => {
                       setEditDestination(newValue);
-                      console.log('Destination updated to:', newValue);
                     }}
                     label="Destination Address"
                     isEditable={true}

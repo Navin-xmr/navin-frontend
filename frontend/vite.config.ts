@@ -15,7 +15,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "images/**/*"],
+      includeAssets: ["navin-logo.svg", "images/**/*"],
       manifest: {
         name: "Navin — Blockchain Logistics",
         short_name: "Navin",
@@ -86,6 +86,27 @@ export default defineConfig({
       },
     }),
   ], // tailwindcss() removed temporarily for CI
+  server: {
+    proxy: {
+      // Backend mounts its routers under /api, so the prefix is preserved.
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
+    }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'stellar-sdk': ['@stellar/stellar-sdk'],
+          'sentry': ['@sentry/react'],
+          'recharts': ['recharts'],
+          'react-router': ['react-router-dom'],
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),

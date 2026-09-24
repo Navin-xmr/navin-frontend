@@ -13,10 +13,15 @@ export interface TrackingTimelineProps {
   milestones: Milestone[];
 }
 
+const STATUS_LABEL: Record<Milestone['status'], string> = {
+  completed: 'Completed',
+  current: 'Current',
+  upcoming: 'Upcoming',
+};
+
 function getMilestoneIcon(name: string, status: Milestone['status']) {
   const upper = name.toUpperCase();
-  const sizeClass = 'w-4 h-4';
-  const iconProps = { className: sizeClass };
+  const iconProps = { className: 'w-4 h-4', 'aria-label': STATUS_LABEL[status] };
 
   let Icon = Package;
   if (upper.includes('PICK') || upper.includes('CARRIER')) Icon = Truck;
@@ -24,7 +29,6 @@ function getMilestoneIcon(name: string, status: Milestone['status']) {
   else if (upper.includes('DELIVER')) Icon = CheckCircle;
   else if (upper.includes('DELAY')) Icon = AlertTriangle;
 
-  if (status === 'upcoming') return <Icon {...iconProps} />;
   return <Icon {...iconProps} />;
 }
 

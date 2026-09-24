@@ -164,8 +164,8 @@ const TwoFactorSetup: React.FC = () => {
         <div className="space-y-4">
           <p className="text-sm text-yellow-400">Save these backup codes in a safe place. Each code can be used once.</p>
           <div className="grid grid-cols-2 gap-2 bg-slate-800/50 p-4 rounded-lg">
-            {backupCodes.map((code, index) => (
-              <div key={index} className="text-sm font-mono text-white bg-slate-700/50 px-3 py-2 rounded text-center">
+            {backupCodes.map((code) => (
+              <div key={code} className="text-sm font-mono text-white bg-slate-700/50 px-3 py-2 rounded text-center">
                 {code}
               </div>
             ))}

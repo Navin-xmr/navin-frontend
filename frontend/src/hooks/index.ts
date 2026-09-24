@@ -1,4 +1,5 @@
 export { useAuth } from './useAuth';
+export { useDebounce } from './useDebounce';
 export { useKeyboardShortcuts } from './useKeyboardShortcuts';
 export type { ShortcutDef } from './useKeyboardShortcuts';
 export { useFocusTrap } from './useFocusTrap';

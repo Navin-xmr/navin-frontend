@@ -37,8 +37,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <div className="text-text-secondary text-[11px] font-semibold uppercase mb-2">
         {label}
       </div>
-      {payload.map((entry, index) => (
-        <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
+      {payload.map((entry) => (
+        <div key={entry.name ?? entry.color ?? String(entry.value)} className="flex items-center gap-2 mb-1 last:mb-0">
           <div
             className="w-2 h-2 rounded-full"
             style={{ backgroundColor: entry.color }}
@@ -150,6 +150,7 @@ export default function ShipmentVolumeTrendWidget({
               <TrendIcon size={14} />
               <span>{percentage.toFixed(1)}%</span>
             </div>
+          </div>
 
           <div className="flex items-center gap-3">
             <WidgetRefreshIndicator
@@ -194,6 +195,7 @@ export default function ShipmentVolumeTrendWidget({
             </button>
           ))}
         </div>
+      </div>
 
       {/* Chart body */}
       <div className="pt-5 pr-4 pb-3 pl-0 h-[400px] md:h-[300px] md:pt-4 md:pr-2 md:pb-2">
@@ -273,5 +275,6 @@ export default function ShipmentVolumeTrendWidget({
           </AreaChart>
         </ResponsiveContainer>
       </div>
+    </div>
   );
 }

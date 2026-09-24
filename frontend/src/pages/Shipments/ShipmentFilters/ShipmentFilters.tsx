@@ -1,5 +1,5 @@
 import { SlidersHorizontal } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Chip } from '../../../components/ui/Chip';
 
@@ -95,6 +95,8 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState<ShipmentFiltersValues>(() => loadFiltersFromURL(searchParams));
   const [isOpen, setIsOpen] = useState(() => countActive(loadFiltersFromURL(searchParams)) > 0);
+  const fieldId = useId();
+  const fieldIdFor = (field: string) => `${fieldId}-${field}`;
   const mounted = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipDebounce = useRef(false);
@@ -247,10 +249,17 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Status */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('status')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Status
-              </label>
-              <div className="flex flex-wrap gap-2">
+              </span>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('status')}
+              >
                 {STATUS_OPTIONS.map((s) => (
                   <Chip
                     key={s}
@@ -273,10 +282,17 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Priority */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('priority')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Priority
-              </label>
-              <div className="flex flex-wrap gap-2">
+              </span>
+              <div
+                className="flex flex-wrap gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('priority')}
+              >
                 {PRIORITY_OPTIONS.map((p) => (
                   <Chip
                     key={p}
@@ -299,10 +315,17 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Date Range */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('date-range')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Date Range
-              </label>
-              <div className="flex items-center gap-2">
+              </span>
+              <div
+                className="flex items-center gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('date-range')}
+              >
                 <input
                   type="date"
                   value={filters.dateFrom}
@@ -327,10 +350,14 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Origin */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <label
+                htmlFor={fieldIdFor('origin')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Origin City
               </label>
               <input
+                id={fieldIdFor('origin')}
                 type="text"
                 value={filters.origin}
                 onChange={(e) =>
@@ -343,10 +370,14 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Destination */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <label
+                htmlFor={fieldIdFor('destination')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Destination City
               </label>
               <input
+                id={fieldIdFor('destination')}
                 type="text"
                 value={filters.destination}
                 onChange={(e) =>
@@ -359,10 +390,14 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Carrier */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <label
+                htmlFor={fieldIdFor('carrier')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Carrier
               </label>
               <input
+                id={fieldIdFor('carrier')}
                 type="text"
                 value={filters.carrier}
                 onChange={(e) =>
@@ -375,10 +410,17 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
 
             {/* Weight Range */}
             <div>
-              <label className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider">
+              <span
+                id={fieldIdFor('weight-range')}
+                className="block text-xs text-slate-400 mb-2 font-medium uppercase tracking-wider"
+              >
                 Weight Range (kg)
-              </label>
-              <div className="flex items-center gap-2">
+              </span>
+              <div
+                className="flex items-center gap-2"
+                role="group"
+                aria-labelledby={fieldIdFor('weight-range')}
+              >
                 <input
                   type="number"
                   min={0}
@@ -387,6 +429,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                     setFilters((prev) => ({ ...prev, weightMin: e.target.value }))
                   }
                   placeholder="Min"
+                  aria-label="Minimum weight (kg)"
                   className={inputBase}
                 />
                 <span className="text-slate-500 text-xs shrink-0">to</span>
@@ -398,6 +441,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
                     setFilters((prev) => ({ ...prev, weightMax: e.target.value }))
                   }
                   placeholder="Max"
+                  aria-label="Maximum weight (kg)"
                   className={inputBase}
                 />
               </div>

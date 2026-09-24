@@ -55,7 +55,9 @@ function useWidgetRefresh({
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMountedRef = useRef(true);
 
-  onRefreshRef.current = onRefresh;
+  useEffect(() => {
+    onRefreshRef.current = onRefresh;
+  });
 
   useEffect(() => {
     isMountedRef.current = true;

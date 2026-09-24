@@ -51,6 +51,25 @@ const loadLocaleResources = async (language: SupportedLanguage) => {
   }, {});
 };
 
+import enLanding from "./locales/en/landing.json";
+import frCommon from "./locales/fr/common.json";
+import frAuth from "./locales/fr/auth.json";
+import frDashboard from "./locales/fr/dashboard.json";
+import frShipments from "./locales/fr/shipments.json";
+import frSettings from "./locales/fr/settings.json";
+import frLanding from "./locales/fr/landing.json";
+import esCommon from "./locales/es/common.json";
+import esAuth from "./locales/es/auth.json";
+import esDashboard from "./locales/es/dashboard.json";
+import esShipments from "./locales/es/shipments.json";
+import esSettings from "./locales/es/settings.json";
+import esLanding from "./locales/es/landing.json";
+
+
+const savedLanguage =
+  typeof window !== "undefined"
+    ? localStorage.getItem("language") || "en"
+    : "en";
 i18n.use(initReactI18next).init({
   lng: getInitialLanguage(),
   fallbackLng: "en",
@@ -69,6 +88,23 @@ i18n.use(initReactI18next).init({
       dashboard: enDashboard,
       shipments: enShipments,
       settings: enSettings,
+      landing: enLanding,
+    },
+    fr: {
+      common: frCommon,
+      auth: frAuth,
+      dashboard: frDashboard,
+      shipments: frShipments,
+      settings: frSettings,
+      landing: frLanding,
+    },
+    es: {
+      common: esCommon,
+      auth: esAuth,
+      dashboard: esDashboard,
+      shipments: esShipments,
+      settings: esSettings,
+      landing: esLanding,
     },
   },
 

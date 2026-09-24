@@ -1,10 +1,23 @@
+import type { ReactElement } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import StatusUpdate from './StatusUpdate';
+import { ToastProvider } from '../../../context/ToastContext';
+import { LiveRegionProvider } from '../../../context/LiveRegionContext';
+
+const renderWithProviders = (ui: ReactElement) =>
+  render(
+    <BrowserRouter>
+      <LiveRegionProvider>
+        <ToastProvider>{ui}</ToastProvider>
+      </LiveRegionProvider>
+    </BrowserRouter>,
+  );
 
 describe('StatusUpdate', () => {
   it('shows a dropdown with five milestone options', () => {
-    render(<StatusUpdate shipmentId="1234" />);
+    renderWithProviders(<StatusUpdate shipmentId="1234" />);
 
     fireEvent.click(screen.getByRole('button', { name: /update status for shipment 1234/i }));
 
@@ -19,7 +32,7 @@ describe('StatusUpdate', () => {
   it('opens confirmation dialog and closes on cancel', () => {
     const onStatusUpdate = vi.fn().mockResolvedValue(undefined);
 
-    render(<StatusUpdate shipmentId="1234" onStatusUpdate={onStatusUpdate} />);
+    renderWithProviders(<StatusUpdate shipmentId="1234" onStatusUpdate={onStatusUpdate} />);
 
     fireEvent.click(screen.getByRole('button', { name: /update status for shipment 1234/i }));
     fireEvent.click(screen.getByRole('button', { name: 'In Transit' }));
@@ -36,7 +49,7 @@ describe('StatusUpdate', () => {
   it('confirms status update and shows success feedback', async () => {
     const onStatusUpdate = vi.fn().mockResolvedValue(undefined);
 
-    render(<StatusUpdate shipmentId="1234" onStatusUpdate={onStatusUpdate} />);
+    renderWithProviders(<StatusUpdate shipmentId="1234" onStatusUpdate={onStatusUpdate} />);
 
     fireEvent.click(screen.getByRole('button', { name: /update status for shipment 1234/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Delivered' }));
@@ -46,20 +59,26 @@ describe('StatusUpdate', () => {
       expect(onStatusUpdate).toHaveBeenCalledWith('1234', 'Delivered');
     });
 
-    expect(screen.getByRole('status')).toHaveTextContent('Shipment #1234 updated to Delivered.');
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent('Shipment #1234 updated to Delivered.');
+    });
   });
 
   it('shows error feedback when update fails', async () => {
     const onStatusUpdate = vi.fn().mockRejectedValue(new Error('Could not update shipment'));
 
-    render(<StatusUpdate shipmentId="1234" onStatusUpdate={onStatusUpdate} />);
+    renderWithProviders(<StatusUpdate shipmentId="1234" onStatusUpdate={onStatusUpdate} />);
 
     fireEvent.click(screen.getByRole('button', { name: /update status for shipment 1234/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Out for Delivery' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
 
+    // useOptimisticUpdate deliberately swallows the raw thrown error and
+    // surfaces its own configured, user-facing fallback message instead.
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Could not update shipment');
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Failed to update shipment status. Changes have been reverted.',
+      );
     });
   });
 });

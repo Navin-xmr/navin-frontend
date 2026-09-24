@@ -1,6 +1,9 @@
 import { Github, Linkedin, Twitter } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function Footer() {
+    const { t } = useTranslation("landing");
+
     return (
         <footer className="relative py-20 px-4 bg-background-secondary overflow-hidden">
             {/* Background footer image */}
@@ -16,17 +19,17 @@ function Footer() {
                 {/* CTA Section */}
                 <div className="text-center mb-16">
                     <h2 className="font-display text-3xl md:text-5xl lg:text-6xl font-bold mb-6 text-text-primary">
-                        Get Started <span className="text-primary">Today</span>
+                        {t("footer.heading")} <span className="text-primary">{t("footer.headingHighlight")}</span>
                     </h2>
                     <p className="text-text-secondary text-lg mb-8 max-w-2xl mx-auto">
-                        Join 500+ enterprise leaders. Get the latest on blockchain logistics and zero trust supply chain management.
+                        {t("footer.subtitle")}
                     </p>
-                    
+
                     {/* Email Subscribe Form */}
                     <form className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
                         <input
                             type="email"
-                            placeholder="Enter your Email"
+                            placeholder={t("footer.emailPlaceholder")}
                             className="flex-1 px-6 py-4 bg-background-card/60 backdrop-blur-lg border border-border-light rounded-2xl text-text-primary placeholder:text-text-secondary/60 focus:outline-none focus:border-primary-light focus:shadow-glow-blue transition-all duration-300 hover:border-primary-light/50"
                             required
                         />
@@ -34,7 +37,7 @@ function Footer() {
                             type="submit"
                             className="w-full sm:w-auto px-10 py-4 bg-primary hover:bg-primary-light text-background font-display font-semibold text-lg rounded-2xl transition-all duration-300 hover:shadow-glow-blue hover:scale-[1.02] active:scale-[0.98] border border-primary-light/40"
                         >
-                            Subscribe
+                            {t("footer.subscribe")}
                         </button>
                     </form>
                 </div>
@@ -51,14 +54,14 @@ function Footer() {
                             />
                             <div>
                                 <h3 className="font-display text-xl font-bold text-text-primary">Navin</h3>
-                                <p className="text-sm text-text-secondary">The New Standard in Logistics Security</p>
+                                <p className="text-sm text-text-secondary">{t("footer.tagline")}</p>
                             </div>
                         </div>
                         
                         {/* Social Links */}
                         <div className="flex items-center gap-4">
                             <a
-                                href="https://github.com"
+                                href="https://github.com/Navin-xmr/"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="group w-12 h-12 rounded-xl bg-background-card/60 backdrop-blur-lg border border-border-light flex items-center justify-center hover:border-primary-light hover:shadow-glow-blue hover:scale-110 transition-all duration-300"
@@ -89,9 +92,25 @@ function Footer() {
                     
                     {/* Copyright */}
                     <div className="mt-8 text-center text-sm text-text-secondary">
-                        <p>&copy; {new Date().getFullYear()} Navin. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} {t("footer.copyright")}</p>
                     </div>
                 </div>
+            </div>
+
+            {/* Giant watermark wordmark */}
+            <div
+                className="relative mt-12 select-none pointer-events-none overflow-hidden"
+                aria-hidden="true"
+            >
+                <p
+                    className="font-display font-extrabold leading-none text-center bg-gradient-to-b from-primary/25 via-accent-teal/15 to-transparent bg-clip-text text-transparent"
+                    style={{
+                        fontSize: 'clamp(6rem, 22vw, 16rem)',
+                        transform: 'translateY(28%)',
+                    }}
+                >
+                    Navin
+                </p>
             </div>
         </footer>
     );

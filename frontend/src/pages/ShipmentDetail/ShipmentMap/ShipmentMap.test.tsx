@@ -42,8 +42,8 @@ describe('ShipmentMap', () => {
     );
 
     expect(screen.getByRole('heading', { name: /map view/i })).toBeInTheDocument();
-    expect(screen.getByText('ORIGIN:')).toBeInTheDocument();
-    expect(screen.getByText('DESTINATION:')).toBeInTheDocument();
+    expect(screen.getByText('Origin')).toBeInTheDocument();
+    expect(screen.getByText('Destination')).toBeInTheDocument();
     expect(screen.getByText('Location tracking unavailable')).toBeInTheDocument();
   });
 
@@ -64,8 +64,8 @@ describe('ShipmentMap', () => {
     );
 
     expect(screen.getByRole('heading', { name: /map view/i })).toBeInTheDocument();
-    expect(screen.getByText('ORIGIN:')).toBeInTheDocument();
-    expect(screen.getByText('DESTINATION:')).toBeInTheDocument();
+    expect(screen.getByText('Origin')).toBeInTheDocument();
+    expect(screen.getByText('Destination')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /View full map/i })).toBeInTheDocument();
     expect(screen.getByTestId('map-container')).toBeInTheDocument();
   });

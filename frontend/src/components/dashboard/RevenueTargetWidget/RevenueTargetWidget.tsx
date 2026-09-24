@@ -87,6 +87,7 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
             {achievementPercent.toFixed(1)}% of target
           </p>
         </div>
+      </div>
 
       <div className="mt-2 grid gap-2 text-sm text-[#cbd5e1]">
         <div className="flex items-center justify-between">
@@ -101,6 +102,7 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
           <span className="text-[#94a3b8]">Projected EOM</span>
           <span className="font-semibold text-[#60a5fa]">{formatCurrency(projectedRevenue)}</span>
         </div>
+      </div>
 
       <div className="mt-5 rounded-xl border border-[#1e293b] bg-[#0f172a] p-4">
         <div className="mb-2 flex items-center justify-between">

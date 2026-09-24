@@ -24,23 +24,6 @@ const DeliveryProofUpload: React.FC<DeliveryProofUploadProps> = ({
 
   const prevPreviewRef = useRef<string | null>(null);
 
-  // Generate a preview URL for the first valid file
-  useEffect(() => {
-    if (prevPreviewRef.current) {
-      URL.revokeObjectURL(prevPreviewRef.current);
-      prevPreviewRef.current = null;
-    }
-
-    const first = files[0];
-    if (first && first.type.startsWith("image/")) {
-      const url = URL.createObjectURL(first);
-      setPreviewUrl(url);
-      prevPreviewRef.current = url;
-    } else {
-      setPreviewUrl(null);
-    }
-  }, [files]);
-
   // Revoke object URL on unmount
   useEffect(() => {
     return () => {
@@ -49,6 +32,21 @@ const DeliveryProofUpload: React.FC<DeliveryProofUploadProps> = ({
   }, []);
 
   const handleFilesSelected = (selected: File[]) => {
+    // Generate a preview URL for the first valid file
+    if (prevPreviewRef.current) {
+      URL.revokeObjectURL(prevPreviewRef.current);
+      prevPreviewRef.current = null;
+    }
+
+    const first = selected[0];
+    if (first && first.type.startsWith("image/")) {
+      const url = URL.createObjectURL(first);
+      setPreviewUrl(url);
+      prevPreviewRef.current = url;
+    } else {
+      setPreviewUrl(null);
+    }
+
     setFiles(selected);
     setSubmitError(null);
   };

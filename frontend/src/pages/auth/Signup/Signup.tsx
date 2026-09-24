@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { WalletConnectButton } from "../../../components/auth/WalletConnectButton/WalletConnectButton";
 import { authApi } from "../../../services/api";
 import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
@@ -15,6 +16,7 @@ interface FormErrors {
 }
 
 const Signup: React.FC = () => {
+  const { t } = useTranslation("auth");
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -31,13 +33,13 @@ const Signup: React.FC = () => {
 
   const validate = () => {
     const newErrors: FormErrors = {};
-    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Invalid email format";
-    if (!formData.password) newErrors.password = "Password is required";
-    else if (formData.password.length < 8) newErrors.password = "Minimum 8 characters required";
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match";
-    if (!formData.terms) newErrors.terms = "You must agree to the terms";
+    if (!formData.fullName.trim()) newErrors.fullName = t("signup.errorFullNameRequired");
+    if (!formData.email) newErrors.email = t("signup.errorEmailRequired");
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = t("signup.errorEmailInvalid");
+    if (!formData.password) newErrors.password = t("signup.errorPasswordRequired");
+    else if (formData.password.length < 8) newErrors.password = t("signup.errorPasswordMinLength");
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t("signup.errorPasswordsMismatch");
+    if (!formData.terms) newErrors.terms = t("signup.errorTermsRequired");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -60,7 +62,7 @@ const Signup: React.FC = () => {
       });
       navigate("/dashboard");
     } catch {
-      setErrors((prev) => ({ ...prev, general: "Account creation failed. Please try again." }));
+      setErrors((prev) => ({ ...prev, general: t("signup.errorGeneral") }));
     } finally {
       setLoading(false);
     }
@@ -80,9 +82,9 @@ const Signup: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-[2rem] font-bold mb-2 bg-[linear-gradient(135deg,#fff_0%,#00DAC1_100%)] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]">
-            Create Account
+            {t("signup.title")}
           </h2>
-          <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem]">Join Navin and experience transparent tracking</p>
+          <p className="text-[rgba(255,255,255,0.6)] text-[0.95rem]">{t("signup.subtitle")}</p>
         </div>
 
         <div className="flex justify-center mb-5">
@@ -97,9 +99,9 @@ const Signup: React.FC = () => {
           )}
           {/* Full Name */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="fullName" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">Full Name</label>
+            <label htmlFor="fullName" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">{t("signup.fullNameLabel")}</label>
             <input
-              type="text" id="fullName" name="fullName" placeholder="John Doe"
+              type="text" id="fullName" name="fullName" placeholder={t("signup.fullNamePlaceholder")}
               value={formData.fullName} onChange={handleChange}
               aria-invalid={!!errors.fullName}
               aria-describedby={errors.fullName ? "fullName-error" : undefined}
@@ -110,9 +112,9 @@ const Signup: React.FC = () => {
 
           {/* Email */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">Email Address</label>
+            <label htmlFor="email" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">{t("signup.emailLabel")}</label>
             <input
-              type="email" id="email" name="email" placeholder="name@company.com"
+              type="email" id="email" name="email" placeholder={t("signup.emailPlaceholder")}
               value={formData.email} onChange={handleChange}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? "email-error" : undefined}
@@ -123,7 +125,7 @@ const Signup: React.FC = () => {
 
           {/* Password */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="password" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">Password</label>
+            <label htmlFor="password" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">{t("signup.passwordLabel")}</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"} id="password" name="password" placeholder="••••••••"
@@ -136,7 +138,7 @@ const Signup: React.FC = () => {
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 bg-none border-none text-[rgba(255,255,255,0.6)] cursor-pointer flex items-center justify-center p-2 rounded-lg transition-all hover:text-[#00DAC1] hover:bg-[rgba(255,255,255,0.05)]"
                 onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? t("signup.hidePassword") : t("signup.showPassword")}
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -149,7 +151,7 @@ const Signup: React.FC = () => {
 
           {/* Confirm Password */}
           <div className="flex flex-col gap-2">
-            <label htmlFor="confirmPassword" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">Confirm Password</label>
+            <label htmlFor="confirmPassword" className="text-[0.85rem] font-medium text-[rgba(255,255,255,0.6)] ml-1">{t("signup.confirmPasswordLabel")}</label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"} id="confirmPassword" name="confirmPassword" placeholder="••••••••"
@@ -162,7 +164,7 @@ const Signup: React.FC = () => {
                 type="button"
                 className="absolute right-3 top-1/2 -translate-y-1/2 bg-none border-none text-[rgba(255,255,255,0.6)] cursor-pointer flex items-center justify-center p-2 rounded-lg transition-all hover:text-[#00DAC1] hover:bg-[rgba(255,255,255,0.05)]"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                aria-label={showConfirmPassword ? t("signup.hidePassword") : t("signup.showPassword")}
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -189,8 +191,8 @@ const Signup: React.FC = () => {
                 </svg>
               </div>
               <span>
-                I agree to the{" "}
-                <a href="#" className="text-[#00DAC1] no-underline hover:underline">Terms and Conditions</a>
+                {t("signup.termsLabel")}{" "}
+                <a href="#" className="text-[#00DAC1] no-underline hover:underline">{t("signup.termsLink")}</a>
               </span>
             </label>
             {errors.terms && <span id="terms-error" className="text-[#FF4D4D] text-[0.75rem] mt-1 ml-1" role="alert">{errors.terms}</span>}
@@ -205,15 +207,15 @@ const Signup: React.FC = () => {
             {loading ? (
               <>
                 <div className="w-5 h-5 border-2 border-[rgba(0,0,0,0.1)] border-t-black rounded-full animate-spin" />
-                Creating Account...
+                {t("signup.submitting")}
               </>
-            ) : "Create Account"}
+            ) : t("signup.submit")}
           </button>
         </form>
 
         <p className="text-center text-[0.9rem] text-[rgba(255,255,255,0.6)] mt-6">
-          Already have an account?{" "}
-          <Link to="/login" className="text-[#00DAC1] no-underline font-semibold hover:underline">Sign in</Link>
+          {t("signup.alreadyHaveAccount")}{" "}
+          <Link to="/login" className="text-[#00DAC1] no-underline font-semibold hover:underline">{t("signup.signIn")}</Link>
         </p>
       </div>
     </div>

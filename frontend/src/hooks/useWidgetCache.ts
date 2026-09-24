@@ -11,8 +11,7 @@ interface CacheEntry<T> {
   fetchedAt: number; // epoch ms
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const widgetCacheMap = new Map<string, CacheEntry<any>>();
+const widgetCacheMap = new Map<string, CacheEntry<unknown>>();
 
 // ---------------------------------------------------------------------------
 // Types
@@ -71,7 +70,9 @@ function useWidgetCache<T>(
   // adding it to the dependency array (avoids infinite loops when the caller
   // passes an inline arrow function).
   const fetcherRef = useRef(fetcher);
-  fetcherRef.current = fetcher;
+  useEffect(() => {
+    fetcherRef.current = fetcher;
+  });
 
   // -------------------------------------------------------------------------
   // Derive initial state from whatever is already in the cache.
@@ -122,26 +123,31 @@ function useWidgetCache<T>(
   // navigation returns to this widget's route).
   // -------------------------------------------------------------------------
   useEffect(() => {
-    const entry = getCachedEntry();
+    // The whole body is deferred to a microtask so its setState calls run
+    // as a reaction to the cache lookup rather than synchronously within
+    // the effect (still resolves before the next paint).
+    queueMicrotask(() => {
+      const entry = getCachedEntry();
 
-    if (!entry) {
-      // No cached data at all — fetch immediately.
-      void runFetch();
-      return;
-    }
+      if (!entry) {
+        // No cached data at all — fetch immediately.
+        void runFetch();
+        return;
+      }
 
-    if (isEntryStale(entry)) {
-      // Data exists but is past TTL — mark stale and re-fetch.
-      setData(entry.data); // keep showing stale data while re-fetching
-      setIsStale(true);
-      void runFetch();
-    } else {
-      // Fresh cached data — hydrate state without a loading spinner.
-      setData(entry.data);
-      setIsStale(false);
-      setLastUpdated(new Date(entry.fetchedAt));
-      setIsLoading(false);
-    }
+      if (isEntryStale(entry)) {
+        // Data exists but is past TTL — mark stale and re-fetch.
+        setData(entry.data); // keep showing stale data while re-fetching
+        setIsStale(true);
+        void runFetch();
+      } else {
+        // Fresh cached data — hydrate state without a loading spinner.
+        setData(entry.data);
+        setIsStale(false);
+        setLastUpdated(new Date(entry.fetchedAt));
+        setIsLoading(false);
+      }
+    });
   }, [cacheKey, getCachedEntry, isEntryStale, runFetch]);
 
   // -------------------------------------------------------------------------

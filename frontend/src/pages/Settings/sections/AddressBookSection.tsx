@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useId, useState } from 'react';
 import {
   Book,
   Plus,
@@ -49,6 +49,8 @@ const AddressBookSection: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Address | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const fieldId = useId();
+  const fieldIdFor = (field: string) => `${fieldId}-${field}`;
 
   const fetchAddresses = useCallback(async () => {
     setIsLoading(true);
@@ -265,10 +267,14 @@ const AddressBookSection: React.FC = () => {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-white mb-1.5">
+            <label
+              htmlFor={fieldIdFor('label')}
+              className="block text-sm font-medium text-white mb-1.5"
+            >
               Label <span className="text-red-400">*</span>
             </label>
             <input
+              id={fieldIdFor('label')}
               value={form.label}
               onChange={(e) => {
                 setForm((p) => ({ ...p, label: e.target.value }));
@@ -284,10 +290,14 @@ const AddressBookSection: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-1.5">
+              <label
+                htmlFor={fieldIdFor('name')}
+                className="block text-sm font-medium text-white mb-1.5"
+              >
                 Contact Name <span className="text-red-400">*</span>
               </label>
               <input
+                id={fieldIdFor('name')}
                 value={form.name}
                 onChange={(e) => {
                   setForm((p) => ({ ...p, name: e.target.value }));
@@ -301,10 +311,14 @@ const AddressBookSection: React.FC = () => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1.5">
+              <label
+                htmlFor={fieldIdFor('phone')}
+                className="block text-sm font-medium text-white mb-1.5"
+              >
                 Phone <span className="text-red-400">*</span>
               </label>
               <input
+                id={fieldIdFor('phone')}
                 value={form.phone}
                 onChange={(e) => {
                   setForm((p) => ({ ...p, phone: e.target.value }));
@@ -320,10 +334,14 @@ const AddressBookSection: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white mb-1.5">
+            <label
+              htmlFor={fieldIdFor('street')}
+              className="block text-sm font-medium text-white mb-1.5"
+            >
               Street Address <span className="text-red-400">*</span>
             </label>
             <input
+              id={fieldIdFor('street')}
               value={form.street}
               onChange={(e) => {
                 setForm((p) => ({ ...p, street: e.target.value }));
@@ -339,10 +357,14 @@ const AddressBookSection: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-1.5">
+              <label
+                htmlFor={fieldIdFor('city')}
+                className="block text-sm font-medium text-white mb-1.5"
+              >
                 City <span className="text-red-400">*</span>
               </label>
               <input
+                id={fieldIdFor('city')}
                 value={form.city}
                 onChange={(e) => {
                   setForm((p) => ({ ...p, city: e.target.value }));
@@ -356,10 +378,14 @@ const AddressBookSection: React.FC = () => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1.5">
+              <label
+                htmlFor={fieldIdFor('state')}
+                className="block text-sm font-medium text-white mb-1.5"
+              >
                 State <span className="text-red-400">*</span>
               </label>
               <input
+                id={fieldIdFor('state')}
                 value={form.state}
                 onChange={(e) => {
                   setForm((p) => ({ ...p, state: e.target.value }));
@@ -376,10 +402,14 @@ const AddressBookSection: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-1.5">
+              <label
+                htmlFor={fieldIdFor('country')}
+                className="block text-sm font-medium text-white mb-1.5"
+              >
                 Country <span className="text-red-400">*</span>
               </label>
               <input
+                id={fieldIdFor('country')}
                 value={form.country}
                 onChange={(e) => {
                   setForm((p) => ({ ...p, country: e.target.value }));
@@ -395,10 +425,14 @@ const AddressBookSection: React.FC = () => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-white mb-1.5">
+              <label
+                htmlFor={fieldIdFor('postalCode')}
+                className="block text-sm font-medium text-white mb-1.5"
+              >
                 Postal Code <span className="text-red-400">*</span>
               </label>
               <input
+                id={fieldIdFor('postalCode')}
                 value={form.postalCode}
                 onChange={(e) => {
                   setForm((p) => ({ ...p, postalCode: e.target.value }));
