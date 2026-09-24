@@ -144,11 +144,11 @@ describe('UserManagement', () => {
 
   // ── Search / filter ───────────────────────────────────────────────────────
 
-  it('filters users by name search', async () => {
-    mockGetAll.mockResolvedValue({
-      data: [makeUser(), makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' })],
-      page: 1, limit: 8, total: 2,
-    });
+  it('sends search query to the API (debounced) and renders server results', async () => {
+    // First call returns both users; second call (after debounce) returns only Alice.
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser(), makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' })], page: 1, limit: 8, total: 2 })
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 });
     mockInvList.mockResolvedValue([]);
 
     render(<UserManagement />);
@@ -156,27 +156,41 @@ describe('UserManagement', () => {
 
     await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'Alice');
 
+    // After debounce the API is called with the search param.
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: 'Alice' }),
+      ),
+    );
+    // Server returns only Alice; Bob should no longer be in the DOM.
+    await waitFor(() => expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument());
     expect(screen.getByText('Alice Smith')).toBeInTheDocument();
-    expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument();
   });
 
   it('shows empty table row when search yields no results', async () => {
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 })
+      .mockResolvedValueOnce({ data: [], page: 1, limit: 8, total: 0 });
     render(<UserManagement />);
     await waitFor(() => screen.getByText('Alice Smith'));
 
     await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'zzznobody');
 
-    expect(screen.getByText(/no users found matching your criteria/i)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: 'zzznobody' }),
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByText(/no users found matching your criteria/i)).toBeInTheDocument(),
+    );
   });
 
-  it('filters users by role', async () => {
-    mockGetAll.mockResolvedValue({
-      data: [
-        makeUser(),
-        makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' }),
-      ],
-      page: 1, limit: 8, total: 2,
-    });
+  it('sends role filter to the API and renders server results', async () => {
+    // Initial call returns all; after role select, only Admins.
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser(), makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' })], page: 1, limit: 8, total: 2 })
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 });
     mockInvList.mockResolvedValue([]);
 
     render(<UserManagement />);
@@ -184,8 +198,13 @@ describe('UserManagement', () => {
 
     await userEvent.selectOptions(screen.getByDisplayValue('All Roles'), 'Admin');
 
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ role: 'Admin' }),
+      ),
+    );
+    await waitFor(() => expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument());
     expect(screen.getByText('Alice Smith')).toBeInTheDocument();
-    expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument();
   });
 
   // ── Role change ───────────────────────────────────────────────────────────
@@ -352,5 +371,41 @@ describe('UserManagement', () => {
       expect.stringContaining('carol@example.com'),
       'success',
     );
+  });
+
+  // ── Server-side pagination ────────────────────────────────────────────────
+
+  it('passes page, limit, search and role to the API and drives pager from response total', async () => {
+    // 9 total users — enough to require a second page with pageSize=8.
+    const page1Users = Array.from({ length: 8 }, (_, i) =>
+      makeUser({ _id: `u${i + 1}`, name: `User ${i + 1}`, email: `u${i + 1}@example.com` }),
+    );
+    const page2Users = [makeUser({ _id: 'u9', name: 'User 9', email: 'u9@example.com' })];
+
+    mockGetAll
+      .mockResolvedValueOnce({ data: page1Users, page: 1, limit: 8, total: 9 })
+      .mockResolvedValueOnce({ data: page2Users, page: 2, limit: 8, total: 9 });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('User 1'));
+
+    // Initial API call must include page and limit.
+    expect(mockGetAll).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, limit: 8 }),
+    );
+
+    // The pager is driven by response.total=9 > limit=8, so nav buttons appear.
+    const nextBtn = screen.getByRole('button', { name: /next page/i });
+    expect(nextBtn).toBeDefined();
+    await userEvent.click(nextBtn);
+
+    // After navigating, the API must be called with page: 2.
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2, limit: 8 }),
+      ),
+    );
+    await waitFor(() => expect(screen.getByText('User 9')).toBeInTheDocument());
   });
 });

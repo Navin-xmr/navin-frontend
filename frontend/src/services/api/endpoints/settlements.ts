@@ -97,10 +97,11 @@ export const settlementsApi = {
 
     getSettlements: async (
         params?: GetSettlementsParams,
+        options?: { signal?: AbortSignal },
     ): Promise<PaginatedSettlements> => {
         const res = await apiClient.get<{ data: PaginatedSettlements }>(
             "/settlements",
-            { params },
+            { params, signal: options?.signal },
         );
         return res.data.data;
     },

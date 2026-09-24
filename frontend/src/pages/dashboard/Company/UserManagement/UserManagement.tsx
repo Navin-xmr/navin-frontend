@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical,
   X, Loader2, AlertTriangle, Mail, RefreshCw, Trash2, Clock,
@@ -7,6 +7,7 @@ import { usersApi, invitationsApi } from '@services/api';
 import type { User as ApiUser, UserRole, Invitation } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
+import { useDebounce } from '../../../../hooks/useDebounce';
 import { usePagination } from '../../../../hooks/usePagination';
 import Avatar from '../../../../components/ui/Avatar';
 import Breadcrumb from '@components/common/Breadcrumb';
@@ -65,18 +66,27 @@ const UserManagement: React.FC = () => {
   const inviteModalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(inviteModalRef, isModalOpen, closeModal);
 
+  const [total, setTotal] = useState(0);
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
   const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await usersApi.getAll();
+      const res = await usersApi.getAll({
+        page: currentPage,
+        limit: itemsPerPage,
+        search: debouncedSearch || undefined,
+        role: roleFilter === 'All' ? undefined : (roleFilter as import('@services/api').UserRole),
+      });
       setUsers(res.data.map(mapApiUser));
+      setTotal(res.total);
     } catch {
       setError('Failed to load users. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, debouncedSearch, itemsPerPage, roleFilter]);
 
   const fetchInvitations = useCallback(async () => {
     try {
@@ -91,27 +101,16 @@ const UserManagement: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      fetchUsers();
-      fetchInvitations();
-    });
-  }, [fetchUsers, fetchInvitations]);
+    void fetchUsers();
+  }, [fetchUsers]);
 
-  const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRole = roleFilter === 'All' || user.role === roleFilter;
-      return matchesSearch && matchesRole;
-    });
-  }, [users, searchQuery, roleFilter]);
+  useEffect(() => {
+    void fetchInvitations();
+  }, [fetchInvitations]);
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
-  const currentUsers = filteredUsers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(total / itemsPerPage) || 1;
+  // Server already returns the current page's slice; render all returned users.
+  const currentUsers = users;
 
   const handleRoleChange = async (id: string, newRole: UserRole) => {
     const prev = users;
@@ -402,13 +401,14 @@ const UserManagement: React.FC = () => {
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <span className="text-slate-400 text-sm">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+            Showing {total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} entries
           </span>
           <div className="flex items-center gap-3">
             <button
               className="bg-[#14171E] border border-[#1E293B] text-slate-100 w-8 h-8 flex items-center justify-center rounded-md cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:not-disabled:bg-[#1E293B] hover:not-disabled:border-[#334155]"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              aria-label="Previous page"
             >
               <ChevronLeft size={16} />
             </button>
@@ -417,6 +417,7 @@ const UserManagement: React.FC = () => {
               className="bg-[#14171E] border border-[#1E293B] text-slate-100 w-8 h-8 flex items-center justify-center rounded-md cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:not-disabled:bg-[#1E293B] hover:not-disabled:border-[#334155]"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              aria-label="Next page"
             >
               <ChevronRight size={16} />
             </button>

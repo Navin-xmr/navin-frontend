@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronDown,
@@ -193,34 +193,49 @@ const PaymentHistory: React.FC = () => {
   const [total, setTotal] = useState(0);
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
 
-  const load = async () => {
+  const abortRef = useRef<AbortController | null>(null);
+
+  const load = useCallback(async () => {
+    // Cancel any in-flight request before starting a new one.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     setError(null);
     try {
-      const res = await settlementsApi.getSettlements({
-        page: currentPage,
-        limit: itemsPerPage,
-        status: filterStatus === "All" ? undefined : filterStatus,
-        sortBy: "createdAt",
-        sortOrder,
-      });
-      setPayments(res.data);
-      setTotal(res.total);
+      const res = await settlementsApi.getSettlements(
+        {
+          page: currentPage,
+          limit: itemsPerPage,
+          status: filterStatus === "All" ? undefined : filterStatus,
+          sortBy: "createdAt",
+          sortOrder,
+        },
+        { signal: controller.signal },
+      );
+      if (!controller.signal.aborted) {
+        setPayments(res.data);
+        setTotal(res.total);
+      }
     } catch (e) {
+      if (controller.signal.aborted) return;
       setError(e instanceof Error ? e.message : "Failed to load payment history");
       setPayments([]);
       setTotal(0);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [currentPage, filterStatus, itemsPerPage, sortOrder]);
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      void load();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, filterStatus, sortOrder]);
+    void load();
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [load]);
 
   const openPaymentDetail = async (payment: Settlement) => {
     setSelectedPayment(payment);
@@ -253,19 +268,6 @@ const PaymentHistory: React.FC = () => {
     setCurrentPage(1);
   };
 
-  return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
-      <div className="max-w-6xl mx-auto flex flex-col gap-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-text-primary">Payment History</h1>
-            <p className="text-sm text-text-secondary mt-1">
-              Track your escrow settlements and on-chain payments.
-            </p>
-          </div>
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
   // Single page-level heading shared by every render state (error / empty /
   // loaded) so the page always exposes just one top-level heading.
   const pageHeader = (
@@ -278,6 +280,9 @@ const PaymentHistory: React.FC = () => {
       </p>
     </div>
   );
+
+  const tableContainerClass =
+    "bg-background-card border border-border rounded-2xl overflow-hidden mb-5";
 
   if (error) {
     return (
@@ -299,17 +304,6 @@ const PaymentHistory: React.FC = () => {
     );
   }
 
-  if (!isLoading && payments.length === 0) {
-    return (
-      <div className="p-6 md:p-4">
-        <div className="mb-6">{pageHeader}</div>
-        <div className={tableContainerClass}>
-          <EmptyState.NoPayments />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 md:p-4">
       {/* Header */}
@@ -319,10 +313,7 @@ const PaymentHistory: React.FC = () => {
           <div className="relative flex items-center max-md:w-full">
             <select
               value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value as SettlementStatus | "All");
-                setCurrentPage(1);
-              }}
+              onChange={(e) => handleFilterChange(e.target.value as SettlementStatus | "All")}
               aria-label="Filter by payment status"
               className="appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#62ffff] focus-visible:ring-offset-1 focus-visible:ring-offset-background hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full"
             >
@@ -341,174 +332,136 @@ const PaymentHistory: React.FC = () => {
           <button
             type="button"
             className="inline-flex items-center gap-2 bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 rounded-lg text-sm font-medium cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#62ffff] focus-visible:ring-offset-1 focus-visible:ring-offset-background hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
-            onClick={() =>
-              setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
-            }
+            onClick={handleSortToggle}
             aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
             aria-pressed={sortOrder === "desc"}
           >
-            <ChevronLeft size={16} />
-            Back to Dashboard
-          </Link>
+            Date <ArrowUpDown size={14} />
+            <span className="text-text-secondary max-md:hidden">
+              {sortOrder === "desc" ? "Newest" : "Oldest"}
+            </span>
+          </button>
         </div>
+      </div>
 
-        <PaymentSummaryCards />
+      <PaymentSummaryCards />
 
-        <div className="bg-background-card border border-border rounded-2xl p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="status-filter" className="text-sm text-text-secondary">
-                Status
-              </label>
-              <div className="relative">
-                <select
-                  id="status-filter"
-                  value={filterStatus}
-                  onChange={(e) =>
-                    handleFilterChange(e.target.value as SettlementStatus | "All")
-                  }
-                  className="appearance-none bg-background-card border border-border rounded-lg pl-3 pr-8 py-2 text-sm text-text-primary focus:outline-none focus:border-primary"
-                >
-                  <option value="All">All</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="ESCROWED">Escrowed</option>
-                  <option value="RELEASED">Released</option>
-                  <option value="DISPUTED">Disputed</option>
-                  <option value="FAILED">Failed</option>
-                </select>
-                <ChevronDown
-                  size={16}
-                  className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary"
-                />
-              </div>
-            </div>
-            <button
-              onClick={handleSortToggle}
-              className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
-            >
-              <ArrowUpDown size={16} />
-              Date {sortOrder === "asc" ? "Ascending" : "Descending"}
-            </button>
+      <div className={tableContainerClass}>
+        {isLoading ? (
+          <div className="flex flex-col gap-2 p-4">
+            {[...Array(5)].map((_, i) => (
+              <TableRowSkeleton key={i} />
+            ))}
           </div>
-
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-error bg-error/10 border border-error/30 rounded-lg p-3 mb-4">
-              <AlertTriangle size={16} />
-              {error}
-            </div>
-          )}
-
-          {isLoading ? (
-            <div className="flex flex-col gap-2">
-              {[...Array(5)].map((_, i) => (
-                <TableRowSkeleton key={i} />
-              ))}
-            </div>
-          ) : payments.length === 0 ? (
+        ) : payments.length === 0 ? (
+          <div className="p-6">
             <EmptyState
               title="No payments found"
               description="Your escrow settlements will appear here once created."
             />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-text-secondary border-b border-border">
-                    <th className="py-3 pr-4 font-medium">Shipment</th>
-                    <th className="py-3 pr-4 font-medium">Date</th>
-                    <th className="py-3 pr-4 font-medium">Amount</th>
-                    <th className="py-3 pr-4 font-medium">Status</th>
-                    <th className="py-3 pr-4 font-medium">Tx Hash</th>
-                    <th className="py-3 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment) => (
-                    <tr
-                      key={payment._id}
-                      className="border-b border-border last:border-0 hover:bg-background-hover transition-colors"
-                    >
-                      <td className="py-3 pr-4 text-text-primary">
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-text-secondary border-b border-border">
+                  <th className="py-3 px-4 font-medium">Shipment</th>
+                  <th className="py-3 px-4 font-medium">Date</th>
+                  <th className="py-3 px-4 font-medium">Amount</th>
+                  <th className="py-3 px-4 font-medium">Status</th>
+                  <th className="py-3 px-4 font-medium">Tx Hash</th>
+                  <th className="py-3 px-4 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr
+                    key={payment._id}
+                    className="border-b border-border last:border-0 hover:bg-background-hover transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <Link
+                        to={`/dashboard/shipments/${payment.shipmentId}`}
+                        className="text-primary hover:underline font-medium"
+                      >
                         {payment.shipmentId}
-                      </td>
-                      <td className="py-3 pr-4 text-text-secondary">
-                        {new Date(payment.createdAt).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </td>
-                      <td className="py-3 pr-4 text-text-primary font-medium">
-                        {payment.amount.toLocaleString()} {payment.token}
-                      </td>
-                      <td className="py-3 pr-4">
+                      </Link>
+                    </td>
+                    <td className="py-3 px-4 text-text-secondary">
+                      {new Date(payment.createdAt).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+                    <td className="py-3 px-4 text-text-primary font-medium">
+                      {payment.amount.toLocaleString()} {payment.token}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusClasses[payment.status]}`}
+                      >
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusClasses[payment.status]}`}
+                          className={`w-1.5 h-1.5 rounded-full ${statusDotClasses[payment.status]}`}
+                        />
+                        {payment.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      {payment.stellarTxHash ? (
+                        <a
+                          href={getStellarExplorerUrl(payment.stellarTxHash)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-xs text-primary inline-flex items-center gap-1 hover:underline"
                         >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${statusDotClasses[payment.status]}`}
-                          />
-                          {payment.status}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        {payment.stellarTxHash ? (
-                          <a
-                            href={getStellarExplorerUrl(payment.stellarTxHash)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono text-xs text-primary inline-flex items-center gap-1 hover:underline"
-                          >
-                            {truncateHash(payment.stellarTxHash)}
-                            <ExternalLink size={11} aria-hidden="true" />
-                          </a>
-                        ) : (
-                          <span className="text-text-secondary text-xs">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 text-right">
-                        <button
-                          onClick={() => openPaymentDetail(payment)}
-                          className="text-xs text-primary hover:underline"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                          {truncateHash(payment.stellarTxHash)}
+                          <ExternalLink size={11} aria-hidden="true" />
+                        </a>
+                      ) : (
+                        <span className="text-text-secondary text-xs">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        onClick={() => void openPaymentDetail(payment)}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-          {!isLoading && payments.length > 0 && (
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-xs text-text-secondary">
-                Page {currentPage} of {totalPages}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Next page"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+        {!isLoading && payments.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <span className="text-xs text-text-secondary">
+              Page {currentPage} of {totalPages} · {total} total
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-border text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                aria-label="Next page"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <PaymentDetailModal

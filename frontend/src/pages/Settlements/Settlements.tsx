@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpDown,
   ExternalLink,
@@ -84,34 +84,49 @@ export default function Settlements() {
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
-  const load = async () => {
+  const abortRef = useRef<AbortController | null>(null);
+
+  const load = useCallback(async () => {
+    // Cancel any in-flight request before starting a new one.
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     setError(null);
     try {
-      const res = await settlementsApi.getSettlements({
-        page: currentPage,
-        limit,
-        status: filterStatus === "ALL" ? undefined : filterStatus,
-        sortBy: "createdAt",
-        sortOrder,
-      });
-      setSettlements(res.data);
-      setTotal(res.total);
+      const res = await settlementsApi.getSettlements(
+        {
+          page: currentPage,
+          limit,
+          status: filterStatus === "ALL" ? undefined : filterStatus,
+          sortBy: "createdAt",
+          sortOrder,
+        },
+        { signal: controller.signal },
+      );
+      if (!controller.signal.aborted) {
+        setSettlements(res.data);
+        setTotal(res.total);
+      }
     } catch (e) {
+      if (controller.signal.aborted) return;
       setError(e instanceof Error ? e.message : "Failed to load settlements");
       setSettlements([]);
       setTotal(0);
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [currentPage, filterStatus, limit, sortOrder]);
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      void load();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, filterStatus, sortOrder]);
+    void load();
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [load]);
 
   // Apply realtime settlement status updates
   useEffect(() => {
