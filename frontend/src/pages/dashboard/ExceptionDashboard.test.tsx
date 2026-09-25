@@ -1,9 +1,40 @@
-import { describe, it, expect } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ExceptionDashboard from './ExceptionDashboard';
+import { exceptionApi } from '@services/api/endpoints/exceptions';
+import type { ShipmentException } from '@services/api/endpoints/exceptions';
+
+vi.mock('@services/api/endpoints/exceptions', () => ({
+  exceptionApi: {
+    getAll: vi.fn(),
+    resolve: vi.fn(),
+  },
+}));
+
+const mockedGetAll = vi.mocked(exceptionApi.getAll);
+
+const mockExceptions: ShipmentException[] = [
+  {
+    id: 'EX-1021',
+    shipmentId: 'SHP-1042',
+    type: 'DELAYED',
+    status: 'OPEN',
+    ageHours: 38,
+    owner: 'Amina',
+    route: 'Lagos → Abuja',
+    openedAt: new Date().toISOString(),
+    resolutionHours: 12,
+    severity: 'HIGH',
+  },
+];
 
 describe('ExceptionDashboard', () => {
+  beforeEach(() => {
+    mockedGetAll.mockReset();
+    mockedGetAll.mockResolvedValue(mockExceptions);
+  });
+
   it('renders KPI cards, filters, and inline resolution controls', async () => {
     const user = userEvent.setup();
     render(<ExceptionDashboard />);
@@ -15,8 +46,10 @@ describe('ExceptionDashboard', () => {
 
     const selects = screen.getAllByRole('combobox');
     await user.selectOptions(selects[0], 'DELAYED');
-    await user.click(screen.getAllByRole('button', { name: /resolve/i })[0]);
 
-    expect(screen.getByPlaceholderText(/add an update/i)).toBeInTheDocument();
+    const resolveButtons = await screen.findAllByRole('button', { name: /resolve/i });
+    await user.click(resolveButtons[0]);
+
+    expect(await screen.findByPlaceholderText(/add an update/i)).toBeInTheDocument();
   });
 });
