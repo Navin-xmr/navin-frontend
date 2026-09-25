@@ -21,4 +21,9 @@ describe('CostPerRouteWidget', () => {
     expect(screen.getByText('Shipments on New York, NY → Los Angeles, CA')).toBeInTheDocument();
     expect(screen.getByText('NV-001')).toBeInTheDocument();
   });
+
+  it('renders honest empty state when data is empty', () => {
+    render(<CostPerRouteWidget data={[]} />);
+    expect(screen.getByText('No route cost data available')).toBeInTheDocument();
+  });
 });

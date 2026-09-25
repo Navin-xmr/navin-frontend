@@ -20,6 +20,8 @@ import RecentActivityFeed from "./RecentActivity/RecentActivityFeed";
 import ShipmentsMapWidget from "./ShipmentsMap/ShipmentsMapWidget";
 import RevenueSummaryWidget from "./RevenueSummary/RevenueSummaryWidget";
 import { CostPerRouteWidget } from "../../../components/dashboard/CostPerRouteWidget";
+import type { RouteCostData } from "../../../components/dashboard/CostPerRouteWidget/types";
+import { shipmentApi } from "@services/api/endpoints/shipments";
 import { RevenueTargetWidget } from "../../../components/dashboard/RevenueTargetWidget";
 import PerformanceScorecardWidget from "./Scorecard/PerformanceScorecardWidget";
 import { shipmentApi } from "@services/api/endpoints/shipments";
@@ -147,6 +149,9 @@ const CompanyDashboard: React.FC = () => {
   const [showTour, setShowTour] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [routeCostData, setRouteCostData] = useState<RouteCostData[]>([]);
+  const [isRouteCostLoading, setIsRouteCostLoading] = useState(true);
+  const [routeCostError, setRouteCostError] = useState<string | null>(null);
   const widgetToggleId = useId();
   const [activePresetId, setActivePresetId] = useState(() => {
     try {
@@ -213,6 +218,65 @@ const CompanyDashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
+        setIsRouteCostLoading(true);
+        setRouteCostError(null);
+
+        const [shipmentsRes] = await Promise.allSettled([
+          shipmentApi.getAll({ limit: 100 }),
+          new Promise((resolve) => setTimeout(resolve, 1200)),
+        ]);
+
+        if (shipmentsRes.status === 'fulfilled') {
+          const shipments = shipmentsRes.value.data ?? [];
+          const routeMap = new Map<string, RouteCostData>();
+
+          for (const s of shipments) {
+            const origin = s.origin?.trim() || 'Unknown Origin';
+            const destination = s.destination?.trim() || 'Unknown Destination';
+            const routeKey = `${origin} → ${destination}`;
+
+            const meta = (s.offChainMetadata ?? {}) as Record<string, unknown>;
+            const base = typeof meta.baseCost === 'number' ? meta.baseCost : 1200;
+            const fuel = typeof meta.fuelCost === 'number' ? meta.fuelCost : 400;
+            const customs = typeof meta.customsCost === 'number' ? meta.customsCost : 150;
+            const insurance = typeof meta.insuranceCost === 'number' ? meta.insuranceCost : 100;
+            const revenue = typeof meta.revenue === 'number' ? meta.revenue : 2500;
+            const cost = base + fuel + customs + insurance;
+
+            const shipmentItem = {
+              id: s.id || s._id,
+              trackingNumber: s.trackingNumber || s.id || s._id,
+              cost,
+              revenue,
+            };
+
+            const existing = routeMap.get(routeKey);
+            if (!existing) {
+              routeMap.set(routeKey, {
+                route: routeKey,
+                origin,
+                destination,
+                base,
+                fuel,
+                customs,
+                insurance,
+                revenue,
+                shipments: [shipmentItem],
+              });
+            } else {
+              existing.base += base;
+              existing.fuel += fuel;
+              existing.customs += customs;
+              existing.insurance += insurance;
+              existing.revenue += revenue;
+              existing.shipments.push(shipmentItem);
+            }
+          }
+          setRouteCostData(Array.from(routeMap.values()));
+        } else {
+          setRouteCostError('Failed to load route cost data');
+        }
+
         setHasError(false);
         await Promise.allSettled([
           shipmentApi.getAll({ limit: 5 }),
@@ -221,12 +285,14 @@ const CompanyDashboard: React.FC = () => {
         ]);
         if (cancelled) return;
         setIsLoading(false);
+        setIsRouteCostLoading(false);
         setLastRefreshed(new Date());
         if (!isTourComplete()) setShowTour(true);
       } catch {
         if (cancelled) return;
         setHasError(true);
         setIsLoading(false);
+        setIsRouteCostLoading(false);
       }
     };
     void fetchDashboardData();
@@ -449,7 +515,11 @@ const CompanyDashboard: React.FC = () => {
       {isWidgetVisible("targets") && (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <RevenueTargetWidget />
-          <CostPerRouteWidget />
+          <CostPerRouteWidget
+            data={routeCostData}
+            loading={isRouteCostLoading}
+            error={routeCostError}
+          />
         </div>
       )}
 
