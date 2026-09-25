@@ -33,12 +33,13 @@ vi.mock('../../services/realtime/realtimeService', () => ({
   },
 }));
 
-// authApi + tokenStorage used by SessionTimeoutModal
+// authApi + tokenStorage used by SessionTimeoutModal (directly and via logoutSession)
 vi.mock('../../services/api/endpoints/auth', () => ({
   authApi: {
     refresh: vi.fn().mockResolvedValue(undefined),
     logout: vi.fn().mockResolvedValue(undefined),
   },
+  clearLocalSession: vi.fn(),
 }));
 
 vi.mock('../../services/auth/tokenStorage', () => ({

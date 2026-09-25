@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useCallback } from 'react';
 import { useAuth } from '@hooks/useAuth';
 import type { UserRole } from '@utils/rbac';
-import { clearToken } from '../services/auth/tokenStorage';
+import { logoutSession } from '../services/auth/logoutSession';
+import { redirectToLogin } from '../services/auth/sessionRedirect';
 import { useWallet } from './WalletContext';
 
 export interface AuthContextValue {
@@ -9,7 +10,7 @@ export interface AuthContextValue {
   isAuthenticated: boolean;
   role: UserRole | null;
   userId: string | null;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -18,12 +19,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const auth = useAuth();
   const { disconnect } = useWallet();
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     // Clear wallet state before redirecting so a subsequent user on the same
     // browser session doesn't inherit the previous user's connected wallet.
     void disconnect();
-    clearToken();
-    window.location.href = '/login';
+    await logoutSession();
+    redirectToLogin();
   }, [disconnect]);
 
   return (

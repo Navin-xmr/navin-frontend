@@ -36,6 +36,12 @@ export interface AuthResponse {
     token: string;
 }
 
+/** Drops the client-side session: the stored token and the Sentry user. */
+export const clearLocalSession = (): void => {
+    clearToken();
+    Sentry.setUser(null);
+};
+
 export const authApi = {
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/login", data);
@@ -58,9 +64,13 @@ export const authApi = {
     },
 
     logout: async (): Promise<void> => {
-        await apiClient.post("/auth/logout");
-        clearToken();
-        Sentry.setUser(null);
+        try {
+            await apiClient.post("/auth/logout");
+        } finally {
+            // A failed or timed-out request must not leave the user signed in
+            // locally, so client-side cleanup always runs.
+            clearLocalSession();
+        }
     },
 
     refresh: async (): Promise<void> => {

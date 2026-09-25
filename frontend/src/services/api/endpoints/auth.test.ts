@@ -200,14 +200,52 @@ describe('authApi endpoint', () => {
       expect(mockSentry.setUser).toHaveBeenCalledWith(null);
     });
 
-    it('leaves the stored token in place when the request fails', async () => {
+    it('still clears the token and the Sentry user when the request fails (#817)', async () => {
       localStorage.setItem('authToken', 'jwt-token-001');
       mockApiClient.post.mockRejectedValueOnce(new Error('Network error'));
 
       await expect(authApi.logout()).rejects.toThrow('Network error');
 
-      expect(localStorage.getItem('authToken')).toBe('jwt-token-001');
-      expect(mockSentry.setUser).not.toHaveBeenCalled();
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(mockSentry.setUser).toHaveBeenCalledWith(null);
+    });
+
+    it('still clears local session state on a 5xx response (#817)', async () => {
+      localStorage.setItem('authToken', 'jwt-token-001');
+      mockApiClient.post.mockRejectedValueOnce(
+        Object.assign(new Error('Internal Server Error'), { response: { status: 500 } }),
+      );
+
+      await expect(authApi.logout()).rejects.toThrow('Internal Server Error');
+
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(mockSentry.setUser).toHaveBeenCalledWith(null);
+    });
+
+    it('still clears local session state when the request times out (#817)', async () => {
+      localStorage.setItem('authToken', 'jwt-token-001');
+      mockApiClient.post.mockRejectedValueOnce(
+        Object.assign(new Error('timeout of 30000ms exceeded'), { code: 'ECONNABORTED' }),
+      );
+
+      await expect(authApi.logout()).rejects.toThrow('timeout of 30000ms exceeded');
+
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(mockSentry.setUser).toHaveBeenCalledWith(null);
+    });
+
+    it('sends the logout request before clearing the token it authenticates with', async () => {
+      localStorage.setItem('authToken', 'jwt-token-001');
+      let tokenDuringRequest: string | null = 'unset';
+      mockApiClient.post.mockImplementationOnce(async () => {
+        tokenDuringRequest = localStorage.getItem('authToken');
+        return { data: {} };
+      });
+
+      await authApi.logout();
+
+      expect(tokenDuringRequest).toBe('jwt-token-001');
+      expect(localStorage.getItem('authToken')).toBeNull();
     });
   });
 
