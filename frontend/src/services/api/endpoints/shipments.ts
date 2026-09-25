@@ -44,6 +44,8 @@ export interface Shipment {
     stellarTokenId?: string;
     /** Stellar transaction hash for the tokenization transaction */
     stellarTxHash?: string;
+    expectedDelivery?: string;
+    estimatedDelivery?: string;
 }
 
 export interface PaginatedShipments {
