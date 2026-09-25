@@ -10,13 +10,14 @@ vi.mock('../client', () => ({
 
 vi.mock('@sentry/react', () => ({
   setUser: vi.fn(),
+  setTag: vi.fn(),
 }));
 
 import { apiClient } from '../client';
 import * as Sentry from '@sentry/react';
 
 const mockApiClient = apiClient as unknown as { post: ReturnType<typeof vi.fn> };
-const mockSentry = Sentry as unknown as { setUser: ReturnType<typeof vi.fn> };
+const mockSentry = Sentry as unknown as { setUser: ReturnType<typeof vi.fn>; setTag: ReturnType<typeof vi.fn> };
 
 // === Fixtures
 
@@ -59,11 +60,8 @@ describe('authApi endpoint', () => {
       await authApi.login({ email: 'jane@navin.io', password: 'secret' });
 
       expect(localStorage.getItem('authToken')).toBe('jwt-token-001');
-      expect(mockSentry.setUser).toHaveBeenCalledWith({
-        id: 'user-001',
-        email: 'jane@navin.io',
-        username: 'ADMIN',
-      });
+      expect(mockSentry.setUser).toHaveBeenCalledWith({ id: 'user-001' });
+      expect(mockSentry.setTag).toHaveBeenCalledWith('role', 'ADMIN');
     });
 
     it('propagates a rejected request and stores no token', async () => {
@@ -118,11 +116,8 @@ describe('authApi endpoint', () => {
       await authApi.signup({ email: 'jane@navin.io', password: 'secret', name: 'Jane Doe' });
 
       expect(localStorage.getItem('authToken')).toBe('jwt-token-001');
-      expect(mockSentry.setUser).toHaveBeenCalledWith({
-        id: 'user-001',
-        email: 'jane@navin.io',
-        username: 'ADMIN',
-      });
+      expect(mockSentry.setUser).toHaveBeenCalledWith({ id: 'user-001' });
+      expect(mockSentry.setTag).toHaveBeenCalledWith('role', 'ADMIN');
     });
 
     it('propagates a rejected request and stores no token', async () => {

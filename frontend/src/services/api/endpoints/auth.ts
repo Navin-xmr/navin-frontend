@@ -36,6 +36,15 @@ export interface AuthResponse {
     token: string;
 }
 
+/**
+ * Identifies the authenticated user in Sentry without sending PII.
+ * Only the opaque user ID is sent; the role is attached as a searchable tag.
+ */
+const setSentryUser = (user: AuthUser): void => {
+    Sentry.setUser({ id: user.id });
+    Sentry.setTag('role', user.role);
+};
+
 /** Drops the client-side session: the stored token and the Sentry user. */
 export const clearLocalSession = (): void => {
     clearToken();
@@ -47,7 +56,7 @@ export const authApi = {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/login", data);
         const { token, user } = res.data.data;
         setToken(token);
-        Sentry.setUser({ id: user.id, email: user.email, username: user.role });
+        setSentryUser(user);
         return res.data.data;
     },
 
@@ -55,7 +64,7 @@ export const authApi = {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/signup", data);
         const { token, user } = res.data.data;
         setToken(token);
-        Sentry.setUser({ id: user.id, email: user.email, username: user.role });
+        setSentryUser(user);
         return res.data.data;
     },
 

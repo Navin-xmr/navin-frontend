@@ -17,7 +17,7 @@ import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
 import PWAInstallPrompt from '@components/ui/PWAInstallPrompt';
 import PageSkeleton from '@components/ui/PageSkeleton';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { RouteTransitionProvider } from './context/RouteTransitionContext';
 import RouteTransition from '@components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
@@ -127,6 +127,8 @@ const router = createBrowserRouter([
 ]);
 
 function RealtimeManager() {
+  const { isAuthenticated, userId } = useAuthContext();
+
   useEffect(() => {
     // Disable realtime service in development if environment variable is set
     if (import.meta.env.VITE_DISABLE_REALTIME === 'true') {
@@ -135,11 +137,17 @@ function RealtimeManager() {
       }
       return;
     }
-    
+
+    if (!isAuthenticated) {
+      // Ensure any lingering connection is torn down when the user logs out
+      realtimeService.disconnect();
+      return;
+    }
+
     realtimeService.reset();
     realtimeService.connect();
     return () => realtimeService.disconnect();
-  }, []);
+  }, [isAuthenticated, userId]);
   return null;
 }
 

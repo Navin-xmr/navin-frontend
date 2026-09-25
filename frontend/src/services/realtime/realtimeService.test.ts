@@ -10,13 +10,15 @@ vi.mock('../api/client', () => ({
 // Minimal EventSource mock
 class MockEventSource {
   static instance: MockEventSource | null = null;
+  static lastUrl: string | null = null;
   onopen: (() => void) | null = null;
   onmessage: ((e: { data: string }) => void) | null = null;
   onerror: (() => void) | null = null;
   closed = false;
 
-  constructor() {
+  constructor(url: string) {
     MockEventSource.instance = this;
+    MockEventSource.lastUrl = url;
   }
 
   close() {
@@ -41,6 +43,7 @@ describe('RealtimeService', () => {
 
   beforeEach(() => {
     MockEventSource.instance = null;
+    MockEventSource.lastUrl = null;
     vi.stubGlobal('EventSource', MockEventSource);
     vi.mocked(apiClient.get).mockReset().mockResolvedValue({ data: [] });
     service = new RealtimeService();
@@ -55,6 +58,18 @@ describe('RealtimeService', () => {
   it('opens an EventSource on connect()', () => {
     service.connect();
     expect(MockEventSource.instance).not.toBeNull();
+  });
+
+  it('builds the SSE URL from VITE_API_BASE_URL (not a bare relative path)', () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:3000/api');
+    // Re-create the service so it picks up the stubbed env
+    const svc = new RealtimeService();
+    svc.connect();
+    expect(MockEventSource.lastUrl).toMatch(/^https?:\/\//);
+    expect(MockEventSource.lastUrl).toContain('/events');
+    expect(MockEventSource.lastUrl).not.toBe('/api/events');
+    svc.disconnect();
+    vi.unstubAllEnvs();
   });
 
   it('sets status to connected on open', () => {
@@ -236,7 +251,7 @@ describe('RealtimeService', () => {
 
     await vi.advanceTimersByTimeAsync(15_000);
 
-    expect(apiClient.get).toHaveBeenCalledWith('/api/events/poll');
+    expect(apiClient.get).toHaveBeenCalledWith('/events/poll');
     expect(handler).toHaveBeenCalledWith(event);
     expect(service.status).toBe('connected');
   });

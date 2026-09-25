@@ -5,7 +5,21 @@ export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
 
 type Handler<T extends RealtimeEvent = RealtimeEvent> = (event: T) => void;
 
-const SSE_ENDPOINT = '/api/events';
+/**
+ * Build the SSE endpoint URL from VITE_API_BASE_URL so it works in production
+ * (no Vite proxy). We append the token as a query param because the browser's
+ * EventSource API cannot set Authorization headers.
+ *
+ * Reading the env var inside the function (not at module scope) allows
+ * vi.stubEnv() to work correctly in tests.
+ */
+function buildSseUrl(): string {
+  const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
+  const token = localStorage.getItem('authToken');
+  const url = `${base}/events`;
+  return token ? `${url}?token=${encodeURIComponent(token)}` : url;
+}
+
 const MAX_RETRIES = 3;
 const FALLBACK_POLL_INTERVAL_MS = 15_000;
 const MAX_BACKOFF_MS = 30_000;
@@ -50,7 +64,7 @@ export class RealtimeService {
       this.eventSource.close();
     }
     this.setStatus('reconnecting');
-    const es = new EventSource(SSE_ENDPOINT, { withCredentials: true });
+    const es = new EventSource(buildSseUrl(), { withCredentials: true });
     this.eventSource = es;
 
     es.onopen = () => {
@@ -93,7 +107,7 @@ export class RealtimeService {
 
   private async poll(): Promise<void> {
     try {
-      const res = await apiClient.get<RealtimeEvent[]>('/api/events/poll');
+      const res = await apiClient.get<RealtimeEvent[]>('/events/poll');
       res.data.forEach((ev) => this.emit(ev));
       this.setStatus('connected');
     } catch {

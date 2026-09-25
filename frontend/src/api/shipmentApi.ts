@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiClient } from '../services/api/client';
 import type { ShipmentStatus } from '../services/api/endpoints/shipments';
 import {
   readNumericField,
@@ -197,7 +197,7 @@ async function fetchAllShipmentPages(params?: Record<string, string | number | b
   let total = Infinity;
 
   while (all.length < total && page <= 50) {
-    const response = await axios.get<BackendResponse>('/api/shipments', {
+    const response = await apiClient.get<BackendResponse>('/shipments', {
       params: { limit: 100, page, ...params },
     });
     const payload = response.data ?? {};
@@ -234,7 +234,7 @@ export const shipmentApi = {
       }
     }
 
-    const response = await axios.get<BackendResponse>('/api/shipments', {
+    const response = await apiClient.get<BackendResponse>('/shipments', {
       params: cleanParams,
       signal,
     });
@@ -255,7 +255,7 @@ export const shipmentApi = {
   },
 
   async patchPriority(id: string, priority: ShipmentPriority): Promise<void> {
-    await axios.patch(`/api/shipments/${id}`, { priority });
+    await apiClient.patch(`/shipments/${id}`, { priority });
   },
 
   async bulkUpdateStatus(
@@ -263,8 +263,8 @@ export const shipmentApi = {
     status: ShipmentStatus,
   ): Promise<{ updated: string[]; failed: string[] }> {
     try {
-      const res = await axios.patch<{ data: { updated: string[]; failed: string[] } }>(
-        '/api/shipments/bulk-status',
+      const res = await apiClient.patch<{ data: { updated: string[]; failed: string[] } }>(
+        '/shipments/bulk-status',
         { ids, status },
       );
       return res.data.data ?? { updated: ids, failed: [] };
@@ -275,7 +275,7 @@ export const shipmentApi = {
       await Promise.all(
         ids.map(async (id) => {
           try {
-            await axios.patch(`/api/shipments/${id}/status`, { status });
+            await apiClient.patch(`/shipments/${id}/status`, { status });
             updated.push(id);
           } catch {
             failed.push(id);
