@@ -31,6 +31,9 @@ import { exportShipmentPdf } from "../../utils/exportShipmentPdf";
 import ShipmentComparison from "../../components/shipment/ShipmentComparison";
 import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison";
 import ShipmentStickyBar from "./ShipmentStickyBar";
+import { Zap } from "lucide-react";
+import { formatDate } from "@utils/localeFormat";
+import type { ShipmentStatus } from "../../types/realtimeEvents";
 import StatusUpdate, { ShipmentMilestone } from "../../components/shipment/StatusUpdate";
 import { shipmentApi, ShipmentStatus } from "@services/api/endpoints/shipments";
 import type { ShipmentStatus as RealtimeShipmentStatus } from "../../types/realtimeEvents";
@@ -50,6 +53,13 @@ const ShipmentDetail: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState<ShipmentStatus | "CREATED">(shipment?.status ?? "CREATED");
+
+  React.useEffect(() => {
+    if (shipment?.status) {
+      setCurrentStatus(shipment.status);
+    }
+  }, [shipment?.status]);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [currentStatus, setCurrentStatus] = useState<ShipmentStatus>(shipment?.status ?? "IN_TRANSIT");
@@ -70,13 +80,20 @@ const ShipmentDetail: React.FC = () => {
     }
   }, [statusEvent, id, announce, t]);
 
+  const rawEta =
+    (shipment?.expectedDelivery as string | undefined) ??
+    (shipment?.estimatedDelivery as string | undefined) ??
+    (shipment?.offChainMetadata?.expectedDeliveryDate as string | undefined) ??
+    (shipment?.offChainMetadata?.estimatedDelivery as string | undefined) ??
+    (shipment?.offChainMetadata?.expectedDelivery as string | undefined);
+
   const shipmentHeaderData = {
     shipmentId: id ? `#${id}` : t("shipmentDetail.unknownId"),
     trackingNumber: shipment?.trackingNumber ?? id ?? "",
-    status: shipment?.status ?? "IN_TRANSIT",
-    originAddress: shipment?.origin ?? "New York Distribution Center, NY 10001",
-    destinationAddress: shipment?.destination ?? "123 Main Street, Boston, MA 02101",
-    expectedDeliveryDate: "Oct 24, 2026 by 5:00 PM EST",
+    status: shipment?.status ?? "CREATED",
+    originAddress: shipment?.origin ?? "—",
+    destinationAddress: shipment?.destination ?? "—",
+    expectedDeliveryDate: rawEta ? formatDate(rawEta) : "—",
     userRole: (role ?? "customer") as "company" | "customer",
     priority: shipment?.priority ?? "STANDARD",
   };
