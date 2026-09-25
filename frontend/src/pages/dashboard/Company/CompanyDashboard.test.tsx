@@ -35,6 +35,24 @@ vi.mock('./Scorecard/PerformanceScorecardWidget', () => ({
   default: () => <div data-testid="performance-scorecard" />,
 }));
 
+vi.mock('@services/api/endpoints/shipments', () => ({
+  shipmentApi: {
+    getAll: vi.fn().mockResolvedValue({ data: [] }),
+  },
+}));
+
+vi.mock('@services/api/endpoints/analytics', () => ({
+  analyticsApi: {
+    getSummary: vi.fn().mockResolvedValue({}),
+  },
+}));
+
+vi.mock('@services/api/endpoints/settlements', () => ({
+  settlementsApi: {
+    getSummary: vi.fn().mockResolvedValue({}),
+  },
+}));
+
 describe('CompanyDashboard', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -44,21 +62,23 @@ describe('CompanyDashboard', () => {
     vi.useRealTimers();
   });
 
-  it('renders a refresh control for the dashboard overview', () => {
+  it('renders a refresh control for the dashboard overview', async () => {
     render(
       <MemoryRouter>
         <CompanyDashboard />
       </MemoryRouter>,
     );
 
-    vi.advanceTimersByTime(1200);
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     const refreshButton = screen.getByRole('button', { name: /refresh dashboard/i });
     expect(refreshButton).toBeInTheDocument();
 
     fireEvent.click(refreshButton);
-    act(() => {
-      vi.advanceTimersByTime(1200);
+    await act(async () => {
+      await Promise.resolve();
     });
     expect(screen.getByText(/last refreshed/i)).toBeInTheDocument();
   });

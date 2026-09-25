@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowUpDown,
   ExternalLink,
@@ -26,6 +26,7 @@ import { useLiveRegion } from "../../context/LiveRegionContext";
 import Breadcrumb from "@components/common/Breadcrumb";
 
 import { getStellarExpertTxUrl } from "@utils/stellar";
+import { formatDate } from "@utils/localeFormat";
 
 // Local lightweight table formatting (kept inline to avoid coupling)
 const truncateHash = (hash?: string) => {
@@ -57,6 +58,7 @@ const statusDotClasses: Record<SettlementStatus, string> = {
 const toStatusLabel = (s: SettlementStatus) => s;
 
 export default function Settlements() {
+  const { t, i18n } = useTranslation("dashboard");
   const { role } = useAuthContext();
   const { announce } = useLiveRegion();
   const [isLoading, setIsLoading] = useState(true);
@@ -190,10 +192,10 @@ export default function Settlements() {
       <div className="p-6 md:p-4">
         <EmptyState
           icon={<AlertTriangle size={28} />}
-          title="Failed to load settlements"
+          title={t("settlements.error.title")}
           description={error}
           cta={{
-            label: "Retry",
+            label: t("settlements.error.retry"),
             onClick: () => {
               setCurrentPage(1);
               void load();
@@ -206,15 +208,15 @@ export default function Settlements() {
 
   return (
     <div className="p-6 md:p-4">
-      <Breadcrumb items={[{ label: "Dashboard", href: "/dashboard" }]} current="Settlements" />
+      <Breadcrumb items={[{ label: t("companyDashboard.title", "Dashboard"), href: "/dashboard" }]} current={t("settlements.title")} />
       {/* Header */}
       <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-4">
         <div>
           <h1 className="text-2xl font-bold mb-1 max-md:text-xl max-md:font-semibold">
-            Settlements
+            {t("settlements.title")}
           </h1>
           <p className="text-text-secondary text-sm max-md:text-xs">
-            Track escrow releases and settlement outcomes
+            {t("settlements.subtitle")}
           </p>
         </div>
 
@@ -226,10 +228,10 @@ export default function Settlements() {
                 setFilterStatus(e.target.value as SettlementStatus | "ALL");
                 setCurrentPage(1);
               }}
-              aria-label="Filter by settlement status"
+              aria-label={t("settlements.filterAriaLabel")}
               className="appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#62ffff] focus-visible:ring-offset-1 focus-visible:ring-offset-background hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full"
             >
-              <option value="ALL">All Status</option>
+              <option value="ALL">{t("settlements.allStatus")}</option>
               <option value="PENDING">PENDING</option>
               <option value="ESCROWED">ESCROWED</option>
               <option value="RELEASED">RELEASED</option>
@@ -247,12 +249,12 @@ export default function Settlements() {
             onClick={() =>
               setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
             }
-            aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
+            aria-label={t("settlements.sortByDate", { order: sortOrder === "desc" ? t("settlements.newestFirst") : t("settlements.oldestFirst") })}
             aria-pressed={sortOrder === "desc"}
           >
-            Date <ArrowUpDown size={14} />
+            {t("settlements.date")} <ArrowUpDown size={14} />
             <span className="text-text-secondary max-md:hidden">
-              {sortOrder === "desc" ? "Newest" : "Oldest"}
+              {sortOrder === "desc" ? t("settlements.newest") : t("settlements.oldest")}
             </span>
           </button>
         </div>
@@ -263,7 +265,7 @@ export default function Settlements() {
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
           <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            Total settled
+            {t("settlements.totalSettled")}
           </div>
           <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {summary
@@ -273,7 +275,7 @@ export default function Settlements() {
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
           <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            Pending
+            {t("settlements.pending")}
           </div>
           <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {summary
@@ -283,7 +285,7 @@ export default function Settlements() {
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
           <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            In escrow
+            {t("settlements.inEscrow")}
           </div>
           <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {summary
@@ -293,7 +295,7 @@ export default function Settlements() {
         </div>
         <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
           <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            Total records
+            {t("settlements.totalRecords")}
           </div>
           <div className="text-2xl sm:text-[32px] font-bold leading-none">
             {total}
@@ -306,11 +308,11 @@ export default function Settlements() {
           <table className="w-full border-collapse min-w-200">
             <thead className="bg-[rgba(19,186,186,0.1)]">
               <tr>
-                <th className={thClass}>Date</th>
-                <th className={thClass}>Shipment ID</th>
-                <th className={thClass}>Amount</th>
-                <th className={thClass}>Status</th>
-                <th className={thClass}>Stellar Tx</th>
+                <th className={thClass}>{t("settlements.table.date")}</th>
+                <th className={thClass}>{t("settlements.table.shipmentId")}</th>
+                <th className={thClass}>{t("settlements.table.amount")}</th>
+                <th className={thClass}>{t("settlements.table.status")}</th>
+                <th className={thClass}>{t("settlements.table.stellarTx")}</th>
               </tr>
             </thead>
             <tbody>
@@ -332,8 +334,8 @@ export default function Settlements() {
         <div className="p-6 md:p-4">
           <EmptyState
             icon={<Receipt size={28} />}
-            title="No Settlements Found"
-            description="No settlement records match your criteria. Settlements will appear here once escrow contracts are triggered on the Stellar blockchain."
+            title={t("settlements.empty.title")}
+            description={t("settlements.empty.description")}
           />
         </div>
       ) : (
@@ -353,16 +355,16 @@ export default function Settlements() {
                     }
                   >
                     <span className="inline-flex items-center gap-2">
-                      Date <ArrowUpDown size={14} aria-hidden="true" />
+                      {t("settlements.table.date")} <ArrowUpDown size={14} aria-hidden="true" />
                     </span>
                   </th>
-                  <th className={thClass}>Shipment ID</th>
-                  <th className={thClass}>Amount</th>
-                  <th className={thClass}>Status</th>
-                  <th className={thClass}>Stellar Tx</th>
+                  <th className={thClass}>{t("settlements.table.shipmentId")}</th>
+                  <th className={thClass}>{t("settlements.table.amount")}</th>
+                  <th className={thClass}>{t("settlements.table.status")}</th>
+                  <th className={thClass}>{t("settlements.table.stellarTx")}</th>
                   {(can(role, "settlement:release-payment") ||
                     can(role, "settlement:dispute")) && (
-                    <th className={thClass}>Actions</th>
+                    <th className={thClass}>{t("settlements.table.actions")}</th>
                   )}
                 </tr>
               </thead>
@@ -378,11 +380,7 @@ export default function Settlements() {
                       <td
                         className={`${tdClass} font-medium text-text-secondary`}
                       >
-                        {new Date(s.createdAt).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {formatDate(s.createdAt, { year: "numeric", month: "short", day: "numeric" }, i18n.language)}
                       </td>
                       <td className={tdClass}>
                         <Link
@@ -439,13 +437,13 @@ export default function Settlements() {
                             {can(role, "settlement:release-payment") &&
                               s.status === "ESCROWED" && (
                                 <button className="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30">
-                                  Release
+                                  {t("settlements.table.release")}
                                 </button>
                               )}
                             {can(role, "settlement:dispute") &&
                               s.status !== "DISPUTED" && (
                                 <button className="px-2 py-1 text-xs font-semibold rounded bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30">
-                                  Dispute
+                                  {t("settlements.table.dispute")}
                                 </button>
                               )}
                           </div>
@@ -482,17 +480,13 @@ export default function Settlements() {
                       {toStatusLabel(s.status)}
                     </span>
                     <span className="text-xs text-text-secondary">
-                      {new Date(s.createdAt).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {formatDate(s.createdAt, { year: "numeric", month: "short", day: "numeric" }, i18n.language)}
                     </span>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-text-secondary uppercase">Shipment</span>
+                      <span className="text-xs text-text-secondary uppercase">{t("settlements.mobile.shipment")}</span>
                       <Link
                         to={`/dashboard/shipments/${s.shipmentId}`}
                         className="text-[#62ffff] font-semibold text-sm no-underline"
@@ -502,14 +496,14 @@ export default function Settlements() {
                       </Link>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-text-secondary uppercase">Amount</span>
+                      <span className="text-xs text-text-secondary uppercase">{t("settlements.mobile.amount")}</span>
                       <span className="font-semibold text-sm">
                         {s.amount.toLocaleString()}{" "}
                         <span className="text-[11px] text-text-secondary uppercase">{s.token}</span>
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-text-secondary uppercase">Tx</span>
+                      <span className="text-xs text-text-secondary uppercase">{t("settlements.mobile.tx")}</span>
                       {url ? (
                         <a
                           href={url}
@@ -535,7 +529,7 @@ export default function Settlements() {
                             className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 active:bg-green-500/30 min-h-[40px]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            Release Payment
+                            {t("settlements.table.releasePayment")}
                           </button>
                         )}
                       {can(role, "settlement:dispute") &&
@@ -544,7 +538,7 @@ export default function Settlements() {
                             className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 active:bg-red-500/30 min-h-[40px]"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            Dispute
+                            {t("settlements.table.dispute")}
                           </button>
                         )}
                     </div>
@@ -556,13 +550,13 @@ export default function Settlements() {
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 px-4 sm:px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)]">
             <div className="text-sm text-text-secondary">
-              Page {currentPage} of {totalPages}
+              {t("settlements.pagination.pageOf", { current: currentPage, total: totalPages })}
             </div>
             <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto justify-center flex-wrap">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                aria-label="Previous page"
+                aria-label={t("settlements.pagination.prev")}
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={16} />
@@ -585,7 +579,7 @@ export default function Settlements() {
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={currentPage === totalPages}
-                aria-label="Next page"
+                aria-label={t("settlements.pagination.next")}
                 className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight size={16} />

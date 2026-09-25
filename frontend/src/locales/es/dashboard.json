@@ -134,5 +134,299 @@
       "humidityBelowMin": "Humedad por debajo del mínimo",
       "batteryLow": "Batería baja"
     }
+  },
+  "settlements": {
+    "title": "Liquidaciones",
+    "subtitle": "Rastrea liberaciones de custodia y resultados de liquidación",
+    "filterAriaLabel": "Filtrar por estado de liquidación",
+    "allStatus": "Todos los estados",
+    "sortByDate": "Ordenar por fecha {{order}}",
+    "newestFirst": "más reciente primero",
+    "oldestFirst": "más antiguo primero",
+    "date": "Fecha",
+    "newest": "Más reciente",
+    "oldest": "Más antiguo",
+    "totalSettled": "Total liquidado",
+    "pending": "Pendiente",
+    "inEscrow": "En custodia",
+    "totalRecords": "Total de registros",
+    "table": {
+      "date": "Fecha",
+      "shipmentId": "ID de envío",
+      "amount": "Monto",
+      "status": "Estado",
+      "stellarTx": "Tx de Stellar",
+      "actions": "Acciones",
+      "release": "Liberar",
+      "dispute": "Disputar",
+      "releasePayment": "Liberar pago"
+    },
+    "mobile": {
+      "shipment": "Envío",
+      "amount": "Monto",
+      "tx": "Tx"
+    },
+    "pagination": {
+      "pageOf": "Página {{current}} de {{total}}",
+      "prev": "Página anterior",
+      "next": "Página siguiente"
+    },
+    "modal": {
+      "title": "Detalles del depósito en garantía",
+      "close": "Cerrar",
+      "verifyOnBlockchain": "Verificar en Blockchain",
+      "loading": "Cargando información del depósito...",
+      "shipment": "Envío",
+      "amount": "Monto",
+      "status": "Estado",
+      "stellarTx": "Tx de Stellar",
+      "releaseConditions": "Condiciones de liberación",
+      "releasedAt": "Liberado en",
+      "disputedAt": "Disputado en",
+      "disputeReason": "Motivo de disputa",
+      "payer": "Pagador",
+      "payee": "Beneficiario"
+    },
+    "empty": {
+      "title": "No se encontraron liquidaciones",
+      "description": "Ningún registro coincide con sus criterios. Las liquidaciones aparecerán aquí una vez que se activen los contratos de custodia en Stellar."
+    },
+    "error": {
+      "title": "Error al cargar liquidaciones",
+      "retry": "Reintentar"
+    },
+    "statusUpdated": "Estado de la liquidación actualizado a {{status}}"
+  },
+  "paymentHistory": {
+    "title": "Historial de pagos",
+    "subtitle": "Rastrea todas las transacciones de pago en la cadena de bloques",
+    "filterAriaLabel": "Filtrar por estado de pago",
+    "allStatus": "Todos los estados",
+    "sortByDate": "Ordenar por fecha {{order}}",
+    "newestFirst": "más reciente primero",
+    "oldestFirst": "más antiguo primero",
+    "date": "Fecha",
+    "newest": "Más reciente",
+    "oldest": "Más antiguo",
+    "table": {
+      "shipment": "Envío",
+      "date": "Fecha",
+      "amount": "Monto",
+      "status": "Estado",
+      "txHash": "Hash de Tx",
+      "actions": "Acciones",
+      "view": "Ver"
+    },
+    "modal": {
+      "title": "Detalles del pago",
+      "closeAriaLabel": "Cerrar detalles del pago",
+      "shipmentId": "ID de envío",
+      "date": "Fecha",
+      "amount": "Monto",
+      "status": "Estado",
+      "txHash": "Hash de Tx",
+      "close": "Cerrar",
+      "verifyOnChain": "Verificar en cadena"
+    },
+    "empty": {
+      "title": "No se encontraron pagos",
+      "description": "Sus liquidaciones en custodia aparecerán aquí una vez creadas."
+    },
+    "error": {
+      "title": "Error al cargar historial de pagos",
+      "retry": "Reintentar"
+    },
+    "summary": {
+      "totalPayments": "Pagos totales",
+      "totalValue": "Valor total",
+      "pendingPayments": "Pagos pendientes",
+      "releasedPayments": "Pagos liberados"
+    }
+  },
+  "blockchainLedger": {
+    "title": "Libro mayor de Blockchain",
+    "subtitle": "Historial inmutable de hitos para todos los eventos de envíos",
+    "refresh": "Actualizar",
+    "refreshAriaLabel": "Actualizar datos del libro mayor",
+    "stats": {
+      "totalBlocks": "Total de bloques",
+      "network": "Red",
+      "status": "Estado",
+      "syncing": "Sincronizando",
+      "upToDate": "Al día",
+      "stellarMainnet": "Stellar Mainnet",
+      "stellarTestnet": "Stellar Testnet"
+    },
+    "filter": {
+      "label": "Filtro:",
+      "allEvents": "Todos los eventos"
+    },
+    "table": {
+      "ariaLabel": "Tabla de eventos del libro mayor de blockchain",
+      "blockNumber": "Bloque #",
+      "timestamp": "Marca de tiempo",
+      "shipmentRef": "Ref. de envío",
+      "milestone": "Hito",
+      "txHash": "Hash de Tx",
+      "status": "Estado",
+      "verified": "Verificado",
+      "pending": "Pendiente"
+    },
+    "empty": {
+      "title": "No se encontraron bloques",
+      "description": "Ningún evento coincide con su filtro actual. Pruebe seleccionando un tipo de hito diferente o limpie el filtro."
+    },
+    "error": {
+      "title": "Error al cargar el libro mayor",
+      "default": "Error al cargar datos del libro mayor. Inténtelo de nuevo."
+    },
+    "pagination": {
+      "prev": "Anterior",
+      "prevAria": "Página anterior",
+      "next": "Siguiente",
+      "nextAria": "Cargar página siguiente",
+      "pageOfTotal": "Página {{page}} · {{total}} bloques en total",
+      "pageOnly": "Página {{page}}"
+    }
+  },
+  "userManagement": {
+    "title": "Gestión de equipo",
+    "subtitle": "Administre accesos, roles e invite a nuevos miembros a su organización.",
+    "inviteMember": "Invitar miembro",
+    "pendingInvitations": "Invitaciones pendientes",
+    "loading": "Cargando…",
+    "loadingTeamMembers": "Cargando miembros del equipo...",
+    "resend": "Reenviar",
+    "revoke": "Revocar",
+    "searchPlaceholder": "Buscar por nombre o correo...",
+    "allRoles": "Todos los roles",
+    "admin": "Administrador",
+    "manager": "Gerente",
+    "viewer": "Visualizador",
+    "table": {
+      "user": "Usuario",
+      "role": "Rol",
+      "status": "Estado",
+      "lastLogin": "Último inicio",
+      "actions": "Acciones",
+      "deactivate": "Desactivar",
+      "activate": "Activar",
+      "edit": "Editar",
+      "noUsersFound": "No se encontraron usuarios que coincidan con sus criterios."
+    },
+    "pagination": {
+      "showing": "Mostrando {{start}} a {{end}} de {{total}} entradas",
+      "prevAria": "Página anterior",
+      "nextAria": "Página siguiente"
+    },
+    "modal": {
+      "title": "Invitar miembro del equipo",
+      "successTitle": "¡Invitación enviada!",
+      "successBody": "Se ha enviado una invitación a {{email}}. Recibirán un correo con un enlace para crear su cuenta.",
+      "close": "Cerrar",
+      "inviteAnother": "Invitar a otro",
+      "emailLabel": "Correo electrónico *",
+      "roleLabel": "Rol *",
+      "adminDesc": "Administrador — Acceso total",
+      "managerDesc": "Gerente — Editar y ver",
+      "viewerDesc": "Visualizador — Solo lectura",
+      "messageLabel": "Mensaje personalizado (opcional)",
+      "messagePlaceholder": "Agregue una nota personalizada al correo de invitación…",
+      "cancel": "Cancelar",
+      "sendInvite": "Enviar invitación",
+      "sending": "Enviando…"
+    },
+    "confirmDialog": {
+      "title": "Desactivar usuario",
+      "message": "¿Está seguro de que desea desactivar a {{name}}? Perderá el acceso de inmediato.",
+      "confirm": "Desactivar"
+    },
+    "toasts": {
+      "ownRoleError": "No puedes cambiar tu propio rol.",
+      "roleUpdated": "Rol de usuario actualizado a {{role}}",
+      "lastAdminError": "No se puede degradar al último administrador.",
+      "roleUpdateFailed": "Error al actualizar el rol",
+      "ownAccountDeactivateError": "No puedes desactivar tu propia cuenta.",
+      "userActivated": "Usuario activado con éxito",
+      "statusUpdateFailed": "Error al actualizar el estado del usuario",
+      "userDeactivated": "Usuario desactivado con éxito",
+      "inviteSentFailed": "Error al enviar la invitación",
+      "inviteResent": "Invitación reenviada a {{email}}",
+      "inviteResentFailed": "Error al reenviar la invitación",
+      "inviteRevoked": "Invitación a {{email}} revocada",
+      "inviteRevokeFailed": "Error al revocar la invitación"
+    },
+    "error": {
+      "title": "Error al cargar usuarios",
+      "retry": "Reintentar"
+    }
+  },
+  "calendarView": {
+    "dashboard": "Panel",
+    "calendar": "Calendario",
+    "prevMonthAria": "Mes anterior",
+    "nextMonthAria": "Mes siguiente",
+    "today": "Hoy",
+    "loading": "Cargando envíos…",
+    "noShipments": "No se esperan envíos.",
+    "days": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb"
+    },
+    "months": {
+      "january": "Enero",
+      "february": "Febrero",
+      "march": "Marzo",
+      "april": "Abril",
+      "may": "Mayo",
+      "june": "Junio",
+      "july": "Julio",
+      "august": "Agosto",
+      "september": "Septiembre",
+      "october": "Octubre",
+      "november": "Noviembre",
+      "december": "Diciembre"
+    }
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que busca no existe o puede haber sido movida.",
+    "dashboard": "Ir al panel",
+    "home": "Ir al inicio"
+  },
+  "publicTracking": {
+    "appName": "Navin",
+    "loadingAria": "Cargando envío",
+    "loadingText": "Cargando envío…",
+    "notFoundTitle": "Envío no encontrado",
+    "notFoundMessage": "Ningún envío coincide con el número de rastreo {{trackingNumber}}. Verifique el número e intente de nuevo.",
+    "createAccount": "Crear una cuenta de Navin",
+    "errorTitle": "No se pudo cargar el envío",
+    "tryAgain": "Intentar de nuevo",
+    "trackingNumber": "Número de rastreo",
+    "copy": "Copiar",
+    "copyLink": "Copiar enlace de rastreo",
+    "publicSummary": "Resumen público",
+    "publicSummaryDesc": "Comparta esta página de solo lectura con clientes o socios para ver el estado, ruta, hora estimada y actualizaciones de hitos.",
+    "shareLink": "Compartir enlace",
+    "from": "Desde",
+    "to": "Hacia",
+    "expectedDelivery": "Entrega estimada: ",
+    "trackingTimeline": "Cronología de seguimiento",
+    "poweredBy": "Desarrollado por Navin Logistics",
+    "ctaDesc": "Seguimiento de envíos verificado en blockchain. Cree una cuenta para acceder a análisis completos, datos de IoT y liquidaciones automatizadas.",
+    "createFreeAccount": "Crear cuenta gratuita",
+    "shareOpened": "Hoja de compartir abierta.",
+    "linkCopied": "Enlace de seguimiento copiado.",
+    "shareFallback": "Copie la URL de la página desde su navegador para compartir este resumen de seguimiento.",
+    "announceFound": "Envío {{number}} encontrado. Estado: {{status}}.",
+    "announceNotFound": "No se encontró ningún envío para el número de rastreo {{number}}.",
+    "noTrackingNumber": "No se proporcionó ningún número de seguimiento.",
+    "defaultLookupError": "Ocurrió un error al buscar este envío. Por favor, intente de nuevo."
   }
 }
