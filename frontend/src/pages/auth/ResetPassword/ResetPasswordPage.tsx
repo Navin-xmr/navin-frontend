@@ -1,33 +1,35 @@
-import React, { useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff } from "lucide-react";
 import { AxiosError } from "axios";
 import { useToast } from "../../../context/ToastContext";
 import { authApi } from "../../../services/api";
+import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import { validatePassword } from "../../../utils/passwordPolicy";
 
 const authCardClass = "min-h-screen flex items-center justify-center bg-[#050505] text-white relative overflow-hidden font-sans";
 const cardInnerClass =
   "bg-[rgba(20,20,20,0.7)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.1)] rounded-3xl p-10 w-full max-w-[480px] z-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)] sm:p-8 sm:rounded-none sm:min-h-screen sm:flex sm:flex-col sm:justify-center";
 
-const passwordStrength = (value: string) => {
-  if (!value) return "none";
-  let score = 0;
-  if (value.length >= 8) score += 1;
-  if (/[A-Z]/.test(value)) score += 1;
-  if (/[0-9]/.test(value)) score += 1;
-  if (/[^A-Za-z0-9]/.test(value)) score += 1;
-  if (score <= 1) return "weak";
-  if (score <= 3) return "fair";
-  return "strong";
-};
-
 const ResetPasswordPage: React.FC = () => {
   const { t } = useTranslation("auth");
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { addToast } = useToast();
-  const token = searchParams.get("token") ?? "";
+
+  const [token, setToken] = useState<string>(() => {
+    return (location.state as { token?: string } | null)?.token || searchParams.get("token") || "";
+  });
+
+  useEffect(() => {
+    const urlToken = searchParams.get("token");
+    if (urlToken) {
+      setToken(urlToken);
+      navigate(location.pathname, { replace: true, state: { token: urlToken } });
+    }
+  }, [searchParams, location.pathname, navigate]);
 
   const [formData, setFormData] = useState({ newPassword: "", confirmPassword: "" });
   const [errors, setErrors] = useState({ newPassword: "", confirmPassword: "", general: "" });
@@ -37,12 +39,13 @@ const ResetPasswordPage: React.FC = () => {
 
   const validate = () => {
     const nextErrors = { newPassword: "", confirmPassword: "", general: "" };
+    const validation = validatePassword(formData.newPassword);
 
     if (!formData.newPassword) {
       nextErrors.newPassword = t("resetPassword.errorNewPasswordRequired");
-    } else if (formData.newPassword.length < 8) {
+    } else if (!validation.meetsMinLength) {
       nextErrors.newPassword = t("resetPassword.errorPasswordMinLength");
-    } else if (!/[A-Z]/.test(formData.newPassword) || !/[a-z]/.test(formData.newPassword) || !/[0-9]/.test(formData.newPassword) || !/[^A-Za-z0-9]/.test(formData.newPassword)) {
+    } else if (!validation.hasUppercase || !validation.hasLowercase || !validation.hasNumber || !validation.hasSpecial) {
       nextErrors.newPassword = t("resetPassword.errorPasswordComplexity");
     }
 
@@ -59,14 +62,6 @@ const ResetPasswordPage: React.FC = () => {
     setErrors(nextErrors);
     return !nextErrors.newPassword && !nextErrors.confirmPassword && !nextErrors.general;
   };
-
-  const strength = useMemo(() => passwordStrength(formData.newPassword), [formData.newPassword]);
-  const strengthLabel = useMemo(() => {
-    if (strength === "weak") return t("resetPassword.strengthWeak");
-    if (strength === "fair") return t("resetPassword.strengthFair");
-    if (strength === "strong") return t("resetPassword.strengthStrong");
-    return "";
-  }, [strength, t]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -164,35 +159,7 @@ const ResetPasswordPage: React.FC = () => {
               </span>
             )}
             {formData.newPassword && (
-              <div className="mt-2">
-                <div className="h-1 w-full bg-[rgba(255,255,255,0.1)] rounded-sm overflow-hidden mb-1.5">
-                  <div
-                    className="h-full transition-all duration-300"
-                    style={{
-                      width:
-                        strength === "weak"
-                          ? "33.33%"
-                          : strength === "fair"
-                          ? "66.66%"
-                          : strength === "strong"
-                          ? "100%"
-                          : "0%",
-                      backgroundColor:
-                        strength === "weak"
-                          ? "#FF4D4D"
-                          : strength === "fair"
-                          ? "#FFAB00"
-                          : strength === "strong"
-                          ? "#00E676"
-                          : "transparent",
-                    }}
-                  />
-                </div>
-                <div className="text-[0.75rem] text-[rgba(255,255,255,0.6)]">
-                  {t("resetPassword.strengthLabel")}{" "}
-                  <span className="font-semibold text-white">{strengthLabel || t("resetPassword.strengthNone")}</span>
-                </div>
-              </div>
+              <PasswordStrengthMeter password={formData.newPassword} />
             )}
           </div>
 

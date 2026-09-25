@@ -77,6 +77,11 @@ export interface GetNotificationsParams {
   q?: string;
 }
 
+export interface BulkNotificationResult {
+  succeeded: string[];
+  failed: string[];
+}
+
 export const notificationsApi = {
   getAll: async (params?: GetNotificationsParams): Promise<PaginatedNotifications> => {
     const res = await apiClient.get<{ data: Notification[]; meta: PaginatedNotifications["meta"] }>(
@@ -90,12 +95,36 @@ export const notificationsApi = {
     await apiClient.patch(`/notifications/${id}/read`);
   },
 
+  markManyAsRead: async (ids: string[]): Promise<BulkNotificationResult> => {
+    const res = await apiClient.patch<{ data?: BulkNotificationResult; succeeded?: string[]; failed?: string[] }>(
+      "/notifications/bulk/read",
+      { ids },
+    );
+    const data = res.data?.data || res.data;
+    return {
+      succeeded: data?.succeeded ?? ids,
+      failed: data?.failed ?? [],
+    };
+  },
+
   markAllAsRead: async (): Promise<void> => {
     await apiClient.post("/notifications/read-all");
   },
 
   deleteOne: async (id: string): Promise<void> => {
     await apiClient.delete(`/notifications/${id}`);
+  },
+
+  deleteMany: async (ids: string[]): Promise<BulkNotificationResult> => {
+    const res = await apiClient.delete<{ data?: BulkNotificationResult; succeeded?: string[]; failed?: string[] }>(
+      "/notifications/bulk",
+      { data: { ids } },
+    );
+    const data = res.data?.data || res.data;
+    return {
+      succeeded: data?.succeeded ?? ids,
+      failed: data?.failed ?? [],
+    };
   },
 
   getUnreadCount: async (): Promise<number> => {

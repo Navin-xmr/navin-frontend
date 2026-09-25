@@ -24,6 +24,9 @@ import type { RouteCostData } from "../../../components/dashboard/CostPerRouteWi
 import { shipmentApi } from "@services/api/endpoints/shipments";
 import { RevenueTargetWidget } from "../../../components/dashboard/RevenueTargetWidget";
 import PerformanceScorecardWidget from "./Scorecard/PerformanceScorecardWidget";
+import { shipmentApi } from "@services/api/endpoints/shipments";
+import { analyticsApi } from "@services/api/endpoints/analytics";
+import { settlementsApi } from "@services/api/endpoints/settlements";
 import OnboardingTour, {
   isTourComplete,
   resetTourFlag,
@@ -211,6 +214,7 @@ const CompanyDashboard: React.FC = () => {
   ];
 
   useEffect(() => {
+    let cancelled = false;
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
@@ -273,17 +277,28 @@ const CompanyDashboard: React.FC = () => {
           setRouteCostError('Failed to load route cost data');
         }
 
+        setHasError(false);
+        await Promise.allSettled([
+          shipmentApi.getAll({ limit: 5 }),
+          analyticsApi.getSummary().catch(() => null),
+          settlementsApi.getSummary('month').catch(() => null),
+        ]);
+        if (cancelled) return;
         setIsLoading(false);
         setIsRouteCostLoading(false);
         setLastRefreshed(new Date());
         if (!isTourComplete()) setShowTour(true);
       } catch {
+        if (cancelled) return;
         setHasError(true);
         setIsLoading(false);
         setIsRouteCostLoading(false);
       }
     };
     void fetchDashboardData();
+    return () => {
+      cancelled = true;
+    };
   }, [refreshKey]);
 
   const refreshedLabel = useMemo(() => {
@@ -292,7 +307,6 @@ const CompanyDashboard: React.FC = () => {
   }, [lastRefreshed]);
 
   const handleRefresh = () => {
-    setLastRefreshed(new Date());
     setRefreshKey((value) => value + 1);
   };
 

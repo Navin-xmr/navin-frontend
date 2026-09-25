@@ -7,6 +7,7 @@ import ForgotPassword from './pages/auth/ForgotPassword/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPassword/ResetPasswordPage';
 import CompanyRegister from './pages/auth/Register/CompanyRegister';
 import EmailVerification from './pages/auth/EmailVerification/EmailVerification';
+import VerifyEmailPage from './pages/auth/VerifyEmail/VerifyEmailPage';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import RoleGuard from './components/auth/RoleGuard';
 import * as Sentry from '@sentry/react';
@@ -70,6 +71,7 @@ const router = createBrowserRouter([
   { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/register/company', element: <CompanyRegister /> },
   { path: '/register/verify-email', element: <EmailVerification /> },
+  { path: '/verify-email', element: <VerifyEmailPage /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: S(<PaginationDemo />) },
   { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
