@@ -9,15 +9,13 @@ import {
 import { shipmentApi, Shipment, ShipmentStatus } from '../../../services/api/endpoints/shipments';
 import { getStatusBadgeClass, getStatusDisplayLabel } from '../../../utils/shipmentStatus';
 import { safeFormatDate, safeDateCompare } from '../../../utils/safeFormat';
-import { NotificationItem } from '../../../components/notifications/NotificationDropdown/NotificationDropdown';
+import { notificationsApi } from '../../../services/api/endpoints/notifications';
+import type { Notification } from '../../../services/api/endpoints/notifications';
 
-// No notifications API yet — use same mock as NotificationDropdown
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  { id: '1', type: 'shipment', message: 'Shipment #SH-2024-001 has been delivered successfully', timestamp: new Date(Date.now() - 2 * 3600000), read: false },
-  { id: '2', type: 'payment', message: 'Payment of 5,000 XLM received for shipment #SH-2024-002', timestamp: new Date(Date.now() - 5 * 3600000), read: false },
-  { id: '3', type: 'alert', message: 'Shipment #SH-2024-003 is delayed due to weather conditions', timestamp: new Date(Date.now() - 86400000), read: false },
-  { id: '4', type: 'shipment', message: 'New shipment #SH-2024-004 is awaiting pickup', timestamp: new Date(Date.now() - 2 * 86400000), read: true },
-];
+/** How many unread notifications the sidebar previews. */
+const NOTIFICATION_PREVIEW_LIMIT = 3;
+/** Page size fetched to find unread items; the API has no unread-only filter. */
+const NOTIFICATION_FETCH_LIMIT = 20;
 
 const STATUS_PROGRESS: Record<ShipmentStatus, number> = {
   CREATED: 25,
@@ -41,8 +39,9 @@ function getMilestoneProgress(shipment: Shipment): number {
   return STATUS_PROGRESS[shipment.status] ?? 0;
 }
 
-function getTimeAgo(timestamp: Date, t: (key: string, opts?: Record<string, unknown>) => string): string {
-  const diffMs = Date.now() - timestamp.getTime();
+function getTimeAgo(timestamp: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  const diffMs = Date.now() - new Date(timestamp).getTime();
+  if (Number.isNaN(diffMs)) return '';
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
@@ -51,10 +50,11 @@ function getTimeAgo(timestamp: Date, t: (key: string, opts?: Record<string, unkn
   return t('customerDashboard.timeAgo.days', { count: diffDays });
 }
 
-function getNotificationIcon(type: NotificationItem['type']) {
-  switch (type) {
+function getNotificationIcon(icon: Notification['icon']) {
+  switch (icon) {
     case 'shipment': return <Package size={14} className="text-blue-400" />;
-    case 'payment':  return <DollarSign size={14} className="text-emerald-400" />;
+    case 'payment':
+    case 'invoice':  return <DollarSign size={14} className="text-emerald-400" />;
     case 'alert':    return <AlertTriangle size={14} className="text-amber-400" />;
     default:         return <Bell size={14} className="text-slate-400" />;
   }
@@ -67,6 +67,9 @@ const CustomerDashboard: React.FC = () => {
   const [hasError, setHasError] = useState(false);
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [pastSortOrder, setPastSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [unreadNotifications, setUnreadNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
+  const [notificationsError, setNotificationsError] = useState(false);
 
   useEffect(() => {
     shipmentApi
@@ -74,6 +77,14 @@ const CustomerDashboard: React.FC = () => {
       .then(res => setShipments(res.data))
       .catch(() => setHasError(true))
       .finally(() => setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    notificationsApi
+      .getAll({ limit: NOTIFICATION_FETCH_LIMIT })
+      .then(res => setUnreadNotifications(res.data.filter(n => !n.isRead).slice(0, NOTIFICATION_PREVIEW_LIMIT)))
+      .catch(() => setNotificationsError(true))
+      .finally(() => setNotificationsLoading(false));
   }, []);
 
   const activeShipments = useMemo(
@@ -100,8 +111,6 @@ const CustomerDashboard: React.FC = () => {
     startOfMonth.setHours(0, 0, 0, 0);
     return shipments.filter(s => s.status === 'DELIVERED' && new Date(s.updatedAt) >= startOfMonth).length;
   }, [shipments]);
-
-  const unreadNotifications = MOCK_NOTIFICATIONS.filter(n => !n.read).slice(0, 3);
 
   if (hasError) {
     return (
@@ -353,7 +362,16 @@ const CustomerDashboard: React.FC = () => {
             </div>
 
             <div className="divide-y divide-[#1e293b]">
-              {unreadNotifications.length === 0 ? (
+              {notificationsLoading ? (
+                <div className="p-4 space-y-3" data-testid="notifications-loading">
+                  {[1, 2, 3].map(i => <div key={i} className="h-10 rounded-lg animate-shimmer" />)}
+                </div>
+              ) : notificationsError ? (
+                <div className="px-5 py-8 text-center" role="alert">
+                  <AlertTriangle size={24} className="text-[#334155] mx-auto mb-2" />
+                  <p className="text-text-secondary text-sm">{t('customerDashboard.notificationsError')}</p>
+                </div>
+              ) : unreadNotifications.length === 0 ? (
                 <div className="px-5 py-8 text-center">
                   <CheckCircle2 size={24} className="text-[#334155] mx-auto mb-2" />
                   <p className="text-text-secondary text-sm">{t('customerDashboard.allCaughtUp')}</p>
@@ -365,11 +383,11 @@ const CustomerDashboard: React.FC = () => {
                     className="flex gap-3 px-4 py-3 bg-blue-500/5 border-l-2 border-l-blue-500 hover:bg-[#1a1f2e] transition-colors cursor-pointer"
                   >
                     <div className="shrink-0 w-7 h-7 rounded-lg bg-[#1e2433] flex items-center justify-center">
-                      {getNotificationIcon(n.type)}
+                      {getNotificationIcon(n.icon)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] text-slate-200 leading-[1.4] m-0 line-clamp-2">
-                        {n.message}
+                        {n.title}
                       </p>
                       <span className="text-[11px] text-slate-500 mt-0.5 block">
                         {getTimeAgo(n.timestamp, t)}

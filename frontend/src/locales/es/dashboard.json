@@ -78,6 +78,7 @@
     "newCount_one": "{{count}} nueva",
     "newCount_other": "{{count}} nuevas",
     "allCaughtUp": "¡Todo al día!",
+    "notificationsError": "No se pudieron cargar las notificaciones.",
     "viewAllNotifications": "Ver todas las notificaciones",
     "timeAgo": {
       "minutes": "hace {{count}} min",
