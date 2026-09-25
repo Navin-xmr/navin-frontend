@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '../../common/Modal/Modal';
 import { useToast } from '../../../context/ToastContext';
 import { authApi } from '../../../services/api/endpoints/auth';
-import { getToken, clearToken } from '../../../services/auth/tokenStorage';
+import { getToken } from '../../../services/auth/tokenStorage';
+import { logoutSession } from '../../../services/auth/logoutSession';
 import { useWallet } from '../../../context/WalletContext';
 
 /** Minutes before expiry to show the warning modal. */
@@ -49,7 +50,9 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
     clearTimers();
     setIsOpen(false);
     void disconnect();
-    clearToken();
+    // An expired token can't authenticate POST /auth/logout, so only notify
+    // the server when the user is still signed in.
+    void logoutSession({ notifyServer: !expired });
     if (expired) {
       addToast('Your session has expired. Please sign in again.', 'error');
     }
@@ -122,9 +125,6 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
   };
 
   const handleSignOut = () => {
-    void authApi.logout().catch(() => {
-      // Ignore logout API errors — we clear local state regardless
-    });
     performLogout(false);
   };
 

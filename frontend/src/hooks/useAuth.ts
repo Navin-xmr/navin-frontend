@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { decodeJwt } from 'jose';
 import { toUserRole, type UserRole } from '@utils/rbac';
+import { clearToken, getToken, onCrossTabTokenChange } from '../services/auth/tokenStorage';
+import { redirectToLogin } from '../services/auth/sessionRedirect';
 
-const AUTH_STORAGE_KEY = 'authToken';
 const AUTH_CHECK_DELAY_MS = 150;
 
 export interface AuthState {
@@ -32,7 +33,7 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     function checkToken() {
-      const token = localStorage.getItem(AUTH_STORAGE_KEY);
+      const token = getToken();
 
       if (!token) {
         setIsAuthenticated(false);
@@ -45,7 +46,7 @@ export function useAuth(): AuthState {
       const parsed = parseToken(token);
 
       if (!parsed.valid || parsed.expired) {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
+        clearToken();
         setIsAuthenticated(false);
         setRole(null);
         setUserId(null);
@@ -78,9 +79,17 @@ export function useAuth(): AuthState {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Keep every open tab in step: a login elsewhere is picked up at once,
+    // and a logout elsewhere signs this tab out too.
+    const unsubscribeCrossTab = onCrossTabTokenChange((token) => {
+      checkToken();
+      if (!token) redirectToLogin();
+    });
+
     return () => {
       window.clearTimeout(timer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      unsubscribeCrossTab();
     };
   }, []);
 
