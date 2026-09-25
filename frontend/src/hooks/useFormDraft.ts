@@ -106,8 +106,7 @@ export function useFormDraft<T extends object>(
     }, debounceMs);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values, disabled, storageKey, debounceMs]);
+  }, [values, disabled, storageKey, debounceMs, clearDraft, isEmpty]);
 
   return { draft, lastSavedAt, restoreDraft, discardDraft, clearDraft };
 }

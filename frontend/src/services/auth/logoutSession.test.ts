@@ -24,12 +24,28 @@ import { realtimeService } from '../realtime/realtimeService';
 const mockPost = apiClient.post as ReturnType<typeof vi.fn>;
 const mockSetUser = Sentry.setUser as ReturnType<typeof vi.fn>;
 const mockDisconnect = realtimeService.disconnect as ReturnType<typeof vi.fn>;
+const mockCacheKeys = vi.fn();
+const mockCacheDelete = vi.fn();
 
 describe('logoutSession (#816)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     localStorage.setItem('authToken', 'jwt-token-001');
+    mockCacheKeys.mockResolvedValue([
+      'telemetry-latest',
+      'shipment-detail',
+      'shipments-list',
+      'notifications',
+      'settlements',
+      'images',
+    ]);
+    mockCacheDelete.mockResolvedValue(true);
+    vi.stubGlobal('caches', { keys: mockCacheKeys, delete: mockCacheDelete });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('notifies the server, clears the token and Sentry user, and closes the real-time connection', async () => {
@@ -60,5 +76,14 @@ describe('logoutSession (#816)', () => {
     expect(localStorage.getItem('authToken')).toBeNull();
     expect(mockSetUser).toHaveBeenCalledWith(null);
     expect(mockDisconnect).toHaveBeenCalledOnce();
+  });
+
+  it('deletes authenticated API caches but preserves static asset caches', async () => {
+    mockPost.mockResolvedValueOnce({ data: {} });
+
+    await logoutSession();
+
+    expect(mockCacheDelete).toHaveBeenCalledTimes(5);
+    expect(mockCacheDelete).not.toHaveBeenCalledWith('images');
   });
 });

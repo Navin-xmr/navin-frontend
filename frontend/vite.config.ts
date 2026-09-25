@@ -5,11 +5,27 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 import { VitePWA } from "vite-plugin-pwa";
+import { loadEnv } from "vite";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, __dirname, "");
+  const apiBaseUrl = env.VITE_API_BASE_URL;
+  const apiBase = apiBaseUrl ? new URL(apiBaseUrl) : null;
+  const apiPrefix = apiBase
+    ? `${apiBase.origin}${apiBase.pathname.replace(/\/+$/, "")}`
+    : "";
+  const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const apiRoutePattern = (path: string) =>
+    new RegExp(
+      apiPrefix
+        ? `^${escapeRegExp(apiPrefix)}${path}(?:\\?.*)?$`
+        : `^https?://[^/]+/api${path}(?:\\?.*)?$`,
+    );
+
+  return ({
   plugins: [
     react(),
     VitePWA({
@@ -22,8 +38,7 @@ export default defineConfig({
         theme_color: "#0d1117",
         background_color: "#0d1117",
         display: "standalone",
-        orientation: "portrait-primary",
-        start_url: "/dashboard",
+        start_url: "/",
         icons: [
           {
             src: "/images/icon-192.png",
@@ -34,7 +49,13 @@ export default defineConfig({
             src: "/images/icon-512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable",
+            purpose: "any",
+          },
+          {
+            src: "/images/maskable-icon.png",
+            sizes: "1x1",
+            type: "image/png",
+            purpose: "maskable",
           },
         ],
       },
@@ -59,7 +80,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\/api\/shipments\/[^/]+\/telemetry\/latest/,
+            urlPattern: apiRoutePattern("/shipments/[^/?]+/telemetry/latest"),
             handler: "NetworkFirst",
             options: {
               cacheName: "telemetry-latest",
@@ -67,15 +88,16 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\/api\/shipments\/[^/]+$/,
-            handler: "CacheFirst",
+            urlPattern: apiRoutePattern("/shipments/[^/?]+"),
+            handler: "NetworkFirst",
             options: {
               cacheName: "shipment-detail",
+              networkTimeoutSeconds: 3,
               expiration: { maxEntries: 20, maxAgeSeconds: 43200 },
             },
           },
           {
-            urlPattern: /\/api\/shipments/,
+            urlPattern: apiRoutePattern("/shipments(?:/.*)?"),
             handler: "StaleWhileRevalidate",
             options: {
               cacheName: "shipments-list",
@@ -83,7 +105,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\/api\/notifications/,
+            urlPattern: apiRoutePattern("/notifications(?:/.*)?"),
             handler: "NetworkFirst",
             options: {
               cacheName: "notifications",
@@ -91,7 +113,7 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /\/api\/settlements/,
+            urlPattern: apiRoutePattern("/settlements(?:/.*)?"),
             handler: "StaleWhileRevalidate",
             options: {
               cacheName: "settlements",
@@ -147,6 +169,8 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     exclude: [
       ...configDefaults.exclude,
+      "e2e/**",
     ],
   },
+  });
 });
