@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, ChevronLeft, Pencil } from "lucide-react";
 import { authApi } from "../../../services/api";
-import PasswordStrengthMeter from "../../../components/ui/PasswordStrengthMeter";
+import PasswordStrengthMeter from '@components/ui/PasswordStrengthMeter';
 import { PASSWORD_MIN_LENGTH } from "../../../utils/passwordPolicy";
 import { ProgressStepper, type StepDef } from "../../../components/ui/ProgressStepper";
 import useFormAutosave from "../../../hooks/useFormAutosave";

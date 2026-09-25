@@ -13,7 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { anomalyApi } from "@services/api/endpoints/anomalies";
-import Avatar from "../../ui/Avatar";
+import Avatar from '@components/ui/Avatar';
 import { useAuthContext } from "../../../context/AuthContext";
 
 export interface SidebarProps {

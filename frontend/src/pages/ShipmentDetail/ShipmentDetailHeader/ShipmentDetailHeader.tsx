@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { Package, ArrowRight, QrCode, Printer, AlertTriangle, ChevronDown, Download, Loader2 } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
-import PriorityBadge from "../../../components/ui/PriorityBadge";
-import CopyToClipboard from "../../../components/ui/CopyToClipboard";
+import PriorityBadge from '@components/ui/PriorityBadge';
+import CopyToClipboard from '@components/ui/CopyToClipboard';
 import ETACountdown from "../../../components/shipment/ETACountdown";
-import InlineEditField from "../../../components/ui/InlineEditField";
-import RoleAccessInfo from "../../../components/ui/RoleAccessInfo";
+import InlineEditField from '@components/ui/InlineEditField';
+import RoleAccessInfo from '@components/ui/RoleAccessInfo';
 import type { ShipmentStatus } from "../../../services/api/endpoints/shipments";
 
 export type UserRole = "company" | "customer";

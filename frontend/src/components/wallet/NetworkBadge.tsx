@@ -1,6 +1,6 @@
 import React from 'react';
 import { useWallet } from '../../context/WalletContext';
-import Tag from '../ui/Tag';
+import Tag from '@components/ui/Tag';
 
 const NetworkBadge: React.FC = () => {
   const { network } = useWallet();

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
-import PasswordStrengthMeter from '../../../../components/ui/PasswordStrengthMeter';
+import PasswordStrengthMeter from '@components/ui/PasswordStrengthMeter';
 import { PASSWORD_MIN_LENGTH } from '../../../../utils/passwordPolicy';
 
 const inputCls = 'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] pr-10';

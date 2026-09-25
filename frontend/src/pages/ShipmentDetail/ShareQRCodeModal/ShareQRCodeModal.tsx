@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import Modal from "../../../components/common/Modal/Modal";
-import CopyToClipboard from "../../../components/ui/CopyToClipboard";
+import CopyToClipboard from '@components/ui/CopyToClipboard';
 import { Download } from "lucide-react";
 
 interface ShareQRCodeModalProps {

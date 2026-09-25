@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ledgerApi } from '@services/api/endpoints/ledger';
 import type { LedgerBlock, MilestoneEvent, GetLedgerBlocksParams } from '@services/api/endpoints/ledger';
-import CopyToClipboard from '../../components/ui/CopyToClipboard';
+import CopyToClipboard from '@components/ui/CopyToClipboard';
 import Breadcrumb from '@components/common/Breadcrumb';
 import { getStellarExpertTxUrl, STELLAR_NETWORK } from '@utils/stellar';
 

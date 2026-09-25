@@ -6,7 +6,7 @@ import { BulkActionBar } from '../../components/shipment/BulkActionBar';
 import { BulkStatusModal } from '../../components/shipment/BulkStatusModal';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
 import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
-import type { ExportFormat } from '../../components/ui/ExportDropdown';
+import type { ExportFormat } from '@components/ui/ExportDropdown';
 import { useToast } from '../../context/ToastContext';
 import { useBulkSelection, useDebounce } from '../../hooks';
 import { safeFormatDate } from '../../utils/safeFormat';

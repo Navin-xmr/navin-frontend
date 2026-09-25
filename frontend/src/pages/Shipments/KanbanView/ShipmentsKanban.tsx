@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, MapPin } from 'lucide-react';
 import { shipmentApi, type Shipment } from '../../../api/shipmentApi';
 import type { ShipmentStatus } from '../../../services/api/endpoints/shipments';
-import PriorityBadge from '../../../components/ui/PriorityBadge';
+import PriorityBadge from '@components/ui/PriorityBadge';
 import { safeFormatDate } from '../../../utils/safeFormat';
 
 const PAGE_SIZE = 100;
