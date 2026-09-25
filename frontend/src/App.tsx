@@ -129,7 +129,9 @@ function RealtimeManager() {
   useEffect(() => {
     // Disable realtime service in development if environment variable is set
     if (import.meta.env.VITE_DISABLE_REALTIME === 'true') {
-      console.log('Realtime service disabled in development mode');
+      if (import.meta.env.DEV) {
+        console.warn('Realtime service disabled in development mode');
+      }
       return;
     }
     
