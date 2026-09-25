@@ -30,5 +30,6 @@
   "connectWalletDescription": "Connectez votre portefeuille Freighter pour autoriser les transactions blockchain et gérer les contrats intelligents.",
 
   "settingsSaved": "Paramètres enregistrés avec succès !",
-  "manageCompanyProfile": "Gérez le profil de votre entreprise, les notifications et les portefeuilles connectés."
+  "manageCompanyProfile": "Gérez le profil de votre entreprise, les notifications et les portefeuilles connectés.",
+  "signOut": "Se déconnecter"
 }

@@ -1,9 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ExternalLink,
   Hash,
   Layers,
-  AlertCircle,
   RefreshCw,
   ChevronLeft,
   ChevronRight,
@@ -11,11 +10,13 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import { ledgerApi } from '@services/api/endpoints/ledger';
-import type { LedgerBlock, MilestoneEvent, GetLedgerBlocksParams } from '@services/api/endpoints/ledger';
+import type { LedgerBlock, MilestoneEvent } from '@services/api/endpoints/ledger';
 import CopyToClipboard from '@components/ui/CopyToClipboard';
+import { TableSkeleton } from '@components/ui/Skeleton';
 import Breadcrumb from '@components/common/Breadcrumb';
+import ErrorFallback from '@components/ErrorFallback/ErrorFallback';
 import { getStellarExpertTxUrl, STELLAR_NETWORK } from '@utils/stellar';
+import { useLedger } from './hooks/useLedger';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -68,7 +69,13 @@ function truncateHash(hash: string, chars = 8): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function PageHeader({ onRefresh, refreshing }: { onRefresh: () => void; refreshing: boolean }) {
+interface PageHeaderProps {
+  onRefresh: () => void;
+  refreshing: boolean;
+  total?: number;
+}
+
+function PageHeader({ onRefresh, refreshing, total }: PageHeaderProps) {
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-col gap-1">
@@ -79,6 +86,14 @@ function PageHeader({ onRefresh, refreshing }: { onRefresh: () => void; refreshi
           <h1 className="text-2xl font-bold text-text-primary font-display tracking-tight">
             Blockchain Ledger
           </h1>
+          {total !== undefined && (
+            <span
+              id="ledger-record-count"
+              className="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary"
+            >
+              {total.toLocaleString()} on-chain {total === 1 ? 'record' : 'records'}
+            </span>
+          )}
         </div>
         <p className="text-sm text-text-secondary pl-[52px]">
           Immutable on-chain milestone history for all shipment events
@@ -181,34 +196,11 @@ function FilterBar({ filter, onFilterChange }: FilterBarProps) {
   );
 }
 
-function SkeletonRow({ cols }: { cols: number }) {
-  return (
-    <tr>
-      {Array.from({ length: cols }).map((_, i) => (
-        <td key={i} className="px-5 py-4 border-b border-[rgba(98,255,255,0.08)]">
-          <div className="h-4 rounded-md bg-[rgba(98,255,255,0.06)] animate-pulse" />
-        </td>
-      ))}
-    </tr>
-  );
-}
-
-function TableSkeleton() {
-  return (
-    <>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <SkeletonRow key={i} cols={6} />
-      ))}
-    </>
-  );
-}
-
 interface LedgerTableProps {
   blocks: LedgerBlock[];
-  loading: boolean;
 }
 
-function LedgerTable({ blocks, loading }: LedgerTableProps) {
+function LedgerTable({ blocks }: LedgerTableProps) {
   const thClass =
     'px-5 py-3.5 text-left text-[11px] font-semibold text-[#62ffff] uppercase tracking-widest border-b border-[rgba(98,255,255,0.15)] whitespace-nowrap';
   const tdClass =
@@ -228,92 +220,88 @@ function LedgerTable({ blocks, loading }: LedgerTableProps) {
           </tr>
         </thead>
         <tbody>
-          {loading ? (
-            <TableSkeleton />
-          ) : (
-            blocks.map((block) => {
-              const colors = MILESTONE_COLORS[block.milestoneEvent] ?? {
-                dot: 'bg-text-secondary',
-                badge: 'bg-text-secondary/10',
-                text: 'text-text-secondary',
-              };
-              const label = MILESTONE_LABELS[block.milestoneEvent] ?? block.milestoneEvent;
-              const explorerUrl = getStellarExpertTxUrl(block.transactionHash);
+          {blocks.map((block) => {
+            const colors = MILESTONE_COLORS[block.milestoneEvent] ?? {
+              dot: 'bg-text-secondary',
+              badge: 'bg-text-secondary/10',
+              text: 'text-text-secondary',
+            };
+            const label = MILESTONE_LABELS[block.milestoneEvent] ?? block.milestoneEvent;
+            const explorerUrl = getStellarExpertTxUrl(block.transactionHash);
 
-              return (
-                <tr
-                  key={`${block.blockNumber}-${block.transactionHash}`}
-                  className="transition-colors hover:bg-[rgba(98,255,255,0.03)] group"
-                >
-                  {/* Block number */}
-                  <td className={tdClass}>
-                    <span className="font-mono text-primary font-semibold">
-                      #{block.blockNumber.toLocaleString()}
-                    </span>
-                  </td>
+            return (
+              <tr
+                key={`${block.blockNumber}-${block.transactionHash}`}
+                className="transition-colors hover:bg-[rgba(98,255,255,0.03)] group"
+              >
+                {/* Block number */}
+                <td className={tdClass}>
+                  <span className="font-mono text-primary font-semibold">
+                    #{block.blockNumber.toLocaleString()}
+                  </span>
+                </td>
 
-                  {/* Timestamp */}
-                  <td className={`${tdClass} text-text-secondary font-mono text-xs`}>
-                    {formatTimestamp(block.timestamp)}
-                  </td>
+                {/* Timestamp */}
+                <td className={`${tdClass} text-text-secondary font-mono text-xs`}>
+                  {formatTimestamp(block.timestamp)}
+                </td>
 
-                  {/* Shipment reference */}
-                  <td className={tdClass}>
-                    <span className="font-medium text-text-primary">
-                      {block.shipmentReference}
-                    </span>
-                  </td>
+                {/* Shipment reference */}
+                <td className={tdClass}>
+                  <span className="font-medium text-text-primary">
+                    {block.shipmentReference}
+                  </span>
+                </td>
 
-                  {/* Milestone event */}
-                  <td className={tdClass}>
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${colors.badge} ${colors.text}`}
+                {/* Milestone event */}
+                <td className={tdClass}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${colors.badge} ${colors.text}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} flex-shrink-0`} />
+                    {label}
+                  </span>
+                </td>
+
+                {/* Tx hash */}
+                <td className={tdClass}>
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href={explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      id={`tx-link-${block.transactionHash.slice(0, 8)}`}
+                      className="inline-flex items-center gap-1.5 font-mono text-xs text-primary/80 hover:text-primary transition-colors group/link"
+                      aria-label={`View transaction ${block.transactionHash} on Stellar Expert`}
+                      title={block.transactionHash}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${colors.dot} flex-shrink-0`} />
-                      {label}
+                      {truncateHash(block.transactionHash)}
+                      <ExternalLink
+                        size={11}
+                        className="opacity-0 group-hover/link:opacity-100 transition-opacity flex-shrink-0"
+                      />
+                    </a>
+                    <CopyToClipboard value={block.transactionHash} size="sm" />
+                  </div>
+                </td>
+
+                {/* Verification status */}
+                <td className={tdClass}>
+                  {block.verified ? (
+                    <span className="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
+                      <CheckCircle2 size={13} />
+                      Verified
                     </span>
-                  </td>
-
-                  {/* Tx hash */}
-                  <td className={tdClass}>
-                    <div className="flex items-center gap-1.5">
-                      <a
-                        href={explorerUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        id={`tx-link-${block.transactionHash.slice(0, 8)}`}
-                        className="inline-flex items-center gap-1.5 font-mono text-xs text-primary/80 hover:text-primary transition-colors group/link"
-                        aria-label={`View transaction ${block.transactionHash} on Stellar Expert`}
-                        title={block.transactionHash}
-                      >
-                        {truncateHash(block.transactionHash)}
-                        <ExternalLink
-                          size={11}
-                          className="opacity-0 group-hover/link:opacity-100 transition-opacity flex-shrink-0"
-                        />
-                      </a>
-                      <CopyToClipboard value={block.transactionHash} size="sm" />
-                    </div>
-                  </td>
-
-                  {/* Verification status */}
-                  <td className={tdClass}>
-                    {block.verified ? (
-                      <span className="inline-flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
-                        <CheckCircle2 size={13} />
-                        Verified
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-yellow-400 text-xs font-semibold">
-                        <Clock size={13} />
-                        Pending
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })
-          )}
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-yellow-400 text-xs font-semibold">
+                      <Clock size={13} />
+                      Pending
+                    </span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -377,14 +365,7 @@ function CursorPager({ hasPrev, hasNext, onPrev, onNext, pageLabel, loading }: P
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-
-
 const BlockchainLedger: React.FC = () => {
-  const [blocks, setBlocks] = useState<LedgerBlock[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState<number | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(false);
   const [filter, setFilter] = useState<MilestoneEvent | ''>('');
 
   // Cursor stack: index 0 = first page (no cursor), subsequent = "next" cursors
@@ -393,43 +374,11 @@ const BlockchainLedger: React.FC = () => {
 
   const currentCursor = cursorStack[pageIndex] ?? null;
 
-  const fetchBlocks = useCallback(
-    async (cursor: string | null, milestoneEvent: MilestoneEvent | '') => {
-      setLoading(true);
-      setError(null);
-      try {
-        const params: GetLedgerBlocksParams = { limit: PAGE_LIMIT };
-        if (cursor) params.cursor = cursor;
-        if (milestoneEvent) params.milestoneEvent = milestoneEvent;
-
-        const result = await ledgerApi.getBlocks(params);
-        setBlocks(result.data);
-        setHasMore(result.hasMore);
-        if (result.total !== undefined) setTotal(result.total);
-
-        // Store the next cursor at cursorStack[pageIndex + 1] if available
-        if (result.hasMore && result.nextCursor) {
-          setCursorStack((prev) => {
-            const next = [...prev];
-            next[pageIndex + 1] = result.nextCursor;
-            return next;
-          });
-        }
-      } catch {
-        setError('Failed to load blockchain ledger data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [pageIndex],
-  );
-
-  // Re-fetch whenever cursor or filter changes
-  useEffect(() => {
-    Promise.resolve().then(() => {
-      void fetchBlocks(currentCursor, filter);
-    });
-  }, [currentCursor, filter]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { entries, total, hasMore, nextCursor, isLoading, error, refetch } = useLedger(undefined, {
+    cursor: currentCursor,
+    milestoneEvent: filter,
+    limit: PAGE_LIMIT,
+  });
 
   const handleFilterChange = (value: MilestoneEvent | '') => {
     setFilter(value);
@@ -439,26 +388,51 @@ const BlockchainLedger: React.FC = () => {
   };
 
   const handleNext = () => {
-    if (hasMore) setPageIndex((i) => i + 1);
+    if (!hasMore || !nextCursor) return;
+    setCursorStack((prev) => [...prev.slice(0, pageIndex + 1), nextCursor]);
+    setPageIndex((i) => i + 1);
   };
 
   const handlePrev = () => {
     if (pageIndex > 0) setPageIndex((i) => i - 1);
   };
 
-  const handleRefresh = () => {
-    void fetchBlocks(currentCursor, filter);
-  };
-
   const pageLabel = total !== undefined
     ? `Page ${pageIndex + 1} · ${total.toLocaleString()} total blocks`
     : `Page ${pageIndex + 1}`;
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div id="ledger-loading" role="status" aria-label="Loading ledger records">
+          <TableSkeleton rows={8} columns={6} />
+        </div>
+      );
+    }
+
+    if (error) {
+      return <ErrorFallback error={error} resetError={refetch} />;
+    }
+
+    if (entries.length === 0) {
+      return (
+        <div
+          id="ledger-empty-state"
+          className="rounded-2xl bg-[rgba(19,186,186,0.04)] border border-[rgba(98,255,255,0.15)]"
+        >
+          <EmptyLedger />
+        </div>
+      );
+    }
+
+    return <LedgerTable blocks={entries} />;
+  };
 
   return (
     <main className="flex flex-col gap-6 p-6 max-w-[1400px] mx-auto">
       <Breadcrumb items={[{ label: 'Dashboard', href: '/dashboard' }]} current="Blockchain Ledger" />
       {/* Header */}
-      <PageHeader onRefresh={handleRefresh} refreshing={loading} />
+      <PageHeader onRefresh={refetch} refreshing={isLoading} total={isLoading ? undefined : total} />
 
       {/* Stats bar */}
       <StatsBar total={total} hasMore={hasMore} />
@@ -468,48 +442,19 @@ const BlockchainLedger: React.FC = () => {
         <FilterBar filter={filter} onFilterChange={handleFilterChange} />
       </div>
 
-      {/* Error state */}
-      {error && !loading && (
-        <div
-          role="alert"
-          id="ledger-error-banner"
-          className="flex items-start gap-3 px-4 py-3 rounded-xl bg-accent-red/10 border border-accent-red/25 text-red-400 text-sm"
-        >
-          <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
-          <div className="flex flex-col gap-1">
-            <span className="font-semibold">Error loading ledger</span>
-            <span className="text-red-300/80">{error}</span>
-          </div>
-        </div>
+      {renderContent()}
+
+      {/* Cursor pagination */}
+      {!error && (hasMore || pageIndex > 0) && (
+        <CursorPager
+          hasPrev={pageIndex > 0}
+          hasNext={hasMore}
+          onPrev={handlePrev}
+          onNext={handleNext}
+          pageLabel={pageLabel}
+          loading={isLoading}
+        />
       )}
-
-      {/* Table / empty state */}
-      {!error || loading ? (
-        <>
-          {!loading && blocks.length === 0 ? (
-            <div
-              id="ledger-empty-state"
-              className="rounded-2xl bg-[rgba(19,186,186,0.04)] border border-[rgba(98,255,255,0.15)]"
-            >
-              <EmptyLedger />
-            </div>
-          ) : (
-            <LedgerTable blocks={blocks} loading={loading} />
-          )}
-
-          {/* Cursor pagination */}
-          {(hasMore || pageIndex > 0) && (
-            <CursorPager
-              hasPrev={pageIndex > 0}
-              hasNext={hasMore}
-              onPrev={handlePrev}
-              onNext={handleNext}
-              pageLabel={pageLabel}
-              loading={loading}
-            />
-          )}
-        </>
-      ) : null}
     </main>
   );
 };

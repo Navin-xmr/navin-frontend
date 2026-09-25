@@ -23,6 +23,7 @@ import RouteTransition from '@components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
 import NotFoundPage from '@pages/NotFound/NotFoundPage';
+import { registerNavigationBridge } from '@utils/navigationBridge';
 
 // Lazy loaded
 // Dev-only component demos (lazy-loaded; excluded from production bundle)
@@ -142,6 +143,18 @@ function RealtimeManager() {
   return null;
 }
 
+function NavigationBridgeRegistrar() {
+  useEffect(() => {
+    // Lets the axios 401 interceptor route to /login through React Router
+    // instead of forcing a full page reload.
+    registerNavigationBridge((path, options) => {
+      void router.navigate(path, options);
+    });
+    return () => registerNavigationBridge(undefined);
+  }, []);
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -152,6 +165,7 @@ function App() {
             <OfflineBanner />
             <SlowConnectionBanner />
             <RealtimeManager />
+            <NavigationBridgeRegistrar />
             <RouterProvider router={router} />
             <PWAInstallPrompt />
           </ErrorBoundary>

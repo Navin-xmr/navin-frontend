@@ -10,6 +10,9 @@ export interface AuthContextValue {
   isAuthenticated: boolean;
   role: UserRole | null;
   userId: string | null;
+  /** Re-reads the stored token so guards see a session created moments ago. */
+  refresh: () => void;
+  logout: () => void;
   logout: () => Promise<void>;
 }
 

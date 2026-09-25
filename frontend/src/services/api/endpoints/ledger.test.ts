@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ledgerApi } from './ledger';
-import type { PaginatedLedgerBlocks, LedgerBlock } from './ledger';
+import type { PaginatedLedgerBlocks, LedgerBlock, MilestoneEvent } from './ledger';
 
 // ─── Mock axios client ────────────────────────────────────────────────────────
 
@@ -108,6 +108,39 @@ describe('ledgerApi', () => {
       });
     });
 
+    it('passes shipmentId filter when provided', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ data: mockPaginatedResponse });
+
+      await ledgerApi.getBlocks({ shipmentId: 'ship-001' });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/ledger/blocks', {
+        params: { shipmentId: 'ship-001' },
+      });
+    });
+
+    const milestoneEvents: MilestoneEvent[] = [
+      'SHIPMENT_CREATED',
+      'PICKUP_CONFIRMED',
+      'IN_TRANSIT',
+      'CUSTOMS_CLEARED',
+      'OUT_FOR_DELIVERY',
+      'DELIVERED',
+      'CANCELLED',
+      'SETTLEMENT_INITIATED',
+      'SETTLEMENT_COMPLETED',
+      'PROOF_SUBMITTED',
+    ];
+
+    it.each(milestoneEvents)('forwards the %s milestone filter unchanged', async (milestoneEvent) => {
+      mockApiClient.get.mockResolvedValueOnce({ data: mockPaginatedResponse });
+
+      await ledgerApi.getBlocks({ milestoneEvent });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/ledger/blocks', {
+        params: { milestoneEvent },
+      });
+    });
+
     it('passes combined params correctly', async () => {
       mockApiClient.get.mockResolvedValueOnce({ data: mockPaginatedResponse });
 
@@ -142,6 +175,29 @@ describe('ledgerApi', () => {
       expect(result.data).toHaveLength(0);
       expect(result.hasMore).toBe(false);
       expect(result.nextCursor).toBeNull();
+    });
+
+    it('treats total as optional when the backend omits it', async () => {
+      const withoutTotal: PaginatedLedgerBlocks = {
+        data: [mockBlock],
+        nextCursor: null,
+        hasMore: false,
+      };
+      mockApiClient.get.mockResolvedValueOnce({ data: withoutTotal });
+
+      const result = await ledgerApi.getBlocks();
+
+      expect(result.total).toBeUndefined();
+      expect(result.data).toEqual([mockBlock]);
+    });
+
+    it('returns unverified blocks with verified: false', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ data: { ...mockPaginatedResponse, data: [mockSecondBlock] } });
+
+      const result = await ledgerApi.getBlocks();
+
+      expect(result.data[0].verified).toBe(false);
+      expect(result.data[0].milestoneEvent).toBe('IN_TRANSIT');
     });
 
     it('propagates network errors', async () => {
