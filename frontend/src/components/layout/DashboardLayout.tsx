@@ -18,13 +18,16 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  LogOut,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import TopHeader from './TopHeader/TopHeader';
 import AnimatedPage from './AnimatedPage';
 import { SessionTimeoutModal } from '../auth/SessionTimeoutModal';
 import { useFocusTrap } from '../../hooks/useFocusTrap';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import ShortcutsHelpModal from '../common/ShortcutsHelpModal';
+import { useAuthContext } from '../../context/AuthContext';
 
 interface NavItem {
   name: string;
@@ -41,6 +44,8 @@ interface NavGroup {
 const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation('common');
+  const { logout } = useAuthContext();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [favoritePaths, setFavoritePaths] = useState<string[]>(() => {
@@ -448,13 +453,31 @@ const DashboardLayout: React.FC = () => {
                 </p>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-none bg-transparent text-sm font-medium text-gray-600 dark:text-[#8a8f9d] hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+            >
+              <LogOut size={18} />
+              <span>{t('signOut')}</span>
+            </button>
           </div>
         )}
 
         {/* Collapsed: mini status dot */}
         {isCollapsed && (
-          <div className="mt-auto flex justify-center pb-2" title="Enterprise Node — Syncing">
-            <div className="relative group/tooltip">
+          <div className="mt-auto flex flex-col items-center gap-3 pb-2">
+            <button
+              type="button"
+              onClick={logout}
+              className="flex items-center justify-center w-10 h-10 rounded-lg border-none bg-transparent text-gray-500 dark:text-[#8a8f9d] hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+              aria-label={t('signOut')}
+              title={t('signOut')}
+            >
+              <LogOut size={18} />
+            </button>
+            <div className="relative group/tooltip" title="Enterprise Node — Syncing">
               <div className="w-10 h-10 bg-teal-50 dark:bg-[rgba(19,186,186,0.15)] rounded-xl flex items-center justify-center text-teal-600 dark:text-[#62ffff]">
                 <ShieldCheck size={18} />
               </div>

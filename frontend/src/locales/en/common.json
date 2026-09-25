@@ -30,5 +30,6 @@
   "connectWalletDescription": "Connect your Freighter wallet to authorize blockchain transactions and manage smart contracts.",
 
   "settingsSaved": "Settings saved successfully!",
-  "manageCompanyProfile": "Manage your company profile, notifications, and connected wallets."
+  "manageCompanyProfile": "Manage your company profile, notifications, and connected wallets.",
+  "signOut": "Sign out"
 }

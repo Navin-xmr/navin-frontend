@@ -37,6 +37,7 @@ function authValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue 
     isAuthenticated: true,
     role: "company",
     userId: "user-1",
+    refresh: vi.fn(),
     logout: vi.fn(),
     ...overrides,
   };

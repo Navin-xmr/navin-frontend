@@ -2,12 +2,35 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
+import RoleGuard from '../RoleGuard';
+import { AuthProvider } from '../../../context/AuthContext';
+
+vi.mock('../../../context/WalletContext', () => ({
+  useWallet: () => ({ disconnect: vi.fn() }),
+}));
 
 // Helper to create a valid-looking JWT (not cryptographically signed, just for testing)
 function makeToken(payload: Record<string, unknown>): string {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const body = btoa(JSON.stringify(payload));
   return `${header}.${body}.signature`;
+}
+
+function renderRoutes() {
+  return render(
+    <AuthProvider>
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <Routes>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<RoleGuard allowedRoles={['company']} />}>
+              <Route path="/dashboard" element={<div>Protected Dashboard</div>} />
+            </Route>
+          </Route>
+          <Route path="/login" element={<div>Login Page</div>} />
+        </Routes>
+      </MemoryRouter>
+    </AuthProvider>
+  );
 }
 
 describe('ProtectedRoute', () => {
@@ -21,31 +44,13 @@ describe('ProtectedRoute', () => {
   });
 
   it('shows loading state while checking auth status', () => {
-    render(
-      <MemoryRouter initialEntries={['/dashboard']}>
-        <Routes>
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<div>Protected Dashboard</div>} />
-          </Route>
-          <Route path="/login" element={<div>Login Page</div>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderRoutes();
 
     expect(screen.getByText('Checking authentication...')).toBeInTheDocument();
   });
 
   it('redirects unauthenticated users to /login', () => {
-    render(
-      <MemoryRouter initialEntries={['/dashboard']}>
-        <Routes>
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<div>Protected Dashboard</div>} />
-          </Route>
-          <Route path="/login" element={<div>Login Page</div>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderRoutes();
 
     act(() => {
       vi.advanceTimersByTime(200);
@@ -58,16 +63,7 @@ describe('ProtectedRoute', () => {
   it('renders protected content for authenticated users', () => {
     localStorage.setItem('authToken', makeToken({ sub: 'user-1', role: 'company' }));
 
-    render(
-      <MemoryRouter initialEntries={['/dashboard']}>
-        <Routes>
-          <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<div>Protected Dashboard</div>} />
-          </Route>
-          <Route path="/login" element={<div>Login Page</div>} />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderRoutes();
 
     act(() => {
       vi.advanceTimersByTime(200);
@@ -76,5 +72,5 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('Protected Dashboard')).toBeInTheDocument();
     expect(screen.queryByText('Login Page')).not.toBeInTheDocument();
   });
-});
 
+});

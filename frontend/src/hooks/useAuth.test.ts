@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from './useAuth';
+import { clearToken, setToken } from '../services/auth/tokenStorage';
 
 const AUTH_STORAGE_KEY = 'authToken';
 
@@ -46,7 +47,7 @@ describe('useAuth', () => {
       vi.advanceTimersByTime(200);
     });
 
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       isLoading: false,
       isAuthenticated: false,
       role: null,
@@ -93,7 +94,7 @@ describe('useAuth', () => {
       vi.advanceTimersByTime(200);
     });
 
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       isLoading: false,
       isAuthenticated: false,
       role: null,
@@ -134,7 +135,7 @@ describe('useAuth', () => {
       vi.advanceTimersByTime(200);
     });
 
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       isLoading: false,
       isAuthenticated: false,
       role: null,
@@ -176,5 +177,50 @@ describe('useAuth', () => {
     const { result } = renderHook(() => useAuth());
 
     expect(result.current.isLoading).toBe(true);
+  });
+
+  it('updates immediately when a token is stored through tokenStorage (#813)', () => {
+    const { result } = renderHook(() => useAuth());
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(result.current.isAuthenticated).toBe(false);
+
+    act(() => {
+      setToken(makeToken({ sub: 'user-9', role: 'customer', exp: Math.floor(Date.now() / 1000) + 3600 }));
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.role).toBe('customer');
+    expect(result.current.userId).toBe('user-9');
+
+    act(() => {
+      clearToken();
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.role).toBeNull();
+  });
+
+  it('exposes refresh() to re-read the stored token on demand', () => {
+    const { result } = renderHook(() => useAuth());
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(result.current.isAuthenticated).toBe(false);
+
+    localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      makeToken({ sub: 'user-2', role: 'company', exp: Math.floor(Date.now() / 1000) + 3600 }),
+    );
+
+    act(() => {
+      result.current.refresh();
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.role).toBe('company');
   });
 });

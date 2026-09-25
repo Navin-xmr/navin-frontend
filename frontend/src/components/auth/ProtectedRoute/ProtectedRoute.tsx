@@ -1,9 +1,9 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "@hooks/useAuth";
+import { useAuthContext } from "@context/AuthContext";
 
 const ProtectedRoute: React.FC = () => {
-    const { isLoading, isAuthenticated } = useAuth();
+    const { isLoading, isAuthenticated } = useAuthContext();
     const location = useLocation();
 
     if (isLoading) {
