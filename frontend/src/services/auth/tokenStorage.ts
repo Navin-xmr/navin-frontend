@@ -52,3 +52,21 @@ export function onTokenChange(listener: TokenChangeListener): () => void {
     listeners.delete(listener);
   };
 }
+
+/**
+ * Subscribes to token changes made in *other* tabs of the same origin (the
+ * browser fires `storage` events only in tabs that did not make the write).
+ * The listener receives the new token, or null when it was removed — which
+ * includes `localStorage.clear()`, reported as an event with a null key.
+ * Returns an unsubscribe function.
+ */
+export function onCrossTabTokenChange(listener: (token: string | null) => void): () => void {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.storageArea !== localStorage) return;
+    if (event.key !== null && event.key !== TOKEN_KEY) return;
+    listener(event.key === null ? null : event.newValue);
+  };
+
+  window.addEventListener("storage", handleStorage);
+  return () => window.removeEventListener("storage", handleStorage);
+}

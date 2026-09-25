@@ -3,6 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from './useAuth';
 import { clearToken, setToken } from '../services/auth/tokenStorage';
 
+const { mockRedirectToLogin } = vi.hoisted(() => ({ mockRedirectToLogin: vi.fn() }));
+
+vi.mock('../services/auth/sessionRedirect', () => ({
+  redirectToLogin: mockRedirectToLogin,
+}));
+
 const AUTH_STORAGE_KEY = 'authToken';
 
 function base64url(input: object): string {
@@ -17,6 +23,13 @@ function makeToken(payload: Record<string, unknown>): string {
   return `${header}.${body}.signature`;
 }
 
+/** Simulates the `storage` event the browser fires when another tab writes. */
+function dispatchStorageEvent(key: string | null, newValue: string | null, oldValue: string | null = null) {
+  window.dispatchEvent(
+    new StorageEvent('storage', { key, newValue, oldValue, storageArea: localStorage }),
+  );
+}
+
 function setVisibility(state: DocumentVisibilityState) {
   Object.defineProperty(document, 'visibilityState', {
     value: state,
@@ -27,6 +40,7 @@ function setVisibility(state: DocumentVisibilityState) {
 describe('useAuth', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.clearAllMocks();
     localStorage.clear();
     setVisibility('visible');
   });
@@ -222,5 +236,91 @@ describe('useAuth', () => {
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.role).toBe('company');
+  describe('cross-tab sync (#819)', () => {
+    const validToken = () =>
+      makeToken({ sub: 'user-1', role: 'company', exp: Math.floor(Date.now() / 1000) + 3600 });
+
+    it('signs this tab in when another tab stores a token', () => {
+      const { result } = renderHook(() => useAuth());
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(result.current.isAuthenticated).toBe(false);
+
+      const token = validToken();
+      act(() => {
+        // The other tab has already written to the shared storage area.
+        localStorage.setItem(AUTH_STORAGE_KEY, token);
+        dispatchStorageEvent(AUTH_STORAGE_KEY, token);
+      });
+
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.role).toBe('company');
+      expect(mockRedirectToLogin).not.toHaveBeenCalled();
+    });
+
+    it('signs this tab out and redirects to /login when another tab removes the token', () => {
+      const token = validToken();
+      localStorage.setItem(AUTH_STORAGE_KEY, token);
+      const { result } = renderHook(() => useAuth());
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(result.current.isAuthenticated).toBe(true);
+
+      act(() => {
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+        dispatchStorageEvent(AUTH_STORAGE_KEY, null, token);
+      });
+
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.role).toBeNull();
+      expect(mockRedirectToLogin).toHaveBeenCalledOnce();
+    });
+
+    it('treats localStorage.clear() in another tab as a logout', () => {
+      localStorage.setItem(AUTH_STORAGE_KEY, validToken());
+      const { result } = renderHook(() => useAuth());
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+
+      act(() => {
+        localStorage.clear();
+        dispatchStorageEvent(null, null);
+      });
+
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(mockRedirectToLogin).toHaveBeenCalledOnce();
+    });
+
+    it('ignores storage events for unrelated keys', () => {
+      localStorage.setItem(AUTH_STORAGE_KEY, validToken());
+      const { result } = renderHook(() => useAuth());
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+
+      act(() => {
+        dispatchStorageEvent('navin-theme', null, 'dark');
+      });
+
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(mockRedirectToLogin).not.toHaveBeenCalled();
+    });
+
+    it('stops listening once unmounted', () => {
+      localStorage.setItem(AUTH_STORAGE_KEY, validToken());
+      const { unmount } = renderHook(() => useAuth());
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      unmount();
+
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      dispatchStorageEvent(AUTH_STORAGE_KEY, null, 'old-token');
+
+      expect(mockRedirectToLogin).not.toHaveBeenCalled();
+    });
   });
 });
