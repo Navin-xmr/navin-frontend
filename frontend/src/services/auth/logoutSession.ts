@@ -1,5 +1,6 @@
 import { authApi, clearLocalSession } from "../api/endpoints/auth";
 import { realtimeService } from "../realtime/realtimeService";
+import { clearAuthenticatedApiCaches } from "./apiCache";
 
 export interface LogoutSessionOptions {
   /**
@@ -13,7 +14,8 @@ export interface LogoutSessionOptions {
 /**
  * The single sign-out routine shared by every logout path. It tries to
  * invalidate the server session (ignoring failures), then always clears the
- * stored token and Sentry user and closes the real-time connection.
+ * stored token and Sentry user, closes the real-time connection, and removes
+ * authenticated API responses from the browser's runtime caches.
  */
 export async function logoutSession({ notifyServer = true }: LogoutSessionOptions = {}): Promise<void> {
   try {
@@ -27,5 +29,6 @@ export async function logoutSession({ notifyServer = true }: LogoutSessionOption
     // cleared the local session in its finally block.
   } finally {
     realtimeService.disconnect();
+    await clearAuthenticatedApiCaches();
   }
 }

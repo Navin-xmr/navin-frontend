@@ -124,8 +124,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, notify]);
 
   const immediate = useCallback((next: ShipmentFiltersValues) => {
     skipDebounce.current = true;

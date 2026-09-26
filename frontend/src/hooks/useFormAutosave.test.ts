@@ -136,6 +136,26 @@ describe('useFormAutosave', () => {
     expect(parsed.name).toBe('immediate');
   });
 
+  it('uses the latest onSave callback when it changes during a pending save', () => {
+    const data = { name: 'latest' };
+    const initialOnSave = vi.fn();
+    const latestOnSave = vi.fn();
+    const { rerender } = renderHook(
+      ({ onSave }: { onSave: (value: typeof data) => void }) =>
+        useFormAutosave({ storageKey: 'form-latest-callback', data, debounceMs: 500, onSave }),
+      { initialProps: { onSave: initialOnSave } },
+    );
+
+    rerender({ onSave: latestOnSave });
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    expect(initialOnSave).not.toHaveBeenCalled();
+    expect(latestOnSave).toHaveBeenCalledWith(data);
+  });
+
   it('loadDraft() returns previously saved data', () => {
     let formData = { name: 'persisted' };
     const { result, rerender } = renderHook(() =>

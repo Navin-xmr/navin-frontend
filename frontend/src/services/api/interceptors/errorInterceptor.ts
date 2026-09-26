@@ -1,6 +1,7 @@
 import { AxiosInstance, AxiosError } from "axios";
 import { notifyToast } from "../../../context/toastBridge";
 import { clearToken } from "../../auth/tokenStorage";
+import { clearAuthenticatedApiCaches } from "../../auth/apiCache";
 import { navigateTo } from "../../../utils/navigationBridge";
 
 // This stops the app from showing multiple pop-ups at the same time if multiple requests fail at once
@@ -81,6 +82,7 @@ export const setupErrorInterceptor = (
                         
                         // Clean up old login token safely
                         clearToken();
+                        void clearAuthenticatedApiCaches();
                         
                         // Show the exact toast message requested by the issue
                         notifyToast("Session expired, redirecting to login...", "error");

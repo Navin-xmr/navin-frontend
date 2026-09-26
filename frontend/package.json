@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "test:watch": "vitest",
     "check:locales": "node scripts/check-locales.mjs"
   },
@@ -21,11 +22,9 @@
     "@tanstack/react-virtual": "^3.14.11",
     "axios": "^1.20.0",
     "html2pdf.js": "^0.14.0",
-    "i18next": "^26.3.3",
+    "i18next": "^26.4.2",
     "i18next-browser-languagedetector": "^8.2.0",
     "i18next-resources-to-backend": "^1.2.1",
-    "jose": "^6.2.3",
-    "i18next": "^26.4.2",
     "jose": "^6.2.12",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.575.0",
@@ -41,6 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",

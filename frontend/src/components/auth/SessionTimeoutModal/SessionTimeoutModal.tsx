@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../../common/Modal/Modal';
 import { useToast } from '../../../context/ToastContext';
@@ -40,13 +40,13 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
   const expireTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     if (warnTimerRef.current) clearTimeout(warnTimerRef.current);
     if (expireTimerRef.current) clearTimeout(expireTimerRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-  };
+  }, []);
 
-  const performLogout = (expired: boolean) => {
+  const performLogout = useCallback((expired: boolean) => {
     clearTimers();
     setIsOpen(false);
     void disconnect();
@@ -57,9 +57,9 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
       addToast('Your session has expired. Please sign in again.', 'error');
     }
     navigate('/login', { replace: true });
-  };
+  }, [addToast, clearTimers, disconnect, navigate]);
 
-  const schedule = () => {
+  const schedule = useCallback(() => {
     clearTimers();
     const expiry = getTokenExpiry();
     if (!expiry) return;
@@ -94,7 +94,7 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
     expireTimerRef.current = setTimeout(() => {
       performLogout(true);
     }, msUntilExpire);
-  };
+  }, [clearTimers, performLogout]);
 
   // Initial schedule on mount
   useEffect(() => {
@@ -102,8 +102,7 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
       schedule();
     });
     return clearTimers;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [clearTimers, schedule]);
 
   const formatCountdown = (seconds: number): string => {
     const m = Math.floor(seconds / 60);

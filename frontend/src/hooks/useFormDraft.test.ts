@@ -195,4 +195,21 @@ let values: DraftShape = { name: 'stored' };
 
     expect(result.current.lastSavedAt).toBeInstanceOf(Date);
   });
+
+  it('rechecks unchanged values when the emptiness predicate changes', async () => {
+    const values = { name: 'saved' };
+    const { rerender } = renderHook(
+      ({ isEmpty }: { isEmpty: (value: typeof values) => boolean }) =>
+        useFormDraft('draft-updated-predicate', values, isEmpty),
+      { initialProps: { isEmpty: () => false } },
+    );
+
+    act(() => { vi.advanceTimersByTime(800); });
+    expect(localStorage.getItem('draft-updated-predicate')).not.toBeNull();
+
+    rerender({ isEmpty: () => true });
+    await act(async () => { await Promise.resolve(); });
+
+    expect(localStorage.getItem('draft-updated-predicate')).toBeNull();
+  });
 });

@@ -102,6 +102,10 @@ const Shipments: React.FC = () => {
     weightMax: searchParams.get('af_weightMax') ?? '',
     priority: searchParams.getAll('af_priority') as ShipmentFiltersValues['priority'],
   };
+  const advancedStatusKey = advancedFilters.status.join(',');
+  const advancedPriorityKey = advancedFilters.priority.join(',');
+  const advancedOrigin = advancedFilters.origin;
+  const advancedDestination = advancedFilters.destination;
 
   /** Update one or more search params, always resetting page to 1 unless explicitly set. */
   const updateFilters = useCallback(
@@ -192,14 +196,14 @@ const Shipments: React.FC = () => {
     // Backend receives a single status value; advanced multi-select is treated
     // as a refinement. When both conflict, the advanced selection wins.
     const effectiveStatus =
-      advancedFilters.status.length > 0
+      advancedStatusKey.length > 0
         ? undefined                      // let advanced statuses pass through
         : statusFilter !== 'ALL'
           ? (statusFilter as import('../../api/shipmentApi').ShipmentStatus)
           : undefined;
 
     const effectivePriority =
-      advancedFilters.priority.length > 0
+      advancedPriorityKey.length > 0
         ? undefined
         : priorityFilter !== 'ALL'
           ? (priorityFilter as import('../../api/shipmentApi').ShipmentPriority)
@@ -214,8 +218,8 @@ const Shipments: React.FC = () => {
         priority: effectivePriority,
         dateFrom: effectiveDateFrom || undefined,
         dateTo: effectiveDateTo || undefined,
-        origin: advancedFilters.origin || undefined,
-        destination: advancedFilters.destination || undefined,
+        origin: advancedOrigin || undefined,
+        destination: advancedDestination || undefined,
         signal: controller.signal,
       })
       .then((response) => {
@@ -239,14 +243,13 @@ const Shipments: React.FC = () => {
     debouncedSearchQuery,
     statusFilter,
     priorityFilter,
-    timeframeFilter,
     effectiveDateFrom,
     effectiveDateTo,
-    advancedFilters.origin,
-    advancedFilters.destination,
-    advancedFilters.status.join(','),
-    advancedFilters.priority.join(','),
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+    advancedOrigin,
+    advancedDestination,
+    advancedStatusKey,
+    advancedPriorityKey,
+  ]);
 
   // filteredShipments == shipments (server already filtered)
   const filteredShipments = shipments;

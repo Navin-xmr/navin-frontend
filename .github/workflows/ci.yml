@@ -35,6 +35,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install Playwright browser
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Check locale keys
         working-directory: .
         run: node scripts/check-locales.mjs
@@ -50,3 +53,8 @@ jobs:
 
       - name: Build
         run: pnpm run build
+        env:
+          VITE_API_BASE_URL: http://127.0.0.1:4173/api
+
+      - name: Playwright E2E
+        run: pnpm run test:e2e
