@@ -31,6 +31,19 @@ vi.mock('../../../services/api/endpoints/shipments', async () => {
   };
 });
 
+vi.mock('../../../services/api/endpoints/notifications', async () => {
+  const actual = await vi.importActual<typeof import('../../../services/api/endpoints/notifications')>(
+    '../../../services/api/endpoints/notifications'
+  );
+  return {
+    ...actual,
+    notificationsApi: {
+      ...actual.notificationsApi,
+      getAll: () => Promise.resolve({ data: [], meta: { page: 1, limit: 20, total: 0, hasMore: false } }),
+    },
+  };
+});
+
 const mockAuthContextValue = vi.fn<() => AuthContextValue>();
 
 vi.mock('@context/AuthContext', () => ({

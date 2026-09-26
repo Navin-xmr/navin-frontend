@@ -78,6 +78,7 @@
     "newCount_one": "{{count}} new",
     "newCount_other": "{{count}} new",
     "allCaughtUp": "All caught up!",
+    "notificationsError": "Couldn't load notifications.",
     "viewAllNotifications": "View All Notifications",
     "timeAgo": {
       "minutes": "{{count}}m ago",
