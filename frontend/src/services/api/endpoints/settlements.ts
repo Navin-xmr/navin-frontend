@@ -21,6 +21,14 @@ export interface RevenueSummaryResponse {
     sparkline: number[];
 }
 
+export type SummaryPeriod = "week" | "month" | "quarter";
+
+/** Explicit date range (ISO dates) for the aggregated summary endpoint. */
+export interface SummaryDateRange {
+    startDate?: string;
+    endDate?: string;
+}
+
 export interface Settlement {
     _id: string;
     createdAt: string;
@@ -87,10 +95,24 @@ export interface PaginatedSettlements {
 }
 
 export const settlementsApi = {
-    getSummary: async (period: "week" | "month" | "quarter" = "month"): Promise<RevenueSummaryResponse> => {
+    /**
+     * Aggregated totals across ALL settlements (not the current page).
+     * Pass a period shortcut, or an explicit `{ startDate, endDate }` range.
+     */
+    getSummary: async (
+        periodOrRange: SummaryPeriod | SummaryDateRange = "month",
+    ): Promise<RevenueSummaryResponse> => {
+        const params: Record<string, string> =
+            typeof periodOrRange === "string"
+                ? { period: periodOrRange }
+                : {};
+        if (typeof periodOrRange !== "string") {
+            if (periodOrRange.startDate) params.startDate = periodOrRange.startDate;
+            if (periodOrRange.endDate) params.endDate = periodOrRange.endDate;
+        }
         const res = await apiClient.get<{ data: RevenueSummaryResponse }>(
             "/settlements/summary",
-            { params: { period } },
+            { params },
         );
         return res.data.data;
     },

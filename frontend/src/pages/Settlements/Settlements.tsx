@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ArrowUpDown,
@@ -132,13 +132,26 @@ export default function Settlements() {
     };
   }, [load]);
 
-  // Fetch the global summary once on mount. The summary is independent of
-  // pagination so it reflects all settlements, not just the current page.
-  useEffect(() => {
-    settlementsApi.getSummary().then(setSummary).catch(() => {
-      // Non-critical — summary cards will show placeholder values
-    });
+  // The summary is aggregated server-side, independent of pagination, so it
+  // reflects all settlements rather than the rows on the current page. Only
+  // the latest request may write the result, so a slow earlier response can
+  // never overwrite a newer one.
+  const summaryRequestRef = useRef(0);
+  const loadSummary = useCallback(() => {
+    const requestId = ++summaryRequestRef.current;
+    settlementsApi
+      .getSummary()
+      .then((res) => {
+        if (requestId === summaryRequestRef.current) setSummary(res);
+      })
+      .catch(() => {
+        // Non-critical — summary cards keep their last value (or a placeholder)
+      });
   }, []);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
 
   // Apply realtime settlement status updates
   useEffect(() => {
@@ -162,8 +175,11 @@ export default function Settlements() {
         `Settlement status updated to ${event.newStatus}`,
         isError ? "assertive" : "polite",
       );
+      // A status change moves money between buckets — refresh the totals so
+      // the cards stay consistent with the table.
+      loadSummary();
     });
-  }, [realtimeEvents, announce]);
+  }, [realtimeEvents, announce, loadSummary]);
 
 
   const onOpen = async (s: Settlement) => {
@@ -199,6 +215,7 @@ export default function Settlements() {
             onClick: () => {
               setCurrentPage(1);
               void load();
+              loadSummary();
             },
           }}
         />
