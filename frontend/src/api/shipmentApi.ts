@@ -216,20 +216,28 @@ export const shipmentApi = {
     limit?: number;
     page?: number;
     search?: string;
-    status?: ShipmentStatus;
-    priority?: ShipmentPriority;
+    /** One status, or several (sent as a comma-separated list). */
+    status?: ShipmentStatus | ShipmentStatus[];
+    /** One priority, or several (sent as a comma-separated list). */
+    priority?: ShipmentPriority | ShipmentPriority[];
     dateFrom?: string;
     dateTo?: string;
     origin?: string;
     destination?: string;
+    carrier?: string;
+    weightMin?: string;
+    weightMax?: string;
     signal?: AbortSignal;
   } = {}): Promise<ShipmentsResponse> {
     const { signal, ...queryParams } = params;
 
     // Strip undefined/empty values so they don't pollute the query string.
+    // Multi-value filters are serialised as a comma-separated list.
     const cleanParams: Record<string, string | number> = {};
     for (const [key, value] of Object.entries(queryParams)) {
-      if (value !== undefined && value !== '' && value !== null) {
+      if (Array.isArray(value)) {
+        if (value.length > 0) cleanParams[key] = value.join(',');
+      } else if (value !== undefined && value !== '' && value !== null) {
         cleanParams[key] = value as string | number;
       }
     }

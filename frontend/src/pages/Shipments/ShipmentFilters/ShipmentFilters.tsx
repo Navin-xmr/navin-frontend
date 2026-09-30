@@ -60,6 +60,8 @@ function loadFiltersFromURL(sp: URLSearchParams): ShipmentFiltersValues {
 function serializeToURL(sp: URLSearchParams, f: ShipmentFiltersValues): URLSearchParams {
   const next = new URLSearchParams();
   for (const [k, v] of sp.entries()) {
+    // Changing filters restarts pagination, so the page param is not carried over.
+    if (k === 'page') continue;
     if (!(FILTER_KEYS as readonly string[]).includes(k as keyof ShipmentFiltersValues)) {
       next.set(k, v);
     }

@@ -15,8 +15,11 @@ interface ShipmentsFilterToolbarProps {
   onPriorityChange: (value: TopPriorityFilter) => void;
   timeframeFilter: TopTimeframeFilter;
   onTimeframeChange: (value: TopTimeframeFilter) => void;
-  onAdvancedChange: (values: ShipmentFiltersValues) => void;
+  /** Optional: the advanced panel keeps the URL in sync itself. */
+  onAdvancedChange?: (values: ShipmentFiltersValues) => void;
 }
+
+const noop = () => undefined;
 
 const selectClass =
   'bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#62ffff] cursor-pointer';
@@ -86,7 +89,7 @@ export function ShipmentsFilterToolbar({
         <option value="90" className={optionClass}>Last 90 Days</option>
       </select>
 
-      <ShipmentFilters onFilterChange={onAdvancedChange} />
+      <ShipmentFilters onFilterChange={onAdvancedChange ?? noop} />
     </div>
   );
 }
