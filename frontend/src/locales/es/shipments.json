@@ -66,6 +66,9 @@
     "disputeSubmitted": "Disputa enviada. Número de referencia: {{ref}}",
     "offlineBanner": "Subir comprobantes requiere conexión a internet.",
     "unknownId": "Envío desconocido",
-    "trackingUnavailable": "Número de seguimiento no disponible"
+    "trackingUnavailable": "Número de seguimiento no disponible",
+    "lastUpdated": "Última actualización",
+    "refreshNow": "Actualizar ahora",
+    "staleBanner": "Estos datos están desactualizados, haga clic en Actualizar"
   }
 }

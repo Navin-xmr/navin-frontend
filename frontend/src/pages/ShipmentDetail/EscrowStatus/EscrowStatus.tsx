@@ -10,6 +10,11 @@ import { getStellarExpertTxUrl } from "@utils/stellar";
 
 export interface EscrowStatusProps {
     shipmentId: string;
+    /**
+     * Changing this value re-reads the escrow/settlement state (without
+     * flashing the loading skeleton), so the parent can keep it fresh.
+     */
+    refreshKey?: number | null;
 }
 
 const STATUS_STYLES: Record<SettlementStatus, string> = {
@@ -28,19 +33,31 @@ const STATUS_STYLES: Record<SettlementStatus, string> = {
 const truncateHash = (hash: string) =>
     hash.length <= 12 ? hash : `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 
-const EscrowStatus: React.FC<EscrowStatusProps> = ({ shipmentId }) => {
+const EscrowStatus: React.FC<EscrowStatusProps> = ({ shipmentId, refreshKey }) => {
     const [settlements, setSettlements] = useState<Settlement[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!shipmentId) return;
+        let cancelled = false;
         settlementsApi
             .getByShipmentId(shipmentId)
-            .then(setSettlements)
-            .catch(() => setError("Failed to load escrow records."))
-            .finally(() => setLoading(false));
-    }, [shipmentId]);
+            .then((data) => {
+                if (cancelled) return;
+                setSettlements(data);
+                setError(null);
+            })
+            .catch(() => {
+                if (!cancelled) setError("Failed to load escrow records.");
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [shipmentId, refreshKey]);
 
     return (
         <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl px-8 py-12 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] mt-8 md:px-5 md:py-8 md:rounded-2xl sm:px-4 sm:py-6">
@@ -66,7 +83,7 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ shipmentId }) => {
                 </div>
             )}
 
-            {!loading && error && (
+            {!loading && error && settlements.length === 0 && (
                 <p className="text-center text-red-400 py-8">{error}</p>
             )}
 
@@ -84,7 +101,7 @@ const EscrowStatus: React.FC<EscrowStatusProps> = ({ shipmentId }) => {
                 </div>
             )}
 
-            {!loading && !error && settlements.length > 0 && (
+            {!loading && settlements.length > 0 && (
                 <div className="flex flex-col gap-4">
                     {settlements.map((s) => (
                         <div
