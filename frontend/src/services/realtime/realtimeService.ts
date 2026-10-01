@@ -1,9 +1,25 @@
 import type { RealtimeEvent, RealtimeEventType } from '../../types/realtimeEvents';
 import { apiClient } from '../api/client';
 
-export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
+export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected' | 'offline';
 
 type Handler<T extends RealtimeEvent = RealtimeEvent> = (event: T) => void;
+
+/**
+ * Resolve the real-time WebSocket URL from the environment. Reading the env var
+ * inside the function (not at module scope) allows vi.stubEnv() to work in tests.
+ *
+ * When VITE_REALTIME_WS_URL is not configured (e.g. Testnet or sandboxed
+ * deployments), real-time is disabled gracefully and the service reports an
+ * 'offline' status so the UI can show an Offline banner and offer manual refresh.
+ */
+function getRealtimeWsUrl(): string | null {
+  const url = import.meta.env.VITE_REALTIME_WS_URL;
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    return null;
+  }
+  return url.trim();
+}
 
 /**
  * Build the SSE endpoint URL from VITE_API_BASE_URL so it works in production
@@ -52,6 +68,17 @@ export class RealtimeService {
 
   connect(): void {
     if (this.closed) return;
+
+    // No real-time endpoint configured (Testnet / sandboxed deployment):
+    // disable real-time gracefully and let the UI fall back to manual refresh.
+    if (!getRealtimeWsUrl()) {
+      console.warn(
+        '[realtime] VITE_REALTIME_WS_URL is not configured; real-time updates are disabled. Manual refresh is required.',
+      );
+      this.setStatus('offline');
+      return;
+    }
+
     if (!('EventSource' in window) || this.useFallback) {
       this.startPolling();
       return;
@@ -84,6 +111,9 @@ export class RealtimeService {
       if (this.closed) return;
 
       if (this.retryCount >= MAX_RETRIES) {
+        console.warn(
+          '[realtime] Failed to connect to real-time endpoint; falling back to polling. Real-time is optional.',
+        );
         this.useFallback = true;
         this.startPolling();
         return;

@@ -138,48 +138,41 @@ function RealtimeManager() {
       return;
     }
 
-    if (!isAuthenticated) {
-      // Ensure any lingering connection is torn down when the user logs out
-      realtimeService.disconnect();
+    if (!isAuthenticated || !userId) {
       return;
     }
 
-    realtimeService.reset();
-    realtimeService.connect();
-    return () => realtimeService.disconnect();
-  }, [isAuthenticated, userId]);
-  return null;
-}
+    realtimeService.connect(userId);
 
-function NavigationBridgeRegistrar() {
-  useEffect(() => {
-    // Lets the axios 401 interceptor route to /login through React Router
-    // instead of forcing a full page reload.
-    registerNavigationBridge((path, options) => {
-      void router.navigate(path, options);
-    });
-    return () => registerNavigationBridge(undefined);
-  }, []);
+    return () => {
+      realtimeService.disconnect();
+    };
+  }, [isAuthenticated, userId]);
+
   return null;
 }
 
 function App() {
+  useEffect(() => {
+    registerNavigationBridge();
+  }, []);
+
   return (
-    <AuthProvider>
-      <RouteTransitionProvider>
-        <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
-          <ErrorBoundary>
-            <RouteTransition />
+    <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+      <ErrorBoundary>
+        <AuthProvider>
+          <RouteTransitionProvider>
             <OfflineBanner />
             <SlowConnectionBanner />
             <RealtimeManager />
-            <NavigationBridgeRegistrar />
-            <RouterProvider router={router} />
+            <RouteTransition>
+              <RouterProvider router={router} />
+            </RouteTransition>
             <PWAInstallPrompt />
-          </ErrorBoundary>
-        </Sentry.ErrorBoundary>
-      </RouteTransitionProvider>
-    </AuthProvider>
+          </RouteTransitionProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </Sentry.ErrorBoundary>
   );
 }
 
