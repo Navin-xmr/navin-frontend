@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -38,6 +39,7 @@ function formatDelta(current: number, previous: number, suffix = ''): string {
 }
 
 const Analytics: React.FC = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<AnalyticsFiltersValues>(defaultFilters);
   const dateRangeInvalid =
     !!filters.startDate && !!filters.endDate && filters.startDate > filters.endDate;
@@ -93,6 +95,7 @@ const Analytics: React.FC = () => {
           trendType:
             summary.onTimeDeliveryRate >= summary.onTimeDeliveryRatePrev ? 'up' : 'down',
           icon: <CheckCircle2 size={18} />,
+          onClick: () => navigate('/dashboard/shipments?status=delivered&lateFilter=on-time'),
         },
         {
           label: 'Average Transit Time',
@@ -101,6 +104,7 @@ const Analytics: React.FC = () => {
           trendType:
             summary.averageTransitDays <= summary.averageTransitDaysPrev ? 'up' : 'down',
           icon: <Clock size={18} />,
+          onClick: () => navigate('/dashboard/settlements?sort=duration'),
         },
         {
           label: 'Dispute Rate',
@@ -192,33 +196,6 @@ const Analytics: React.FC = () => {
                   {performance?.shipmentsByStatus.length ? (
                     performance.shipmentsByStatus.map((item) => (
                       <tr key={item.status} className="group hover:bg-[rgba(255,255,255,0.02)]">
-                        <td className="px-6 py-4 text-sm text-white border-b border-[rgba(30,41,59,0.5)]">
-                          {item.status}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-[#94a3b8] border-b border-[rgba(30,41,59,0.5)]">
-                          {item.total.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={2} className="text-center px-6 py-12 text-[#64748b]">
-                        No shipment data found for the selected period.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <p className="px-6 py-4 text-xs text-[#64748b]">
-              Total delayed shipments: {performance?.totalDelayedShipments.toLocaleString() ?? 0} of{' '}
-              {totalFromPerformance.toLocaleString()}
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+                        <td className="px-6 py-4 text-sm text-
 
-export default Analytics;
+/* … truncated 1040 chars — edit only what you need near the top … */

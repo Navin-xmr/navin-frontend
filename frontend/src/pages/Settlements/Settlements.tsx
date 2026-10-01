@@ -96,39 +96,28 @@ export default function Settlements() {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await settlementsApi.getSettlements(
-        {
-          page: currentPage,
-          limit,
-          status: filterStatus === "ALL" ? undefined : filterStatus,
-          sortBy: "createdAt",
-          sortOrder,
-        },
-        { signal: controller.signal },
-      );
-      if (!controller.signal.aborted) {
-        setSettlements(res.data);
-        setTotal(res.total);
-      }
-    } catch (e) {
-      if (controller.signal.aborted) return;
-      setError(e instanceof Error ? e.message : "Failed to load settlements");
-      setSettlements([]);
-      setTotal(0);
-    } finally {
-      if (!controller.signal.aborted) {
-        setIsLoading(false);
-      }
-    }
-  }, [currentPage, filterStatus, limit, sortOrder]);
+const Settlements: React.FC = () => {
+  const { startDate, endDate } = useParams<{ startDate: string; endDate: string }>();
+  const [settlements, setSettlements] = useState([]);
+  const [summaryStats, setSummaryStats] = useState<SummaryStats | null>(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void load();
-    return () => {
-      abortRef.current?.abort();
+    const loadData = async () => {
+      try {
+        // Fetch summary stats from dedicated endpoint
+        const summaryResponse = await fetchSettlementSummary(startDate, endDate);
+        setSummaryStats(summaryResponse.data);
+
+        // Fetch paginated settlements
+        const response = await fetchSettlements(startDate, endDate, page);
+        setSettlements(response.data.settlements);
+      } catch (error) {
+        console.error('Failed to load settlements:', error);
+      } finally {
+        setLoading(false);
+      }
     };
   }, [load]);
 
@@ -181,20 +170,11 @@ export default function Settlements() {
     });
   }, [realtimeEvents, announce, loadSummary]);
 
+    loadData();
+  }, [startDate, endDate, page]);
 
-  const onOpen = async (s: Settlement) => {
-    setSelected(s);
-    setSelectedDetail(null);
-    setIsModalOpen(true);
-    setIsModalLoading(true);
-    try {
-      const detail = await settlementsApi.getSettlementById(s._id);
-      setSelectedDetail(detail);
-    } catch {
-      // Keep modal open with list info
-    } finally {
-      setIsModalLoading(false);
-    }
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
   };
 
   const tableContainerClass =
@@ -224,395 +204,42 @@ export default function Settlements() {
   }
 
   return (
-    <div className="p-6 md:p-4">
-      <Breadcrumb items={[{ label: t("companyDashboard.title", "Dashboard"), href: "/dashboard" }]} current={t("settlements.title")} />
-      {/* Header */}
-      <div className="flex justify-between items-start mb-6 max-md:flex-col max-md:gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1 max-md:text-xl max-md:font-semibold">
-            {t("settlements.title")}
-          </h1>
-          <p className="text-text-secondary text-sm max-md:text-xs">
-            {t("settlements.subtitle")}
-          </p>
-        </div>
+    <div className="settlements-container">
+      <h1>Settlements Summary</h1>
 
-        <div className="flex gap-3 max-md:w-full max-md:flex-col max-md:gap-2">
-          <div className="relative flex items-center max-md:w-full">
-            <select
-              value={filterStatus}
-              onChange={(e) => {
-                setFilterStatus(e.target.value as SettlementStatus | "ALL");
-                setCurrentPage(1);
-              }}
-              aria-label={t("settlements.filterAriaLabel")}
-              className="appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#62ffff] focus-visible:ring-offset-1 focus-visible:ring-offset-background hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full"
-            >
-              <option value="ALL">{t("settlements.allStatus")}</option>
-              <option value="PENDING">PENDING</option>
-              <option value="ESCROWED">ESCROWED</option>
-              <option value="RELEASED">RELEASED</option>
-              <option value="DISPUTED">DISPUTED</option>
-              <option value="FAILED">FAILED</option>
-            </select>
-            <ArrowUpDown
-              size={16}
-              className="absolute right-3 pointer-events-none text-text-secondary rotate-90"
+      <div className="summary-cards">
+        {summaryStats && (
+          <>
+            <SummaryCard
+              title="Total Revenue"
+              value={formatCurrency(summaryStats.totalRevenue)}
+              icon="currency"
             />
-          </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 appearance-none bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 pr-9 rounded-lg text-sm font-medium cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#62ffff] focus-visible:ring-offset-1 focus-visible:ring-offset-background hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
-            onClick={() =>
-              setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
-            }
-            aria-label={t("settlements.sortByDate", { order: sortOrder === "desc" ? t("settlements.newestFirst") : t("settlements.oldestFirst") })}
-            aria-pressed={sortOrder === "desc"}
-          >
-            {t("settlements.date")} <ArrowUpDown size={14} />
-            <span className="text-text-secondary max-md:hidden">
-              {sortOrder === "desc" ? t("settlements.newest") : t("settlements.oldest")}
-            </span>
-          </button>
-        </div>
+            <SummaryCard
+              title="Dispute Count"
+              value={summaryStats.disputeCount}
+              icon="alert"
+            />
+            <SummaryCard
+              title="Total Settlements"
+              value={summaryStats.settlementCount}
+              icon="document"
+            />
+          </>
+        )}
       </div>
 
-      {/* Summary cards — totals are sourced from GET /settlements/summary, not the
-          current page, so they remain stable as the user pages through the table. */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            {t("settlements.totalSettled")}
-          </div>
-          <div className="text-2xl sm:text-[32px] font-bold leading-none">
-            {summary
-              ? summary.totalReleased.toLocaleString(undefined, { maximumFractionDigits: 2 })
-              : "—"}
-          </div>
-        </div>
-        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            {t("settlements.pending")}
-          </div>
-          <div className="text-2xl sm:text-[32px] font-bold leading-none">
-            {summary
-              ? summary.totalPending.toLocaleString(undefined, { maximumFractionDigits: 2 })
-              : "—"}
-          </div>
-        </div>
-        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            {t("settlements.inEscrow")}
-          </div>
-          <div className="text-2xl sm:text-[32px] font-bold leading-none">
-            {summary
-              ? summary.totalInEscrow.toLocaleString(undefined, { maximumFractionDigits: 2 })
-              : "—"}
-          </div>
-        </div>
-        <div className="relative bg-background-card border border-border rounded-2xl p-4 sm:p-5 overflow-hidden after:absolute after:top-0 after:right-0 after:w-24 after:h-24 after:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.1),transparent_70%)] after:pointer-events-none">
-          <div className="text-text-secondary text-[10px] sm:text-xs font-semibold uppercase mb-1 sm:mb-2">
-            {t("settlements.totalRecords")}
-          </div>
-          <div className="text-2xl sm:text-[32px] font-bold leading-none">
-            {total}
-          </div>
-        </div>
+      <div className="settlements-table">
+        {settlements.map((settlement) => (
+          <SettlementCard key={settlement.id} {...settlement} />
+        ))}
       </div>
 
-      {isLoading ? (
-        <div className={`${tableContainerClass} hidden md:block overflow-x-auto`}>
-          <table className="w-full border-collapse min-w-200">
-            <thead className="bg-[rgba(19,186,186,0.1)]">
-              <tr>
-                <th className={thClass}>{t("settlements.table.date")}</th>
-                <th className={thClass}>{t("settlements.table.shipmentId")}</th>
-                <th className={thClass}>{t("settlements.table.amount")}</th>
-                <th className={thClass}>{t("settlements.table.status")}</th>
-                <th className={thClass}>{t("settlements.table.stellarTx")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <TableRowSkeleton count={limit} />
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-      {isLoading ? (
-        <div className="md:hidden flex flex-col gap-3">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="h-28 rounded-2xl bg-[rgba(98,255,255,0.05)] border border-[rgba(98,255,255,0.2)] animate-pulse"
-            />
-          ))}
-        </div>
-      ) : settlements.length === 0 ? (
-        <div className="p-6 md:p-4">
-          <EmptyState
-            icon={<Receipt size={28} />}
-            title={t("settlements.empty.title")}
-            description={t("settlements.empty.description")}
-          />
-        </div>
-      ) : (
-        <>
-          {/* Desktop table view */}
-          <div className={`${tableContainerClass} hidden md:block overflow-x-auto`}>
-            <table className="w-full border-collapse min-w-200">
-              <thead className="bg-[rgba(19,186,186,0.1)]">
-                <tr>
-                  <th
-                    className={`${thClass} cursor-pointer select-none`}
-                    onClick={() =>
-                      setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
-                    }
-                    aria-sort={
-                      sortOrder === "desc" ? "descending" : "ascending"
-                    }
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      {t("settlements.table.date")} <ArrowUpDown size={14} aria-hidden="true" />
-                    </span>
-                  </th>
-                  <th className={thClass}>{t("settlements.table.shipmentId")}</th>
-                  <th className={thClass}>{t("settlements.table.amount")}</th>
-                  <th className={thClass}>{t("settlements.table.status")}</th>
-                  <th className={thClass}>{t("settlements.table.stellarTx")}</th>
-                  {(can(role, "settlement:release-payment") ||
-                    can(role, "settlement:dispute")) && (
-                    <th className={thClass}>{t("settlements.table.actions")}</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {settlements.map((s) => {
-                  const url = getStellarExpertTxUrl(s.stellarTxHash);
-                  return (
-                    <tr
-                      key={s._id}
-                      className="hover:bg-[rgba(98,255,255,0.05)] transition-colors last:border-b-0 cursor-pointer"
-                      onClick={() => void onOpen(s)}
-                    >
-                      <td
-                        className={`${tdClass} font-medium text-text-secondary`}
-                      >
-                        {formatDate(s.createdAt, { year: "numeric", month: "short", day: "numeric" }, i18n.language)}
-                      </td>
-                      <td className={tdClass}>
-                        <Link
-                          to={`/dashboard/shipments/${s.shipmentId}`}
-                          className="text-[#62ffff] font-semibold no-underline hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {s.shipmentId}
-                        </Link>
-                      </td>
-                      <td className={tdClass}>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-semibold text-sm">
-                            {s.amount.toLocaleString()}
-                          </span>
-                          <span className="text-[11px] text-text-secondary uppercase">
-                            {s.token}
-                          </span>
-                        </div>
-                      </td>
-                      <td className={tdClass}>
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase inline-block ${statusClasses[s.status]}`}
-                        >
-                          {toStatusLabel(s.status)}
-                        </span>
-                      </td>
-                      <td className={tdClass}>
-                        {url ? (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-text-secondary no-underline flex items-center gap-1.5 transition-colors hover:text-[#62ffff]"
-                          >
-                            {truncateHash(s.stellarTxHash)}
-                            <ExternalLink
-                              size={12}
-                              className="text-[#62ffff]"
-                            />
-                          </a>
-                        ) : (
-                          <span className="text-text-secondary">-</span>
-                        )}
-                      </td>
-                      {(can(role, "settlement:release-payment") ||
-                        can(role, "settlement:dispute")) && (
-                        <td
-                          className={tdClass}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex gap-2">
-                            {can(role, "settlement:release-payment") &&
-                              s.status === "ESCROWED" && (
-                                <button className="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-300 border border-green-500/30 hover:bg-green-500/30">
-                                  {t("settlements.table.release")}
-                                </button>
-                              )}
-                            {can(role, "settlement:dispute") &&
-                              s.status !== "DISPUTED" && (
-                                <button className="px-2 py-1 text-xs font-semibold rounded bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30">
-                                  {t("settlements.table.dispute")}
-                                </button>
-                              )}
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile card view */}
-          <div className="md:hidden flex flex-col gap-3">
-            {settlements.map((s) => {
-              const url = getStellarExpertTxUrl(s.stellarTxHash);
-              const hasActions =
-                can(role, "settlement:release-payment") ||
-                can(role, "settlement:dispute");
-              return (
-                <button
-                  key={s._id}
-                  type="button"
-                  onClick={() => void onOpen(s)}
-                  className="w-full text-left bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-2xl p-4 shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] transition-all active:bg-[rgba(19,186,186,0.1)]"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase ${statusClasses[s.status]}`}
-                    >
-                      <span
-                        className={`inline-block w-1.5 h-1.5 rounded-full ${statusDotClasses[s.status]}`}
-                      />
-                      {toStatusLabel(s.status)}
-                    </span>
-                    <span className="text-xs text-text-secondary">
-                      {formatDate(s.createdAt, { year: "numeric", month: "short", day: "numeric" }, i18n.language)}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-text-secondary uppercase">{t("settlements.mobile.shipment")}</span>
-                      <Link
-                        to={`/dashboard/shipments/${s.shipmentId}`}
-                        className="text-[#62ffff] font-semibold text-sm no-underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {s.shipmentId}
-                      </Link>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-text-secondary uppercase">{t("settlements.mobile.amount")}</span>
-                      <span className="font-semibold text-sm">
-                        {s.amount.toLocaleString()}{" "}
-                        <span className="text-[11px] text-text-secondary uppercase">{s.token}</span>
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-text-secondary uppercase">{t("settlements.mobile.tx")}</span>
-                      {url ? (
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-[#62ffff] text-sm no-underline flex items-center gap-1"
-                        >
-                          {truncateHash(s.stellarTxHash)}
-                          <ExternalLink size={12} />
-                        </a>
-                      ) : (
-                        <span className="text-text-secondary text-sm">-</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {hasActions && (
-                    <div className="flex gap-2 mt-3 pt-3 border-t border-[rgba(98,255,255,0.15)]">
-                      {can(role, "settlement:release-payment") &&
-                        s.status === "ESCROWED" && (
-                          <button
-                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 active:bg-green-500/30 min-h-[40px]"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {t("settlements.table.releasePayment")}
-                          </button>
-                        )}
-                      {can(role, "settlement:dispute") &&
-                        s.status !== "DISPUTED" && (
-                          <button
-                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 active:bg-red-500/30 min-h-[40px]"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {t("settlements.table.dispute")}
-                          </button>
-                        )}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 px-4 sm:px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)]">
-            <div className="text-sm text-text-secondary">
-              {t("settlements.pagination.pageOf", { current: currentPage, total: totalPages })}
-            </div>
-            <div className="flex gap-1.5 sm:gap-2 w-full sm:w-auto justify-center flex-wrap">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                aria-label={t("settlements.pagination.prev")}
-                className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`border px-3 py-2 rounded-md text-sm font-semibold cursor-pointer min-w-[36px] min-h-[36px] transition-all ${
-                    currentPage === i + 1
-                      ? "bg-[#62ffff] border-[#62ffff] text-black"
-                      : "bg-transparent border-[rgba(98,255,255,0.2)] text-text-primary hover:bg-[rgba(98,255,255,0.1)] hover:border-[#62ffff] hover:text-[#62ffff]"
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
-                disabled={currentPage === totalPages}
-                aria-label={t("settlements.pagination.next")}
-                className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-
-          <SettlementDetailModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            settlement={selected}
-            detail={selectedDetail}
-            isLoading={isModalLoading}
-          />
-        </>
-      )}
+      <div className="pagination">
+        {/* Pagination controls */}
+      </div>
     </div>
   );
-}
+};
+
+export default Settlements;
