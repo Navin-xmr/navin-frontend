@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ShipmentDetail from './ShipmentDetail';
@@ -23,7 +24,8 @@ const mockShipment: Shipment = {
   updatedAt: '2024-03-15T10:30:00.000Z',
 };
 
-vi.mock('react-router-dom', () => ({
+vi.mock('react-router-dom', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('react-router-dom')>()),
   useParams: () => ({ id: 'ship-001' }),
 }));
 
@@ -54,12 +56,20 @@ vi.mock('../../hooks/useRealtimeEvents', () => ({
   useRealtimeEvents: () => ({}),
 }));
 
+const detailState = {
+  lastUpdatedAt: null as number | null,
+  isStale: false,
+  isLoading: false,
+};
+
 vi.mock('../../hooks/useShipmentDetail', () => ({
   useShipmentDetail: () => ({
     shipment: mockShipment,
-    isLoading: false,
+    isLoading: detailState.isLoading,
     error: null,
     refresh: mockRefresh,
+    lastUpdatedAt: detailState.lastUpdatedAt,
+    isStale: detailState.isStale,
   }),
 }));
 
@@ -78,7 +88,11 @@ vi.mock('@services/api/endpoints/shipments', async (importOriginal) => {
 vi.mock('./ShipmentMap/ShipmentMap', () => ({ default: () => <div data-testid="shipment-map" /> }));
 vi.mock('./SensorDataCards/SensorDataCards', () => ({ default: () => <div data-testid="sensor-cards" /> }));
 vi.mock('./PaymentStatus/PaymentStatus', () => ({ default: () => <div data-testid="payment-status" /> }));
-vi.mock('./EscrowStatus/EscrowStatus', () => ({ default: () => <div data-testid="escrow-status" /> }));
+vi.mock('./EscrowStatus/EscrowStatus', () => ({
+  default: ({ refreshKey }: { refreshKey?: number | null }) => (
+    <div data-testid="escrow-status" data-refresh-key={refreshKey ?? ''} />
+  ),
+}));
 vi.mock('./DeliveryProofUpload/DeliveryProofUpload', () => ({ default: () => <div data-testid="proof-upload" /> }));
 vi.mock('./PhotosSection/PhotosSection', () => ({ default: () => <div data-testid="photos-section" /> }));
 vi.mock('./DocumentsSection/DocumentsSection', () => ({ default: () => <div data-testid="documents-section" /> }));
@@ -89,9 +103,14 @@ vi.mock('../../components/shipment/ShipmentComparison', () => ({ default: () => 
 vi.mock('./ShipmentStickyBar', () => ({ default: () => null }));
 vi.mock('./ShareQRCodeModal/ShareQRCodeModal', () => ({ default: () => null }));
 
+const render = (ui: React.ReactElement) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
+
 describe('ShipmentDetail Status Update', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    detailState.lastUpdatedAt = null;
+    detailState.isStale = false;
+    detailState.isLoading = false;
   });
 
   it('opens status modal and updates status via shipmentApi.updateStatus', async () => {
@@ -138,6 +157,50 @@ describe('ShipmentDetail Status Update', () => {
     await waitFor(() => {
       expect(mockUpdateStatus).toHaveBeenCalledWith('ship-001', 'DELIVERED');
       expect(mockAddToast).toHaveBeenCalledWith('Network error', 'error');
+    });
+  });
+
+  describe('stale contract state', () => {
+    it('shows when the data was last fetched and passes it to the escrow panel', () => {
+      detailState.lastUpdatedAt = new Date('2026-09-30T10:15:30.000Z').getTime();
+
+      render(<ShipmentDetail />);
+
+      expect(screen.getByText(/last updated/i)).toBeInTheDocument();
+      expect(screen.getByTestId('last-updated')).toHaveAttribute('datetime', '2026-09-30T10:15:30.000Z');
+      expect(screen.getByTestId('last-updated')).not.toHaveTextContent('—');
+      // Escrow/settlement state is re-read whenever the detail data is refreshed.
+      expect(screen.getByTestId('escrow-status')).toHaveAttribute(
+        'data-refresh-key',
+        String(detailState.lastUpdatedAt),
+      );
+    });
+
+    it('offers a Refresh now button that refetches immediately', async () => {
+      const user = userEvent.setup();
+      detailState.lastUpdatedAt = Date.now();
+
+      render(<ShipmentDetail />);
+      await user.click(screen.getByRole('button', { name: /refresh now/i }));
+
+      expect(mockRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not show the stale banner for fresh data', () => {
+      detailState.lastUpdatedAt = Date.now();
+
+      render(<ShipmentDetail />);
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('shows the stale banner when the data is older than 5 minutes', () => {
+      detailState.lastUpdatedAt = Date.now() - 6 * 60_000;
+      detailState.isStale = true;
+
+      render(<ShipmentDetail />);
+
+      expect(screen.getByRole('alert')).toHaveTextContent('This data is stale, click Refresh');
     });
   });
 });

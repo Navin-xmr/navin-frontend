@@ -66,6 +66,9 @@
     "disputeSubmitted": "Litige soumis. Num\u00e9ro de r\u00e9f\u00e9rence\u00a0: {{ref}}",
     "offlineBanner": "L'envoi de preuves n\u00e9cessite une connexion internet.",
     "unknownId": "Exp\u00e9dition inconnue",
-    "trackingUnavailable": "Num\u00e9ro de suivi non disponible"
+    "trackingUnavailable": "Num\u00e9ro de suivi non disponible",
+    "lastUpdated": "Derni\u00e8re mise \u00e0 jour",
+    "refreshNow": "Actualiser maintenant",
+    "staleBanner": "Ces donn\u00e9es sont obsol\u00e8tes, cliquez sur Actualiser"
   }
 }

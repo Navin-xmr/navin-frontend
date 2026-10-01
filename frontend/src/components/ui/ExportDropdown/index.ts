@@ -1,2 +1,2 @@
 export { default } from './ExportDropdown';
-export type { ExportDropdownProps } from './ExportDropdown';
+export type { ExportDropdownProps, ExportFormat } from './ExportDropdown';

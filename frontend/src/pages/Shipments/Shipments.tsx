@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Package } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { shipmentApi, type Shipment } from '../../api/shipmentApi';
+import {
+  shipmentApi,
+  type Shipment,
+  type ShipmentPriority,
+} from '../../api/shipmentApi';
 import { BulkActionBar } from '../../components/shipment/BulkActionBar';
 import { BulkStatusModal } from '../../components/shipment/BulkStatusModal';
 import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
@@ -65,47 +69,43 @@ function exportShipmentsToJSON(shipments: Shipment[], filename?: string): void {
   URL.revokeObjectURL(url);
 }
 
-const initialAdvancedFilters: ShipmentFiltersValues = {
-  status: [],
-  dateFrom: '',
-  dateTo: '',
-  carrier: '',
-  origin: '',
-  destination: '',
-  weightMin: '',
-  weightMax: '',
-  priority: [],
-};
-
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // ── URL-backed filter state (persisted in the query string) ───────────────
+  // The URL is the single source of truth for filters. The advanced filter
+  // panel writes the same plain keys (status, priority, carrier, ...) itself,
+  // so both it and the toolbar dropdowns are read from here; `status` and
+  // `priority` may hold a comma-separated list.
+  const csvParam = (key: string) => searchParams.get(key)?.split(',').filter(Boolean) ?? [];
   const searchQuery = searchParams.get('q') ?? '';
-  const statusFilter = (searchParams.get('status') as TopStatusFilter) ?? 'ALL';
-  const priorityFilter = (searchParams.get('priority') as TopPriorityFilter) ?? 'ALL';
+  const statusList = csvParam('status') as ShipmentStatus[];
+  const priorityList = csvParam('priority') as ShipmentPriority[];
+  const statusFilter: TopStatusFilter = statusList.length === 1 ? statusList[0] : 'ALL';
+  const priorityFilter: TopPriorityFilter = priorityList.length === 1 ? priorityList[0] : 'ALL';
   const timeframeFilter = (searchParams.get('timeframe') as TopTimeframeFilter) ?? 'ALL';
   const currentPage = Number(searchParams.get('page') ?? '1');
 
-  // Advanced filters come from the ShipmentFilters panel; stored as individual
-  // params so the full URL is copyable/bookmarkable.
   const advancedFilters: ShipmentFiltersValues = {
-    status: searchParams.getAll('af_status') as ShipmentFiltersValues['status'],
-    dateFrom: searchParams.get('af_dateFrom') ?? '',
-    dateTo: searchParams.get('af_dateTo') ?? '',
-    carrier: searchParams.get('af_carrier') ?? '',
-    origin: searchParams.get('af_origin') ?? '',
-    destination: searchParams.get('af_destination') ?? '',
-    weightMin: searchParams.get('af_weightMin') ?? '',
-    weightMax: searchParams.get('af_weightMax') ?? '',
-    priority: searchParams.getAll('af_priority') as ShipmentFiltersValues['priority'],
+    status: statusList,
+    dateFrom: searchParams.get('dateFrom') ?? '',
+    dateTo: searchParams.get('dateTo') ?? '',
+    carrier: searchParams.get('carrier') ?? '',
+    origin: searchParams.get('origin') ?? '',
+    destination: searchParams.get('destination') ?? '',
+    weightMin: searchParams.get('weightMin') ?? '',
+    weightMax: searchParams.get('weightMax') ?? '',
+    priority: priorityList,
   };
-  const advancedStatusKey = advancedFilters.status.join(',');
-  const advancedPriorityKey = advancedFilters.priority.join(',');
+  const statusKey = statusList.join(',');
+  const priorityKey = priorityList.join(',');
   const advancedOrigin = advancedFilters.origin;
   const advancedDestination = advancedFilters.destination;
+  const advancedCarrier = advancedFilters.carrier;
+  const advancedWeightMin = advancedFilters.weightMin;
+  const advancedWeightMax = advancedFilters.weightMax;
 
   /** Update one or more search params, always resetting page to 1 unless explicitly set. */
   const updateFilters = useCallback(
@@ -192,22 +192,12 @@ const Shipments: React.FC = () => {
     setIsLoading(true);
     setError(null);
 
-    // Merge advanced-filter status array with the top-level status dropdown.
-    // Backend receives a single status value; advanced multi-select is treated
-    // as a refinement. When both conflict, the advanced selection wins.
-    const effectiveStatus =
-      advancedStatusKey.length > 0
-        ? undefined                      // let advanced statuses pass through
-        : statusFilter !== 'ALL'
-          ? (statusFilter as import('../../api/shipmentApi').ShipmentStatus)
-          : undefined;
-
-    const effectivePriority =
-      advancedPriorityKey.length > 0
-        ? undefined
-        : priorityFilter !== 'ALL'
-          ? (priorityFilter as import('../../api/shipmentApi').ShipmentPriority)
-          : undefined;
+    // Every active filter is sent to the API on every request, so the server
+    // filters across ALL pages (not just the one that happens to be loaded).
+    const effectiveStatus = statusKey ? (statusKey.split(',') as ShipmentStatus[]) : undefined;
+    const effectivePriority = priorityKey
+      ? (priorityKey.split(',') as ShipmentPriority[])
+      : undefined;
 
     shipmentApi
       .getAll({
@@ -220,6 +210,9 @@ const Shipments: React.FC = () => {
         dateTo: effectiveDateTo || undefined,
         origin: advancedOrigin || undefined,
         destination: advancedDestination || undefined,
+        carrier: advancedCarrier || undefined,
+        weightMin: advancedWeightMin || undefined,
+        weightMax: advancedWeightMax || undefined,
         signal: controller.signal,
       })
       .then((response) => {
@@ -241,14 +234,15 @@ const Shipments: React.FC = () => {
   }, [
     currentPage,
     debouncedSearchQuery,
-    statusFilter,
-    priorityFilter,
+    statusKey,
+    priorityKey,
     effectiveDateFrom,
     effectiveDateTo,
     advancedOrigin,
     advancedDestination,
-    advancedStatusKey,
-    advancedPriorityKey,
+    advancedCarrier,
+    advancedWeightMin,
+    advancedWeightMax,
   ]);
 
   // filteredShipments == shipments (server already filtered)
@@ -347,17 +341,22 @@ const Shipments: React.FC = () => {
 
   const isAnyFilterActive =
     debouncedSearchQuery !== '' ||
-    statusFilter !== 'ALL' ||
-    priorityFilter !== 'ALL' ||
     timeframeFilter !== 'ALL' ||
     advancedFilters.status.length > 0 ||
     advancedFilters.dateFrom !== '' ||
     advancedFilters.dateTo !== '' ||
     advancedFilters.origin !== '' ||
     advancedFilters.destination !== '' ||
+    advancedFilters.carrier !== '' ||
+    advancedFilters.weightMin !== '' ||
+    advancedFilters.weightMax !== '' ||
     advancedFilters.priority.length > 0;
-  const isEmpty = !isLoading && !error && total === 0;
-  const isFilterEmpty = false; // server handles filtering — no local empty-after-filter state
+  // The server does the filtering, so "no results" is simply total === 0. Tell
+  // "nothing exists" apart from "nothing matches these filters" so the user can
+  // clear the filters instead of assuming there are no shipments at all.
+  const noResults = !isLoading && !error && total === 0;
+  const isEmpty = noResults && !isAnyFilterActive;
+  const isFilterEmpty = noResults && isAnyFilterActive;
   const virtualItems = virtualizer.getVirtualItems();
   const totalSize = virtualizer.getTotalSize();
 
@@ -391,17 +390,6 @@ const Shipments: React.FC = () => {
             onPriorityChange={(p) => updateFilters({ priority: p === 'ALL' ? null : p })}
             timeframeFilter={timeframeFilter}
             onTimeframeChange={(t) => updateFilters({ timeframe: t === 'ALL' ? null : t })}
-            onAdvancedChange={(af) => updateFilters({
-              af_status: af.status,
-              af_dateFrom: af.dateFrom || null,
-              af_dateTo: af.dateTo || null,
-              af_carrier: af.carrier || null,
-              af_origin: af.origin || null,
-              af_destination: af.destination || null,
-              af_weightMin: af.weightMin || null,
-              af_weightMax: af.weightMax || null,
-              af_priority: af.priority,
-            })}
           />
 
           {isEmpty || error || isFilterEmpty ? (

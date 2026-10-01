@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Copy, Check } from 'lucide-react';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../../context/ToastContext';
 
 interface CopyToClipboardProps {
   value: string;

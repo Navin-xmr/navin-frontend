@@ -439,6 +439,128 @@ describe('UserManagement', () => {
     await waitFor(() => expect(screen.getByText('User 9')).toBeInTheDocument());
   });
 
+  it('shows a loading state while the next page is fetched', async () => {
+    const page1Users = Array.from({ length: 8 }, (_, i) =>
+      makeUser({ _id: `u${i + 1}`, name: `User ${i + 1}`, email: `u${i + 1}@example.com` }),
+    );
+    let resolvePage2: (value: unknown) => void = () => {};
+    mockGetAll
+      .mockResolvedValueOnce({ data: page1Users, page: 1, limit: 8, total: 9 })
+      .mockReturnValueOnce(new Promise((resolve) => { resolvePage2 = resolve; }));
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('User 1'));
+
+    await userEvent.click(screen.getByRole('button', { name: /next page/i }));
+
+    expect(await screen.findByText(/loading team members/i)).toBeInTheDocument();
+    expect(screen.queryByText('User 1')).not.toBeInTheDocument();
+
+    resolvePage2({
+      data: [makeUser({ _id: 'u9', name: 'User 9', email: 'u9@example.com' })],
+      page: 2, limit: 8, total: 9,
+    });
+    await waitFor(() => expect(screen.getByText('User 9')).toBeInTheDocument());
+    expect(screen.queryByText(/loading team members/i)).not.toBeInTheDocument();
+  });
+
+  it('returns to page 1 when the search changes while on a later page', async () => {
+    const page1Users = Array.from({ length: 8 }, (_, i) =>
+      makeUser({ _id: `u${i + 1}`, name: `User ${i + 1}`, email: `u${i + 1}@example.com` }),
+    );
+    mockGetAll.mockImplementation(async (params: { page: number; search?: string }) => {
+      if (params.search === 'zed') {
+        return { data: [makeUser({ _id: 'z1', name: 'Zed Zulu', email: 'zed@example.com' })], page: 1, limit: 8, total: 1 };
+      }
+      return params.page === 2
+        ? { data: [makeUser({ _id: 'u9', name: 'User 9', email: 'u9@example.com' })], page: 2, limit: 8, total: 9 }
+        : { data: page1Users, page: 1, limit: 8, total: 9 };
+    });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('User 1'));
+    await userEvent.click(screen.getByRole('button', { name: /next page/i }));
+    await waitFor(() => screen.getByText('User 9'));
+
+    await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'zed');
+
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, search: 'zed' }),
+      ),
+    );
+    await waitFor(() => expect(screen.getByText('Zed Zulu')).toBeInTheDocument());
+    // No request was ever sent for the new search on the old page.
+    expect(mockGetAll).not.toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, search: 'zed' }),
+    );
+  });
+
+  it('ignores a slow earlier response that arrives after a newer one', async () => {
+    let resolveSlow: (value: unknown) => void = () => {};
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 })
+      .mockReturnValueOnce(new Promise((resolve) => { resolveSlow = resolve; }))
+      .mockResolvedValueOnce({
+        data: [makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com' })],
+        page: 1, limit: 8, total: 1,
+      });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    const search = screen.getByPlaceholderText(/search by name or email/i);
+    await userEvent.type(search, 'a');
+    await waitFor(() => expect(mockGetAll).toHaveBeenCalledTimes(2));
+    await userEvent.type(search, 'b');
+    await waitFor(() => screen.getByText('Bob Jones'));
+
+    // The first (stale) search now resolves — it must not replace Bob's results.
+    resolveSlow({ data: [makeUser({ _id: 'u3', name: 'Stale Person', email: 'stale@example.com' })], page: 1, limit: 8, total: 1 });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.getByText('Bob Jones')).toBeInTheDocument();
+    expect(screen.queryByText('Stale Person')).not.toBeInTheDocument();
+  });
+
+  it('refetches users after inviting, so a new member can be searched for immediately', async () => {
+    const dave = makeUser({ _id: 'u4', name: 'Dave New', email: 'dave@example.com', role: 'Viewer' });
+    let daveExists = false;
+    mockGetAll.mockImplementation(async (params: { search?: string }) => {
+      const all = daveExists ? [makeUser(), dave] : [makeUser()];
+      const data = params.search
+        ? all.filter((u) => u.name.toLowerCase().includes(params.search!.toLowerCase()))
+        : all;
+      return { data, page: 1, limit: 8, total: data.length };
+    });
+    mockInvSend.mockImplementation(async () => { daveExists = true; return {}; });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+    expect(screen.queryByText('Dave New')).not.toBeInTheDocument();
+    const callsBeforeInvite = mockGetAll.mock.calls.length;
+
+    await userEvent.click(screen.getByRole('button', { name: /invite member/i }));
+    await userEvent.type(screen.getByLabelText(/email address/i), 'dave@example.com');
+    await userEvent.click(screen.getByRole('button', { name: /send invite/i }));
+
+    // The list is reloaded from the API — not served from the old local page.
+    await waitFor(() => expect(mockGetAll.mock.calls.length).toBeGreaterThan(callsBeforeInvite));
+    await waitFor(() => expect(screen.getByText('Dave New')).toBeInTheDocument());
+
+    // Searching straight away goes to the server and finds the new member.
+    await userEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'dave');
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'dave' })),
+    );
+    await waitFor(() => expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument());
+    expect(screen.getByText('Dave New')).toBeInTheDocument();
+  });
+
   // ── Self-guard (#889) ─────────────────────────────────────────────────────
 
   it('disables the role select for the currently signed-in user', async () => {

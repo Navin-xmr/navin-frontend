@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, AlertTriangle, Zap, X } from "lucide-react";
+import { Loader2, AlertTriangle, RefreshCw, Zap, X } from "lucide-react";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { useShipmentDetail } from "../../hooks/useShipmentDetail";
 import { useTranslation } from "react-i18next";
@@ -31,12 +31,9 @@ import { exportShipmentPdf } from "../../utils/exportShipmentPdf";
 import ShipmentComparison from "../../components/shipment/ShipmentComparison";
 import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison";
 import ShipmentStickyBar from "./ShipmentStickyBar";
-import { Zap } from "lucide-react";
 import { formatDate } from "@utils/localeFormat";
-import type { ShipmentStatus } from "../../types/realtimeEvents";
 import StatusUpdate, { ShipmentMilestone } from "../../components/shipment/StatusUpdate";
-import { shipmentApi, ShipmentStatus } from "@services/api/endpoints/shipments";
-import type { ShipmentStatus as RealtimeShipmentStatus } from "../../types/realtimeEvents";
+import { shipmentApi, type ShipmentStatus } from "@services/api/endpoints/shipments";
 
 const ShipmentDetail: React.FC = () => {
   const { t } = useTranslation("shipments");
@@ -46,14 +43,14 @@ const ShipmentDetail: React.FC = () => {
   const { announce } = useLiveRegion();
   const { addToast } = useToast();
 
-  const { shipment, isLoading, error, refresh } = useShipmentDetail(id);
+  const { shipment, isLoading, error, refresh, lastUpdatedAt, isStale } = useShipmentDetail(id);
   const [isPrinting, setIsPrinting] = useState(false);
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
   const [existingDispute, setExistingDispute] = useState<DisputeData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<ShipmentStatus | "CREATED">(shipment?.status ?? "CREATED");
+  const [currentStatus, setCurrentStatus] = useState<ShipmentStatus>(shipment?.status ?? "CREATED");
 
   React.useEffect(() => {
     if (shipment?.status) {
@@ -62,7 +59,6 @@ const ShipmentDetail: React.FC = () => {
   }, [shipment?.status]);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<ShipmentStatus>(shipment?.status ?? "IN_TRANSIT");
 
   // Ref attached to the hero heading — IntersectionObserver in ShipmentStickyBar
   // watches this element and shows the bar once it scrolls out of the viewport.
@@ -367,6 +363,36 @@ const ShipmentDetail: React.FC = () => {
           )}
         </div>
 
+        {/* Freshness of the on-chain / API state, with a manual refresh */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-6 text-sm text-[rgba(200,230,240,0.75)]">
+          <span>
+            {t("shipmentDetail.lastUpdated", "Last updated")}:{" "}
+            <time
+              data-testid="last-updated"
+              dateTime={lastUpdatedAt ? new Date(lastUpdatedAt).toISOString() : undefined}
+            >
+              {lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString() : "—"}
+            </time>
+          </span>
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[rgba(0,212,200,0.4)] text-[#00d4c8] font-medium hover:bg-[rgba(0,212,200,0.1)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <RefreshCw size={14} className={isLoading ? "animate-spin" : undefined} aria-hidden="true" />
+            {t("shipmentDetail.refreshNow", "Refresh now")}
+          </button>
+        </div>
+        {isStale && (
+          <div
+            role="alert"
+            className="mb-6 p-4 rounded-xl border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.1)] text-[#fbbf24] text-sm text-center"
+          >
+            {t("shipmentDetail.staleBanner", "This data is stale, click Refresh")}
+          </div>
+        )}
+
         <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl p-8 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] md:p-5 md:rounded-2xl sm:p-4">
           <ShipmentMap
             shipmentId={id}
@@ -421,7 +447,7 @@ const ShipmentDetail: React.FC = () => {
         <SensorDataCards sensorData={sensorData} />
         <PaymentStatus payment={paymentData} />
         <CostBreakdown data={costBreakdown} mode="confirmed" />
-        <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} />
+        <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} refreshKey={lastUpdatedAt} />
 
         {can(role, "shipment:upload-proof") && <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />}
 

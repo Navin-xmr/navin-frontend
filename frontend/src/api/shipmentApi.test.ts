@@ -40,6 +40,41 @@ describe('shipmentApi', () => {
     );
   });
 
+  it('sends every filter to the server so results are filtered across all pages', async () => {
+    await shipmentApi.getAll({
+      page: 2,
+      limit: 50,
+      status: ['CREATED', 'IN_TRANSIT'],
+      priority: ['URGENT'],
+      carrier: 'Acme',
+      weightMin: '5',
+      weightMax: '',
+      origin: 'Lagos',
+    });
+
+    expect(mockApiClient.get).toHaveBeenCalledWith('/shipments', {
+      params: {
+        page: 2,
+        limit: 50,
+        status: 'CREATED,IN_TRANSIT',
+        priority: 'URGENT',
+        carrier: 'Acme',
+        weightMin: '5',
+        origin: 'Lagos',
+      },
+      signal: undefined,
+    });
+  });
+
+  it('omits empty multi-value filters and keeps a single status as-is', async () => {
+    await shipmentApi.getAll({ status: 'DELIVERED', priority: [] });
+
+    expect(mockApiClient.get).toHaveBeenCalledWith('/shipments', {
+      params: { status: 'DELIVERED' },
+      signal: undefined,
+    });
+  });
+
   it('does not include the /api prefix in the URL (baseURL already contains it)', async () => {
     await shipmentApi.getAll();
 

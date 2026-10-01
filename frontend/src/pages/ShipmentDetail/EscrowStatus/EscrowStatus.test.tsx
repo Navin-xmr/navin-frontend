@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import EscrowStatus from './EscrowStatus';
 import type { Settlement } from '@services/api/endpoints/settlements';
@@ -77,5 +77,33 @@ describe('EscrowStatus', () => {
     render(<EscrowStatus shipmentId="ship-1" />);
 
     expect(await screen.findByText('Failed to load escrow records.')).toBeInTheDocument();
+  });
+
+  it('re-reads escrow state when refreshKey changes, without flashing the skeleton', async () => {
+    getByShipmentIdMock.mockResolvedValueOnce([makeSettlement({ status: 'ESCROWED' })]);
+    const { rerender } = render(<EscrowStatus shipmentId="ship-1" refreshKey={1} />);
+    expect(await screen.findByText('ESCROWED')).toBeInTheDocument();
+    expect(getByShipmentIdMock).toHaveBeenCalledTimes(1);
+
+    // The settlement completes on-chain; the parent bumps refreshKey.
+    getByShipmentIdMock.mockResolvedValueOnce([makeSettlement({ status: 'RELEASED' })]);
+    rerender(<EscrowStatus shipmentId="ship-1" refreshKey={2} />);
+
+    expect(screen.queryByText('Loading escrow records…')).not.toBeInTheDocument();
+    expect(await screen.findByText('RELEASED')).toBeInTheDocument();
+    expect(getByShipmentIdMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps showing the last known records when a refresh fails', async () => {
+    getByShipmentIdMock.mockResolvedValueOnce([makeSettlement({ status: 'ESCROWED' })]);
+    const { rerender } = render(<EscrowStatus shipmentId="ship-1" refreshKey={1} />);
+    expect(await screen.findByText('ESCROWED')).toBeInTheDocument();
+
+    getByShipmentIdMock.mockRejectedValueOnce(new Error('RPC down'));
+    rerender(<EscrowStatus shipmentId="ship-1" refreshKey={2} />);
+
+    await waitFor(() => expect(getByShipmentIdMock).toHaveBeenCalledTimes(2));
+    expect(screen.getByText('ESCROWED')).toBeInTheDocument();
+    expect(screen.queryByText('Failed to load escrow records.')).not.toBeInTheDocument();
   });
 });

@@ -97,6 +97,26 @@ describe('settlementsApi endpoint', () => {
       });
     });
 
+    it('sends startDate and endDate when given an explicit range', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ data: { data: mockSummary } });
+
+      await settlementsApi.getSummary({ startDate: '2026-07-01', endDate: '2026-09-30' });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/settlements/summary', {
+        params: { startDate: '2026-07-01', endDate: '2026-09-30' },
+      });
+    });
+
+    it('omits empty range bounds', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ data: { data: mockSummary } });
+
+      await settlementsApi.getSummary({ startDate: '2026-07-01' });
+
+      expect(mockApiClient.get).toHaveBeenCalledWith('/settlements/summary', {
+        params: { startDate: '2026-07-01' },
+      });
+    });
+
     it('propagates a rejected request', async () => {
       mockApiClient.get.mockRejectedValueOnce(new Error('Summary unavailable'));
 

@@ -27,8 +27,10 @@ vi.mock("../../context/AuthContext", () => ({
   useAuthContext: () => mockAuthContextValue(),
 }));
 
+const realtime = vi.hoisted(() => ({ events: vi.fn() }));
+
 vi.mock("../../hooks/useRealtimeEvents", () => ({
-  useRealtimeEvents: () => ({}),
+  useRealtimeEvents: () => realtime.events(),
 }));
 
 function authValue(overrides: Partial<AuthContextValue> = {}): AuthContextValue {
@@ -106,6 +108,7 @@ describe("Settlements", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAuthContextValue.mockReturnValue(authValue());
+    realtime.events.mockReturnValue({});
     api.getSettlements.mockResolvedValue(response());
     api.getSettlementById.mockResolvedValue(detail);
     api.getSummary.mockResolvedValue({
@@ -255,6 +258,95 @@ describe("Settlements", () => {
     await user.click(closeButtons[0]);
     await waitFor(() =>
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps summary totals stable across pages and reflects all settlements", async () => {
+    // 25 settlements exist in total, but each page only carries a few rows.
+    // The summary must come from the aggregate endpoint, not from those rows.
+    const pageTwo: Settlement[] = [
+      {
+        _id: "settlement-11",
+        createdAt: "2026-08-10T12:00:00.000Z",
+        shipmentId: "SHP-011",
+        amount: 50,
+        token: "USDC",
+        status: "PENDING",
+      },
+    ];
+    api.getSettlements.mockImplementation(async ({ page }: { page: number }) =>
+      page === 2
+        ? { data: pageTwo, page: 2, limit: 10, total: 25 }
+        : { data: settlements, page: 1, limit: 10, total: 25 },
+    );
+    api.getSummary.mockResolvedValue({
+      totalReleased: 98765,
+      totalInEscrow: 43210,
+      totalPending: 5555,
+      sparkline: [],
+    });
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findAllByText("SHP-001");
+
+    const settled = () => screen.getByText("Total settled").nextElementSibling;
+    const escrow = () => screen.getByText("In escrow").nextElementSibling;
+    const pending = () => screen.getByText("Pending").nextElementSibling;
+
+    // Totals exceed anything the 3 visible rows could add up to (3,000).
+    await waitFor(() => expect(settled()).toHaveTextContent("98,765"));
+    expect(escrow()).toHaveTextContent("43,210");
+    expect(pending()).toHaveTextContent("5,555");
+    expect(
+      screen.getByText("Total records").nextElementSibling,
+    ).toHaveTextContent("25");
+
+    await user.click(screen.getByRole("button", { name: "2" }));
+    expect((await screen.findAllByText("SHP-011")).length).toBeGreaterThan(0);
+    expect(api.getSettlements).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 2 }),
+      expect.anything(),
+    );
+
+    // Same numbers on page 2, and the summary was not refetched per page.
+    expect(settled()).toHaveTextContent("98,765");
+    expect(escrow()).toHaveTextContent("43,210");
+    expect(pending()).toHaveTextContent("5,555");
+    expect(api.getSummary).toHaveBeenCalledTimes(1);
+  });
+
+  it("refreshes the summary totals when a settlement status changes in realtime", async () => {
+    const { rerender } = renderPage();
+    await screen.findAllByText("SHP-001");
+    await waitFor(() =>
+      expect(screen.getByText("Total settled").nextElementSibling).toHaveTextContent("1,200"),
+    );
+    expect(api.getSummary).toHaveBeenCalledTimes(1);
+
+    api.getSummary.mockResolvedValue({
+      totalReleased: 2700,
+      totalInEscrow: 0,
+      totalPending: 1,
+      sparkline: [],
+    });
+    realtime.events.mockReturnValue({
+      "settlement:status": {
+        type: "settlement:status",
+        settlementId: "settlement-1",
+        newStatus: "RELEASED",
+      },
+    });
+    rerender(
+      <MemoryRouter>
+        <LiveRegionProvider>
+          <Settlements />
+        </LiveRegionProvider>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(api.getSummary).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.getByText("Total settled").nextElementSibling).toHaveTextContent("2,700"),
     );
   });
 

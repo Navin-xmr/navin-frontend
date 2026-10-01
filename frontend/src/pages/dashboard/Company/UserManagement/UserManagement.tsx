@@ -44,7 +44,6 @@ const UserManagement: React.FC = () => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('All');
-  const { currentPage, pageSize: itemsPerPage, setPage: setCurrentPage, reset: resetPage } = usePagination({ pageSize: 8 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<ActionMenuState>(null);
   const [loading, setLoading] = useState(true);
@@ -73,7 +72,19 @@ const UserManagement: React.FC = () => {
   const [total, setTotal] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
+  // Pagination is server-driven: every page/search/role change refetches. A new
+  // search or role filter sends the user back to page 1.
+  const { currentPage, pageSize: itemsPerPage, setPage: setCurrentPage } = usePagination({
+    pageSize: 8,
+    resetKey: `${debouncedSearch}|${roleFilter}`,
+  });
+
+  // Only the most recent request may update state, so a slow earlier response
+  // (e.g. the page before a search) can never overwrite newer results.
+  const latestRequestRef = useRef(0);
+
   const fetchUsers = useCallback(async () => {
+    const requestId = ++latestRequestRef.current;
     try {
       setLoading(true);
       setError(null);
@@ -83,12 +94,14 @@ const UserManagement: React.FC = () => {
         search: debouncedSearch || undefined,
         role: roleFilter === 'All' ? undefined : (roleFilter as import('@services/api').UserRole),
       });
+      if (requestId !== latestRequestRef.current) return;
       setUsers(res.data.map(mapApiUser));
       setTotal(res.total);
     } catch {
+      if (requestId !== latestRequestRef.current) return;
       setError('Failed to load users. Please try again.');
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestRef.current) setLoading(false);
     }
   }, [currentPage, debouncedSearch, itemsPerPage, roleFilter]);
 
@@ -193,6 +206,11 @@ const UserManagement: React.FC = () => {
       await invitationsApi.send({ email: inviteEmail, role: inviteRole, message: inviteMessage || undefined });
       setLastInvitedEmail(inviteEmail);
       setInviteStep('success');
+      // Reload from the server instead of trusting the local page: go back to
+      // the first page (or refetch it if we are already there) so the list and
+      // any search made right after the invite reflect the API.
+      if (currentPage !== 1) setCurrentPage(1);
+      else void fetchUsers();
       await fetchInvitations();
     } catch {
       addToast('Failed to send invitation', 'error');
@@ -332,7 +350,7 @@ const UserManagement: React.FC = () => {
             type="text"
             placeholder="Search by name or email..."
             value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#14171E] border border-[#1E293B] rounded-lg py-2.5 pl-10 pr-4 text-slate-100 text-sm outline-none focus:border-blue-500 transition-colors"
           />
         </div>
@@ -340,7 +358,7 @@ const UserManagement: React.FC = () => {
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={18} />
           <select
             value={roleFilter}
-            onChange={(e) => { setRoleFilter(e.target.value); resetPage(); }}
+            onChange={(e) => setRoleFilter(e.target.value)}
             className="bg-[#14171E] border border-[#1E293B] rounded-lg py-2.5 pl-10 pr-9 text-slate-100 text-sm appearance-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:border-cyan-400 cursor-pointer h-full"
           >
             <option value="All">All Roles</option>
