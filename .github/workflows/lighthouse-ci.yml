@@ -45,17 +45,9 @@ jobs:
         run: pnpm run build
 
       - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v10
+        uses: treosh/lighthouse-ci-action@v12
         with:
           configPath: ./frontend/lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
           runs: 1
-
-      - name: Upload Lighthouse artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lighthouse-reports
-          path: ./frontend/.lighthouseci/
-          retention-days: 30

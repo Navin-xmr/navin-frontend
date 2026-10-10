@@ -160,6 +160,10 @@ export default defineConfig(({ mode }) => {
   test: {
     globals: true,
     environment: "jsdom",
+    // Defined here so tests never depend on a developer's local .env.
+    env: {
+      VITE_STELLAR_NETWORK: "testnet",
+    },
     environmentOptions: {
       jsdom: {
         url: "http://localhost:3000",
