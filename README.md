@@ -1,6 +1,6 @@
 # Navin Frontend
 
-> 🚨 **Contributors:** All PRs must target the `dev` branch, not `main`.  
+> 🚨 **Contributors:** All PRs must target the `main` branch.
 > See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 **Navin** is a blockchain-powered logistics platform that improves supply chain visibility for enterprises through tokenized shipments, immutable milestone tracking, and automated settlements.
