@@ -19,14 +19,15 @@ const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const [token, setToken] = useState<string>(() => {
-    return (location.state as { token?: string } | null)?.token || searchParams.get("token") || "";
+  // Captured once: a token in the URL wins over one carried in router state.
+  const [token] = useState<string>(() => {
+    return searchParams.get("token") || (location.state as { token?: string } | null)?.token || "";
   });
 
+  // Strip the token from the address bar and history once it has been captured.
   useEffect(() => {
     const urlToken = searchParams.get("token");
     if (urlToken) {
-      setToken(urlToken);
       navigate(location.pathname, { replace: true, state: { token: urlToken } });
     }
   }, [searchParams, location.pathname, navigate]);

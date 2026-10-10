@@ -45,8 +45,8 @@ describe('ShipmentFilters', () => {
     // Open filter sheet
     await user.click(screen.getByRole('button', { name: /filters/i }));
 
-    // Click 'Delivered' chip
-    const deliveredChip = screen.getByRole('button', { name: /delivered/i });
+    // Filter chips are toggles, exposed as checkboxes.
+    const deliveredChip = screen.getByRole('checkbox', { name: /delivered/i });
     await user.click(deliveredChip);
 
     await waitFor(
@@ -102,8 +102,9 @@ describe('ShipmentFilters', () => {
       </MemoryRouter>,
     );
 
-    // Because filters were preloaded from URL, active chip bar should display 'Clear All'
-    const clearAllButton = screen.getByRole('button', { name: /clear all/i });
+    // Filters preloaded from the URL open the panel too, which has its own
+    // "Clear All Filters" button — match the chip bar's control exactly.
+    const clearAllButton = screen.getByRole('button', { name: 'Clear All' });
     expect(clearAllButton).toBeInTheDocument();
 
     await user.click(clearAllButton);

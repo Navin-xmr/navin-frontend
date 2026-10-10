@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { decodeJwt } from 'jose';
 import { toUserRole, type UserRole } from '@utils/rbac';
-import { onTokenChange } from '../services/auth/tokenStorage';
-import { clearToken, getToken, onCrossTabTokenChange } from '../services/auth/tokenStorage';
+import {
+  clearToken,
+  getToken,
+  onCrossTabTokenChange,
+  onTokenChange,
+} from '../services/auth/tokenStorage';
 import { redirectToLogin } from '../services/auth/sessionRedirect';
 
 const AUTH_CHECK_DELAY_MS = 150;
@@ -38,10 +42,7 @@ export function useAuth(): UseAuthResult {
   const [userId, setUserId] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
-    const token = localStorage.getItem(AUTH_STORAGE_KEY);
-  useEffect(() => {
-    function checkToken() {
-      const token = getToken();
+    const token = getToken();
 
     if (!token) {
       setIsAuthenticated(false);
@@ -54,7 +55,7 @@ export function useAuth(): UseAuthResult {
     const parsed = parseToken(token);
 
     if (!parsed.valid || parsed.expired) {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
+      clearToken();
       setIsAuthenticated(false);
       setRole(null);
       setUserId(null);
@@ -72,28 +73,6 @@ export function useAuth(): UseAuthResult {
       setIsAuthenticated(true);
       setRole(parsed.role);
       setUserId(parsed.userId);
-      if (!parsed.valid || parsed.expired) {
-        clearToken();
-        setIsAuthenticated(false);
-        setRole(null);
-        setUserId(null);
-      } else if (!parsed.role) {
-        // A structurally valid token whose role this build does not recognise.
-        // Nothing is authorised for it, so it must not be reported as an
-        // authenticated session — that is what would let it reach a guarded
-        // route. The token stays in storage on purpose: it is not malformed,
-        // and clearing it would sign the user out of an account whose role
-        // this frontend is simply behind on.
-        setIsAuthenticated(false);
-        setRole(null);
-        setUserId(null);
-      } else {
-        setIsAuthenticated(true);
-        setRole(parsed.role);
-        setUserId(parsed.userId);
-      }
-
-      setIsLoading(false);
     }
 
     setIsLoading(false);
@@ -116,7 +95,7 @@ export function useAuth(): UseAuthResult {
     // Keep every open tab in step: a login elsewhere is picked up at once,
     // and a logout elsewhere signs this tab out too.
     const unsubscribeCrossTab = onCrossTabTokenChange((token) => {
-      checkToken();
+      refresh();
       if (!token) redirectToLogin();
     });
 

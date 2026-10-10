@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, AlertTriangle, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
@@ -8,6 +8,7 @@ import { useToast } from "../../../context/ToastContext";
 export interface VerifyEmailPageProps {}
 
 type VerificationStatus = "loading" | "success" | "expired" | "missing";
+type VerificationResult = Exclude<VerificationStatus, "missing">;
 
 const COOLDOWN_SECONDS = 60;
 
@@ -18,7 +19,13 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
-  const [status, setStatus] = useState<VerificationStatus>("loading");
+  // Captured once: stripping the token from the URL below must not look like a
+  // new token and trigger a second verification.
+  const [token] = useState<string>(
+    () => searchParams.get("token") || (location.state as { token?: string } | null)?.token || "",
+  );
+  const [result, setResult] = useState<VerificationResult>("loading");
+  const status: VerificationStatus = token ? result : "missing";
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [resendEmail, setResendEmail] = useState<string>("");
   const [isResending, setIsResending] = useState<boolean>(false);
@@ -33,36 +40,43 @@ export const VerifyEmailPage: React.FC<VerifyEmailPageProps> = () => {
     return () => clearInterval(interval);
   }, [cooldown]);
 
+  // Security best practice: strip the token from the address bar and history.
   useEffect(() => {
-    const rawToken = searchParams.get("token") || (location.state as { token?: string } | null)?.token;
-
-    if (!rawToken) {
-      setStatus("missing");
-      return;
-    }
-
-    // Security best practice: Strip token from address bar and history
     if (searchParams.get("token")) {
-      navigate(location.pathname, { replace: true, state: { token: rawToken } });
+      navigate(location.pathname, { replace: true, state: { token } });
+    }
+  }, [searchParams, location.pathname, navigate, token]);
+
+  // A verification token is single-use, so the request is sent exactly once
+  // per token even if this effect runs again (e.g. under StrictMode).
+  const verificationRef = useRef<{ token: string; request: Promise<unknown> } | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    if (verificationRef.current?.token !== token) {
+      verificationRef.current = { token, request: authApi.verifyEmail({ token }) };
     }
 
-    const verify = async () => {
-      setStatus("loading");
-      try {
-        await authApi.verifyEmail({ token: rawToken });
-        setStatus("success");
-      } catch (err: unknown) {
-        setStatus("expired");
+    let cancelled = false;
+    verificationRef.current.request
+      .then(() => {
+        if (!cancelled) setResult("success");
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        setResult("expired");
         const msg =
           err && typeof err === "object" && "response" in err
             ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
             : undefined;
         if (msg) setErrorMessage(msg);
-      }
-    };
+      });
 
-    void verify();
-  }, [searchParams, location.pathname, location.state, navigate]);
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
 
   const handleResend = async (e: React.FormEvent) => {
     e.preventDefault();

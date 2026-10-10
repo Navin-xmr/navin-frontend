@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Package } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -147,8 +147,6 @@ const Shipments: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   const {
@@ -184,52 +182,50 @@ const Shipments: React.FC = () => {
   const hasMore = shipments.length < total;
 
   useEffect(() => {
-    // Cancel any previous in-flight request.
-    abortRef.current?.abort();
+    // Aborting in cleanup means a superseded request can never write its result.
     const controller = new AbortController();
-    abortRef.current = controller;
 
-    setIsLoading(true);
-    setError(null);
+    async function load() {
+      setIsLoading(true);
+      setError(null);
 
-    // Every active filter is sent to the API on every request, so the server
-    // filters across ALL pages (not just the one that happens to be loaded).
-    const effectiveStatus = statusKey ? (statusKey.split(',') as ShipmentStatus[]) : undefined;
-    const effectivePriority = priorityKey
-      ? (priorityKey.split(',') as ShipmentPriority[])
-      : undefined;
+      // Every active filter is sent to the API on every request, so the server
+      // filters across ALL pages (not just the one that happens to be loaded).
+      const effectiveStatus = statusKey ? (statusKey.split(',') as ShipmentStatus[]) : undefined;
+      const effectivePriority = priorityKey
+        ? (priorityKey.split(',') as ShipmentPriority[])
+        : undefined;
 
-    shipmentApi
-      .getAll({
-        limit: PAGE_SIZE,
-        page: currentPage,
-        search: debouncedSearchQuery || undefined,
-        status: effectiveStatus,
-        priority: effectivePriority,
-        dateFrom: effectiveDateFrom || undefined,
-        dateTo: effectiveDateTo || undefined,
-        origin: advancedOrigin || undefined,
-        destination: advancedDestination || undefined,
-        carrier: advancedCarrier || undefined,
-        weightMin: advancedWeightMin || undefined,
-        weightMax: advancedWeightMax || undefined,
-        signal: controller.signal,
-      })
-      .then((response) => {
+      try {
+        const response = await shipmentApi.getAll({
+          limit: PAGE_SIZE,
+          page: currentPage,
+          search: debouncedSearchQuery || undefined,
+          status: effectiveStatus,
+          priority: effectivePriority,
+          dateFrom: effectiveDateFrom || undefined,
+          dateTo: effectiveDateTo || undefined,
+          origin: advancedOrigin || undefined,
+          destination: advancedDestination || undefined,
+          carrier: advancedCarrier || undefined,
+          weightMin: advancedWeightMin || undefined,
+          weightMax: advancedWeightMax || undefined,
+          signal: controller.signal,
+        });
         if (controller.signal.aborted) return;
         setShipments((previous) =>
           currentPage === 1 ? response.data : [...previous, ...response.data],
         );
         setTotal(response.meta.total);
-      })
-      .catch((caught: Error) => {
+      } catch (caught) {
         if (controller.signal.aborted) return;
-        setError(caught.message || 'Unable to load shipments.');
-      })
-      .finally(() => {
+        setError((caught instanceof Error && caught.message) || 'Unable to load shipments.');
+      } finally {
         if (!controller.signal.aborted) setIsLoading(false);
-      });
+      }
+    }
 
+    void load();
     return () => controller.abort();
   }, [
     currentPage,

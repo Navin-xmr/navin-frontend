@@ -31,9 +31,6 @@
       "delayed": "Delayed",
       "verified": "Verified"
     },
-    "errorTitle": "Failed to load dashboard",
-    "errorBody": "There was a problem connecting to the logistics network.",
-    "retry": "Retry Connection",
     "menuAriaLabel": "Menu",
     "title": "Logistics Overview",
     "subtitle": "Blockchain-synced real-time data",

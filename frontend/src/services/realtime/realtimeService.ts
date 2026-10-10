@@ -1,5 +1,6 @@
 import type { RealtimeEvent, RealtimeEventType } from '../../types/realtimeEvents';
 import { apiClient } from '../api/client';
+import { getToken } from '../auth/tokenStorage';
 
 export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected' | 'offline';
 
@@ -31,7 +32,7 @@ function getRealtimeWsUrl(): string | null {
  */
 function buildSseUrl(): string {
   const base = (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '');
-  const token = localStorage.getItem('authToken');
+  const token = getToken();
   const url = `${base}/events`;
   return token ? `${url}?token=${encodeURIComponent(token)}` : url;
 }

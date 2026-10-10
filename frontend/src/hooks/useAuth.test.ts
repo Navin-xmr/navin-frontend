@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuth } from './useAuth';
 import { clearToken, setToken } from '../services/auth/tokenStorage';
+import { dispatchStorageEvent } from '../test/storageEvent';
 
 const { mockRedirectToLogin } = vi.hoisted(() => ({ mockRedirectToLogin: vi.fn() }));
 
@@ -21,13 +22,6 @@ function makeToken(payload: Record<string, unknown>): string {
   const header = base64url({ alg: 'HS256', typ: 'JWT' });
   const body = base64url(payload);
   return `${header}.${body}.signature`;
-}
-
-/** Simulates the `storage` event the browser fires when another tab writes. */
-function dispatchStorageEvent(key: string | null, newValue: string | null, oldValue: string | null = null) {
-  window.dispatchEvent(
-    new StorageEvent('storage', { key, newValue, oldValue, storageArea: localStorage }),
-  );
 }
 
 function setVisibility(state: DocumentVisibilityState) {
@@ -236,6 +230,8 @@ describe('useAuth', () => {
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.role).toBe('company');
+  });
+
   describe('cross-tab sync (#819)', () => {
     const validToken = () =>
       makeToken({ sub: 'user-1', role: 'company', exp: Math.floor(Date.now() / 1000) + 3600 });

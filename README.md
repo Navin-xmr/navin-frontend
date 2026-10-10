@@ -31,10 +31,10 @@ The Vercel deployment (`frontend/vercel.json`) sets security headers on every re
 The policy allows only the origins the app actually talks to:
 
 - `'self'` — the app bundle and its own assets
-- **API origin** — the Navin backend (`VITE_API_URL`)
+- **API origin** — the Navin backend (`VITE_API_BASE_URL`); not in the committed policy, see the note below
 - **Soroban RPC** — Stellar RPC endpoint used for contract calls
 - **Sentry ingest** — `https://*.ingest.sentry.io` for error reporting
-- **Google Fonts** — `https://fonts.googleapis.com` (styles) and `https://fonts.gstatic.com` (font files)
+- **Fonts** — bundled with the app (see `frontend/src/fonts.css`), so no font CDN is allowed
 - **OpenStreetMap tiles** — `https://*.tile.openstreetmap.org` for Leaflet maps
 
 ```
@@ -43,11 +43,14 @@ base-uri 'self';
 object-src 'none';
 frame-ancestors 'none';
 form-action 'self';
-script-src 'self';
-style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-font-src 'self' https://fonts.gstatic.com data:;
-img-src 'self' data: blob: https://*.tile.openstreetmap.org;
-connect-src 'self' https://*.ingest.sentry.io;
+script-src 'self' 'unsafe-inline' https://browser.sentry-cdn.com;
+style-src 'self' 'unsafe-inline';
+font-src 'self' data:;
+img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org;
+connect-src 'self' https://*.sentry.io https://*.ingest.sentry.io https://soroban-testnet.stellar.org https://soroban-mainnet.stellar.org https://horizon-testnet.stellar.org https://horizon.stellar.org;
+worker-src 'self' blob:;
+manifest-src 'self';
+upgrade-insecure-requests;
 ```
 
 > **Note:** The API and Soroban RPC origins are environment-specific. Add them to `connect-src` in `frontend/vercel.json` for each deployment (e.g. `https://api.navin.example https://soroban-testnet.stellar.org`). If you need to roll out a change safely, switch the header name to `Content-Security-Policy-Report-Only` first, confirm there are no violations in the browser console, then rename it back to `Content-Security-Policy`.
@@ -184,7 +187,7 @@ Quick overview:
 
 > 💡 All components should be written in **TypeScript (`.tsx`)**.
 > Follow the file structure in each issue — it tells you exactly where to create your files.
-> See [TAILWIND_MIGRATION.md](docs/TAILWIND_MIGRATION.md) for styling guidelines (available after Issue #92 is merged).
+> See [Frontend Component & Styling Conventions](docs/FRONTEND_COMPONENT_CONVENTIONS.md) for styling guidelines.
 
 ### Developer Guides
 
@@ -192,9 +195,6 @@ Quick overview:
 |---|---|
 | **[Frontend Component & Styling Conventions](docs/FRONTEND_COMPONENT_CONVENTIONS.md)** | Folder structure, naming rules, Tailwind-first styling, path aliases, and legacy CSS migration policy — **start here** |
 | [Component Conventions](docs/COMPONENT_CONVENTIONS.md) | TypeScript, exports, props interfaces, and dead code rules |
-| [Tailwind Migration Guide](docs/TAILWIND_MIGRATION.md) | Step-by-step CSS → Tailwind conversion reference |
-| [Tailwind Before/After Examples](docs/TAILWIND_BEFORE_AFTER.md) | Side-by-side migration examples |
-| [Tailwind PR Checklist](docs/TAILWIND_PR_CHECKLIST.md) | Checklist for Tailwind migration PRs |
 
 ---
 
@@ -215,18 +215,14 @@ Have questions or want to discuss ideas?
 
 ## Star the Project ⭐
 
-If you find Navin useful, 
+If you find Navin useful, interesting, or want to support decentralized logistics infrastructure —
+**please give us a star on GitHub!**
+It helps us attract more contributors and grow the community.
+
+[**⭐ Star Navin Frontend on GitHub**](https://github.com/Navin-xmr/navin-frontend)
+
+---
+
+## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-## Handsoff notes
-
-This project is licensed under the [MIT License](LICENSE).
-
-## Handsoff notes
-
-<!-- handsoff-issue-907 -->
-- #907: [Refactor] Remove the `Promise.resolve().then(() => setState(...))` workaround used in effects
-<!-- handsoff-issue-903 -->
-- #903: [Theme] NotificationsPage and UserManagement use hardcoded dark colours and look broken in light theme
-/* … truncated 333 chars — edit only what you need near the top … */

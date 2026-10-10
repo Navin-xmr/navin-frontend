@@ -28,7 +28,7 @@ describe('LiveRegionContext', () => {
 
     act(() => {
       result.current.announce('Operation succeeded');
-      vi.runAllTimers();
+      vi.advanceTimersByTime(100);
     });
 
     const statusRegion = screen.getByRole('status');
@@ -44,7 +44,7 @@ describe('LiveRegionContext', () => {
 
     act(() => {
       result.current.announce('Critical network error', 'assertive');
-      vi.runAllTimers();
+      vi.advanceTimersByTime(100);
     });
 
     const alertRegion = screen.getByRole('alert');

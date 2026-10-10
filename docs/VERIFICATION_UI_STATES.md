@@ -376,4 +376,3 @@ While chain data is being fetched, render a skeleton placeholder — never an em
 
 - [`FRONTEND_COMPONENT_CONVENTIONS.md`](./FRONTEND_COMPONENT_CONVENTIONS.md) — Folder structure, naming, Tailwind styling, and path aliases
 - [`COMPONENT_CONVENTIONS.md`](./COMPONENT_CONVENTIONS.md) — TypeScript, exports, and props rules
-- [`TAILWIND_MIGRATION.md`](./TAILWIND_MIGRATION.md) — CSS → Tailwind conversion guide

@@ -196,6 +196,33 @@ const Analytics: React.FC = () => {
                   {performance?.shipmentsByStatus.length ? (
                     performance.shipmentsByStatus.map((item) => (
                       <tr key={item.status} className="group hover:bg-[rgba(255,255,255,0.02)]">
-                        <td className="px-6 py-4 text-sm text-
+                        <td className="px-6 py-4 text-sm text-white border-b border-[rgba(30,41,59,0.5)]">
+                          {item.status}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-[#94a3b8] border-b border-[rgba(30,41,59,0.5)]">
+                          {item.total.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={2} className="text-center px-6 py-12 text-[#64748b]">
+                        No shipment data found for the selected period.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <p className="px-6 py-4 text-xs text-[#64748b]">
+              Total delayed shipments: {performance?.totalDelayedShipments.toLocaleString() ?? 0} of{' '}
+              {totalFromPerformance.toLocaleString()}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
-/* … truncated 1040 chars — edit only what you need near the top … */
+export default Analytics;

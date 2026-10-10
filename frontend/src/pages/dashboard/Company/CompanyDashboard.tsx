@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Truck,
   ShieldCheck,
-  AlertTriangle,
   Rocket,
   Menu,
   RefreshCw,
@@ -21,12 +20,9 @@ import ShipmentsMapWidget from "./ShipmentsMap/ShipmentsMapWidget";
 import RevenueSummaryWidget from "./RevenueSummary/RevenueSummaryWidget";
 import { CostPerRouteWidget } from "../../../components/dashboard/CostPerRouteWidget";
 import type { RouteCostData } from "../../../components/dashboard/CostPerRouteWidget/types";
-import { shipmentApi } from "@services/api/endpoints/shipments";
 import { RevenueTargetWidget } from "../../../components/dashboard/RevenueTargetWidget";
 import PerformanceScorecardWidget from "./Scorecard/PerformanceScorecardWidget";
 import { shipmentApi } from "@services/api/endpoints/shipments";
-import { analyticsApi } from "@services/api/endpoints/analytics";
-import { settlementsApi } from "@services/api/endpoints/settlements";
 import OnboardingTour, {
   isTourComplete,
   resetTourFlag,
@@ -145,12 +141,10 @@ const defaultWidgetIds = dashboardPresets[2].widgets;
 const CompanyDashboard: React.FC = () => {
   const { t } = useTranslation('dashboard');
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [routeCostData, setRouteCostData] = useState<RouteCostData[]>([]);
-  const [isRouteCostLoading, setIsRouteCostLoading] = useState(true);
   const [routeCostError, setRouteCostError] = useState<string | null>(null);
   const widgetToggleId = useId();
   const [activePresetId, setActivePresetId] = useState(() => {
@@ -216,84 +210,68 @@ const CompanyDashboard: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
     const fetchDashboardData = async () => {
+      setIsLoading(true);
+      setRouteCostError(null);
+
       try {
-        setIsLoading(true);
-        setIsRouteCostLoading(true);
-        setRouteCostError(null);
-
-        const [shipmentsRes] = await Promise.allSettled([
-          shipmentApi.getAll({ limit: 100 }),
-          new Promise((resolve) => setTimeout(resolve, 1200)),
-        ]);
-
-        if (shipmentsRes.status === 'fulfilled') {
-          const shipments = shipmentsRes.value.data ?? [];
-          const routeMap = new Map<string, RouteCostData>();
-
-          for (const s of shipments) {
-            const origin = s.origin?.trim() || 'Unknown Origin';
-            const destination = s.destination?.trim() || 'Unknown Destination';
-            const routeKey = `${origin} → ${destination}`;
-
-            const meta = (s.offChainMetadata ?? {}) as Record<string, unknown>;
-            const base = typeof meta.baseCost === 'number' ? meta.baseCost : 1200;
-            const fuel = typeof meta.fuelCost === 'number' ? meta.fuelCost : 400;
-            const customs = typeof meta.customsCost === 'number' ? meta.customsCost : 150;
-            const insurance = typeof meta.insuranceCost === 'number' ? meta.insuranceCost : 100;
-            const revenue = typeof meta.revenue === 'number' ? meta.revenue : 2500;
-            const cost = base + fuel + customs + insurance;
-
-            const shipmentItem = {
-              id: s.id || s._id,
-              trackingNumber: s.trackingNumber || s.id || s._id,
-              cost,
-              revenue,
-            };
-
-            const existing = routeMap.get(routeKey);
-            if (!existing) {
-              routeMap.set(routeKey, {
-                route: routeKey,
-                origin,
-                destination,
-                base,
-                fuel,
-                customs,
-                insurance,
-                revenue,
-                shipments: [shipmentItem],
-              });
-            } else {
-              existing.base += base;
-              existing.fuel += fuel;
-              existing.customs += customs;
-              existing.insurance += insurance;
-              existing.revenue += revenue;
-              existing.shipments.push(shipmentItem);
-            }
-          }
-          setRouteCostData(Array.from(routeMap.values()));
-        } else {
-          setRouteCostError('Failed to load route cost data');
-        }
-
-        setHasError(false);
-        await Promise.allSettled([
-          shipmentApi.getAll({ limit: 5 }),
-          analyticsApi.getSummary().catch(() => null),
-          settlementsApi.getSummary('month').catch(() => null),
-        ]);
+        const response = await shipmentApi.getAll({ limit: 100 });
         if (cancelled) return;
-        setIsLoading(false);
-        setIsRouteCostLoading(false);
-        setLastRefreshed(new Date());
-        if (!isTourComplete()) setShowTour(true);
+
+        const shipments = response.data ?? [];
+        const routeMap = new Map<string, RouteCostData>();
+
+        for (const s of shipments) {
+          const origin = s.origin?.trim() || 'Unknown Origin';
+          const destination = s.destination?.trim() || 'Unknown Destination';
+          const routeKey = `${origin} → ${destination}`;
+
+          const meta = (s.offChainMetadata ?? {}) as Record<string, unknown>;
+          const base = typeof meta.baseCost === 'number' ? meta.baseCost : 1200;
+          const fuel = typeof meta.fuelCost === 'number' ? meta.fuelCost : 400;
+          const customs = typeof meta.customsCost === 'number' ? meta.customsCost : 150;
+          const insurance = typeof meta.insuranceCost === 'number' ? meta.insuranceCost : 100;
+          const revenue = typeof meta.revenue === 'number' ? meta.revenue : 2500;
+          const cost = base + fuel + customs + insurance;
+
+          const shipmentItem = {
+            id: s.id || s._id,
+            trackingNumber: s.trackingNumber || s.id || s._id,
+            cost,
+            revenue,
+          };
+
+          const existing = routeMap.get(routeKey);
+          if (!existing) {
+            routeMap.set(routeKey, {
+              route: routeKey,
+              origin,
+              destination,
+              base,
+              fuel,
+              customs,
+              insurance,
+              revenue,
+              shipments: [shipmentItem],
+            });
+          } else {
+            existing.base += base;
+            existing.fuel += fuel;
+            existing.customs += customs;
+            existing.insurance += insurance;
+            existing.revenue += revenue;
+            existing.shipments.push(shipmentItem);
+          }
+        }
+        setRouteCostData(Array.from(routeMap.values()));
       } catch {
         if (cancelled) return;
-        setHasError(true);
-        setIsLoading(false);
-        setIsRouteCostLoading(false);
+        // The other widgets load their own data, so only this one reports it.
+        setRouteCostError('Failed to load route cost data');
       }
+
+      setIsLoading(false);
+      setLastRefreshed(new Date());
+      if (!isTourComplete()) setShowTour(true);
     };
     void fetchDashboardData();
     return () => {
@@ -333,21 +311,6 @@ const CompanyDashboard: React.FC = () => {
 
   const isWidgetVisible = (widgetId: DashboardWidgetId) =>
     visibleWidgets.includes(widgetId);
-
-  if (hasError) {
-    return (
-      <div className="w-full max-w-[1080px] mx-auto px-[46px] py-6">
-        <div className="flex flex-col items-center justify-center p-12 bg-[#14171e] border border-dashed border-[#ef4444] rounded-xl text-center">
-          <AlertTriangle size={48} className="text-[#ef4444] mb-4" />
-          <h3 className="text-lg font-semibold mb-2">{t('companyDashboard.errorTitle')}</h3>
-          <p className="text-[#94a3b8] text-sm mb-4">{t('companyDashboard.errorBody')}</p>
-          <button className="bg-[#ef4444] text-white border-none px-4 py-2 rounded-md font-medium cursor-pointer" onClick={() => window.location.reload()}>
-            {t('companyDashboard.retry')}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="font-sans text-white bg-transparent w-full max-w-[1080px] mx-auto min-h-[calc(100vh-72px)] px-[46px] py-6 flex flex-col gap-8 max-md:px-4 max-md:gap-6 max-md:pb-[90px]">
@@ -517,7 +480,7 @@ const CompanyDashboard: React.FC = () => {
           <RevenueTargetWidget />
           <CostPerRouteWidget
             data={routeCostData}
-            loading={isRouteCostLoading}
+            loading={isLoading}
             error={routeCostError}
           />
         </div>

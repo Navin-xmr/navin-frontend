@@ -2,7 +2,7 @@ import React, { useState, useRef, useId, useCallback } from 'react';
 
 type Placement = 'top' | 'bottom' | 'left' | 'right';
 
-interface TooltipProps {
+export interface TooltipProps {
   content: string;
   children: React.ReactNode;
   placement?: Placement;

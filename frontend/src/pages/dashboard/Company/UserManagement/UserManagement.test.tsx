@@ -65,7 +65,7 @@ vi.mock('@components/common/Breadcrumb', () => ({
 }));
 
 vi.mock('@components/ui/ConfirmDialog', () => ({
-  default: ({ isOpen, onConfirm, onClose, title }: {
+  ConfirmDialog: ({ isOpen, onConfirm, onClose, title }: {
     isOpen: boolean; onConfirm: () => void; onClose: () => void; title: string;
   }) =>
     isOpen ? (

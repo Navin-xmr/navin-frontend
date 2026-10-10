@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { useShipmentTemplates } from './useShipmentTemplates';
 import { shipmentTemplateApi } from '@services/api/endpoints/shipmentTemplates';
-import type { ShipmentTemplate } from '../types/shipmentTemplate';
+import type { ShipmentTemplate, ShipmentTemplateFields } from '../types/shipmentTemplate';
 
 vi.mock('@services/api/endpoints/shipmentTemplates', () => ({
   shipmentTemplateApi: {
@@ -13,13 +13,22 @@ vi.mock('@services/api/endpoints/shipmentTemplates', () => ({
   },
 }));
 
+function makeFields(origin: string, destination: string): ShipmentTemplateFields {
+  return {
+    origin,
+    destination,
+    itemDescription: 'Electronics',
+    weight: '12',
+    recipientName: 'Ada Obi',
+    recipientContact: 'ada@example.com',
+  };
+}
+
 const mockTemplates: ShipmentTemplate[] = [
   {
     id: 'tmpl-1',
     name: 'Standard Route',
-    origin: 'New York',
-    destination: 'London',
-    priority: 'STANDARD',
+    fields: makeFields('New York', 'London'),
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
   },
@@ -79,9 +88,7 @@ describe('useShipmentTemplates', () => {
     const created: ShipmentTemplate = {
       id: 'tmpl-2',
       name: 'Express Route',
-      origin: 'Tokyo',
-      destination: 'Seoul',
-      priority: 'URGENT',
+      fields: makeFields('Tokyo', 'Seoul'),
       createdAt: '2026-01-02T00:00:00Z',
       updatedAt: '2026-01-02T00:00:00Z',
     };
@@ -97,9 +104,7 @@ describe('useShipmentTemplates', () => {
     await act(async () => {
       res = await result.current.createTemplate({
         name: 'Express Route',
-        origin: 'Tokyo',
-        destination: 'Seoul',
-        priority: 'URGENT',
+        fields: makeFields('Tokyo', 'Seoul'),
       });
     });
 

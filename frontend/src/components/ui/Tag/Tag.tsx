@@ -73,16 +73,4 @@ const Tag: React.FC<TagProps> = ({
   );
 };
 
-// Pre-configured status badge variants for common use cases
-export interface StatusBadgeProps {
-  status: string;
-  variant?: TagVariant;
-  size?: TagSize;
-  className?: string;
-}
-
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, variant = 'default', size = 'sm', className = '' }) => (
-  <Tag label={status} variant={variant} size={size} dot className={className} />
-);
-
 export default Tag;

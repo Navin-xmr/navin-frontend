@@ -77,9 +77,11 @@ describe('CompanyDashboard', () => {
     expect(refreshButton).toBeInTheDocument();
 
     fireEvent.click(refreshButton);
+    // The timestamp is set once the refetch actually settles, not on click.
     await act(async () => {
-      await Promise.resolve();
+      await vi.waitFor(() => {
+        expect(screen.getByText(/last refreshed/i)).toBeInTheDocument();
+      });
     });
-    expect(screen.getByText(/last refreshed/i)).toBeInTheDocument();
   });
 });

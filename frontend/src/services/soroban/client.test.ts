@@ -117,7 +117,10 @@ describe('soroban client', () => {
 
     it('throws when submission returns ERROR', async () => {
       const { callContractMethod } = await loadClient();
-      mockServer.sendTransaction.mockResolvedValue({ status: 'ERROR', errorResultXdr: 'bad-xdr' });
+      mockServer.sendTransaction.mockResolvedValue({
+        status: 'ERROR',
+        errorResult: { toXDR: () => 'bad-xdr' },
+      });
 
       await expect(callContractMethod(CONTRACT_ID, 'release', makeSigner())).rejects.toThrow(
         'Transaction submission failed: bad-xdr',

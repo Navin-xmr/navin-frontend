@@ -21,6 +21,10 @@ describe('ToastContext', () => {
     </LiveRegionProvider>
   );
 
+  // Each visible toast carries one dismiss button; the message text alone is
+  // ambiguous because the hidden live region repeats it for screen readers.
+  const visibleToasts = () => screen.queryAllByRole('button', { name: 'Dismiss notification' });
+
   it('throws an error when useToast is used outside of ToastProvider', () => {
     expect(() => renderHook(() => useToast())).toThrow(
       'useToast must be used within a ToastProvider',
@@ -32,12 +36,14 @@ describe('ToastContext', () => {
 
     act(() => {
       result.current.addToast('Shipment created successfully', 'success');
-      vi.runAllTimers();
+      vi.advanceTimersByTime(100);
     });
 
-    expect(screen.getByText('Shipment created successfully')).toBeInTheDocument();
+    expect(visibleToasts()).toHaveLength(1);
     const liveRegion = screen.getByRole('status');
     expect(liveRegion).toHaveTextContent('Shipment created successfully');
+    // The toast itself is not a live region, so the message is announced once.
+    expect(screen.getByRole('alert')).toHaveTextContent('');
   });
 
   it('uses assertive priority announcement for error toasts', () => {
@@ -45,12 +51,13 @@ describe('ToastContext', () => {
 
     act(() => {
       result.current.addToast('Failed to connect wallet', 'error');
-      vi.runAllTimers();
+      vi.advanceTimersByTime(100);
     });
 
-    expect(screen.getByText('Failed to connect wallet')).toBeInTheDocument();
+    expect(visibleToasts()).toHaveLength(1);
     const alertRegion = screen.getByRole('alert');
     expect(alertRegion).toHaveTextContent('Failed to connect wallet');
+    expect(screen.getByRole('status')).toHaveTextContent('');
   });
 
   it('collapses toasts with the same id/key into one', () => {
@@ -97,18 +104,39 @@ describe('ToastContext', () => {
     act(() => {
       vi.advanceTimersByTime(5000);
     });
-    expect(screen.queryByText('Auto dismiss toast')).not.toBeInTheDocument();
+    expect(visibleToasts()).toHaveLength(0);
 
     // Manual removeToast
     act(() => {
       result.current.addToast('Manual close toast', 'info', undefined, 'manual-id');
     });
-    expect(screen.getByText('Manual close toast')).toBeInTheDocument();
+    expect(visibleToasts()).toHaveLength(1);
 
     act(() => {
       result.current.removeToast('manual-id');
     });
-    expect(screen.queryByText('Manual close toast')).not.toBeInTheDocument();
+    expect(visibleToasts()).toHaveLength(0);
+  });
+
+  it('does not restart an older toast\'s dismiss timer when a newer toast arrives', () => {
+    const { result } = renderHook(() => useToast(), { wrapper });
+
+    act(() => {
+      result.current.addToast('First', 'info', undefined, 'first');
+    });
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    act(() => {
+      result.current.addToast('Second', 'info', undefined, 'second');
+    });
+    expect(visibleToasts()).toHaveLength(2);
+
+    // 5s after the first toast, but only 2s after the second.
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(visibleToasts()).toHaveLength(1);
   });
 
   it('supports toastBridge registration outside React', () => {

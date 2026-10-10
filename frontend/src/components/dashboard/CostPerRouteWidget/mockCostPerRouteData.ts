@@ -1,4 +1,4 @@
-import type { RouteShipment, RouteCostData } from './types';
+import type { RouteCostData } from './types';
 
 export const MOCK_ROUTE_COST_DATA: RouteCostData[] = [
   {

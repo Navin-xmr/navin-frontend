@@ -4,7 +4,7 @@ name: Backend Compatibility Check
 # docs/backend-compatibility.json is still satisfied.
 #
 # This job runs in two situations:
-#   1. On every push / PR to `dev` (schema-only, no live server required).
+#   1. On every push / PR to `main` (schema-only, no live server required).
 #   2. When the workflow is triggered manually (workflow_dispatch) — allows
 #      contributors to optionally supply a backend Swagger URL for a deeper
 #      spec check.
@@ -16,13 +16,13 @@ name: Backend Compatibility Check
 
 on:
   push:
-    branches: [dev]
+    branches: [main]
     paths:
       - "docs/backend-compatibility.json"
       - "scripts/check-backend-compat.mjs"
       - ".github/workflows/backend-compat.yml"
   pull_request:
-    branches: [dev]
+    branches: [main]
     paths:
       - "docs/backend-compatibility.json"
       - "scripts/check-backend-compat.mjs"
@@ -45,6 +45,10 @@ jobs:
   compat-check:
     name: Backend compatibility check
     runs-on: ubuntu-latest
+    # Resolved here because the `secrets` context is not available in a step's
+    # `if:` expression; steps test the env var instead.
+    env:
+      SWAGGER_URL: ${{ github.event.inputs.swagger_url || secrets.BACKEND_SWAGGER_URL }}
 
     steps:
       - name: Checkout repository
@@ -99,9 +103,5 @@ jobs:
       # contributor PRs that don't have access to secrets.
       # -----------------------------------------------------------------------
       - name: Validate against Swagger spec
-        if: >
-          (github.event.inputs.swagger_url != '' && github.event.inputs.swagger_url != null)
-          || secrets.BACKEND_SWAGGER_URL != ''
-        env:
-          SWAGGER_URL: ${{ github.event.inputs.swagger_url || secrets.BACKEND_SWAGGER_URL }}
+        if: env.SWAGGER_URL != ''
         run: node scripts/check-backend-compat.mjs --swagger "$SWAGGER_URL"

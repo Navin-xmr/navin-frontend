@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import ProfileDispatcher from './ProfileDispatcher';
 import * as AuthContextModule from '@context/AuthContext';
+import type { AuthContextValue } from '@context/AuthContext';
+import type { UserRole } from '@utils/rbac';
 
 vi.mock('@context/AuthContext', () => ({
   useAuthContext: vi.fn(),
@@ -12,22 +14,20 @@ vi.mock('@pages/dashboard/Customer/Profile/CustomerProfile', () => ({
   default: () => <div>Customer Delivery Address Form</div>,
 }));
 
+function authAs(role: UserRole, userId: string): AuthContextValue {
+  return {
+    role,
+    userId,
+    isAuthenticated: true,
+    isLoading: false,
+    refresh: vi.fn(),
+    logout: vi.fn(),
+  };
+}
+
 describe('ProfileDispatcher', () => {
   it('redirects company user to /dashboard/settings?tab=profile and does not show customer form', () => {
-    vi.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
-      role: 'company',
-      token: 'fake',
-      user: null,
-      userId: '1',
-      sessionExpiresAt: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      refreshToken: vi.fn(),
-      extendSession: vi.fn(),
-      setRole: vi.fn(),
-      isAuthenticated: true,
-      isLoading: false,
-    });
+    vi.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue(authAs('company', '1'));
 
     render(
       <MemoryRouter initialEntries={['/dashboard/profile']}>
@@ -43,20 +43,7 @@ describe('ProfileDispatcher', () => {
   });
 
   it('renders customer profile form for customer users', () => {
-    vi.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
-      role: 'customer',
-      token: 'fake',
-      user: null,
-      userId: '2',
-      sessionExpiresAt: null,
-      login: vi.fn(),
-      logout: vi.fn(),
-      refreshToken: vi.fn(),
-      extendSession: vi.fn(),
-      setRole: vi.fn(),
-      isAuthenticated: true,
-      isLoading: false,
-    });
+    vi.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue(authAs('customer', '2'));
 
     render(
       <MemoryRouter initialEntries={['/dashboard/profile']}>

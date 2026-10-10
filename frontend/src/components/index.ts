@@ -30,10 +30,6 @@ export { default as Combobox } from '@components/ui/Combobox';
 export type { ComboboxOption, ComboboxProps } from '@components/ui/Combobox';
 export { default as ExportDropdown } from '@components/ui/ExportDropdown';
 export type { ExportDropdownProps, ExportFormat } from '@components/ui/ExportDropdown';
-export { default as Drawer } from '@components/ui/Drawer';
-export type { DrawerProps, DrawerPlacement } from '@components/ui/Drawer';
-export { default as StaleDataBanner } from '@components/ui/StaleDataBanner';
-export type { StaleDataBannerProps } from '@components/ui/StaleDataBanner';
 export { default as CopyToClipboard } from '@components/ui/CopyToClipboard';
 export type { CopyToClipboardProps } from '@components/ui/CopyToClipboard';
 export { default as Tooltip } from '@components/ui/Tooltip';
@@ -45,17 +41,12 @@ export type { PasswordStrengthMeterProps } from '@components/ui/PasswordStrength
 export { default as ConnectionStatusDot } from '@components/ui/ConnectionStatusDot';
 export type { ConnectionStatusDotProps } from '@components/ui/ConnectionStatusDot';
 export { default as PageSkeleton } from '@components/ui/PageSkeleton';
-export type { PageSkeletonProps } from '@components/ui/PageSkeleton';
 export { default as PWAInstallPrompt } from '@components/ui/PWAInstallPrompt';
-export type { PWAInstallPromptProps } from '@components/ui/PWAInstallPrompt';
 export { default as RouteTransition } from '@components/ui/RouteTransition';
-export type { RouteTransitionProps } from '@components/ui/RouteTransition';
 export { default as RoleAccessInfo } from '@components/ui/RoleAccessInfo';
 export type { RoleAccessInfoProps } from '@components/ui/RoleAccessInfo';
 export { default as InlineEditField } from '@components/ui/InlineEditField';
 export type { InlineEditFieldProps } from '@components/ui/InlineEditField';
-export { default as AccessRestrictedBadge } from '@components/ui/AccessRestrictedBadge';
-export type { AccessRestrictedBadgeProps } from '@components/ui/AccessRestrictedBadge';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
 
 export { default as Card, CardHeader, CardBody, CardFooter } from './Card';
@@ -72,8 +63,6 @@ export type { WalletConnectButtonProps } from './auth/WalletConnectButton';
 export { default as DashboardLayout } from './layout/DashboardLayout';
 export { default as TopHeader } from './layout/TopHeader';
 export type { TopHeaderProps } from './layout/TopHeader';
-export { default as Sidebar } from './layout/Sidebar';
-export type { SidebarProps } from './layout/Sidebar';
 
 // Notifications
 export { NotificationDropdown } from './notifications/NotificationDropdown';
@@ -100,8 +89,6 @@ export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation
 export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation';
 export { default as QuickActionPanel } from './shipment/QuickActionPanel';
 export type { QuickActionPanelProps, ActionType } from './shipment/QuickActionPanel';
-export { OverdueShipmentBadge } from './shipment/OverdueShipmentBadge';
-export type { OverdueShipmentBadgeProps } from './shipment/OverdueShipmentBadge';
 
 // Onboarding
 export { OnboardingTour } from './onboarding';
@@ -120,8 +107,6 @@ export type { ShipmentActionMenuProps, ShipmentActionItem, ShipmentActionMenuSta
 export { default as GlobalSearch } from './common/GlobalSearch';
 export type { GlobalSearchProps, SearchResult, SearchResultType } from './common/GlobalSearch';
 // Dashboard — Recent Activity Panel (#525)
-export { RecentActivityPanel } from './dashboard/RecentActivityPanel';
-export type { RecentActivityPanelProps } from './dashboard/RecentActivityPanel';
 // Skeletons
 export {
   Skeleton,

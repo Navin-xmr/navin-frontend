@@ -15,7 +15,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `corepack pnpm@10.28.1 run preview -- --host 127.0.0.1 --port ${port} --strictPort`,
+    // Called directly: `pnpm run preview -- <flags>` forwards the `--` to Vite,
+    // which then ignores the flags and binds to the default host instead.
+    command: `pnpm exec vite preview --host 127.0.0.1 --port ${port} --strictPort`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 30_000,

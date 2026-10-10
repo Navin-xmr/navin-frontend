@@ -24,8 +24,6 @@ const CompanySettings: React.FC = () => {
     // Load company profile on mount
     useEffect(() => {
         let cancelled = false;
-        setProfileLoading(true);
-        setProfileError(null);
         companyApi.getProfile()
             .then((data) => {
                 if (cancelled) return;

@@ -251,8 +251,10 @@ describe('BlockchainLedger page', () => {
       mockGetBlocks.mockRejectedValue(new Error('Network Error'));
       renderPage();
 
-      const alert = await screen.findByRole('alert');
-      expect(alert).toHaveTextContent('Something went wrong');
+      // The app-wide live region is also an (empty) alert, so find the error
+      // panel through its heading rather than by role alone.
+      const heading = await screen.findByRole('heading', { name: 'Something went wrong' });
+      const alert = heading.closest('[role="alert"]');
       expect(alert).toHaveTextContent('Network Error');
       expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
       expect(screen.queryByLabelText('Load next page')).not.toBeInTheDocument();

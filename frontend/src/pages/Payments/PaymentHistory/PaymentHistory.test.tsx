@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PaymentHistory from './PaymentHistory';
@@ -48,6 +48,12 @@ function response(data: Settlement[] = payments, total = data.length): Paginated
   return { data, page: 1, limit: 10, total };
 }
 
+// Rows are rendered twice — a table for desktop and a card list for mobile,
+// switched by CSS — so row-level assertions are scoped to the table.
+async function desktopTable() {
+  return within(await screen.findByRole('table'));
+}
+
 function renderPage() {
   return render(
     <MemoryRouter>
@@ -67,13 +73,13 @@ describe('PaymentHistory', () => {
     renderPage();
 
     expect(screen.getByRole('heading', { name: 'Payment History' })).toBeInTheDocument();
-    expect(await screen.findByRole('link', { name: 'SHP-001' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'SHP-001' })).toHaveAttribute(
+    const table = await desktopTable();
+    expect(await table.findByRole('link', { name: 'SHP-001' })).toHaveAttribute(
       'href',
       '/dashboard/shipments/SHP-001',
     );
-    expect(screen.getAllByText('RELEASED')).toHaveLength(1);
-    expect(screen.getByText(/1,234/)).toBeInTheDocument();
+    expect(table.getAllByText('RELEASED')).toHaveLength(1);
+    expect(table.getByText(/1,234/)).toBeInTheDocument();
     expect(api.getSettlements).toHaveBeenCalledWith(
       {
         page: 1,
@@ -97,7 +103,8 @@ describe('PaymentHistory', () => {
     expect(screen.getByText('settlements unavailable')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Retry' }));
 
-    expect(await screen.findByRole('link', { name: 'SHP-001' })).toBeInTheDocument();
+    const table = await desktopTable();
+    expect(await table.findByRole('link', { name: 'SHP-001' })).toBeInTheDocument();
     expect(api.getSettlements).toHaveBeenCalledTimes(2);
   });
 
@@ -212,14 +219,15 @@ describe('PaymentHistory', () => {
     );
 
     // The new (filter-change) response arrives and shows SHP-PAGE2.
-    await screen.findByText('SHP-PAGE2');
+    const table = await desktopTable();
+    await table.findByText('SHP-PAGE2');
 
     // Now resolve the stale page-1 response — it must NOT overwrite the table.
     resolvePage1(response(payments));
     await new Promise((r) => setTimeout(r, 50));
 
-    expect(screen.getByText('SHP-PAGE2')).toBeInTheDocument();
+    expect(table.getByText('SHP-PAGE2')).toBeInTheDocument();
     // SHP-001 should NOT appear (stale page-1 response was aborted).
-    expect(screen.queryByRole('link', { name: 'SHP-001' })).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('link', { name: 'SHP-001' })).toHaveLength(0);
   });
 });

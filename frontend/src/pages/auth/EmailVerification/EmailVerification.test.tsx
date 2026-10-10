@@ -35,6 +35,7 @@ describe('EmailVerification Page', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -70,7 +71,8 @@ describe('EmailVerification Page', () => {
   });
 
   it('activates cooldown countdown on resend', async () => {
-    vi.useFakeTimers();
+    // shouldAdvanceTime keeps Testing Library's waitFor polling alive under fake timers.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     mockAuthApi.resendVerification.mockResolvedValueOnce({});
     renderComponent({ email: 'test@example.com' });
 
@@ -87,6 +89,5 @@ describe('EmailVerification Page', () => {
     });
 
     expect(screen.getByRole('button', { name: /resend/i })).toBeDisabled();
-    vi.useRealTimers();
   });
 });

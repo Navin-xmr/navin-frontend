@@ -50,6 +50,14 @@ const Combobox: React.FC<ComboboxProps> = ({
   const listboxRef = useRef<HTMLUListElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const announcementRef = useRef<HTMLDivElement>(null);
+  // Set before returning focus to the input in code (after a selection or a
+  // clear) so that refocus does not count as the user asking for suggestions.
+  const skipOpenOnFocusRef = useRef(false);
+
+  const focusInputWithoutOpening = () => {
+    skipOpenOnFocusRef.current = document.activeElement !== inputRef.current;
+    inputRef.current?.focus();
+  };
 
   // Sync external value
   useEffect(() => {
@@ -127,6 +135,10 @@ const Combobox: React.FC<ComboboxProps> = ({
   };
 
   const handleInputFocus = () => {
+    if (skipOpenOnFocusRef.current) {
+      skipOpenOnFocusRef.current = false;
+      return;
+    }
     if (filteredOptions.length > 0) {
       setIsOpen(true);
     }
@@ -139,7 +151,7 @@ const Combobox: React.FC<ComboboxProps> = ({
       onSelectOption?.(option);
       setIsOpen(false);
       setActiveIndex(-1);
-      inputRef.current?.focus();
+      focusInputWithoutOpening();
     },
     [onChange, onSelectOption],
   );
@@ -187,7 +199,7 @@ const Combobox: React.FC<ComboboxProps> = ({
     onChange('');
     setActiveIndex(-1);
     setIsOpen(false);
-    inputRef.current?.focus();
+    focusInputWithoutOpening();
   };
 
   const toggleOpen = () => {
@@ -274,6 +286,7 @@ const Combobox: React.FC<ComboboxProps> = ({
           ref={listboxRef}
           id={listboxId}
           role="listbox"
+          onMouseDown={(event) => event.preventDefault()}
           aria-label={`${ariaLabel} suggestions`}
           className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-lg border border-[rgba(98,255,255,0.2)] bg-[#121620] shadow-lg shadow-black/40 py-1"
         >

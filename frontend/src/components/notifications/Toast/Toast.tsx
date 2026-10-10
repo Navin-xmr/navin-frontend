@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { ToastType } from "../../../context/ToastContext";
 
@@ -9,6 +9,8 @@ interface ToastProps {
   navigateTo?: string;
   onClose: () => void;
 }
+
+const AUTO_DISMISS_MS = 5000;
 
 const icons = {
   success: <CheckCircle className="w-5 h-5 text-green-400" />,
@@ -23,23 +25,28 @@ export const Toast: React.FC<ToastProps> = ({
   navigateTo,
   onClose,
 }) => {
+  // The dismiss timer must run once per toast. `onClose` is a fresh closure on
+  // every provider render, so it is read through a ref instead of being a
+  // dependency — otherwise each new toast would restart the older ones' timers.
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    const timer = setTimeout(onClose, 5000);
-    return () => clearTimeout(timer);
+    onCloseRef.current = onClose;
   }, [onClose]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => onCloseRef.current(), AUTO_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   // ToastProvider mounts outside RouterProvider, so router hooks are unavailable here.
   const handleClick = () => {
     if (navigateTo) window.location.assign(navigateTo);
   };
 
-  const isAssertive = type === "error";
-
+  // Not a live region itself: ToastProvider announces every toast through the
+  // app-wide LiveRegionProvider, and a second region here would read it twice.
   return (
     <div
-      role={isAssertive ? "alert" : "status"}
-      aria-live={isAssertive ? "assertive" : "polite"}
-      aria-atomic="true"
       className="
         pointer-events-auto flex items-center justify-between min-w-[320px] max-w-md 
         p-4 rounded-xl shadow-lg border animate-in slide-in-from-right-full duration-300
@@ -70,7 +77,7 @@ export const Toast: React.FC<ToastProps> = ({
         aria-label="Dismiss notification"
         className="p-1 ml-4 rounded-full hover:bg-white/10 transition-colors"
       >
-        <X className="w-4 h-4 text-secondary" />
+        <X className="w-4 h-4 text-text-secondary" />
       </button>
     </div>
   );

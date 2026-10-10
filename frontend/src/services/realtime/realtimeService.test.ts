@@ -45,6 +45,8 @@ describe('RealtimeService', () => {
     MockEventSource.instance = null;
     MockEventSource.lastUrl = null;
     vi.stubGlobal('EventSource', MockEventSource);
+    // Real-time is opt-in: without this the service reports 'offline'.
+    vi.stubEnv('VITE_REALTIME_WS_URL', 'wss://realtime.navin.test');
     vi.mocked(apiClient.get).mockReset().mockResolvedValue({ data: [] });
     service = new RealtimeService();
   });
@@ -52,7 +54,22 @@ describe('RealtimeService', () => {
   afterEach(() => {
     service.disconnect();
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.useRealTimers();
+  });
+
+  it('reports offline and opens no connection when real-time is not configured', () => {
+    vi.stubEnv('VITE_REALTIME_WS_URL', '');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const statuses: string[] = [];
+    service.onStatusChange((status) => statuses.push(status));
+
+    service.connect();
+
+    expect(MockEventSource.instance).toBeNull();
+    expect(service.status).toBe('offline');
+    expect(statuses).toEqual(['offline']);
+    warn.mockRestore();
   });
 
   it('opens an EventSource on connect()', () => {

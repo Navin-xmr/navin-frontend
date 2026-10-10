@@ -101,27 +101,8 @@ const DashboardLayout: React.FC = () => {
   };
 
   const navGroups: NavGroup[] = [
-    {
-      label: 'Main Menu',
-      items: [
-        { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard' },
-        { name: 'Shipments', icon: <Package size={18} />, path: '/dashboard/shipments' },
-        { name: 'Shipment History', icon: <History size={18} />, path: '/dashboard/shipments/history' },
-        { name: 'Blockchain Ledger', icon: <Database size={18} />, path: '/dashboard/blockchain-ledger' },
-        { name: 'Settlements', icon: <Wallet size={18} />, path: '/dashboard/settlements' },
-        { name: 'Payments', icon: <CreditCard size={18} />, path: '/dashboard/payments' },
-        { name: 'Analytics', icon: <BarChart3 size={18} />, path: '/dashboard/analytics' },
-        { name: 'Notifications', icon: <Bell size={18} />, path: '/dashboard/notifications' },
-      ],
-    },
-    {
-      label: 'System',
-      items: [
-        { name: 'Profile', icon: <User size={18} />, path: '/dashboard/profile' },
-        { name: 'Settings', icon: <Settings size={18} />, path: '/dashboard/settings' },
-        { name: 'Help Center', icon: <HelpCircle size={18} />, path: '/dashboard/help-center' },
-      ],
-    },
+    { label: 'Main Menu', items: mainMenu },
+    { label: 'System', items: systemMenu },
   ];
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
@@ -145,7 +126,7 @@ const DashboardLayout: React.FC = () => {
     const isFavorite = favoritePaths.includes(item.path);
 
     return (
-      <div key={item.path} className="group flex items-center gap-1">
+      <div key={item.path} className="group relative flex items-center">
         <button
           data-tour-id={
             item.path === '/dashboard/shipments' ? 'tour-shipments-link' :
@@ -157,7 +138,8 @@ const DashboardLayout: React.FC = () => {
               ? 'bg-teal-50 dark:bg-[rgba(19,186,186,0.15)] text-teal-700 dark:text-white border-l-[3px] border-l-teal-500 dark:border-l-[#62ffff] pl-2.25 [&_svg]:text-teal-500 dark:[&_svg]:text-[#62ffff]'
               : 'bg-transparent text-gray-600 dark:text-[#8a8f9d] hover:bg-gray-100 dark:hover:bg-[rgba(19,186,186,0.1)] hover:text-gray-900 dark:hover:text-white'
             }`}
-          onClick={() => { navigate(item.path); closeSidebar(); }}
+          onClick={() => handleNavClick(item.path)}
+          aria-current={isActive ? 'page' : undefined}
         >
           {item.icon}
           <span className="truncate">{item.name}</span>
@@ -166,10 +148,10 @@ const DashboardLayout: React.FC = () => {
           <button
             type="button"
             onClick={() => toggleFavorite(item.path)}
-            className={`rounded-md p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-[#62ffff] ${
+            className={`absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-2 transition focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-[#62ffff] ${
               isFavorite
                 ? 'text-amber-500 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-300/10'
-                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-[#8a8f9d] dark:hover:bg-[rgba(19,186,186,0.1)] dark:hover:text-white'
+                : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:text-[#8a8f9d] dark:hover:bg-[rgba(19,186,186,0.1)] dark:hover:text-white'
             }`}
             aria-pressed={isFavorite}
             aria-label={`${isFavorite ? 'Remove' : 'Add'} ${item.name} ${isFavorite ? 'from' : 'to'} dashboard favorites`}
@@ -288,7 +270,7 @@ const DashboardLayout: React.FC = () => {
         className={`
           bg-white dark:bg-[#0b0e14] border-r border-gray-200 dark:border-[#1e2433]
           flex flex-col shrink-0 transition-all duration-300 ease-in-out
-          lg:relative lg:translate-x-0
+          lg:sticky lg:top-0 lg:h-screen lg:translate-x-0
           fixed top-0 left-0 h-full z-100
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           ${isCollapsed ? 'w-16 px-2 py-6' : 'w-64 p-6'}
@@ -328,13 +310,13 @@ const DashboardLayout: React.FC = () => {
           </div>
         </div>
 
-        {favoriteItems.length > 0 && (
-          <div className="mb-8" aria-label="Dashboard favorites">
+        {favoriteItems.length > 0 && !isCollapsed && (
+          <nav className="mb-8" aria-label="Dashboard favorites">
             <h3 className="text-[11px] font-semibold uppercase text-gray-500 dark:text-[#8a8f9d] tracking-[0.05em] mb-4">Favorites</h3>
             <div className="flex flex-col gap-1">
               {favoriteItems.map((item) => renderNavItem(item, false))}
             </div>
-          </div>
+          </nav>
         )}
 
         {/* Nav groups */}
@@ -396,25 +378,7 @@ const DashboardLayout: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    /* Expanded: full nav item */
-                    <button
-                      key={item.name}
-                      data-tour-id={
-                        item.path === '/dashboard/shipments' ? 'tour-shipments-link' :
-                        item.path === '/dashboard/settlements' ? 'tour-settlements-link' :
-                        undefined
-                      }
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all border-none w-full text-left relative
-                        ${isActive
-                          ? 'bg-teal-50 dark:bg-[rgba(19,186,186,0.15)] text-teal-700 dark:text-white border-l-[3px] border-l-teal-500 dark:border-l-[#62ffff] pl-[calc(0.75rem-3px)] [&_svg]:text-teal-500 dark:[&_svg]:text-[#62ffff]'
-                          : 'bg-transparent text-gray-600 dark:text-[#8a8f9d] hover:bg-gray-100 dark:hover:bg-[rgba(19,186,186,0.08)] hover:text-gray-900 dark:hover:text-white'
-                        }`}
-                      onClick={() => handleNavClick(item.path)}
-                      aria-current={isActive ? 'page' : undefined}
-                    >
-                      {item.icon}
-                      <span className="truncate">{item.name}</span>
-                    </button>
+                    renderNavItem(item)
                   );
                 })}
               </div>

@@ -31,9 +31,6 @@
       "delayed": "Retardées",
       "verified": "Vérifiées"
     },
-    "errorTitle": "Échec du chargement du tableau de bord",
-    "errorBody": "Un problème est survenu lors de la connexion au réseau logistique.",
-    "retry": "Réessayer la connexion",
     "menuAriaLabel": "Menu",
     "title": "Aperçu logistique",
     "subtitle": "Données en temps réel synchronisées sur la blockchain",

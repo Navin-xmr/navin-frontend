@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import Tag, { StatusBadge } from './Tag';
-import { STATUS_VARIANT_MAP } from './statusVariantMap';
+import Tag from './Tag';
 
 describe('Tag', () => {
   it('renders the requested variant, size, icon and remove button', () => {
@@ -56,22 +55,5 @@ describe('Tag', () => {
     Object.defineProperty(clickEvent, 'stopPropagation', { value: vi.fn() });
     removeBtn.dispatchEvent(clickEvent);
     expect(onRemove).toHaveBeenCalled();
-  });
-});
-
-describe('StatusBadge', () => {
-  it('renders with dot indicator', () => {
-    render(<StatusBadge status="Active" variant="success" />);
-    const tag = screen.getByText('Active').closest('span')!;
-    expect(tag).toBeInTheDocument();
-  });
-});
-
-describe('STATUS_VARIANT_MAP', () => {
-  it('maps common statuses to variants', () => {
-    expect(STATUS_VARIANT_MAP.active).toBe('success');
-    expect(STATUS_VARIANT_MAP.pending).toBe('warning');
-    expect(STATUS_VARIANT_MAP.failed).toBe('danger');
-    expect(STATUS_VARIANT_MAP.in_transit).toBe('info');
   });
 });

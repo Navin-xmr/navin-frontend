@@ -50,13 +50,19 @@ const ShipmentDetail: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<ShipmentStatus>(shipment?.status ?? "CREATED");
 
-  React.useEffect(() => {
-    if (shipment?.status) {
-      setCurrentStatus(shipment.status);
-    }
-  }, [shipment?.status]);
+  // The server is the source of truth for status. A realtime event or an update
+  // made on this page shows immediately as an override, and is dropped as soon
+  // as the server reports a new status of its own.
+  const serverStatus = shipment?.status;
+  const [statusOverride, setStatusOverride] = useState<ShipmentStatus | null>(null);
+  const [syncedServerStatus, setSyncedServerStatus] = useState(serverStatus);
+  if (serverStatus && serverStatus !== syncedServerStatus) {
+    setSyncedServerStatus(serverStatus);
+    setStatusOverride(null);
+  }
+  const currentStatus: ShipmentStatus =
+    statusOverride ?? serverStatus ?? syncedServerStatus ?? "CREATED";
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
@@ -68,9 +74,8 @@ const ShipmentDetail: React.FC = () => {
   const statusEvent = events["shipment:status"];
   React.useEffect(() => {
     if (statusEvent && statusEvent.shipmentId === id) {
-      announce(`Shipment status updated to ${statusEvent.newStatus}`);
       Promise.resolve().then(() => {
-        setCurrentStatus(statusEvent.newStatus as ShipmentStatus);
+        setStatusOverride(statusEvent.newStatus as ShipmentStatus);
         announce(t("shipmentDetail.statusUpdated", { status: statusEvent.newStatus }));
       });
     }
@@ -140,7 +145,7 @@ const ShipmentDetail: React.FC = () => {
     try {
       const updated = await shipmentApi.updateStatus(id, nextStatus);
       const resultingStatus = updated?.status ?? nextStatus;
-      setCurrentStatus(resultingStatus);
+      setStatusOverride(resultingStatus);
       refresh();
       addToast(t("shipmentDetail.statusUpdateSuccess", `Shipment status updated to ${resultingStatus}.`), "success");
       announce(`Shipment status updated to ${resultingStatus}`);

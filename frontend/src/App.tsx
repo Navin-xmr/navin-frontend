@@ -142,7 +142,10 @@ function RealtimeManager() {
       return;
     }
 
-    realtimeService.connect(userId);
+    // disconnect() latches the service closed, so it has to be reset before
+    // the next session (or StrictMode's second effect run) can reconnect.
+    realtimeService.reset();
+    realtimeService.connect();
 
     return () => {
       realtimeService.disconnect();
@@ -154,20 +157,22 @@ function RealtimeManager() {
 
 function App() {
   useEffect(() => {
-    registerNavigationBridge();
+    registerNavigationBridge((path, options) => {
+      void router.navigate(path, options);
+    });
+    return () => registerNavigationBridge(undefined);
   }, []);
 
   return (
-    <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+    <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
       <ErrorBoundary>
         <AuthProvider>
           <RouteTransitionProvider>
+            <RouteTransition />
             <OfflineBanner />
             <SlowConnectionBanner />
             <RealtimeManager />
-            <RouteTransition>
-              <RouterProvider router={router} />
-            </RouteTransition>
+            <RouterProvider router={router} />
             <PWAInstallPrompt />
           </RouteTransitionProvider>
         </AuthProvider>

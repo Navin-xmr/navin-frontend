@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useLocalStorage } from './useLocalStorage';
+import { dispatchStorageEvent } from '../test/storageEvent';
 
 describe('useLocalStorage', () => {
   const TEST_KEY = 'test-key';
@@ -104,13 +105,7 @@ describe('useLocalStorage', () => {
     expect(result.current[0]).toEqual({ status: 'idle' });
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent('storage', {
-          key: TEST_KEY,
-          newValue: JSON.stringify({ status: 'active' }),
-          storageArea: localStorage,
-        }),
-      );
+      dispatchStorageEvent(TEST_KEY, JSON.stringify({ status: 'active' }));
     });
 
     expect(result.current[0]).toEqual({ status: 'active' });
@@ -121,13 +116,7 @@ describe('useLocalStorage', () => {
     const { result } = renderHook(() => useLocalStorage<string>(TEST_KEY, 'default'));
 
     act(() => {
-      window.dispatchEvent(
-        new StorageEvent('storage', {
-          key: TEST_KEY,
-          newValue: null,
-          storageArea: localStorage,
-        }),
-      );
+      dispatchStorageEvent(TEST_KEY, null);
     });
 
     expect(result.current[0]).toBe('default');
@@ -135,7 +124,7 @@ describe('useLocalStorage', () => {
 
   it('logs an error and does not throw when localStorage write fails', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    vi.spyOn(window.localStorage, 'setItem').mockImplementation(() => {
       throw new Error('QuotaExceededError');
     });
 

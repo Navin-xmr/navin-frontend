@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UseLocalStorageOptions {
   raw?: boolean;
@@ -19,6 +19,8 @@ export function useLocalStorage<T>(
   initialValue: T | (() => T),
   options?: UseLocalStorageOptions,
 ): readonly [T, (value: T | ((prev: T) => T)) => void, () => void] {
+  const raw = options?.raw ?? false;
+
   const resolveInitial = useCallback((): T => {
     return initialValue instanceof Function ? (initialValue as () => T)() : initialValue;
   }, [initialValue]);
@@ -33,7 +35,7 @@ export function useLocalStorage<T>(
       if (item === null) {
         return resolveInitial();
       }
-      if (options?.raw) {
+      if (raw) {
         return item as unknown as T;
       }
       return JSON.parse(item) as T;
@@ -42,25 +44,31 @@ export function useLocalStorage<T>(
     }
   });
 
+  // Latest value, so functional updates can be resolved here rather than inside
+  // a state updater: React runs updaters during render, where a storage error
+  // (e.g. quota exceeded) would escape the try/catch below.
+  const latestValueRef = useRef(storedValue);
+  useEffect(() => {
+    latestValueRef.current = storedValue;
+  }, [storedValue]);
+
   const setValue = useCallback(
     (value: T | ((prev: T) => T)) => {
+      const valueToStore = value instanceof Function ? value(latestValueRef.current) : value;
+      latestValueRef.current = valueToStore;
+      setStoredValue(valueToStore);
+
+      if (typeof window === 'undefined') return;
       try {
-        setStoredValue((prev) => {
-          const valueToStore = value instanceof Function ? value(prev) : value;
-          if (typeof window !== 'undefined') {
-            if (options?.raw) {
-              window.localStorage.setItem(key, String(valueToStore));
-            } else {
-              window.localStorage.setItem(key, JSON.stringify(valueToStore));
-            }
-          }
-          return valueToStore;
-        });
+        window.localStorage.setItem(
+          key,
+          raw ? String(valueToStore) : JSON.stringify(valueToStore),
+        );
       } catch (error) {
         console.error(`useLocalStorage: failed to write key "${key}"`, error);
       }
     },
-    [key, options?.raw],
+    [key, raw],
   );
 
   const removeValue = useCallback(() => {
@@ -85,9 +93,7 @@ export function useLocalStorage<T>(
         if (e.newValue === null) {
           setStoredValue(resolveInitial());
         } else {
-          const parsed = options?.raw
-            ? (e.newValue as unknown as T)
-            : (JSON.parse(e.newValue) as T);
+          const parsed = raw ? (e.newValue as unknown as T) : (JSON.parse(e.newValue) as T);
           setStoredValue(parsed);
         }
       } catch {
@@ -97,7 +103,7 @@ export function useLocalStorage<T>(
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, [key, options?.raw, resolveInitial]);
+  }, [key, raw, resolveInitial]);
 
   return [storedValue, setValue, removeValue] as const;
 }

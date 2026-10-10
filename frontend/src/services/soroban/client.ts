@@ -71,7 +71,9 @@ export async function callContractMethod(
   const submitResult = await sorobanServer.sendTransaction(signedTx);
 
   if (submitResult.status === 'ERROR') {
-    throw new Error(`Transaction submission failed: ${submitResult.errorResultXdr}`);
+    throw new Error(
+      `Transaction submission failed: ${submitResult.errorResult?.toXDR('base64') ?? 'unknown error'}`,
+    );
   }
 
   const hash = submitResult.hash;

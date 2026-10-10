@@ -201,7 +201,7 @@ let values: DraftShape = { name: 'stored' };
     const { rerender } = renderHook(
       ({ isEmpty }: { isEmpty: (value: typeof values) => boolean }) =>
         useFormDraft('draft-updated-predicate', values, isEmpty),
-      { initialProps: { isEmpty: () => false } },
+      { initialProps: { isEmpty: (): boolean => false } },
     );
 
     act(() => { vi.advanceTimersByTime(800); });

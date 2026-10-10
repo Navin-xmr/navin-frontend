@@ -7,7 +7,7 @@ import CopyToClipboard from '@components/ui/CopyToClipboard';
 import { useLiveRegion } from '../../context/LiveRegionContext';
 import { getStatusBadgeClass } from '../../utils/shipmentStatus';
 import { publicTrackingApi } from '@services/api/endpoints/publicTracking';
-import type { PublicMilestone, PublicShipment } from '@services/api/endpoints/publicTracking';
+import type { PublicShipment } from '@services/api/endpoints/publicTracking';
 
 const STATUS_LABELS: Record<string, string> = {
   CREATED: 'Pending',

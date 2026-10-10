@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  PASSWORD_MIN_LENGTH,
-  validatePassword,
-  getPasswordStrengthLevel,
-} from '../../utils/passwordPolicy';
+import { validatePassword, getPasswordStrengthLevel } from '@utils/passwordPolicy';
 
 export interface PasswordStrengthMeterProps {
   password: string;

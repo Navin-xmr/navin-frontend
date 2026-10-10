@@ -12,7 +12,7 @@ import { useDebounce } from '../../../../hooks/useDebounce';
 import { usePagination } from '../../../../hooks/usePagination';
 import Avatar from '@components/ui/Avatar';
 import Breadcrumb from '@components/common/Breadcrumb';
-import ConfirmDialog from '@components/ui/ConfirmDialog';
+import { ConfirmDialog } from '@components/ui/ConfirmDialog';
 
 interface MappedUser {
   id: string;
@@ -79,51 +79,63 @@ const UserManagement: React.FC = () => {
     resetKey: `${debouncedSearch}|${roleFilter}`,
   });
 
-  // Only the most recent request may update state, so a slow earlier response
-  // (e.g. the page before a search) can never overwrite newer results.
-  const latestRequestRef = useRef(0);
-
-  const fetchUsers = useCallback(async () => {
-    const requestId = ++latestRequestRef.current;
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await usersApi.getAll({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: debouncedSearch || undefined,
-        role: roleFilter === 'All' ? undefined : (roleFilter as import('@services/api').UserRole),
-      });
-      if (requestId !== latestRequestRef.current) return;
-      setUsers(res.data.map(mapApiUser));
-      setTotal(res.total);
-    } catch {
-      if (requestId !== latestRequestRef.current) return;
-      setError('Failed to load users. Please try again.');
-    } finally {
-      if (requestId === latestRequestRef.current) setLoading(false);
-    }
-  }, [currentPage, debouncedSearch, itemsPerPage, roleFilter]);
-
-  const fetchInvitations = useCallback(async () => {
-    try {
-      setInvitationsLoading(true);
-      const data = await invitationsApi.list();
-      setInvitations(data.filter((inv) => inv.status === 'pending'));
-    } catch {
-      // non-critical
-    } finally {
-      setInvitationsLoading(false);
-    }
-  }, []);
+  const [usersReloadKey, setUsersReloadKey] = useState(0);
+  const reloadUsers = useCallback(() => setUsersReloadKey((key) => key + 1), []);
+  const [invitationsReloadKey, setInvitationsReloadKey] = useState(0);
+  const reloadInvitations = useCallback(() => setInvitationsReloadKey((key) => key + 1), []);
 
   useEffect(() => {
-    void fetchUsers();
-  }, [fetchUsers]);
+    // Only the most recent request may update state, so a slow earlier response
+    // (e.g. the page before a search) can never overwrite newer results.
+    let isCurrent = true;
+
+    async function loadUsers() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await usersApi.getAll({
+          page: currentPage,
+          limit: itemsPerPage,
+          search: debouncedSearch || undefined,
+          role: roleFilter === 'All' ? undefined : (roleFilter as import('@services/api').UserRole),
+        });
+        if (!isCurrent) return;
+        setUsers(res.data.map(mapApiUser));
+        setTotal(res.total);
+      } catch {
+        if (!isCurrent) return;
+        setError('Failed to load users. Please try again.');
+      } finally {
+        if (isCurrent) setLoading(false);
+      }
+    }
+
+    void loadUsers();
+    return () => {
+      isCurrent = false;
+    };
+  }, [currentPage, debouncedSearch, itemsPerPage, roleFilter, usersReloadKey]);
 
   useEffect(() => {
-    void fetchInvitations();
-  }, [fetchInvitations]);
+    let isCurrent = true;
+
+    async function loadInvitations() {
+      try {
+        setInvitationsLoading(true);
+        const data = await invitationsApi.list();
+        if (isCurrent) setInvitations(data.filter((inv) => inv.status === 'pending'));
+      } catch {
+        // non-critical
+      } finally {
+        if (isCurrent) setInvitationsLoading(false);
+      }
+    }
+
+    void loadInvitations();
+    return () => {
+      isCurrent = false;
+    };
+  }, [invitationsReloadKey]);
 
   const totalPages = Math.ceil(total / itemsPerPage) || 1;
   // Server already returns the current page's slice; render all returned users.
@@ -210,8 +222,8 @@ const UserManagement: React.FC = () => {
       // the first page (or refetch it if we are already there) so the list and
       // any search made right after the invite reflect the API.
       if (currentPage !== 1) setCurrentPage(1);
-      else void fetchUsers();
-      await fetchInvitations();
+      else reloadUsers();
+      reloadInvitations();
     } catch {
       addToast('Failed to send invitation', 'error');
     } finally {
@@ -265,7 +277,7 @@ const UserManagement: React.FC = () => {
           <p className="m-0 text-sm text-slate-400">{error}</p>
           <button
             className="flex items-center gap-2 bg-blue-500 text-white border-none rounded-lg px-4 py-2.5 text-sm font-medium cursor-pointer hover:bg-blue-600 transition-colors"
-            onClick={fetchUsers}
+            onClick={reloadUsers}
           >
             Retry
           </button>

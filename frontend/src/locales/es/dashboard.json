@@ -31,9 +31,6 @@
       "delayed": "Retrasados",
       "verified": "Verificados"
     },
-    "errorTitle": "No se pudo cargar el panel",
-    "errorBody": "Ocurrió un problema al conectar con la red logística.",
-    "retry": "Reintentar conexión",
     "menuAriaLabel": "Menú",
     "title": "Resumen logístico",
     "subtitle": "Datos en tiempo real sincronizados con la blockchain",

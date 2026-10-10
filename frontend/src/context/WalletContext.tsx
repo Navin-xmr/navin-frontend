@@ -45,6 +45,20 @@ function isValidPublicKey(publicKey: string): boolean {
   return STELLAR_PUBLIC_KEY_PATTERN.test(publicKey);
 }
 
+/**
+ * Whether the wallet is on a different network than this build targets.
+ * Adapters that cannot report their network (or a locked extension) are
+ * treated as matching; the wallet enforces the passphrase again at signing.
+ */
+async function hasNetworkMismatch(adapter: WalletAdapter): Promise<boolean> {
+  if (typeof adapter.getNetwork !== 'function') return false;
+  try {
+    return (await adapter.getNetwork()) !== NETWORK;
+  } catch {
+    return false;
+  }
+}
+
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [adapter, setAdapter] = useState<WalletAdapter | null>(null);
   const [publicKey, setPublicKey] = useState<string | null>(() => {
@@ -60,7 +74,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Keep a ref to the adapter so the polling interval always sees the latest
   // value without being re-created every time adapter state changes.
   const adapterRef = useRef<WalletAdapter | null>(null);
-  adapterRef.current = adapter;
+  useEffect(() => {
+    adapterRef.current = adapter;
+  }, [adapter]);
 
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);
@@ -75,12 +91,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (!isValidPublicKey(pk)) {
         throw new Error('Invalid Stellar public key');
       }
+      // Checked up front rather than left to the first poll, so signing is
+      // never offered on the wrong network.
+      const mismatch = await hasNetworkMismatch(found);
+      adapterRef.current = found;
       setAdapter(found);
       setPublicKey(pk);
       localStorage.setItem(LAST_ADAPTER_KEY, adapterId);
       localStorage.setItem(PUBLIC_KEY_KEY, pk);
       setIsModalOpen(false);
-      setNetworkMismatch(false);
+      setNetworkMismatch(mismatch);
     } finally {
       setIsConnecting(false);
     }
@@ -88,6 +108,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const disconnect = useCallback(async () => {
     if (adapterRef.current) await adapterRef.current.disconnect();
+    adapterRef.current = null;
     setAdapter(null);
     setPublicKey(null);
     setNetworkMismatch(false);
@@ -129,8 +150,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // Check for network change (only adapters that support it, e.g. Freighter)
         if (typeof currentAdapter.getNetwork === 'function') {
-          const walletNetwork = await currentAdapter.getNetwork();
-          setNetworkMismatch(walletNetwork !== NETWORK);
+          setNetworkMismatch((await currentAdapter.getNetwork()) !== NETWORK);
         }
       } catch {
         // Extension may be locked / unavailable — leave state as-is
@@ -164,7 +184,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         })();
       }
     }
-  }, [publicKey]);
+  }, [publicKey, adapter]);
 
   const value: WalletContextValue = useMemo(
     () => ({

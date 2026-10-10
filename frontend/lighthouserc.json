@@ -10,7 +10,8 @@
     },
     "collect": {
       "url": ["http://localhost:4173/"],
-      "startServerCommand": "pnpm run preview",
+      "startServerCommand": "pnpm --dir frontend exec vite preview --port 4173 --strictPort",
+      "startServerReadyPattern": "Local",
       "numberOfRuns": 1
     }
   }

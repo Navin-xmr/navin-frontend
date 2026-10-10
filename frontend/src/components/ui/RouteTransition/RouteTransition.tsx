@@ -1,5 +1,5 @@
 import React from 'react';
-import { useRouteTransition } from '../../context/RouteTransitionContext';
+import { useRouteTransition } from '@context/RouteTransitionContext';
 
 const RouteTransition: React.FC = () => {
   const { isLoading } = useRouteTransition();
