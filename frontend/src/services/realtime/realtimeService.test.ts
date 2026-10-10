@@ -15,6 +15,7 @@ class MockEventSource {
   onmessage: ((e: { data: string }) => void) | null = null;
   onerror: (() => void) | null = null;
   closed = false;
+  private listeners = new Map<string, Array<(e: { data: string }) => void>>();
 
   constructor(url: string) {
     MockEventSource.instance = this;
@@ -29,8 +30,17 @@ class MockEventSource {
     this.onopen?.();
   }
 
+  addEventListener(type: string, listener: (e: { data: string }) => void) {
+    this.listeners.set(type, [...(this.listeners.get(type) ?? []), listener]);
+  }
+
   simulateMessage(data: string) {
     this.onmessage?.({ data });
+  }
+
+  /** A named SSE event (`event: <type>`), which never reaches `onmessage`. */
+  simulateNamedEvent(type: string, data: string) {
+    this.listeners.get(type)?.forEach((listener) => listener({ data }));
   }
 
   simulateError() {
@@ -45,9 +55,8 @@ describe('RealtimeService', () => {
     MockEventSource.instance = null;
     MockEventSource.lastUrl = null;
     vi.stubGlobal('EventSource', MockEventSource);
-    // Real-time is opt-in: without this the service reports 'offline'.
-    vi.stubEnv('VITE_REALTIME_WS_URL', 'wss://realtime.navin.test');
-    vi.mocked(apiClient.get).mockReset().mockResolvedValue({ data: [] });
+    vi.stubEnv('VITE_DISABLE_REALTIME', '');
+    vi.mocked(apiClient.get).mockReset().mockResolvedValue({ data: { data: [] } });
     service = new RealtimeService();
   });
 
@@ -58,9 +67,8 @@ describe('RealtimeService', () => {
     vi.useRealTimers();
   });
 
-  it('reports offline and opens no connection when real-time is not configured', () => {
-    vi.stubEnv('VITE_REALTIME_WS_URL', '');
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('reports offline and opens no connection when real-time is disabled', () => {
+    vi.stubEnv('VITE_DISABLE_REALTIME', 'true');
     const statuses: string[] = [];
     service.onStatusChange((status) => statuses.push(status));
 
@@ -69,7 +77,6 @@ describe('RealtimeService', () => {
     expect(MockEventSource.instance).toBeNull();
     expect(service.status).toBe('offline');
     expect(statuses).toEqual(['offline']);
-    warn.mockRestore();
   });
 
   it('opens an EventSource on connect()', () => {
@@ -260,7 +267,8 @@ describe('RealtimeService', () => {
       },
     };
     vi.unstubAllGlobals();
-    vi.mocked(apiClient.get).mockResolvedValue({ data: [event] });
+    // The API wraps the list in its standard `{ data }` envelope.
+    vi.mocked(apiClient.get).mockResolvedValue({ data: { data: [event] } });
     const handler = vi.fn();
     service.subscribe('notification:new', handler);
 
@@ -268,9 +276,32 @@ describe('RealtimeService', () => {
 
     await vi.advanceTimersByTimeAsync(15_000);
 
-    expect(apiClient.get).toHaveBeenCalledWith('/events/poll');
+    expect(apiClient.get).toHaveBeenCalledWith('/events/poll', { params: undefined });
     expect(handler).toHaveBeenCalledWith(event);
     expect(service.status).toBe('connected');
+
+    // Later polls only ask for what arrived since the previous one.
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(apiClient.get).toHaveBeenLastCalledWith('/events/poll', {
+      params: { since: expect.any(String) },
+    });
+  });
+
+  it('receives the named events the backend puts on the SSE stream', () => {
+    const handler = vi.fn();
+    service.subscribe('shipment:status', handler);
+    service.connect();
+    MockEventSource.instance!.simulateOpen();
+
+    const event: RealtimeEvent = {
+      type: 'shipment:status',
+      shipmentId: 's1',
+      newStatus: 'DELIVERED',
+      timestamp: 'now',
+    };
+    MockEventSource.instance!.simulateNamedEvent('shipment:status', JSON.stringify(event));
+
+    expect(handler).toHaveBeenCalledWith(event);
   });
 
   it('poll() sets status to disconnected when the request fails', async () => {

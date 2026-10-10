@@ -31,7 +31,7 @@ describe('publicTrackingApi', () => {
 
     const result = await publicTrackingApi.getByTrackingNumber('TRACK-001');
 
-    expect(mockGet).toHaveBeenCalledWith('/api/public/shipments/TRACK-001');
+    expect(mockGet).toHaveBeenCalledWith('/public/tracking/TRACK-001');
     expect(result).toEqual(mockShipment);
   });
 
@@ -48,7 +48,7 @@ describe('publicTrackingApi', () => {
 
     await publicTrackingApi.getByTrackingNumber('T/1');
 
-    expect(mockGet).toHaveBeenCalledWith('/api/public/shipments/T%2F1');
+    expect(mockGet).toHaveBeenCalledWith('/public/tracking/T%2F1');
   });
 
   it('propagates errors from the API', async () => {

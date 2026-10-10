@@ -40,7 +40,7 @@ describe('WalletsSection', () => {
     render(<WalletsSection />);
 
     expect(await screen.findByText(/Freighter/)).toBeInTheDocument();
-    expect(apiClient.get).toHaveBeenCalledWith('/api/users/me/wallets');
+    expect(apiClient.get).toHaveBeenCalledWith('/users/me/wallets');
   });
 
   it('shows empty state when no wallets are connected', async () => {
@@ -62,7 +62,7 @@ describe('WalletsSection', () => {
     await user.click(screen.getByRole('button', { name: /connect wallet/i }));
 
     await waitFor(() => {
-      expect(apiClient.post).toHaveBeenCalledWith('/api/users/me/wallets', {
+      expect(apiClient.post).toHaveBeenCalledWith('/users/me/wallets', {
         publicKey: 'GNEWKEY123',
         label: 'Freighter',
       });
@@ -100,7 +100,7 @@ describe('WalletsSection', () => {
     await user.click(screen.getByRole('button', { name: /remove wallet/i }));
 
     await waitFor(() => {
-      expect(apiClient.delete).toHaveBeenCalledWith(`/api/users/me/wallets/${wallet.publicKey}`);
+      expect(apiClient.delete).toHaveBeenCalledWith(`/users/me/wallets/${wallet.publicKey}`);
     });
     await waitFor(() => {
       expect(screen.queryByText(/Freighter/)).not.toBeInTheDocument();

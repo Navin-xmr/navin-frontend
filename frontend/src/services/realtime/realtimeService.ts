@@ -7,19 +7,14 @@ export type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected' | '
 type Handler<T extends RealtimeEvent = RealtimeEvent> = (event: T) => void;
 
 /**
- * Resolve the real-time WebSocket URL from the environment. Reading the env var
- * inside the function (not at module scope) allows vi.stubEnv() to work in tests.
+ * Real-time is on by default and uses the API base URL. Deployments without
+ * an event stream (e.g. a sandbox) set VITE_DISABLE_REALTIME=true; the service
+ * then reports 'offline' so the UI can offer manual refresh instead.
  *
- * When VITE_REALTIME_WS_URL is not configured (e.g. Testnet or sandboxed
- * deployments), real-time is disabled gracefully and the service reports an
- * 'offline' status so the UI can show an Offline banner and offer manual refresh.
+ * Read inside the function (not at module scope) so vi.stubEnv() works in tests.
  */
-function getRealtimeWsUrl(): string | null {
-  const url = import.meta.env.VITE_REALTIME_WS_URL;
-  if (!url || typeof url !== 'string' || url.trim() === '') {
-    return null;
-  }
-  return url.trim();
+function isRealtimeDisabled(): boolean {
+  return import.meta.env.VITE_DISABLE_REALTIME === 'true';
 }
 
 /**
@@ -37,6 +32,19 @@ function buildSseUrl(): string {
   return token ? `${url}?token=${encodeURIComponent(token)}` : url;
 }
 
+/**
+ * Event names the backend puts on the SSE stream (`event: <type>`). Named
+ * events never reach `onmessage`, so each one needs its own listener.
+ */
+const SSE_EVENT_TYPES: readonly RealtimeEventType[] = [
+  'shipment:status',
+  'shipment:milestone',
+  'settlement:status',
+  'notification:new',
+  'anomaly:detected',
+  'location:update',
+];
+
 const MAX_RETRIES = 3;
 const FALLBACK_POLL_INTERVAL_MS = 15_000;
 const MAX_BACKOFF_MS = 30_000;
@@ -52,6 +60,8 @@ export class RealtimeService {
   private retryCount = 0;
   private useFallback = false;
   private closed = false;
+  /** When the last successful poll was requested; sent as `since` on the next one. */
+  private lastPollAt: string | null = null;
 
   private handlers = new Map<RealtimeEventType, Set<Handler>>();
   private statusHandlers = new Set<(status: ConnectionStatus) => void>();
@@ -70,12 +80,7 @@ export class RealtimeService {
   connect(): void {
     if (this.closed) return;
 
-    // No real-time endpoint configured (Testnet / sandboxed deployment):
-    // disable real-time gracefully and let the UI fall back to manual refresh.
-    if (!getRealtimeWsUrl()) {
-      console.warn(
-        '[realtime] VITE_REALTIME_WS_URL is not configured; real-time updates are disabled. Manual refresh is required.',
-      );
+    if (isRealtimeDisabled()) {
       this.setStatus('offline');
       return;
     }
@@ -100,9 +105,11 @@ export class RealtimeService {
       this.setStatus('connected');
     };
 
-    es.onmessage = (e: MessageEvent) => {
+    const handleMessage = (e: MessageEvent) => {
       this.dispatch(e.data as string);
     };
+    es.onmessage = handleMessage;
+    SSE_EVENT_TYPES.forEach((type) => es.addEventListener(type, handleMessage));
 
     es.onerror = () => {
       es.close();
@@ -138,8 +145,13 @@ export class RealtimeService {
 
   private async poll(): Promise<void> {
     try {
-      const res = await apiClient.get<RealtimeEvent[]>('/events/poll');
-      res.data.forEach((ev) => this.emit(ev));
+      const requestedAt = new Date().toISOString();
+      // Without `since` the API returns its default recent window.
+      const res = await apiClient.get<{ data: RealtimeEvent[] }>('/events/poll', {
+        params: this.lastPollAt ? { since: this.lastPollAt } : undefined,
+      });
+      this.lastPollAt = requestedAt;
+      (res.data.data ?? []).forEach((ev) => this.emit(ev));
       this.setStatus('connected');
     } catch {
       this.setStatus('disconnected');
@@ -199,6 +211,7 @@ export class RealtimeService {
     this.closed = false;
     this.retryCount = 0;
     this.useFallback = false;
+    this.lastPollAt = null;
   }
 }
 

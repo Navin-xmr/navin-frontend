@@ -50,7 +50,7 @@ const ProfileSection: React.FC<{ isCompany: boolean }> = ({ isCompany }) => {
     if (form.fullName) changed.fullName = form.fullName;
     if (form.email) changed.email = form.email;
     if (isCompany && form.companyName) changed.companyName = form.companyName;
-    void save({ url: '/api/users/me', payload: changed });
+    void save({ url: '/users/me', payload: changed });
   };
 
   const inputCls =

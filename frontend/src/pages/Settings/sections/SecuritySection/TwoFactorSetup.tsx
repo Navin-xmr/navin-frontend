@@ -22,7 +22,7 @@ const TwoFactorSetup: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiClient.post<{ data: { qrCodeUrl: string } }>('/api/auth/2fa/setup');
+      const res = await apiClient.post<{ data: { qrCodeUrl: string } }>('/auth/2fa/setup');
       setQrUrl(res.data.data.qrCodeUrl);
       setEnabled(true);
     } catch {
@@ -39,7 +39,7 @@ const TwoFactorSetup: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiClient.post<{ data: { backupCodes: string[] } }>('/api/auth/2fa/verify', { code });
+      const res = await apiClient.post<{ data: { backupCodes: string[] } }>('/auth/2fa/verify', { code });
       setBackupCodes(res.data.data.backupCodes);
       setShowBackupCodes(true);
       addToast('Two-factor authentication verified.', 'success');
@@ -84,7 +84,7 @@ const TwoFactorSetup: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await apiClient.delete('/api/auth/2fa', { data: { password: disablePassword } });
+      await apiClient.delete('/auth/2fa', { data: { password: disablePassword } });
       setEnabled(false);
       setQrUrl(null);
       setVerified(false);
@@ -103,7 +103,7 @@ const TwoFactorSetup: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiClient.post<{ data: { backupCodes: string[] } }>('/api/auth/2fa/backup-codes/regenerate');
+      const res = await apiClient.post<{ data: { backupCodes: string[] } }>('/auth/2fa/backup-codes/regenerate');
       setBackupCodes(res.data.data.backupCodes);
       setShowBackupCodes(true);
     } catch {

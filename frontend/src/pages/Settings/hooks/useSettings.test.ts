@@ -27,11 +27,11 @@ describe('useSettings', () => {
 
     let ok: boolean | undefined;
     await act(async () => {
-      ok = await result.current.save({ url: '/api/users/me', payload: { name: 'A' } });
+      ok = await result.current.save({ url: '/users/me', payload: { name: 'A' } });
     });
 
     expect(ok).toBe(true);
-    expect(apiClient.patch).toHaveBeenCalledWith('/api/users/me', { name: 'A' });
+    expect(apiClient.patch).toHaveBeenCalledWith('/users/me', { name: 'A' });
     expect(addToast).toHaveBeenCalledWith('Saved successfully.', 'success');
     expect(result.current.success).toBe('Saved successfully.');
     expect(result.current.error).toBeNull();
@@ -42,10 +42,10 @@ describe('useSettings', () => {
     const { result } = renderHook(() => useSettings());
 
     await act(async () => {
-      await result.current.save({ url: '/api/users/me', method: 'delete', successMessage: 'Deleted.' });
+      await result.current.save({ url: '/users/me', method: 'delete', successMessage: 'Deleted.' });
     });
 
-    expect(apiClient.delete).toHaveBeenCalledWith('/api/users/me');
+    expect(apiClient.delete).toHaveBeenCalledWith('/users/me');
     expect(addToast).toHaveBeenCalledWith('Deleted.', 'success');
   });
 
@@ -55,7 +55,7 @@ describe('useSettings', () => {
 
     let ok: boolean | undefined;
     await act(async () => {
-      ok = await result.current.save({ url: '/api/x', method: 'post' });
+      ok = await result.current.save({ url: '/x', method: 'post' });
     });
 
     expect(ok).toBe(false);
@@ -74,7 +74,7 @@ describe('useSettings', () => {
 
     let savePromise: Promise<boolean>;
     act(() => {
-      savePromise = result.current.save({ url: '/api/x' });
+      savePromise = result.current.save({ url: '/x' });
     });
 
     expect(result.current.isLoading).toBe(true);

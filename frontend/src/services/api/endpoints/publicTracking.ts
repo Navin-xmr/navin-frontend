@@ -40,7 +40,7 @@ export const publicTrackingApi = {
   getByTrackingNumber: async (trackingNumber: string): Promise<PublicShipment> => {
     const encoded = encodeURIComponent(trackingNumber);
     const res = await publicTrackingClient.get<{ data: PublicShipment }>(
-      `/api/public/shipments/${encoded}`,
+      `/public/tracking/${encoded}`,
     );
     return res.data.data;
   },

@@ -271,11 +271,11 @@ export const shipmentApi = {
     status: ShipmentStatus,
   ): Promise<{ updated: string[]; failed: string[] }> {
     try {
-      const res = await apiClient.patch<{ data: { updated: string[]; failed: string[] } }>(
-        '/shipments/bulk-status',
-        { ids, status },
-      );
-      return res.data.data ?? { updated: ids, failed: [] };
+      const res = await apiClient.patch<{
+        data: { updated: number; failed: Array<{ id: string; reason: string }> };
+      }>('/shipments/bulk/status', { shipmentIds: ids, status });
+      const failed = (res.data.data?.failed ?? []).map((entry) => entry.id);
+      return { updated: ids.filter((id) => !failed.includes(id)), failed };
     } catch {
       // Fallback: update one-by-one so we can report partial failures
       const updated: string[] = [];

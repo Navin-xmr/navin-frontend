@@ -24,7 +24,7 @@ const ApiKeysSection: React.FC = () => {
 
   useEffect(() => {
     apiClient
-      .get<{ data: ApiKey[] }>('/api/company/api-keys')
+      .get<{ data: ApiKey[] }>('/company/api-keys')
       .then((r) => setKeys(r.data.data))
       .catch(() => setKeys([]))
       .finally(() => setIsLoading(false));
@@ -34,7 +34,7 @@ const ApiKeysSection: React.FC = () => {
     if (!newKeyName.trim()) return;
     setGenerating(true);
     try {
-      const res = await apiClient.post<{ data: { key: ApiKey; secret: string } }>('/api/company/api-keys', { name: newKeyName });
+      const res = await apiClient.post<{ data: { key: ApiKey; secret: string } }>('/company/api-keys', { name: newKeyName });
       setKeys((prev) => [res.data.data.key, ...prev]);
       setNewKeySecret(res.data.data.secret);
       setNewKeyName('');
@@ -47,7 +47,7 @@ const ApiKeysSection: React.FC = () => {
     if (!pendingRevokeId) return;
     setRevoking(pendingRevokeId);
     try {
-      await apiClient.delete(`/api/company/api-keys/${pendingRevokeId}`);
+      await apiClient.delete(`/company/api-keys/${pendingRevokeId}`);
       setKeys((prev) => prev.filter((k) => k.id !== pendingRevokeId));
     } finally {
       setRevoking(null);

@@ -63,7 +63,7 @@ const ChangePasswordForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mismatch || tooShort) return;
-    void save({ url: '/api/auth/password', payload: { currentPassword: form.current as string, newPassword: form.next as string } });
+    void save({ url: '/auth/password', payload: { currentPassword: form.current as string, newPassword: form.next as string } });
   };
 
   return (

@@ -130,14 +130,6 @@ function RealtimeManager() {
   const { isAuthenticated, userId } = useAuthContext();
 
   useEffect(() => {
-    // Disable realtime service in development if environment variable is set
-    if (import.meta.env.VITE_DISABLE_REALTIME === 'true') {
-      if (import.meta.env.DEV) {
-        console.warn('Realtime service disabled in development mode');
-      }
-      return;
-    }
-
     if (!isAuthenticated || !userId) {
       return;
     }

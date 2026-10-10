@@ -79,7 +79,7 @@ async function mockApi(page: Page): Promise<() => void> {
       return;
     }
 
-    if (pathname.includes('/public/shipments/')) {
+    if (pathname.includes('/public/tracking/')) {
       await route.fulfill({ json: { data: publicShipment } });
       return;
     }

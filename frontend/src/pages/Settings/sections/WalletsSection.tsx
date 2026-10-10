@@ -21,7 +21,7 @@ const WalletsSection: React.FC = () => {
   const fetchWallets = useCallback(async () => {
     setIsLoading(true);
     try {
-      const r = await apiClient.get<{ data: WalletEntry[] }>('/api/users/me/wallets');
+      const r = await apiClient.get<{ data: WalletEntry[] }>('/users/me/wallets');
       setWallets(r.data.data);
     } catch {
       setWallets([]);
@@ -37,7 +37,7 @@ const WalletsSection: React.FC = () => {
 
   const handleWalletConnect = async (publicKey: string) => {
     try {
-      await apiClient.post('/api/users/me/wallets', {
+      await apiClient.post('/users/me/wallets', {
         publicKey,
         label: adapter?.name ?? 'Wallet',
       });
@@ -51,7 +51,7 @@ const WalletsSection: React.FC = () => {
   const removeWallet = async (publicKey: string) => {
     setRemoving(publicKey);
     try {
-      await apiClient.delete(`/api/users/me/wallets/${publicKey}`);
+      await apiClient.delete(`/users/me/wallets/${publicKey}`);
       setWallets((prev) => prev.filter((w) => w.publicKey !== publicKey));
     } finally {
       setRemoving(null);

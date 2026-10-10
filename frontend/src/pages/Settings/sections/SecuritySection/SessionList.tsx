@@ -17,7 +17,7 @@ const SessionList: React.FC = () => {
 
   useEffect(() => {
     apiClient
-      .get<{ data: Session[] }>('/api/auth/sessions')
+      .get<{ data: Session[] }>('/auth/sessions')
       .then((r) => setSessions(r.data.data))
       .catch(() => setSessions([]))
       .finally(() => setIsLoading(false));
@@ -26,7 +26,7 @@ const SessionList: React.FC = () => {
   const revoke = async (id: string) => {
     setRevoking(id);
     try {
-      await apiClient.delete(`/api/auth/sessions/${id}`);
+      await apiClient.delete(`/auth/sessions/${id}`);
       setSessions((prev) => prev.filter((s) => s.id !== id));
     } finally {
       setRevoking(null);
