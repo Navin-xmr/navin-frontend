@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 import { MOCK_VOLUME_DATA } from './mockVolumeData';
-import type { DailyVolume } from './mockVolumeData';
+import type { DailyVolume } from './types';
 
 type Range = 7 | 30 | 90;
 

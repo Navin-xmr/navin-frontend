@@ -271,7 +271,7 @@ component that still carries a legacy `.css` file:
 3. Remove the CSS `import` from the `.tsx` file.
 4. Verify visually and run `pnpm run build` + `pnpm run lint`.
 
-Follow the step-by-step conversion guide in [`TAILWIND_MIGRATION.md`](./TAILWIND_MIGRATION.md) and use the before/after examples in [`TAILWIND_BEFORE_AFTER.md`](./TAILWIND_BEFORE_AFTER.md).
+Follow the [Legacy CSS Migration Guide](./production/legacy-css-migration.md) for the step-by-step conversion.
 
 ---
 
@@ -350,6 +350,3 @@ import type { ShipmentProps } from '@types/shipment';
 
 - [`VERIFICATION_UI_STATES.md`](./VERIFICATION_UI_STATES.md) — Verification badge states, Stellar Explorer linking rules, and graceful failure behavior for on-chain data
 - [`COMPONENT_CONVENTIONS.md`](./COMPONENT_CONVENTIONS.md) — TypeScript, exports, props, and dead code rules
-- [`TAILWIND_MIGRATION.md`](./TAILWIND_MIGRATION.md) — Step-by-step CSS → Tailwind conversion guide
-- [`TAILWIND_BEFORE_AFTER.md`](./TAILWIND_BEFORE_AFTER.md) — Side-by-side migration examples
-- [`TAILWIND_PR_CHECKLIST.md`](./TAILWIND_PR_CHECKLIST.md) — PR checklist for Tailwind migrations

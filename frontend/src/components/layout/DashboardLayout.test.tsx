@@ -33,12 +33,13 @@ vi.mock('../../services/realtime/realtimeService', () => ({
   },
 }));
 
-// authApi + tokenStorage used by SessionTimeoutModal
+// authApi + tokenStorage used by SessionTimeoutModal (directly and via logoutSession)
 vi.mock('../../services/api/endpoints/auth', () => ({
   authApi: {
     refresh: vi.fn().mockResolvedValue(undefined),
     logout: vi.fn().mockResolvedValue(undefined),
   },
+  clearLocalSession: vi.fn(),
 }));
 
 vi.mock('../../services/auth/tokenStorage', () => ({
@@ -56,6 +57,20 @@ vi.mock('../../context/WalletContext', () => ({
     publicKey: null,
     isConnecting: false,
     network: 'testnet',
+    networkMismatch: false,
+  }),
+}));
+
+// AuthContext supplies the sign-out action rendered in the sidebar footer.
+const { mockLogout } = vi.hoisted(() => ({ mockLogout: vi.fn() }));
+vi.mock('../../context/AuthContext', () => ({
+  useAuthContext: () => ({
+    isLoading: false,
+    isAuthenticated: true,
+    role: 'company',
+    userId: 'user-1',
+    refresh: vi.fn(),
+    logout: mockLogout,
   }),
 }));
 
@@ -340,6 +355,34 @@ describe('DashboardLayout', () => {
     it('shows syncing status', () => {
       renderLayout();
       expect(screen.getByText(/Syncing/)).toBeInTheDocument();
+    });
+  });
+
+  // ── Sign out (#815) ─────────────────────────────────────────────────────────
+
+  describe('sign out', () => {
+    it('renders a sign-out control in the sidebar', () => {
+      renderLayout();
+      expect(screen.getByRole('button', { name: /^sign out$/i })).toBeInTheDocument();
+    });
+
+    it('calls AuthContext.logout() when sign out is clicked', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+
+      await user.click(screen.getByRole('button', { name: /^sign out$/i }));
+
+      expect(mockLogout).toHaveBeenCalledOnce();
+    });
+
+    it('keeps an icon-only sign-out control when the sidebar is collapsed', async () => {
+      const user = userEvent.setup();
+      renderLayout();
+
+      await user.click(screen.getByRole('button', { name: /collapse sidebar/i }));
+      await user.click(screen.getByRole('button', { name: /^sign out$/i }));
+
+      expect(mockLogout).toHaveBeenCalledOnce();
     });
   });
 });

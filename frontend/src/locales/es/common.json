@@ -30,5 +30,6 @@
   "connectWalletDescription": "Conecta tu billetera Freighter para autorizar transacciones en blockchain y administrar contratos inteligentes.",
 
   "settingsSaved": "¡Configuración guardada correctamente!",
-  "manageCompanyProfile": "Administra el perfil de tu empresa, las notificaciones y las billeteras conectadas."
+  "manageCompanyProfile": "Administra el perfil de tu empresa, las notificaciones y las billeteras conectadas.",
+  "signOut": "Cerrar sesión"
 }

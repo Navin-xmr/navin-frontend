@@ -66,6 +66,9 @@
     "disputeSubmitted": "Dispute submitted. Reference number: {{ref}}",
     "offlineBanner": "Upload Proof requires an internet connection.",
     "unknownId": "Unknown Shipment",
-    "trackingUnavailable": "Tracking number unavailable"
+    "trackingUnavailable": "Tracking number unavailable",
+    "lastUpdated": "Last updated",
+    "refreshNow": "Refresh now",
+    "staleBanner": "This data is stale, click Refresh"
   }
 }

@@ -6,3 +6,5 @@ export * from "./endpoints/anomalies";
 export * from "./endpoints/ledger";
 export * from "./endpoints/users";
 export * from "./endpoints/shipmentTemplates";
+export * from "./endpoints/company";
+export * from "./endpoints/publicTracking";

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiClient } from '../services/api/client';
 import type { ShipmentStatus } from '../services/api/endpoints/shipments';
 import {
   readNumericField,
@@ -197,7 +197,7 @@ async function fetchAllShipmentPages(params?: Record<string, string | number | b
   let total = Infinity;
 
   while (all.length < total && page <= 50) {
-    const response = await axios.get<BackendResponse>('/api/shipments', {
+    const response = await apiClient.get<BackendResponse>('/shipments', {
       params: { limit: 100, page, ...params },
     });
     const payload = response.data ?? {};
@@ -212,19 +212,39 @@ async function fetchAllShipmentPages(params?: Record<string, string | number | b
 }
 
 export const shipmentApi = {
-  async getAll(params: { limit?: number; page?: number } = {}): Promise<ShipmentsResponse> {
-    const queryParams = new URLSearchParams();
+  async getAll(params: {
+    limit?: number;
+    page?: number;
+    search?: string;
+    /** One status, or several (sent as a comma-separated list). */
+    status?: ShipmentStatus | ShipmentStatus[];
+    /** One priority, or several (sent as a comma-separated list). */
+    priority?: ShipmentPriority | ShipmentPriority[];
+    dateFrom?: string;
+    dateTo?: string;
+    origin?: string;
+    destination?: string;
+    carrier?: string;
+    weightMin?: string;
+    weightMax?: string;
+    signal?: AbortSignal;
+  } = {}): Promise<ShipmentsResponse> {
+    const { signal, ...queryParams } = params;
 
-    if (typeof params.limit === 'number') {
-      queryParams.set('limit', String(params.limit));
+    // Strip undefined/empty values so they don't pollute the query string.
+    // Multi-value filters are serialised as a comma-separated list.
+    const cleanParams: Record<string, string | number> = {};
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (Array.isArray(value)) {
+        if (value.length > 0) cleanParams[key] = value.join(',');
+      } else if (value !== undefined && value !== '' && value !== null) {
+        cleanParams[key] = value as string | number;
+      }
     }
 
-    if (typeof params.page === 'number') {
-      queryParams.set('page', String(params.page));
-    }
-
-    const response = await axios.get<BackendResponse>('/api/shipments', {
-      params: Object.fromEntries(queryParams.entries()),
+    const response = await apiClient.get<BackendResponse>('/shipments', {
+      params: cleanParams,
+      signal,
     });
 
     const payload = response.data ?? {};
@@ -243,7 +263,7 @@ export const shipmentApi = {
   },
 
   async patchPriority(id: string, priority: ShipmentPriority): Promise<void> {
-    await axios.patch(`/api/shipments/${id}`, { priority });
+    await apiClient.patch(`/shipments/${id}`, { priority });
   },
 
   async bulkUpdateStatus(
@@ -251,11 +271,11 @@ export const shipmentApi = {
     status: ShipmentStatus,
   ): Promise<{ updated: string[]; failed: string[] }> {
     try {
-      const res = await axios.patch<{ data: { updated: string[]; failed: string[] } }>(
-        '/api/shipments/bulk-status',
-        { ids, status },
-      );
-      return res.data.data ?? { updated: ids, failed: [] };
+      const res = await apiClient.patch<{
+        data: { updated: number; failed: Array<{ id: string; reason: string }> };
+      }>('/shipments/bulk/status', { shipmentIds: ids, status });
+      const failed = (res.data.data?.failed ?? []).map((entry) => entry.id);
+      return { updated: ids.filter((id) => !failed.includes(id)), failed };
     } catch {
       // Fallback: update one-by-one so we can report partial failures
       const updated: string[] = [];
@@ -263,7 +283,7 @@ export const shipmentApi = {
       await Promise.all(
         ids.map(async (id) => {
           try {
-            await axios.patch(`/api/shipments/${id}/status`, { status });
+            await apiClient.patch(`/shipments/${id}/status`, { status });
             updated.push(id);
           } catch {
             failed.push(id);

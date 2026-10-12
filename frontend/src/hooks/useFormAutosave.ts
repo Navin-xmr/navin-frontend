@@ -91,8 +91,7 @@ function useFormAutosave<T>({
         clearTimeout(timerRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, debounceMs]);
+  }, [data, debounceMs, persistData]);
 
   const loadDraft = useCallback((): T | null => {
     try {

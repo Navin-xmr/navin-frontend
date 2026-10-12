@@ -18,7 +18,7 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
 
   const handleDelete = async () => {
     if (confirmEmail !== userEmail) return;
-    const ok = await save({ url: '/api/users/me', method: 'delete' });
+    const ok = await save({ url: '/users/me', method: 'delete' });
     if (ok) {
       clearToken();
       window.location.href = '/';
@@ -28,7 +28,7 @@ const DangerZone: React.FC<DangerZoneProps> = ({ userEmail }) => {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const res = await apiClient.get('/api/users/me/export', { responseType: 'blob' });
+      const res = await apiClient.get('/users/me/export', { responseType: 'blob' });
       const url = URL.createObjectURL(res.data as Blob);
       const a = document.createElement('a');
       a.href = url;

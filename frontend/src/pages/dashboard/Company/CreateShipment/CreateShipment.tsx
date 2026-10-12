@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, Package, ArrowLeft, Loader2, History, Book } from 'lucide-react';
 import { shipmentApi, type CreateShipmentRequest } from '@services/api/endpoints/shipments';
@@ -96,7 +96,7 @@ const CreateShipment: React.FC = () => {
         [templates],
     );
 
-    const applyTemplate = (templateId: string) => {
+    const applyTemplate = useCallback((templateId: string) => {
         const template = templates.find((item) => item.id === templateId);
         if (!template) return;
 
@@ -108,7 +108,7 @@ const CreateShipment: React.FC = () => {
         setSelectedTemplateId(templateId);
         setErrors({});
         addToast(`Loaded template "${template.name}"`, 'success');
-    };
+    }, [addToast, templates]);
 
     const formatAddress = (addr: Address): string =>
         formatLocalizedAddress({
@@ -125,8 +125,7 @@ const CreateShipment: React.FC = () => {
         if (selectedTemplateId === templateId) return;
         const timer = setTimeout(() => { applyTemplate(templateId); }, 0);
         return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, templates, templatesLoading]);
+    }, [applyTemplate, searchParams, selectedTemplateId, templates, templatesLoading]);
     const [addressOptions, setAddressOptions] = useState<ComboboxOption[]>([]);
     const [addressesLoading, setAddressesLoading] = useState(false);
 
@@ -172,9 +171,10 @@ const CreateShipment: React.FC = () => {
     };
 
     // Auto-fetch cost estimate when required fields are filled
-useEffect(() => {
-    const { origin, destination, weight } = formData;
-    const hasRequired = origin.trim() && destination.trim() && Number(weight) > 0;
+    const { origin: formOrigin, destination: formDestination, weight: formWeight } = formData;
+
+    useEffect(() => {
+    const hasRequired = formOrigin.trim() && formDestination.trim() && Number(formWeight) > 0;
     if (!hasRequired) {
         const timer = setTimeout(() => { setCostEstimate(null); }, 0);
         return () => clearTimeout(timer);
@@ -182,7 +182,7 @@ useEffect(() => {
 
     const timer = setTimeout(() => {
         setIsEstimating(true);
-        const weightKg = Number(weight);
+        const weightKg = Number(formWeight);
         const baseRate = 250 + weightKg * 8;
         const weightSurcharge = weightKg > 50 ? weightKg * 1.5 : weightKg * 0.8;
         const fuelSurcharge = baseRate * 0.075;
@@ -203,8 +203,7 @@ useEffect(() => {
     }, 600);
 
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [formData.origin, formData.destination, formData.weight]);
+}, [formOrigin, formDestination, formWeight]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

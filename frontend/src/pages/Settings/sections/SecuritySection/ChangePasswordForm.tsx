@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
-import PasswordStrengthMeter from '../../../../components/ui/PasswordStrengthMeter';
+import PasswordStrengthMeter from '@components/ui/PasswordStrengthMeter';
+import { PASSWORD_MIN_LENGTH } from '../../../../utils/passwordPolicy';
 
 const inputCls = 'w-full bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-[#62ffff] pr-10';
 
@@ -51,7 +52,7 @@ const ChangePasswordForm: React.FC = () => {
   const { isLoading, error, success, save } = useSettings();
 
   const mismatch = form.confirm !== '' && form.next !== form.confirm;
-  const tooShort = form.next.length > 0 && form.next.length < 12;
+  const tooShort = form.next.length > 0 && form.next.length < PASSWORD_MIN_LENGTH;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -62,7 +63,7 @@ const ChangePasswordForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mismatch || tooShort) return;
-    void save({ url: '/api/auth/password', payload: { currentPassword: form.current as string, newPassword: form.next as string } });
+    void save({ url: '/auth/password', payload: { currentPassword: form.current as string, newPassword: form.next as string } });
   };
 
   return (
@@ -73,7 +74,7 @@ const ChangePasswordForm: React.FC = () => {
       </div>
       <PasswordField label="Current Password" id="cp-current" name="current" value={form.current} showValue={show.current} onChange={handleChange} onToggle={() => toggle('current')} />
       <PasswordField
-        label="New Password (min 12 chars)"
+        label={`New Password (min ${PASSWORD_MIN_LENGTH} chars)`}
         id="cp-next"
         name="next"
         value={form.next}
@@ -84,7 +85,7 @@ const ChangePasswordForm: React.FC = () => {
         ariaDescribedby={tooShort ? 'cp-next-error' : undefined}
       />
       <PasswordStrengthMeter password={form.next} />
-      {tooShort && <p id="cp-next-error" className="text-xs text-red-400" role="alert">Password must be at least 12 characters</p>}
+      {tooShort && <p id="cp-next-error" className="text-xs text-red-400" role="alert">{`Password must be at least ${PASSWORD_MIN_LENGTH} characters`}</p>}
       <PasswordField
         label="Confirm New Password"
         id="cp-confirm"

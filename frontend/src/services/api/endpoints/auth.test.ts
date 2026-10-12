@@ -10,13 +10,14 @@ vi.mock('../client', () => ({
 
 vi.mock('@sentry/react', () => ({
   setUser: vi.fn(),
+  setTag: vi.fn(),
 }));
 
 import { apiClient } from '../client';
 import * as Sentry from '@sentry/react';
 
 const mockApiClient = apiClient as unknown as { post: ReturnType<typeof vi.fn> };
-const mockSentry = Sentry as unknown as { setUser: ReturnType<typeof vi.fn> };
+const mockSentry = Sentry as unknown as { setUser: ReturnType<typeof vi.fn>; setTag: ReturnType<typeof vi.fn> };
 
 // === Fixtures
 
@@ -59,11 +60,8 @@ describe('authApi endpoint', () => {
       await authApi.login({ email: 'jane@navin.io', password: 'secret' });
 
       expect(localStorage.getItem('authToken')).toBe('jwt-token-001');
-      expect(mockSentry.setUser).toHaveBeenCalledWith({
-        id: 'user-001',
-        email: 'jane@navin.io',
-        username: 'ADMIN',
-      });
+      expect(mockSentry.setUser).toHaveBeenCalledWith({ id: 'user-001' });
+      expect(mockSentry.setTag).toHaveBeenCalledWith('role', 'ADMIN');
     });
 
     it('propagates a rejected request and stores no token', async () => {
@@ -118,11 +116,8 @@ describe('authApi endpoint', () => {
       await authApi.signup({ email: 'jane@navin.io', password: 'secret', name: 'Jane Doe' });
 
       expect(localStorage.getItem('authToken')).toBe('jwt-token-001');
-      expect(mockSentry.setUser).toHaveBeenCalledWith({
-        id: 'user-001',
-        email: 'jane@navin.io',
-        username: 'ADMIN',
-      });
+      expect(mockSentry.setUser).toHaveBeenCalledWith({ id: 'user-001' });
+      expect(mockSentry.setTag).toHaveBeenCalledWith('role', 'ADMIN');
     });
 
     it('propagates a rejected request and stores no token', async () => {
@@ -200,14 +195,52 @@ describe('authApi endpoint', () => {
       expect(mockSentry.setUser).toHaveBeenCalledWith(null);
     });
 
-    it('leaves the stored token in place when the request fails', async () => {
+    it('still clears the token and the Sentry user when the request fails (#817)', async () => {
       localStorage.setItem('authToken', 'jwt-token-001');
       mockApiClient.post.mockRejectedValueOnce(new Error('Network error'));
 
       await expect(authApi.logout()).rejects.toThrow('Network error');
 
-      expect(localStorage.getItem('authToken')).toBe('jwt-token-001');
-      expect(mockSentry.setUser).not.toHaveBeenCalled();
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(mockSentry.setUser).toHaveBeenCalledWith(null);
+    });
+
+    it('still clears local session state on a 5xx response (#817)', async () => {
+      localStorage.setItem('authToken', 'jwt-token-001');
+      mockApiClient.post.mockRejectedValueOnce(
+        Object.assign(new Error('Internal Server Error'), { response: { status: 500 } }),
+      );
+
+      await expect(authApi.logout()).rejects.toThrow('Internal Server Error');
+
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(mockSentry.setUser).toHaveBeenCalledWith(null);
+    });
+
+    it('still clears local session state when the request times out (#817)', async () => {
+      localStorage.setItem('authToken', 'jwt-token-001');
+      mockApiClient.post.mockRejectedValueOnce(
+        Object.assign(new Error('timeout of 30000ms exceeded'), { code: 'ECONNABORTED' }),
+      );
+
+      await expect(authApi.logout()).rejects.toThrow('timeout of 30000ms exceeded');
+
+      expect(localStorage.getItem('authToken')).toBeNull();
+      expect(mockSentry.setUser).toHaveBeenCalledWith(null);
+    });
+
+    it('sends the logout request before clearing the token it authenticates with', async () => {
+      localStorage.setItem('authToken', 'jwt-token-001');
+      let tokenDuringRequest: string | null = 'unset';
+      mockApiClient.post.mockImplementationOnce(async () => {
+        tokenDuringRequest = localStorage.getItem('authToken');
+        return { data: {} };
+      });
+
+      await authApi.logout();
+
+      expect(tokenDuringRequest).toBe('jwt-token-001');
+      expect(localStorage.getItem('authToken')).toBeNull();
     });
   });
 
@@ -278,6 +311,46 @@ describe('authApi endpoint', () => {
       await expect(
         authApi.resetPassword({ token: 'expired', newPassword: 'new-secret' })
       ).rejects.toThrow('Reset token expired');
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('posts the verification token to /auth/verify-email', async () => {
+      mockApiClient.post.mockResolvedValueOnce({ data: {} });
+
+      await authApi.verifyEmail({ token: 'valid-verify-token' });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/verify-email', {
+        token: 'valid-verify-token',
+      });
+    });
+
+    it('propagates a rejection when verification fails or token is expired', async () => {
+      mockApiClient.post.mockRejectedValueOnce(new Error('Verification token expired'));
+
+      await expect(
+        authApi.verifyEmail({ token: 'expired-token' })
+      ).rejects.toThrow('Verification token expired');
+    });
+  });
+
+  describe('resendVerification', () => {
+    it('posts email to /auth/resend-verification', async () => {
+      mockApiClient.post.mockResolvedValueOnce({ data: {} });
+
+      await authApi.resendVerification({ email: 'jane@navin.io' });
+
+      expect(mockApiClient.post).toHaveBeenCalledWith('/auth/resend-verification', {
+        email: 'jane@navin.io',
+      });
+    });
+
+    it('propagates a rejection on error', async () => {
+      mockApiClient.post.mockRejectedValueOnce(new Error('Rate limit exceeded'));
+
+      await expect(
+        authApi.resendVerification({ email: 'jane@navin.io' })
+      ).rejects.toThrow('Rate limit exceeded');
     });
   });
 });

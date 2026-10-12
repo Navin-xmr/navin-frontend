@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import { useScrollSpy } from '../../hooks/useScrollSpy';
+import LanguageSelect from '@components/common/LanguageSelect';
 
 const SECTION_IDS = ['home', 'why-navin', 'features', 'how-it-works', 'faq'] as const;
 
@@ -12,34 +13,6 @@ const navLinks = [
   { id: "how-it-works", key: "howItWorks", href: "#how-it-works" },
   { id: "faq", key: "faq", href: "#faq" },
 ];
-
-const LanguageSelect: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
-  const { t, i18n } = useTranslation(["common"]);
-
-  return (
-    <select
-      value={i18n.language}
-      onChange={(e) => {
-        const lang = e.target.value;
-        i18n.changeLanguage(lang);
-        localStorage.setItem("language", lang);
-      }}
-      aria-label={t("language")}
-      className={`bg-gradient-card backdrop-blur-md text-white border border-primary/30 rounded-lg font-medium cursor-pointer transition-all duration-300 hover:border-primary hover:shadow-glow-blue focus:outline-none focus:border-primary focus:shadow-glow-blue appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%2300d4c8%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat ${
-        compact
-          ? "pl-3 pr-7 py-1.5 text-xs bg-[length:1em] bg-[right_0.4rem_center]"
-          : "pl-3 pr-8 py-2 text-sm bg-[length:1.2em] bg-[right_0.4rem_center]"
-      }`}
-      style={{
-        colorScheme: 'dark',
-      }}
-    >
-      <option value="en" className="bg-background text-white">{compact ? "EN" : "English"}</option>
-      <option value="fr" className="bg-background text-white">{compact ? "FR" : "Français"}</option>
-      <option value="es" className="bg-background text-white">{compact ? "ES" : "Español"}</option>
-    </select>
-  );
-};
 
 const Navbar: React.FC = () => {
   const [companyLogo] = React.useState<string | null>(() => {
@@ -101,7 +74,7 @@ const Navbar: React.FC = () => {
           (the nav links + login + signup can overflow at md/lg widths once
           translated into longer languages like French/Spanish) */}
       <div className="flex xl:hidden items-center ml-auto">
-        <LanguageSelect compact />
+        <LanguageSelect compact variant="navbar" />
       </div>
 
       {/* Desktop Menu: a flexible center zone keeps the nav pill from ever
@@ -134,7 +107,7 @@ const Navbar: React.FC = () => {
         {/* Right side */}
         <div className="flex gap-2.5 items-center shrink-0">
 
-          <LanguageSelect />
+          <LanguageSelect variant="navbar" />
 
           <Link
             to="/login"

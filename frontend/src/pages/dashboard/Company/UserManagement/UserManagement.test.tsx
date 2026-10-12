@@ -38,6 +38,18 @@ vi.mock('../../../../context/ToastContext', () => ({
   useToast: () => ({ addToast }),
 }));
 
+// Default: no logged-in user matches any fixture user
+const mockUseAuthContext = vi.fn(() => ({
+  userId: null as string | null,
+  role: 'Admin' as const,
+  isAuthenticated: true,
+  isLoading: false,
+  logout: vi.fn(),
+}));
+vi.mock('../../../../context/AuthContext', () => ({
+  useAuthContext: () => mockUseAuthContext(),
+}));
+
 vi.mock('../../../../hooks/useFocusTrap', () => ({
   useFocusTrap: vi.fn(),
 }));
@@ -50,6 +62,18 @@ vi.mock('../../../../components/ui/Avatar', () => ({
 
 vi.mock('@components/common/Breadcrumb', () => ({
   default: () => <nav aria-label="breadcrumb" />,
+}));
+
+vi.mock('@components/ui/ConfirmDialog', () => ({
+  ConfirmDialog: ({ isOpen, onConfirm, onClose, title }: {
+    isOpen: boolean; onConfirm: () => void; onClose: () => void; title: string;
+  }) =>
+    isOpen ? (
+      <div role="dialog" aria-label={title}>
+        <button onClick={onConfirm}>Confirm</button>
+        <button onClick={onClose}>Cancel dialog</button>
+      </div>
+    ) : null,
 }));
 
 import UserManagement from './UserManagement';
@@ -89,6 +113,8 @@ function setupDefaultMocks() {
 describe('UserManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset to default: no logged-in user matches any fixture, so self-guard never fires
+    mockUseAuthContext.mockReturnValue({ userId: null, role: 'Admin' as const, isAuthenticated: true, isLoading: false, logout: vi.fn() });
     setupDefaultMocks();
   });
 
@@ -144,11 +170,11 @@ describe('UserManagement', () => {
 
   // ── Search / filter ───────────────────────────────────────────────────────
 
-  it('filters users by name search', async () => {
-    mockGetAll.mockResolvedValue({
-      data: [makeUser(), makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' })],
-      page: 1, limit: 8, total: 2,
-    });
+  it('sends search query to the API (debounced) and renders server results', async () => {
+    // First call returns both users; second call (after debounce) returns only Alice.
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser(), makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' })], page: 1, limit: 8, total: 2 })
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 });
     mockInvList.mockResolvedValue([]);
 
     render(<UserManagement />);
@@ -156,27 +182,41 @@ describe('UserManagement', () => {
 
     await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'Alice');
 
+    // After debounce the API is called with the search param.
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: 'Alice' }),
+      ),
+    );
+    // Server returns only Alice; Bob should no longer be in the DOM.
+    await waitFor(() => expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument());
     expect(screen.getByText('Alice Smith')).toBeInTheDocument();
-    expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument();
   });
 
   it('shows empty table row when search yields no results', async () => {
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 })
+      .mockResolvedValueOnce({ data: [], page: 1, limit: 8, total: 0 });
     render(<UserManagement />);
     await waitFor(() => screen.getByText('Alice Smith'));
 
     await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'zzznobody');
 
-    expect(screen.getByText(/no users found matching your criteria/i)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: 'zzznobody' }),
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.getByText(/no users found matching your criteria/i)).toBeInTheDocument(),
+    );
   });
 
-  it('filters users by role', async () => {
-    mockGetAll.mockResolvedValue({
-      data: [
-        makeUser(),
-        makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' }),
-      ],
-      page: 1, limit: 8, total: 2,
-    });
+  it('sends role filter to the API and renders server results', async () => {
+    // Initial call returns all; after role select, only Admins.
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser(), makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Viewer' })], page: 1, limit: 8, total: 2 })
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 });
     mockInvList.mockResolvedValue([]);
 
     render(<UserManagement />);
@@ -184,8 +224,13 @@ describe('UserManagement', () => {
 
     await userEvent.selectOptions(screen.getByDisplayValue('All Roles'), 'Admin');
 
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ role: 'Admin' }),
+      ),
+    );
+    await waitFor(() => expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument());
     expect(screen.getByText('Alice Smith')).toBeInTheDocument();
-    expect(screen.queryByText('Bob Jones')).not.toBeInTheDocument();
   });
 
   // ── Role change ───────────────────────────────────────────────────────────
@@ -232,6 +277,10 @@ describe('UserManagement', () => {
     );
     await userEvent.click(menuTriggers[0]);
     await userEvent.click(screen.getByRole('button', { name: /deactivate/i }));
+
+    // Confirm in the dialog
+    await waitFor(() => screen.getByRole('dialog', { name: /deactivate user/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
 
     await waitFor(() => expect(mockDeactivate).toHaveBeenCalledWith('u1'));
     expect(addToast).toHaveBeenCalledWith(expect.stringContaining('deactivated'), 'success');
@@ -351,6 +400,270 @@ describe('UserManagement', () => {
     expect(addToast).toHaveBeenCalledWith(
       expect.stringContaining('carol@example.com'),
       'success',
+    );
+  });
+
+  // ── Server-side pagination ────────────────────────────────────────────────
+
+  it('passes page, limit, search and role to the API and drives pager from response total', async () => {
+    // 9 total users — enough to require a second page with pageSize=8.
+    const page1Users = Array.from({ length: 8 }, (_, i) =>
+      makeUser({ _id: `u${i + 1}`, name: `User ${i + 1}`, email: `u${i + 1}@example.com` }),
+    );
+    const page2Users = [makeUser({ _id: 'u9', name: 'User 9', email: 'u9@example.com' })];
+
+    mockGetAll
+      .mockResolvedValueOnce({ data: page1Users, page: 1, limit: 8, total: 9 })
+      .mockResolvedValueOnce({ data: page2Users, page: 2, limit: 8, total: 9 });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('User 1'));
+
+    // Initial API call must include page and limit.
+    expect(mockGetAll).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, limit: 8 }),
+    );
+
+    // The pager is driven by response.total=9 > limit=8, so nav buttons appear.
+    const nextBtn = screen.getByRole('button', { name: /next page/i });
+    expect(nextBtn).toBeDefined();
+    await userEvent.click(nextBtn);
+
+    // After navigating, the API must be called with page: 2.
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 2, limit: 8 }),
+      ),
+    );
+    await waitFor(() => expect(screen.getByText('User 9')).toBeInTheDocument());
+  });
+
+  it('shows a loading state while the next page is fetched', async () => {
+    const page1Users = Array.from({ length: 8 }, (_, i) =>
+      makeUser({ _id: `u${i + 1}`, name: `User ${i + 1}`, email: `u${i + 1}@example.com` }),
+    );
+    let resolvePage2: (value: unknown) => void = () => {};
+    mockGetAll
+      .mockResolvedValueOnce({ data: page1Users, page: 1, limit: 8, total: 9 })
+      .mockReturnValueOnce(new Promise((resolve) => { resolvePage2 = resolve; }));
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('User 1'));
+
+    await userEvent.click(screen.getByRole('button', { name: /next page/i }));
+
+    expect(await screen.findByText(/loading team members/i)).toBeInTheDocument();
+    expect(screen.queryByText('User 1')).not.toBeInTheDocument();
+
+    resolvePage2({
+      data: [makeUser({ _id: 'u9', name: 'User 9', email: 'u9@example.com' })],
+      page: 2, limit: 8, total: 9,
+    });
+    await waitFor(() => expect(screen.getByText('User 9')).toBeInTheDocument());
+    expect(screen.queryByText(/loading team members/i)).not.toBeInTheDocument();
+  });
+
+  it('returns to page 1 when the search changes while on a later page', async () => {
+    const page1Users = Array.from({ length: 8 }, (_, i) =>
+      makeUser({ _id: `u${i + 1}`, name: `User ${i + 1}`, email: `u${i + 1}@example.com` }),
+    );
+    mockGetAll.mockImplementation(async (params: { page: number; search?: string }) => {
+      if (params.search === 'zed') {
+        return { data: [makeUser({ _id: 'z1', name: 'Zed Zulu', email: 'zed@example.com' })], page: 1, limit: 8, total: 1 };
+      }
+      return params.page === 2
+        ? { data: [makeUser({ _id: 'u9', name: 'User 9', email: 'u9@example.com' })], page: 2, limit: 8, total: 9 }
+        : { data: page1Users, page: 1, limit: 8, total: 9 };
+    });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('User 1'));
+    await userEvent.click(screen.getByRole('button', { name: /next page/i }));
+    await waitFor(() => screen.getByText('User 9'));
+
+    await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'zed');
+
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, search: 'zed' }),
+      ),
+    );
+    await waitFor(() => expect(screen.getByText('Zed Zulu')).toBeInTheDocument());
+    // No request was ever sent for the new search on the old page.
+    expect(mockGetAll).not.toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, search: 'zed' }),
+    );
+  });
+
+  it('ignores a slow earlier response that arrives after a newer one', async () => {
+    let resolveSlow: (value: unknown) => void = () => {};
+    mockGetAll
+      .mockResolvedValueOnce({ data: [makeUser()], page: 1, limit: 8, total: 1 })
+      .mockReturnValueOnce(new Promise((resolve) => { resolveSlow = resolve; }))
+      .mockResolvedValueOnce({
+        data: [makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com' })],
+        page: 1, limit: 8, total: 1,
+      });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    const search = screen.getByPlaceholderText(/search by name or email/i);
+    await userEvent.type(search, 'a');
+    await waitFor(() => expect(mockGetAll).toHaveBeenCalledTimes(2));
+    await userEvent.type(search, 'b');
+    await waitFor(() => screen.getByText('Bob Jones'));
+
+    // The first (stale) search now resolves — it must not replace Bob's results.
+    resolveSlow({ data: [makeUser({ _id: 'u3', name: 'Stale Person', email: 'stale@example.com' })], page: 1, limit: 8, total: 1 });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(screen.getByText('Bob Jones')).toBeInTheDocument();
+    expect(screen.queryByText('Stale Person')).not.toBeInTheDocument();
+  });
+
+  it('refetches users after inviting, so a new member can be searched for immediately', async () => {
+    const dave = makeUser({ _id: 'u4', name: 'Dave New', email: 'dave@example.com', role: 'Viewer' });
+    let daveExists = false;
+    mockGetAll.mockImplementation(async (params: { search?: string }) => {
+      const all = daveExists ? [makeUser(), dave] : [makeUser()];
+      const data = params.search
+        ? all.filter((u) => u.name.toLowerCase().includes(params.search!.toLowerCase()))
+        : all;
+      return { data, page: 1, limit: 8, total: data.length };
+    });
+    mockInvSend.mockImplementation(async () => { daveExists = true; return {}; });
+    mockInvList.mockResolvedValue([]);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+    expect(screen.queryByText('Dave New')).not.toBeInTheDocument();
+    const callsBeforeInvite = mockGetAll.mock.calls.length;
+
+    await userEvent.click(screen.getByRole('button', { name: /invite member/i }));
+    await userEvent.type(screen.getByLabelText(/email address/i), 'dave@example.com');
+    await userEvent.click(screen.getByRole('button', { name: /send invite/i }));
+
+    // The list is reloaded from the API — not served from the old local page.
+    await waitFor(() => expect(mockGetAll.mock.calls.length).toBeGreaterThan(callsBeforeInvite));
+    await waitFor(() => expect(screen.getByText('Dave New')).toBeInTheDocument());
+
+    // Searching straight away goes to the server and finds the new member.
+    await userEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    await userEvent.type(screen.getByPlaceholderText(/search by name or email/i), 'dave');
+    await waitFor(() =>
+      expect(mockGetAll).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'dave' })),
+    );
+    await waitFor(() => expect(screen.queryByText('Alice Smith')).not.toBeInTheDocument());
+    expect(screen.getByText('Dave New')).toBeInTheDocument();
+  });
+
+  // ── Self-guard (#889) ─────────────────────────────────────────────────────
+
+  it('disables the role select for the currently signed-in user', async () => {
+    mockUseAuthContext.mockReturnValue({ userId: 'u1', role: 'Admin', isAuthenticated: true, isLoading: false, logout: vi.fn() });
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    // The role dropdown for the current user should be disabled
+    const roleSelects = screen.getAllByRole('combobox');
+    const selfSelect = roleSelects.find((s) => (s as HTMLSelectElement).value === 'Admin');
+    expect(selfSelect).toBeDefined();
+    expect(selfSelect).toBeDisabled();
+  });
+
+  it('shows an error toast when trying to change own role (extra guard)', async () => {
+    mockUseAuthContext.mockReturnValue({ userId: 'u1', role: 'Admin', isAuthenticated: true, isLoading: false, logout: vi.fn() });
+    mockUpdateRole.mockResolvedValue({});
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    // Directly trigger handleRoleChange by enabling select and changing it
+    // In practice the select is disabled, but we test the function guard anyway
+    // by finding the disabled select and forcefully firing a change event
+    const roleSelects = screen.getAllByRole('combobox');
+    const selfSelect = roleSelects.find((s) => (s as HTMLSelectElement).value === 'Admin')!;
+    // Remove disabled attribute temporarily and fire change
+    selfSelect.removeAttribute('disabled');
+    await userEvent.selectOptions(selfSelect, 'Viewer');
+
+    await waitFor(() =>
+      expect(addToast).toHaveBeenCalledWith('You cannot change your own role.', 'error'),
+    );
+    expect(mockUpdateRole).not.toHaveBeenCalled();
+  });
+
+  it('shows confirm dialog before deactivating another user', async () => {
+    mockDeactivate.mockResolvedValue({});
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    const menuTriggers = screen.getAllByRole('button').filter(
+      (b) => b.querySelector('svg') && !b.textContent?.trim(),
+    );
+    await userEvent.click(menuTriggers[0]);
+    await userEvent.click(screen.getByRole('button', { name: /deactivate/i }));
+
+    // ConfirmDialog should now be open
+    await waitFor(() =>
+      expect(screen.getByRole('dialog', { name: /deactivate user/i })).toBeInTheDocument(),
+    );
+    // API not called yet
+    expect(mockDeactivate).not.toHaveBeenCalled();
+  });
+
+  it('deactivates user after confirmation', async () => {
+    mockDeactivate.mockResolvedValue({});
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    const menuTriggers = screen.getAllByRole('button').filter(
+      (b) => b.querySelector('svg') && !b.textContent?.trim(),
+    );
+    await userEvent.click(menuTriggers[0]);
+
+    // Click Deactivate to open confirm dialog
+    const deactivateBtn = await waitFor(() => screen.getByRole('button', { name: /deactivate/i }));
+    await userEvent.click(deactivateBtn);
+
+    // Confirm in the dialog
+    await waitFor(() => screen.getByRole('dialog', { name: /deactivate user/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^confirm$/i }));
+
+    await waitFor(() => expect(mockDeactivate).toHaveBeenCalledWith('u1'));
+    expect(addToast).toHaveBeenCalledWith(expect.stringContaining('deactivated'), 'success');
+  });
+
+  it('shows last-admin error toast on 409 role change', async () => {
+    // Set up: two users, current user is u2 so Alice (u1) is not blocked by self-guard
+    mockUseAuthContext.mockReturnValue({ userId: 'u2', role: 'Admin', isAuthenticated: true, isLoading: false, logout: vi.fn() });
+    mockGetAll.mockResolvedValue({
+      data: [
+        makeUser(),
+        makeUser({ _id: 'u2', name: 'Bob Jones', email: 'bob@example.com', role: 'Admin' }),
+      ],
+      page: 1, limit: 8, total: 2,
+    });
+    mockInvList.mockResolvedValue([]);
+    const err = Object.assign(new Error('last admin'), { response: { status: 409 } });
+    mockUpdateRole.mockRejectedValue(err);
+
+    render(<UserManagement />);
+    await waitFor(() => screen.getByText('Alice Smith'));
+
+    // Change Alice's role — she's u1, current user is u2, so self-guard doesn't fire
+    const roleSelects = screen.getAllByRole('combobox');
+    // Find Alice's select (not disabled, first Admin select)
+    const aliceSelect = roleSelects.find(
+      (s) => (s as HTMLSelectElement).value === 'Admin' && !s.hasAttribute('disabled'),
+    )!;
+    await userEvent.selectOptions(aliceSelect, 'Viewer');
+
+    await waitFor(() =>
+      expect(addToast).toHaveBeenCalledWith('Cannot demote the last admin.', 'error'),
     );
   });
 });

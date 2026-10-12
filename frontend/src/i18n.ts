@@ -1,5 +1,6 @@
-import i18n from "i18next";
+import i18n, { type ResourceKey } from "i18next";
 import { initReactI18next } from "react-i18next";
+import resourcesToBackend from "i18next-resources-to-backend";
 
 import enCommon from "./locales/en/common.json";
 import enAuth from "./locales/en/auth.json";
@@ -7,59 +8,93 @@ import enDashboard from "./locales/en/dashboard.json";
 import enShipments from "./locales/en/shipments.json";
 import enSettings from "./locales/en/settings.json";
 import enLanding from "./locales/en/landing.json";
-import frCommon from "./locales/fr/common.json";
-import frAuth from "./locales/fr/auth.json";
-import frDashboard from "./locales/fr/dashboard.json";
-import frShipments from "./locales/fr/shipments.json";
-import frSettings from "./locales/fr/settings.json";
-import frLanding from "./locales/fr/landing.json";
-import esCommon from "./locales/es/common.json";
-import esAuth from "./locales/es/auth.json";
-import esDashboard from "./locales/es/dashboard.json";
-import esShipments from "./locales/es/shipments.json";
-import esSettings from "./locales/es/settings.json";
-import esLanding from "./locales/es/landing.json";
 
+const supportedLanguages = ["en", "fr", "es"] as const;
+type SupportedLanguage = (typeof supportedLanguages)[number];
 
-const savedLanguage =
-  typeof window !== "undefined"
-    ? localStorage.getItem("language") || "en"
-    : "en";
-i18n.use(initReactI18next).init({
-  lng: savedLanguage,
-  fallbackLng: "en",
-  defaultNS: "common",
+const namespaces = ["common", "auth", "dashboard", "shipments", "settings", "landing"] as const;
 
-  interpolation: {
-    escapeValue: false,
-  },
+const isSupportedLanguage = (value: string): value is SupportedLanguage =>
+  (supportedLanguages as readonly string[]).includes(value);
 
-  resources: {
-    en: {
-      common: enCommon,
-      auth: enAuth,
-      dashboard: enDashboard,
-      shipments: enShipments,
-      settings: enSettings,
-      landing: enLanding,
+const detectBrowserLanguage = (): SupportedLanguage => {
+  if (typeof navigator === "undefined") return "en";
+
+  const candidates = [
+    ...(navigator.languages ?? []),
+    navigator.language,
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const base = candidate.toLowerCase().split("-")[0];
+    if (isSupportedLanguage(base)) return base;
+  }
+
+  return "en";
+};
+
+const getInitialLanguage = (): SupportedLanguage => {
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("language");
+    if (saved && isSupportedLanguage(saved)) return saved;
+  }
+
+  return detectBrowserLanguage();
+};
+
+// Every locale except English is its own chunk, fetched the first time that
+// language is needed — at startup for a non-English visitor, or on a switch.
+const lazyLocales = import.meta.glob<{ default: ResourceKey }>([
+  "./locales/*/*.json",
+  "!./locales/en/*.json",
+]);
+
+i18n
+  .use(initReactI18next)
+  .use(
+    resourcesToBackend((language: string, namespace: string) => {
+      const load = lazyLocales[`./locales/${language}/${namespace}.json`];
+      return load
+        ? load()
+        : Promise.reject(new Error(`No "${namespace}" locale for "${language}"`));
+    }),
+  )
+  .init({
+    lng: getInitialLanguage(),
+    fallbackLng: "en",
+    supportedLngs: supportedLanguages,
+    ns: namespaces,
+    defaultNS: "common",
+
+    interpolation: {
+      escapeValue: false,
     },
-    fr: {
-      common: frCommon,
-      auth: frAuth,
-      dashboard: frDashboard,
-      shipments: frShipments,
-      settings: frSettings,
-      landing: frLanding,
+
+    // English stays bundled so the fallback is available without a network round-trip.
+    resources: {
+      en: {
+        common: enCommon,
+        auth: enAuth,
+        dashboard: enDashboard,
+        shipments: enShipments,
+        settings: enSettings,
+        landing: enLanding,
+      },
     },
-    es: {
-      common: esCommon,
-      auth: esAuth,
-      dashboard: esDashboard,
-      shipments: esShipments,
-      settings: esSettings,
-      landing: esLanding,
+    partialBundledLanguages: true,
+
+    // Render the bundled English copy while another language loads instead of
+    // suspending; components re-render once their namespace arrives.
+    react: {
+      useSuspense: false,
     },
-  },
-});
+  });
+
+if (typeof document !== "undefined") {
+  document.documentElement.lang = i18n.language || "en";
+  i18n.on("languageChanged", (lng: string) => {
+    document.documentElement.lang = lng;
+  });
+}
 
 export default i18n;

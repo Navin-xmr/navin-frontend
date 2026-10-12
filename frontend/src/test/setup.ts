@@ -39,6 +39,23 @@ Object.defineProperty(window, 'IntersectionObserver', {
   configurable: true,
 });
 
+// jsdom does not implement matchMedia — report "no match" for every query.
+// Tests that care about a specific query redefine this property themselves.
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  configurable: true,
+  value: (query: string): MediaQueryList => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }),
+});
+
 // Replace localStorage/sessionStorage with reliable in-memory implementations.
 const makeStorage = () => {
   const store: Record<string, string> = {};

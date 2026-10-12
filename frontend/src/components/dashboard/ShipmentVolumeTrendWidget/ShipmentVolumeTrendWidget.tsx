@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, Minus, LineChart } from 'lucide-react';
 import { MOCK_TREND_DATA } from './mockTrendData';
-import type { TimeRange, Granularity, TrendDataPoint } from './mockTrendData';
+import type { TimeRange, Granularity, TrendDataPoint } from './types';
 import { ChartLoading } from '../../ui/ChartLoading';
 import { ChartError } from '../../ui/ChartError';
 import { WidgetRefreshIndicator } from '@components/dashboard/WidgetRefreshIndicator';

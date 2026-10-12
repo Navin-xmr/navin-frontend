@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronDown,
@@ -19,6 +19,7 @@ import {
   SettlementStatus,
   SettlementDetail,
 } from "@services/api/endpoints/settlements";
+import { getStellarExpertTxUrl } from "@utils/stellar";
 
 const statusClasses: Record<SettlementStatus, string> = {
   PENDING:
@@ -44,11 +45,6 @@ const statusDotClasses: Record<SettlementStatus, string> = {
 const truncateHash = (hash?: string) => {
   if (!hash) return "-";
   return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
-};
-
-const getStellarExplorerUrl = (hash?: string) => {
-  if (!hash) return undefined;
-  return `https://stellar.expert/explorer/public/tx/${hash}`;
 };
 
 interface PaymentDetailModalProps {
@@ -136,7 +132,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
               <dd className="text-right">
                 {effective.stellarTxHash ? (
                   <a
-                    href={getStellarExplorerUrl(effective.stellarTxHash)}
+                    href={getStellarExpertTxUrl(effective.stellarTxHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-[#62ffff] inline-flex items-center gap-1 hover:underline"
@@ -160,7 +156,7 @@ const PaymentDetailModal: React.FC<PaymentDetailModalProps> = ({
           </button>
           {effective.stellarTxHash && (
             <a
-              href={getStellarExplorerUrl(effective.stellarTxHash)}
+              href={getStellarExpertTxUrl(effective.stellarTxHash)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 px-3 py-2 rounded-lg bg-[#00d4c8] text-black text-center text-sm font-semibold hover:bg-[#13baba] transition-colors"
@@ -193,34 +189,46 @@ const PaymentHistory: React.FC = () => {
   const [total, setTotal] = useState(0);
   const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
 
-  const load = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await settlementsApi.getSettlements({
-        page: currentPage,
-        limit: itemsPerPage,
-        status: filterStatus === "All" ? undefined : filterStatus,
-        sortBy: "createdAt",
-        sortOrder,
-      });
-      setPayments(res.data);
-      setTotal(res.total);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load payment history");
-      setPayments([]);
-      setTotal(0);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      void load();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, filterStatus, sortOrder]);
+    // Aborting in cleanup means a superseded request can never write its result.
+    const controller = new AbortController();
+
+    async function load() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await settlementsApi.getSettlements(
+          {
+            page: currentPage,
+            limit: itemsPerPage,
+            status: filterStatus === "All" ? undefined : filterStatus,
+            sortBy: "createdAt",
+            sortOrder,
+          },
+          { signal: controller.signal },
+        );
+        if (!controller.signal.aborted) {
+          setPayments(res.data);
+          setTotal(res.total);
+        }
+      } catch (e) {
+        if (controller.signal.aborted) return;
+        setError(e instanceof Error ? e.message : "Failed to load payment history");
+        setPayments([]);
+        setTotal(0);
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void load();
+    return () => controller.abort();
+  }, [currentPage, filterStatus, itemsPerPage, sortOrder, reloadKey]);
 
   const openPaymentDetail = async (payment: Settlement) => {
     setSelectedPayment(payment);
@@ -235,6 +243,18 @@ const PaymentHistory: React.FC = () => {
     } finally {
       setIsModalLoading(false);
     }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedPayment(null);
+    setSelectedDetail(null);
+  };
+
+  // A new sort order or filter restarts from the first page.
+  const handleSortToggle = () => {
+    setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
+    setCurrentPage(1);
   };
 
   const tableContainerClass =
@@ -268,7 +288,7 @@ const PaymentHistory: React.FC = () => {
             label: "Retry",
             onClick: () => {
               setCurrentPage(1);
-              void load();
+              reload();
             },
           }}
         />
@@ -276,16 +296,7 @@ const PaymentHistory: React.FC = () => {
     );
   }
 
-  if (!isLoading && payments.length === 0) {
-    return (
-      <div className="p-6 md:p-4">
-        <div className="mb-6">{pageHeader}</div>
-        <div className={tableContainerClass}>
-          <EmptyState.NoPayments />
-        </div>
-      </div>
-    );
-  }
+  const isEmpty = !isLoading && payments.length === 0;
 
   return (
     <div className="p-6 md:p-4">
@@ -318,9 +329,7 @@ const PaymentHistory: React.FC = () => {
           <button
             type="button"
             className="inline-flex items-center gap-2 bg-[rgba(19,186,186,0.1)] border border-[rgba(98,255,255,0.2)] text-text-primary px-3.5 py-2 rounded-lg text-sm font-medium cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#62ffff] focus-visible:ring-offset-1 focus-visible:ring-offset-background hover:border-[#62ffff] hover:bg-[rgba(19,186,186,0.15)] transition-colors max-md:w-full max-md:justify-center"
-            onClick={() =>
-              setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
-            }
+            onClick={handleSortToggle}
             aria-label={`Sort by date ${sortOrder === "desc" ? "newest first" : "oldest first"}`}
             aria-pressed={sortOrder === "desc"}
           >
@@ -336,16 +345,23 @@ const PaymentHistory: React.FC = () => {
       {/* Payment Summary Cards */}
       <PaymentSummaryCards />
 
+      {/* No rows: the header controls stay so the filter can be changed back. */}
+      {isEmpty && (
+        <div className={tableContainerClass}>
+          <EmptyState.NoPayments />
+        </div>
+      )}
+
       {/* Desktop table — hidden on mobile */}
-      <div className={`${tableContainerClass} hidden md:block overflow-x-auto`}>
+      <div
+        className={`${tableContainerClass} overflow-x-auto ${isEmpty ? "hidden" : "hidden md:block"}`}
+      >
         <table className="w-full border-collapse min-w-[700px]">
           <thead className="bg-[rgba(19,186,186,0.1)]">
             <tr>
               <th
                 className={`${thClass} cursor-pointer select-none`}
-                onClick={() =>
-                  setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))
-                }
+                onClick={handleSortToggle}
                 aria-sort={sortOrder === "desc" ? "descending" : "ascending"}
               >
                 <span className="inline-flex items-center gap-2">
@@ -356,6 +372,7 @@ const PaymentHistory: React.FC = () => {
               <th className={thClass}>Amount</th>
               <th className={thClass}>Status</th>
               <th className={thClass}>Transaction Hash</th>
+              <th className={`${thClass} text-right`}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -404,7 +421,7 @@ const PaymentHistory: React.FC = () => {
                   <td className={`${tdClass} font-mono text-xs`}>
                     {payment.stellarTxHash ? (
                       <a
-                        href={getStellarExplorerUrl(payment.stellarTxHash)}
+                        href={getStellarExpertTxUrl(payment.stellarTxHash)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
@@ -417,6 +434,18 @@ const PaymentHistory: React.FC = () => {
                       <span className="text-text-secondary">-</span>
                     )}
                   </td>
+                  <td className={`${tdClass} text-right`}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void openPaymentDetail(payment);
+                      }}
+                      className="bg-transparent border-none p-0 text-xs font-semibold text-[#62ffff] cursor-pointer hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#62ffff]"
+                    >
+                      View
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -425,7 +454,7 @@ const PaymentHistory: React.FC = () => {
       </div>
 
       {/* Mobile card list — hidden on md+ */}
-      <div className="md:hidden flex flex-col gap-3 mb-5">
+      <div className={`md:hidden flex-col gap-3 mb-5 ${isEmpty ? "hidden" : "flex"}`}>
         {isLoading
           ? [...Array(4)].map((_, i) => (
               <div
@@ -492,7 +521,7 @@ const PaymentHistory: React.FC = () => {
                   <span className="text-[11px] text-text-secondary">Tx Hash</span>
                   {payment.stellarTxHash ? (
                     <a
-                      href={getStellarExplorerUrl(payment.stellarTxHash)}
+                      href={getStellarExpertTxUrl(payment.stellarTxHash)}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
@@ -510,12 +539,14 @@ const PaymentHistory: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] max-md:flex-col max-md:gap-4">
+      <div className={`${isEmpty ? "hidden" : "flex"} justify-between items-center px-6 py-4 bg-[rgba(19,186,186,0.05)] border border-[rgba(98,255,255,0.2)] rounded-xl shadow-[inset_0_0_15px_0px_rgba(0,128,128,0.2)] max-md:flex-col max-md:gap-4`}>
         <div className="text-sm text-text-secondary">
           Page {currentPage} of {totalPages} &middot; {total} total
         </div>
         <div className="flex gap-2 max-md:w-full max-md:justify-center flex-wrap">
           <button
+            type="button"
+            aria-label="Previous page"
             onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
             className="bg-transparent border border-[rgba(98,255,255,0.2)] text-text-primary px-3 py-2 rounded-md text-sm font-medium cursor-pointer flex items-center justify-center min-w-9 transition-all hover:not-disabled:bg-[rgba(98,255,255,0.1)] hover:not-disabled:border-[#62ffff] hover:not-disabled:text-[#62ffff] disabled:opacity-30 disabled:cursor-not-allowed"
@@ -525,6 +556,9 @@ const PaymentHistory: React.FC = () => {
           {[...Array(totalPages)].map((_, i) => (
             <button
               key={i + 1}
+              type="button"
+              aria-label={`Page ${i + 1}`}
+              aria-current={currentPage === i + 1 ? "page" : undefined}
               onClick={() => setCurrentPage(i + 1)}
               className={`border px-3 py-2 rounded-md text-sm font-semibold cursor-pointer min-w-9 transition-all ${
                 currentPage === i + 1
@@ -536,6 +570,8 @@ const PaymentHistory: React.FC = () => {
             </button>
           ))}
           <button
+            type="button"
+            aria-label="Next page"
             onClick={() =>
               setCurrentPage((prev) => Math.min(totalPages, prev + 1))
             }
@@ -549,7 +585,7 @@ const PaymentHistory: React.FC = () => {
 
       <PaymentDetailModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeModal}
         settlement={selectedPayment}
         detail={selectedDetail}
         isLoading={isModalLoading}

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -12,8 +13,8 @@ import ErrorFallback from '@components/ErrorFallback/ErrorFallback';
 import StatCard, { type StatCardProps } from '../../components/dashboard/StatCard/StatCard';
 import ShipmentVolumeChart from '../../components/dashboard/Charts/ShipmentVolumeChart/ShipmentVolumeChart';
 import DeliverySuccessChart from '../../components/dashboard/Charts/DeliverySuccessChart/DeliverySuccessChart';
-import type { DailyVolume } from '../../components/dashboard/Charts/ShipmentVolumeChart/mockVolumeData';
-import type { DeliveryOutcome } from '../../components/dashboard/Charts/DeliverySuccessChart/mockDeliveryData';
+import type { DailyVolume } from '../../components/dashboard/Charts/ShipmentVolumeChart/types';
+import type { DeliveryOutcome } from '../../components/dashboard/Charts/DeliverySuccessChart/types';
 import AnalyticsFilters, { type AnalyticsFiltersValues } from './AnalyticsFilters';
 import { useAnalytics } from './hooks/useAnalytics';
 import { getStatusColorHex } from '../../utils/shipmentStatus';
@@ -38,6 +39,7 @@ function formatDelta(current: number, previous: number, suffix = ''): string {
 }
 
 const Analytics: React.FC = () => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<AnalyticsFiltersValues>(defaultFilters);
   const dateRangeInvalid =
     !!filters.startDate && !!filters.endDate && filters.startDate > filters.endDate;
@@ -93,6 +95,7 @@ const Analytics: React.FC = () => {
           trendType:
             summary.onTimeDeliveryRate >= summary.onTimeDeliveryRatePrev ? 'up' : 'down',
           icon: <CheckCircle2 size={18} />,
+          onClick: () => navigate('/dashboard/shipments?status=delivered&lateFilter=on-time'),
         },
         {
           label: 'Average Transit Time',
@@ -101,6 +104,7 @@ const Analytics: React.FC = () => {
           trendType:
             summary.averageTransitDays <= summary.averageTransitDaysPrev ? 'up' : 'down',
           icon: <Clock size={18} />,
+          onClick: () => navigate('/dashboard/settlements?sort=duration'),
         },
         {
           label: 'Dispute Rate',

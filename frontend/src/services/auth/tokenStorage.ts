@@ -16,6 +16,14 @@
 
 const TOKEN_KEY = "authToken";
 
+type TokenChangeListener = () => void;
+
+const listeners = new Set<TokenChangeListener>();
+
+function notifyTokenChange(): void {
+  listeners.forEach((listener) => listener());
+}
+
 /** Returns the stored auth token, or null if none is present. */
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -24,9 +32,41 @@ export function getToken(): string | null {
 /** Persists an auth token. */
 export function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
+  notifyTokenChange();
 }
 
 /** Removes the stored auth token (logout / session expiry). */
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
+  notifyTokenChange();
+}
+
+/**
+ * Subscribes to token writes made through this module (login, signup, refresh,
+ * logout) so auth state can update without a page reload. Returns an
+ * unsubscribe function.
+ */
+export function onTokenChange(listener: TokenChangeListener): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/**
+ * Subscribes to token changes made in *other* tabs of the same origin (the
+ * browser fires `storage` events only in tabs that did not make the write).
+ * The listener receives the new token, or null when it was removed — which
+ * includes `localStorage.clear()`, reported as an event with a null key.
+ * Returns an unsubscribe function.
+ */
+export function onCrossTabTokenChange(listener: (token: string | null) => void): () => void {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.storageArea !== localStorage) return;
+    if (event.key !== null && event.key !== TOKEN_KEY) return;
+    listener(event.key === null ? null : event.newValue);
+  };
+
+  window.addEventListener("storage", handleStorage);
+  return () => window.removeEventListener("storage", handleStorage);
 }

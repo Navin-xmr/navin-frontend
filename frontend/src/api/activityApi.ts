@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiClient } from '@services/api/client';
 
 export type ActivityEventIcon =
     | 'Truck'
@@ -42,7 +42,7 @@ export const activityApi = {
         if (typeof params.limit === 'number') queryParams.set('limit', String(params.limit));
         if (typeof params.before === 'string' && params.before.length > 0) queryParams.set('before', params.before);
 
-        const res = await axios.get('/api/activity', {
+        const res = await apiClient.get('/activity', {
             params: Object.fromEntries(queryParams.entries()),
         });
 

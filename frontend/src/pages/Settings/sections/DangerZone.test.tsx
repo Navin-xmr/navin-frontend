@@ -64,7 +64,7 @@ describe('DangerZone', () => {
     await user.click(screen.getByRole('button', { name: /delete account/i }));
 
     await waitFor(() => {
-      expect(apiClient.delete).toHaveBeenCalledWith('/api/users/me');
+      expect(apiClient.delete).toHaveBeenCalledWith('/users/me');
     });
     await waitFor(() => {
       expect(localStorage.getItem('authToken')).toBeNull();
@@ -96,7 +96,7 @@ describe('DangerZone', () => {
     await user.click(screen.getByRole('button', { name: /export my data/i }));
 
     await waitFor(() => {
-      expect(apiClient.get).toHaveBeenCalledWith('/api/users/me/export', { responseType: 'blob' });
+      expect(apiClient.get).toHaveBeenCalledWith('/users/me/export', { responseType: 'blob' });
     });
     expect(addToast).toHaveBeenCalledWith('Your data export has started downloading.', 'success');
   });

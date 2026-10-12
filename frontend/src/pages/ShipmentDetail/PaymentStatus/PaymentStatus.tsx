@@ -1,5 +1,6 @@
 import React from "react";
 import { ExternalLink, Wallet, CreditCard, ArrowRightLeft, Hash, Coins } from "lucide-react";
+import { getStellarExpertTxUrl } from "@utils/stellar";
 
 export type PaymentStatusType = "pending" | "escrowed" | "released" | "failed";
 
@@ -35,9 +36,6 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({ payment }) => {
     if (address.length <= 12) return address;
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
-
-  const getStellarExplorerUrl = (txHash: string): string =>
-    `https://stellar.expert/explorer/testnet/tx/${txHash}`;
 
   return (
     <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl px-8 py-12 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] mt-8 md:px-5 md:py-8 md:rounded-2xl sm:px-4 sm:py-6">
@@ -111,7 +109,7 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({ payment }) => {
               <div className="flex-1 min-w-0">
                 <p className="text-[rgba(255,255,255,0.5)] text-sm m-0 mb-1">Transaction Hash</p>
                 <a
-                  href={getStellarExplorerUrl(payment.transactionHash)}
+                  href={getStellarExpertTxUrl(payment.transactionHash)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[#00d4c8] text-base font-medium font-mono hover:text-[#1fffff] transition-colors group"
@@ -147,7 +145,7 @@ const PaymentStatus: React.FC<PaymentStatusProps> = ({ payment }) => {
                 <div className="flex-1 min-w-0">
                   <p className="text-[rgba(255,255,255,0.5)] text-sm m-0 mb-1">Tokenization Tx</p>
                   <a
-                    href={getStellarExplorerUrl(payment.stellarTxHash)}
+                    href={getStellarExpertTxUrl(payment.stellarTxHash)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-[#00d4c8] text-base font-medium font-mono hover:text-[#1fffff] transition-colors group"

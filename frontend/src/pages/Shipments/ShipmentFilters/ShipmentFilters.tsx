@@ -60,6 +60,8 @@ function loadFiltersFromURL(sp: URLSearchParams): ShipmentFiltersValues {
 function serializeToURL(sp: URLSearchParams, f: ShipmentFiltersValues): URLSearchParams {
   const next = new URLSearchParams();
   for (const [k, v] of sp.entries()) {
+    // Changing filters restarts pagination, so the page param is not carried over.
+    if (k === 'page') continue;
     if (!(FILTER_KEYS as readonly string[]).includes(k as keyof ShipmentFiltersValues)) {
       next.set(k, v);
     }
@@ -124,8 +126,7 @@ const ShipmentFilters: React.FC<ShipmentFiltersProps> = ({ onFilterChange }) => 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, notify]);
 
   const immediate = useCallback((next: ShipmentFiltersValues) => {
     skipDebounce.current = true;

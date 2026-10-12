@@ -3,13 +3,20 @@ import { describe, it, expect } from "vitest";
 import App from "../App";
 import { ToastProvider } from "../context/ToastContext";
 import { LiveRegionProvider } from "../context/LiveRegionContext";
+import { WalletProvider } from "../context/WalletContext";
+import { ThemeProvider } from "../hooks/useTheme";
 
 describe("App", () => {
-  it("renders without crashing", () => {
+  // Same provider tree as main.tsx: AuthProvider (inside App) needs the wallet.
+  it("renders the landing page without crashing", () => {
     render(
       <LiveRegionProvider>
         <ToastProvider>
-          <App />
+          <WalletProvider>
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
+          </WalletProvider>
         </ToastProvider>
       </LiveRegionProvider>,
     );

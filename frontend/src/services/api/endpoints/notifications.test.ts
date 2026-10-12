@@ -223,3 +223,55 @@ describe('notificationsApi.getUnreadCount', () => {
     await expect(notificationsApi.getUnreadCount()).rejects.toThrow('Network error');
   });
 });
+
+describe('notificationsApi.markManyAsRead', () => {
+  it('PATCHes bulk read endpoint with notification IDs', async () => {
+    mockApiClient.patch.mockResolvedValueOnce({
+      data: { data: { succeeded: ['n1', 'n2'], failed: [] } },
+    });
+
+    const result = await notificationsApi.markManyAsRead(['n1', 'n2']);
+
+    expect(mockApiClient.patch).toHaveBeenCalledWith('/notifications/bulk/read', {
+      ids: ['n1', 'n2'],
+    });
+    expect(result).toEqual({ succeeded: ['n1', 'n2'], failed: [] });
+  });
+
+  it('handles partial failures reported by backend', async () => {
+    mockApiClient.patch.mockResolvedValueOnce({
+      data: { succeeded: ['n1'], failed: ['n2'] },
+    });
+
+    const result = await notificationsApi.markManyAsRead(['n1', 'n2']);
+
+    expect(result).toEqual({ succeeded: ['n1'], failed: ['n2'] });
+  });
+
+  it('propagates a rejection from the API', async () => {
+    mockApiClient.patch.mockRejectedValueOnce(new Error('Internal server error'));
+
+    await expect(notificationsApi.markManyAsRead(['n1'])).rejects.toThrow('Internal server error');
+  });
+});
+
+describe('notificationsApi.deleteMany', () => {
+  it('DELETEs bulk endpoint with notification IDs in request body', async () => {
+    mockApiClient.delete.mockResolvedValueOnce({
+      data: { data: { succeeded: ['n1', 'n2'], failed: [] } },
+    });
+
+    const result = await notificationsApi.deleteMany(['n1', 'n2']);
+
+    expect(mockApiClient.delete).toHaveBeenCalledWith('/notifications/bulk', {
+      data: { ids: ['n1', 'n2'] },
+    });
+    expect(result).toEqual({ succeeded: ['n1', 'n2'], failed: [] });
+  });
+
+  it('propagates a rejection from the API', async () => {
+    mockApiClient.delete.mockRejectedValueOnce(new Error('Forbidden'));
+
+    await expect(notificationsApi.deleteMany(['n1'])).rejects.toThrow('Forbidden');
+  });
+});

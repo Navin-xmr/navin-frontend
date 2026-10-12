@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { isAxiosError } from "axios";
 import { authApi } from "../../../services/api";
 
 interface FormErrors {
@@ -59,8 +60,15 @@ const Login: React.FC = () => {
             await authApi.login({ email: formData.email, password: formData.password });
             const from = location.state?.from?.pathname ?? "/dashboard";
             navigate(from, { replace: true });
-        } catch {
-            setErrors((prev) => ({ ...prev, general: t("login.errorInvalidCredentials") }));
+        } catch (err) {
+            const status = isAxiosError(err) ? err.response?.status : undefined;
+            const key =
+                status === 429
+                    ? "login.errorTooManyAttempts"
+                    : status && status < 500
+                        ? "login.errorInvalidCredentials"
+                        : "login.errorServerUnreachable";
+            setErrors((prev) => ({ ...prev, general: t(key) }));
         } finally {
             setLoading(false);
         }

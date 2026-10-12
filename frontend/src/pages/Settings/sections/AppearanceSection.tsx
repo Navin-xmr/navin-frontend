@@ -1,9 +1,12 @@
 import React from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@hooks/useTheme';
+import LanguageSelect from '@components/common/LanguageSelect';
 
 const AppearanceSection: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation('common');
 
   return (
     <div className="space-y-6">
@@ -56,6 +59,24 @@ const AppearanceSection: React.FC = () => {
             <Monitor size={22} className="text-gray-400 dark:text-slate-400" />
             <span className="text-xs font-medium text-gray-700 dark:text-slate-300">System</span>
           </button>
+        </div>
+
+        <p className="mt-3 text-xs text-gray-500 dark:text-slate-500">
+          Preference is saved locally and persists across sessions.
+        </p>
+      </div>
+
+      {/* Language Section */}
+      <div className="bg-gray-50 dark:bg-[rgba(19,186,186,0.05)] border border-gray-200 dark:border-[rgba(98,255,255,0.2)] rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Globe size={18} className="text-teal-600 dark:text-[#62ffff]" />
+          <h3 className="text-sm font-medium text-gray-700 dark:text-slate-300">
+            {t('language', 'Language')}
+          </h3>
+        </div>
+
+        <div className="max-w-xs">
+          <LanguageSelect variant="default" className="w-full" />
         </div>
 
         <p className="mt-3 text-xs text-gray-500 dark:text-slate-500">

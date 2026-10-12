@@ -1,6 +1,7 @@
 import axios from "axios";
 import { setupAuthInterceptor } from "./interceptors/authInterceptor";
 import { setupErrorInterceptor } from "./interceptors/errorInterceptor";
+import { navigateTo } from "../../utils/navigationBridge";
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -47,4 +48,4 @@ apiClient.interceptors.response.use((response) => {
 });
 
 setupAuthInterceptor(apiClient);
-setupErrorInterceptor(apiClient);
+setupErrorInterceptor(apiClient, navigateTo);

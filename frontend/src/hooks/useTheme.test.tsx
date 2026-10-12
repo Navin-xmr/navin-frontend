@@ -1,8 +1,12 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useTheme } from './useTheme';
+import { useTheme, ThemeProvider } from './useTheme';
 
 const STORAGE_KEY = 'navin-theme';
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <ThemeProvider>{children}</ThemeProvider>
+);
 
 const mockMatchMedia = (matches: boolean) => {
   Object.defineProperty(window, 'matchMedia', {
@@ -31,38 +35,38 @@ describe('useTheme', () => {
   });
 
   it('returns theme and toggleTheme', () => {
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBeDefined();
     expect(typeof result.current.toggleTheme).toBe('function');
   });
 
   it('defaults to light theme when no stored preference and system prefers light', () => {
     mockMatchMedia(false); // prefers-color-scheme: light
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBe('light');
   });
 
   it('defaults to dark theme when system prefers dark and no stored preference', () => {
     mockMatchMedia(true); // prefers-color-scheme: dark
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBe('dark');
   });
 
   it('reads stored theme from localStorage (dark)', () => {
     localStorage.setItem(STORAGE_KEY, 'dark');
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBe('dark');
   });
 
   it('reads stored theme from localStorage (light)', () => {
     localStorage.setItem(STORAGE_KEY, 'light');
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBe('light');
   });
 
   it('toggleTheme switches from light to dark', () => {
     localStorage.setItem(STORAGE_KEY, 'light');
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
 
     act(() => {
       result.current.toggleTheme();
@@ -73,7 +77,7 @@ describe('useTheme', () => {
 
   it('toggleTheme switches from dark to light', () => {
     localStorage.setItem(STORAGE_KEY, 'dark');
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
 
     act(() => {
       result.current.toggleTheme();
@@ -84,7 +88,7 @@ describe('useTheme', () => {
 
   it('toggleTheme persists new theme to localStorage', () => {
     localStorage.setItem(STORAGE_KEY, 'light');
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
 
     act(() => {
       result.current.toggleTheme();
@@ -95,35 +99,27 @@ describe('useTheme', () => {
 
   it('applies dark class to document.documentElement when theme is dark', () => {
     localStorage.setItem(STORAGE_KEY, 'dark');
-    renderHook(() => useTheme());
+    renderHook(() => useTheme(), { wrapper });
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
   it('removes dark class from document.documentElement when theme is light', () => {
     document.documentElement.classList.add('dark');
     localStorage.setItem(STORAGE_KEY, 'light');
-    renderHook(() => useTheme());
+    renderHook(() => useTheme(), { wrapper });
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
 
-  it('responds to storage event for cross-tab sync (dark)', () => {
+  it('persists changes to localStorage', () => {
     localStorage.setItem(STORAGE_KEY, 'light');
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBe('light');
 
     act(() => {
-      localStorage.setItem(STORAGE_KEY, 'dark');
-      window.dispatchEvent(
-        new StorageEvent('storage', {
-          key: STORAGE_KEY,
-          newValue: 'dark',
-          storageArea: localStorage,
-        }),
-      );
+      result.current.toggleTheme();
     });
 
-    // Note: storage event handling is for cross-tab sync;
-    // within same tab the state is managed by React
+    // Verify that toggleTheme persists to localStorage
     expect(localStorage.getItem(STORAGE_KEY)).toBe('dark');
   });
 
@@ -142,7 +138,7 @@ describe('useTheme', () => {
       })),
     });
 
-    const { unmount } = renderHook(() => useTheme());
+    const { unmount } = renderHook(() => useTheme(), { wrapper });
     expect(addListenerMock).toHaveBeenCalledWith('change', expect.any(Function));
 
     unmount();
@@ -167,7 +163,7 @@ describe('useTheme', () => {
       })),
     });
 
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBe('light');
 
     act(() => {
@@ -197,7 +193,7 @@ describe('useTheme', () => {
       })),
     });
 
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper });
     expect(result.current.theme).toBe('light');
 
     act(() => {

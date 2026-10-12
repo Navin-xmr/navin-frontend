@@ -1,8 +1,8 @@
 import React from 'react';
 import { RefreshCw, X } from 'lucide-react';
 
-import type { ExportFormat } from '../../ui/ExportDropdown';
-import ExportDropdown from '../../ui/ExportDropdown';
+import type { ExportFormat } from '@components/ui/ExportDropdown';
+import ExportDropdown from '@components/ui/ExportDropdown';
 
 export interface BulkActionBarProps {
   count: number;

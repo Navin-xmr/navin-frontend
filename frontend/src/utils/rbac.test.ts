@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { can } from './rbac';
+import { can, toUserRole, USER_ROLES } from './rbac';
 
 describe('rbac.can()', () => {
   describe('company role', () => {
@@ -23,5 +23,32 @@ describe('rbac.can()', () => {
 
   describe('null role', () => {
     it('returns false for any action', () => expect(can(null, 'shipment:create')).toBe(false));
+  });
+});
+
+describe('rbac.toUserRole()', () => {
+  it('accepts the roles the frontend knows', () => {
+    expect(toUserRole('company')).toBe('company');
+    expect(toUserRole('customer')).toBe('customer');
+  });
+
+  it('normalises case and surrounding whitespace', () => {
+    expect(toUserRole('COMPANY')).toBe('company');
+    expect(toUserRole(' Customer ')).toBe('customer');
+  });
+
+  it('rejects anything that is not a known role', () => {
+    // The case in #820: a token claiming a role this build cannot route.
+    expect(toUserRole('admin')).toBeNull();
+    expect(toUserRole('driver')).toBeNull();
+    expect(toUserRole('')).toBeNull();
+    expect(toUserRole(null)).toBeNull();
+    expect(toUserRole(undefined)).toBeNull();
+    expect(toUserRole(7)).toBeNull();
+    expect(toUserRole({ role: 'company' })).toBeNull();
+  });
+
+  it('exposes the roles it validates against', () => {
+    expect([...USER_ROLES]).toEqual(['company', 'customer']);
   });
 });

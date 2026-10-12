@@ -20,8 +20,10 @@ vi.mock('../../services/api/endpoints/notifications', () => ({
   notificationsApi: {
     getAll: vi.fn(),
     markAsRead: vi.fn(),
+    markManyAsRead: vi.fn(),
     markAllAsRead: vi.fn(),
     deleteOne: vi.fn(),
+    deleteMany: vi.fn(),
     getUnreadCount: vi.fn(),
   },
 }));
@@ -38,8 +40,10 @@ import { realtimeService } from '@services/realtime/realtimeService';
 
 const mockGetAll = notificationsApi.getAll as ReturnType<typeof vi.fn>;
 const mockMarkAsRead = notificationsApi.markAsRead as ReturnType<typeof vi.fn>;
+const mockMarkManyAsRead = notificationsApi.markManyAsRead as ReturnType<typeof vi.fn>;
 const mockMarkAllAsRead = notificationsApi.markAllAsRead as ReturnType<typeof vi.fn>;
 const mockDeleteOne = notificationsApi.deleteOne as ReturnType<typeof vi.fn>;
+const mockDeleteMany = notificationsApi.deleteMany as ReturnType<typeof vi.fn>;
 const mockGetUnreadCount = notificationsApi.getUnreadCount as ReturnType<typeof vi.fn>;
 const mockSubscribe = realtimeService.subscribe as ReturnType<typeof vi.fn>;
 
@@ -101,8 +105,10 @@ beforeEach(() => {
   mockGetUnreadCount.mockResolvedValue(2);
   mockGetAll.mockResolvedValue({ data: [notif1, notif2, notif3], meta: defaultMeta });
   mockMarkAsRead.mockResolvedValue(undefined);
+  mockMarkManyAsRead.mockResolvedValue({ succeeded: ['n1', 'n3'], failed: [] });
   mockMarkAllAsRead.mockResolvedValue(undefined);
   mockDeleteOne.mockResolvedValue(undefined);
+  mockDeleteMany.mockResolvedValue({ succeeded: ['n1'], failed: [] });
 });
 
 afterEach(() => {
@@ -287,8 +293,7 @@ describe('bulk selection', () => {
     const toolbar = screen.getByRole('toolbar', { name: 'Bulk notification actions' });
     fireEvent.click(within(toolbar).getByRole('button', { name: /Mark as read/ }));
 
-    await waitFor(() => expect(mockMarkAsRead).toHaveBeenCalledWith('n1'));
-    expect(mockMarkAsRead).toHaveBeenCalledWith('n3');
+    await waitFor(() => expect(mockMarkManyAsRead).toHaveBeenCalledWith(['n1', 'n3']));
     await waitFor(() =>
       expect(screen.queryByRole('toolbar', { name: 'Bulk notification actions' })).not.toBeInTheDocument(),
     );
@@ -306,7 +311,7 @@ describe('bulk selection', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
 
-    await waitFor(() => expect(mockDeleteOne).toHaveBeenCalledWith('n1'));
+    await waitFor(() => expect(mockDeleteMany).toHaveBeenCalledWith(['n1']));
     await waitFor(() => expect(screen.queryByText('Shipment in transit')).not.toBeInTheDocument());
   });
 

@@ -1,6 +1,8 @@
 import { AxiosInstance, AxiosError } from "axios";
 import { notifyToast } from "../../../context/toastBridge";
 import { clearToken } from "../../auth/tokenStorage";
+import { clearAuthenticatedApiCaches } from "../../auth/apiCache";
+import { navigateTo } from "../../../utils/navigationBridge";
 
 // This stops the app from showing multiple pop-ups at the same time if multiple requests fail at once
 let isRedirecting = false;
@@ -46,7 +48,10 @@ const getDescriptiveErrorMessage = (error: AxiosError): string => {
     }
 };
 
-export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path: string) => void) => {
+export const setupErrorInterceptor = (
+    client: AxiosInstance,
+    navigateFn: (path: string) => void = navigateTo,
+) => {
     client.interceptors.response.use(
         (response) => response,
         (error: AxiosError) => {
@@ -77,13 +82,18 @@ export const setupErrorInterceptor = (client: AxiosInstance, navigateFn?: (path:
                         
                         // Clean up old login token safely
                         clearToken();
+                        void clearAuthenticatedApiCaches();
                         
                         // Show the exact toast message requested by the issue
                         notifyToast("Session expired, redirecting to login...", "error");
                         
                         // Wait 2 seconds so the user can read it, then change pages cleanly
                         setTimeout(() => {
-                            navigateFn?.("/login");
+                            // Clearing the token already lets the route guards send the
+                            // user to /login (keeping `state.from`); don't navigate again.
+                            if (!window.location.pathname.startsWith("/login")) {
+                                navigateFn("/login");
+                            }
                             isRedirecting = false;
                         }, 2000);
                     }

@@ -70,7 +70,7 @@ const DisputeForm: React.FC<DisputeFormProps> = ({
       }
 
       const res = await apiClient.post<{ data: DisputeData }>(
-        `/api/shipments/${shipmentId}/disputes`,
+        `/shipments/${shipmentId}/disputes`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },

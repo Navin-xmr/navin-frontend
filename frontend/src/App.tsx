@@ -7,7 +7,7 @@ import ForgotPassword from './pages/auth/ForgotPassword/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPassword/ResetPasswordPage';
 import CompanyRegister from './pages/auth/Register/CompanyRegister';
 import EmailVerification from './pages/auth/EmailVerification/EmailVerification';
-import DashboardLayout from './components/layout/DashboardLayout';
+import VerifyEmailPage from './pages/auth/VerifyEmail/VerifyEmailPage';
 import ProtectedRoute from './components/auth/ProtectedRoute/ProtectedRoute';
 import RoleGuard from './components/auth/RoleGuard';
 import * as Sentry from '@sentry/react';
@@ -15,23 +15,15 @@ import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import ErrorFallback from './components/ErrorFallback/ErrorFallback';
 import OfflineBanner from './components/common/OfflineBanner/OfflineBanner';
 import SlowConnectionBanner from './components/common/SlowConnectionBanner/SlowConnectionBanner';
-import PWAInstallPrompt from './components/ui/PWAInstallPrompt';
-import PageSkeleton from './components/ui/PageSkeleton';
-import { AuthProvider } from './context/AuthContext';
+import PWAInstallPrompt from '@components/ui/PWAInstallPrompt';
+import PageSkeleton from '@components/ui/PageSkeleton';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { RouteTransitionProvider } from './context/RouteTransitionContext';
-import RouteTransition from './components/ui/RouteTransition';
+import RouteTransition from '@components/ui/RouteTransition';
 import { realtimeService } from './services/realtime/realtimeService';
 import PublicTrackingPage from './pages/PublicTracking/PublicTrackingPage';
 import NotFoundPage from '@pages/NotFound/NotFoundPage';
-import './App.css';
-
-// Eagerly loaded (critical path)
-import CompanyDashboard from './pages/dashboard/Company/CompanyDashboard';
-import CustomerDashboard from './pages/dashboard/Customer/CustomerDashboard';
-import AnomalyAlertPanel from './pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel';
-import Shipments from './pages/Shipments/Shipments';
-import CreateShipment from './pages/dashboard/Company/CreateShipment/CreateShipment';
-import CustomerProfile from './pages/dashboard/Customer/Profile/CustomerProfile';
+import { registerNavigationBridge } from '@utils/navigationBridge';
 
 // Lazy loaded
 // Dev-only component demos (lazy-loaded; excluded from production bundle)
@@ -44,6 +36,13 @@ const ConfirmDialogDemo = import.meta.env.DEV
 const SkeletonDemo = import.meta.env.DEV
   ? lazy(() => import('./pages/ComponentDemos/SkeletonDemo/SkeletonDemo'))
   : lazy(() => Promise.resolve({ default: () => null }));
+const DashboardLayout = lazy(() => import('./components/layout/DashboardLayout'));
+const CompanyDashboard = lazy(() => import('./pages/dashboard/Company/CompanyDashboard'));
+const CustomerDashboard = lazy(() => import('./pages/dashboard/Customer/CustomerDashboard'));
+const AnomalyAlertPanel = lazy(() => import('./pages/dashboard/Company/AnomalyPanel/AnomalyAlertPanel'));
+const Shipments = lazy(() => import('./pages/Shipments/Shipments'));
+const CreateShipment = lazy(() => import('./pages/dashboard/Company/CreateShipment/CreateShipment'));
+const ProfileDispatcher = lazy(() => import('./pages/dashboard/ProfileDispatcher/ProfileDispatcher'));
 const ShipmentDetail = lazy(() => import('./pages/ShipmentDetail/ShipmentDetail'));
 const BlockchainLedger = lazy(() => import('./pages/BlockchainLedger/BlockchainLedger'));
 const Settlements = lazy(() => import('./pages/Settlements/Settlements'));
@@ -73,6 +72,7 @@ const router = createBrowserRouter([
   { path: '/reset-password', element: <ResetPasswordPage /> },
   { path: '/register/company', element: <CompanyRegister /> },
   { path: '/register/verify-email', element: <EmailVerification /> },
+  { path: '/verify-email', element: <VerifyEmailPage /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
   { path: '/pagination-demo', element: S(<PaginationDemo />) },
   { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
@@ -82,14 +82,14 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
-        element: <DashboardLayout />,
+        element: S(<DashboardLayout />),
         children: [
           // Company-only routes
           {
             element: <RoleGuard allowedRoles={['company']} />,
             children: [
-              { path: '/dashboard', element: <CompanyDashboard /> },
-              { path: '/dashboard/anomalies', element: <AnomalyAlertPanel /> },
+              { path: '/dashboard', element: S(<CompanyDashboard />) },
+              { path: '/dashboard/anomalies', element: S(<AnomalyAlertPanel />) },
               { path: '/dashboard/blockchain-ledger', element: S(<BlockchainLedger />) },
               { path: '/dashboard/settlements', element: S(<Settlements />) },
               { path: '/dashboard/payments', element: S(<PaymentHistory />) },
@@ -97,7 +97,7 @@ const router = createBrowserRouter([
               { path: '/dashboard/analytics/revenue', element: S(<RevenueAnalytics />) },
               { path: '/dashboard/analytics/exceptions', element: S(<ExceptionDashboard />) },
               { path: '/dashboard/team', element: S(<UserManagement />) },
-              { path: '/dashboard/shipments/create', element: <CreateShipment /> },
+              { path: '/dashboard/shipments/create', element: S(<CreateShipment />) },
               { path: '/dashboard/company-settings', element: S(<CompanySettings />) },
               { path: '/dashboard/calendar', element: S(<CalendarView />) },
             ],
@@ -106,17 +106,17 @@ const router = createBrowserRouter([
           {
             element: <RoleGuard allowedRoles={['customer']} />,
             children: [
-              { path: '/dashboard/customer', element: <CustomerDashboard /> },
+              { path: '/dashboard/customer', element: S(<CustomerDashboard />) },
             ],
           },
           // Shared routes (both roles)
-          { path: '/dashboard/shipments', element: <Shipments /> },
+          { path: '/dashboard/shipments', element: S(<Shipments />) },
           { path: '/dashboard/shipments/:id', element: S(<ShipmentDetail />) },
           { path: '/dashboard/shipments/history', element: S(<ShipmentHistory />) },
           { path: '/dashboard/settings', element: S(<Settings />) },
           { path: '/dashboard/help-center', element: S(<HelpCenter />) },
           { path: '/dashboard/notifications', element: S(<NotificationsPage />) },
-          { path: '/dashboard/profile', element: <CustomerProfile /> },
+          { path: '/dashboard/profile', element: S(<ProfileDispatcher />) },
           { path: '/dashboard/*', element: <NotFoundPage /> },
           { path: '/dashboard/whats-new', element: S(<WhatsNewPage />) },
         ],
@@ -127,36 +127,49 @@ const router = createBrowserRouter([
 ]);
 
 function RealtimeManager() {
+  const { isAuthenticated, userId } = useAuthContext();
+
   useEffect(() => {
-    // Disable realtime service in development if environment variable is set
-    if (import.meta.env.VITE_DISABLE_REALTIME === 'true') {
-      console.log('Realtime service disabled in development mode');
+    if (!isAuthenticated || !userId) {
       return;
     }
-    
+
+    // disconnect() latches the service closed, so it has to be reset before
+    // the next session (or StrictMode's second effect run) can reconnect.
     realtimeService.reset();
     realtimeService.connect();
-    return () => realtimeService.disconnect();
-  }, []);
+
+    return () => {
+      realtimeService.disconnect();
+    };
+  }, [isAuthenticated, userId]);
+
   return null;
 }
 
 function App() {
+  useEffect(() => {
+    registerNavigationBridge((path, options) => {
+      void router.navigate(path, options);
+    });
+    return () => registerNavigationBridge(undefined);
+  }, []);
+
   return (
-    <AuthProvider>
-      <RouteTransitionProvider>
-        <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
-          <ErrorBoundary>
+    <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />}>
+      <ErrorBoundary>
+        <AuthProvider>
+          <RouteTransitionProvider>
             <RouteTransition />
             <OfflineBanner />
             <SlowConnectionBanner />
             <RealtimeManager />
             <RouterProvider router={router} />
             <PWAInstallPrompt />
-          </ErrorBoundary>
-        </Sentry.ErrorBoundary>
-      </RouteTransitionProvider>
-    </AuthProvider>
+          </RouteTransitionProvider>
+        </AuthProvider>
+      </ErrorBoundary>
+    </Sentry.ErrorBoundary>
   );
 }
 

@@ -36,12 +36,27 @@ export interface AuthResponse {
     token: string;
 }
 
+/**
+ * Identifies the authenticated user in Sentry without sending PII.
+ * Only the opaque user ID is sent; the role is attached as a searchable tag.
+ */
+const setSentryUser = (user: AuthUser): void => {
+    Sentry.setUser({ id: user.id });
+    Sentry.setTag('role', user.role);
+};
+
+/** Drops the client-side session: the stored token and the Sentry user. */
+export const clearLocalSession = (): void => {
+    clearToken();
+    Sentry.setUser(null);
+};
+
 export const authApi = {
     login: async (data: LoginRequest): Promise<AuthResponse> => {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/login", data);
         const { token, user } = res.data.data;
         setToken(token);
-        Sentry.setUser({ id: user.id, email: user.email, username: user.role });
+        setSentryUser(user);
         return res.data.data;
     },
 
@@ -49,7 +64,7 @@ export const authApi = {
         const res = await apiClient.post<{ data: AuthResponse }>("/auth/signup", data);
         const { token, user } = res.data.data;
         setToken(token);
-        Sentry.setUser({ id: user.id, email: user.email, username: user.role });
+        setSentryUser(user);
         return res.data.data;
     },
 
@@ -58,9 +73,13 @@ export const authApi = {
     },
 
     logout: async (): Promise<void> => {
-        await apiClient.post("/auth/logout");
-        clearToken();
-        Sentry.setUser(null);
+        try {
+            await apiClient.post("/auth/logout");
+        } finally {
+            // A failed or timed-out request must not leave the user signed in
+            // locally, so client-side cleanup always runs.
+            clearLocalSession();
+        }
     },
 
     refresh: async (): Promise<void> => {
@@ -74,5 +93,13 @@ export const authApi = {
 
     resetPassword: async (data: { token: string; newPassword: string }): Promise<void> => {
         await apiClient.post('/auth/reset-password', data);
+    },
+
+    verifyEmail: async (data: { token: string }): Promise<void> => {
+        await apiClient.post('/auth/verify-email', data);
+    },
+
+    resendVerification: async (data: { email: string }): Promise<void> => {
+        await apiClient.post('/auth/resend-verification', data);
     },
 };

@@ -4,14 +4,8 @@
  * across different time ranges and granularities.
  */
 
-export type TimeRange = '7d' | '30d' | '90d' | '12m';
-export type Granularity = 'daily' | 'weekly' | 'monthly';
+import type { TimeRange, Granularity, TrendDataPoint } from './types';
 
-export interface TrendDataPoint {
-  date: string;
-  completed: number;
-  cancelled: number;
-}
 
 /**
  * Simple seeded pseudo-random number generator (mulberry32)

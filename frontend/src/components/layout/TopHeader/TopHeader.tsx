@@ -3,12 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Menu, User } from "lucide-react";
 import { NotificationDropdown } from "../../notifications/NotificationDropdown/NotificationDropdown";
 import ThemeToggle from "../../ThemeToggle/ThemeToggle";
-import ConnectionStatusDot from "../../ui/ConnectionStatusDot";
+import ConnectionStatusDot from '@components/ui/ConnectionStatusDot';
 import { realtimeService, type ConnectionStatus } from "../../../services/realtime/realtimeService";
 import WalletPill from "../../wallet/WalletPill";
 import NetworkBadge from "../../wallet/NetworkBadge";
 import WalletModal from "../../wallet/WalletModal";
-import Tooltip from "../../ui/Tooltip";
+import Tooltip from '@components/ui/Tooltip';
 import GlobalSearch from "../../common/GlobalSearch/GlobalSearch";
 
 export interface TopHeaderProps {

@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../../common/Modal/Modal';
 import { useToast } from '../../../context/ToastContext';
 import { authApi } from '../../../services/api/endpoints/auth';
-import { getToken, clearToken } from '../../../services/auth/tokenStorage';
+import { getToken } from '../../../services/auth/tokenStorage';
+import { logoutSession } from '../../../services/auth/logoutSession';
+import { useWallet } from '../../../context/WalletContext';
 
 /** Minutes before expiry to show the warning modal. */
 const WARN_BEFORE_MS = 2 * 60 * 1000; // 2 minutes
@@ -28,6 +30,7 @@ export interface SessionTimeoutModalProps {
 const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExtended }) => {
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { disconnect } = useWallet();
 
   const [isOpen, setIsOpen] = useState(false);
   const [countdown, setCountdown] = useState(WARN_BEFORE_MS / 1000);
@@ -37,23 +40,26 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
   const expireTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     if (warnTimerRef.current) clearTimeout(warnTimerRef.current);
     if (expireTimerRef.current) clearTimeout(expireTimerRef.current);
     if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-  };
+  }, []);
 
-  const performLogout = (expired: boolean) => {
+  const performLogout = useCallback((expired: boolean) => {
     clearTimers();
     setIsOpen(false);
-    clearToken();
+    void disconnect();
+    // An expired token can't authenticate POST /auth/logout, so only notify
+    // the server when the user is still signed in.
+    void logoutSession({ notifyServer: !expired });
     if (expired) {
       addToast('Your session has expired. Please sign in again.', 'error');
     }
     navigate('/login', { replace: true });
-  };
+  }, [addToast, clearTimers, disconnect, navigate]);
 
-  const schedule = () => {
+  const schedule = useCallback(() => {
     clearTimers();
     const expiry = getTokenExpiry();
     if (!expiry) return;
@@ -88,7 +94,7 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
     expireTimerRef.current = setTimeout(() => {
       performLogout(true);
     }, msUntilExpire);
-  };
+  }, [clearTimers, performLogout]);
 
   // Initial schedule on mount
   useEffect(() => {
@@ -96,8 +102,7 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
       schedule();
     });
     return clearTimers;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [clearTimers, schedule]);
 
   const formatCountdown = (seconds: number): string => {
     const m = Math.floor(seconds / 60);
@@ -119,9 +124,6 @@ const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({ onSessionExte
   };
 
   const handleSignOut = () => {
-    void authApi.logout().catch(() => {
-      // Ignore logout API errors — we clear local state regardless
-    });
     performLogout(false);
   };
 

@@ -7,4 +7,6 @@ export interface WalletAdapter {
   disconnect(): Promise<void>;
   signTransaction(xdr: string, network: 'testnet' | 'mainnet'): Promise<string>;
   getPublicKey(): Promise<string>;
+  /** Returns the wallet extension's currently selected network, if supported. */
+  getNetwork?(): Promise<'testnet' | 'mainnet'>;
 }

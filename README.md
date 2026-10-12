@@ -1,6 +1,6 @@
 # Navin Frontend
 
-> 🚨 **Contributors:** All PRs must target the `dev` branch, not `main`.  
+> 🚨 **Contributors:** All PRs must target the `main` branch.
 > See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 **Navin** is a blockchain-powered logistics platform that improves supply chain visibility for enterprises through tokenized shipments, immutable milestone tracking, and automated settlements.
@@ -11,6 +11,49 @@ This repository is the **React frontend** of the Navin platform — built with *
 > ⭐ **If this project interests you, please star the repository!**
 > It helps the project grow, attracts contributors, and supports open-source development.
 > [**Star Navin Frontend ⭐**](https://github.com/Navin-xmr/navin-frontend)
+
+---
+
+## Security Headers
+
+The Vercel deployment (`frontend/vercel.json`) sets security headers on every response. Because the app keeps the auth token in `localStorage` and signs Stellar transactions, these headers are a defense-in-depth layer against XSS and clickjacking.
+
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `Content-Security-Policy` | see below | Restricts which origins can load scripts, styles, fonts, images, and connections |
+| `X-Frame-Options` | `DENY` | Prevents clickjacking of wallet-signing flows (legacy fallback for `frame-ancestors`) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Keeps password-reset tokens (in query strings) out of cross-origin `Referer` headers |
+| `X-Content-Type-Options` | `nosniff` | Blocks MIME-type sniffing |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Disables browser features the app does not use |
+
+### Content-Security-Policy
+
+The policy allows only the origins the app actually talks to:
+
+- `'self'` — the app bundle and its own assets
+- **API origin** — the Navin backend (`VITE_API_BASE_URL`); not in the committed policy, see the note below
+- **Soroban RPC** — Stellar RPC endpoint used for contract calls
+- **Sentry ingest** — `https://*.ingest.sentry.io` for error reporting
+- **Fonts** — bundled with the app (see `frontend/src/fonts.css`), so no font CDN is allowed
+- **OpenStreetMap tiles** — `https://*.tile.openstreetmap.org` for Leaflet maps
+
+```
+default-src 'self';
+base-uri 'self';
+object-src 'none';
+frame-ancestors 'none';
+form-action 'self';
+script-src 'self' 'unsafe-inline' https://browser.sentry-cdn.com;
+style-src 'self' 'unsafe-inline';
+font-src 'self' data:;
+img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org;
+connect-src 'self' https://*.sentry.io https://*.ingest.sentry.io https://soroban-testnet.stellar.org https://soroban-mainnet.stellar.org https://horizon-testnet.stellar.org https://horizon.stellar.org;
+worker-src 'self' blob:;
+manifest-src 'self';
+upgrade-insecure-requests;
+```
+
+> **Note:** The API and Soroban RPC origins are environment-specific. Add them to `connect-src` in `frontend/vercel.json` for each deployment (e.g. `https://api.navin.example https://soroban-testnet.stellar.org`). If you need to roll out a change safely, switch the header name to `Content-Security-Policy-Report-Only` first, confirm there are no violations in the browser console, then rename it back to `Content-Security-Policy`.
 
 ---
 
@@ -144,7 +187,7 @@ Quick overview:
 
 > 💡 All components should be written in **TypeScript (`.tsx`)**.
 > Follow the file structure in each issue — it tells you exactly where to create your files.
-> See [TAILWIND_MIGRATION.md](docs/TAILWIND_MIGRATION.md) for styling guidelines (available after Issue #92 is merged).
+> See [Frontend Component & Styling Conventions](docs/FRONTEND_COMPONENT_CONVENTIONS.md) for styling guidelines.
 
 ### Developer Guides
 
@@ -152,9 +195,6 @@ Quick overview:
 |---|---|
 | **[Frontend Component & Styling Conventions](docs/FRONTEND_COMPONENT_CONVENTIONS.md)** | Folder structure, naming rules, Tailwind-first styling, path aliases, and legacy CSS migration policy — **start here** |
 | [Component Conventions](docs/COMPONENT_CONVENTIONS.md) | TypeScript, exports, props interfaces, and dead code rules |
-| [Tailwind Migration Guide](docs/TAILWIND_MIGRATION.md) | Step-by-step CSS → Tailwind conversion reference |
-| [Tailwind Before/After Examples](docs/TAILWIND_BEFORE_AFTER.md) | Side-by-side migration examples |
-| [Tailwind PR Checklist](docs/TAILWIND_PR_CHECKLIST.md) | Checklist for Tailwind migration PRs |
 
 ---
 

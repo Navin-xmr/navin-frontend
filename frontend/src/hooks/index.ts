@@ -20,3 +20,7 @@ export { default as useFormAutosave } from './useFormAutosave';
 export type { UseFormAutosaveOptions, UseFormAutosaveReturn, AutosaveStatus } from './useFormAutosave';
 export { default as useWidgetRefresh } from './useWidgetRefresh';
 export type { UseWidgetRefreshOptions, UseWidgetRefreshReturn, RefreshStatus } from './useWidgetRefresh';
+export { useLocalStorage } from './useLocalStorage';
+export type { UseLocalStorageOptions } from './useLocalStorage';
+export { useLanguage, SUPPORTED_LANGUAGES } from './useLanguage';
+export type { SupportedLanguage, UseLanguageReturn } from './useLanguage';

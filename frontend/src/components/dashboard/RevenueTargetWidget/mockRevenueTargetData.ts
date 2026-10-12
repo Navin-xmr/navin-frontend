@@ -1,13 +1,5 @@
-export interface DailyRevenue {
-  date: string;
-  amount: number;
-}
+import type { DailyRevenue, RevenueTargetData } from './types';
 
-export interface RevenueTargetData {
-  actual: number;
-  target: number;
-  dailyRevenue: DailyRevenue[];
-}
 
 function mulberry32(seed: number) {
   return function random() {

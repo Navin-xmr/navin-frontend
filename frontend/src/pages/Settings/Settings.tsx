@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuthContext } from '@context/AuthContext';
 import { can } from '@utils/rbac';
-import PageSkeleton from '../../components/ui/PageSkeleton';
+import PageSkeleton from '@components/ui/PageSkeleton';
 import Breadcrumb from '@components/common/Breadcrumb';
 
 const ProfileSection = lazy(() => import('./sections/ProfileSection'));

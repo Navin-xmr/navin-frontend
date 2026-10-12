@@ -45,4 +45,18 @@ describe('usePagination', () => {
     expect(result.current.currentPage).toBe(4);
     expect(result.current.pageSize).toBe(25);
   });
+
+  it('returns to page 1 when resetKey changes and keeps the page when it does not', () => {
+    const { result, rerender } = renderHook(
+      ({ resetKey }) => usePagination({ resetKey }),
+      { initialProps: { resetKey: 'status=all' } },
+    );
+
+    act(() => result.current.setPage(4));
+    rerender({ resetKey: 'status=all' });
+    expect(result.current.currentPage).toBe(4);
+
+    rerender({ resetKey: 'status=delivered' });
+    expect(result.current.currentPage).toBe(1);
+  });
 });

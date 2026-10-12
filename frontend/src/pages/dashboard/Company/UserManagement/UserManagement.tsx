@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical,
   X, Loader2, AlertTriangle, Mail, RefreshCw, Trash2, Clock,
@@ -6,10 +6,13 @@ import {
 import { usersApi, invitationsApi } from '@services/api';
 import type { User as ApiUser, UserRole, Invitation } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
+import { useAuthContext } from '../../../../context/AuthContext';
 import { useFocusTrap } from '../../../../hooks/useFocusTrap';
+import { useDebounce } from '../../../../hooks/useDebounce';
 import { usePagination } from '../../../../hooks/usePagination';
-import Avatar from '../../../../components/ui/Avatar';
+import Avatar from '@components/ui/Avatar';
 import Breadcrumb from '@components/common/Breadcrumb';
+import { ConfirmDialog } from '@components/ui/ConfirmDialog';
 
 interface MappedUser {
   id: string;
@@ -36,11 +39,11 @@ type InviteStep = 'form' | 'success';
 
 const UserManagement: React.FC = () => {
   const { addToast } = useToast();
+  const { userId: currentUserId } = useAuthContext();
   const [users, setUsers] = useState<MappedUser[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('All');
-  const { currentPage, pageSize: itemsPerPage, setPage: setCurrentPage, reset: resetPage } = usePagination({ pageSize: 8 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState<ActionMenuState>(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +51,7 @@ const UserManagement: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [inviteStep, setInviteStep] = useState<InviteStep>('form');
+  const [confirmDeactivate, setConfirmDeactivate] = useState<{ id: string; name: string } | null>(null);
 
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<UserRole>('Viewer');
@@ -65,81 +69,144 @@ const UserManagement: React.FC = () => {
   const inviteModalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(inviteModalRef, isModalOpen, closeModal);
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await usersApi.getAll();
-      setUsers(res.data.map(mapApiUser));
-    } catch {
-      setError('Failed to load users. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [total, setTotal] = useState(0);
+  const debouncedSearch = useDebounce(searchQuery, 300);
 
-  const fetchInvitations = useCallback(async () => {
-    try {
-      setInvitationsLoading(true);
-      const data = await invitationsApi.list();
-      setInvitations(data.filter((inv) => inv.status === 'pending'));
-    } catch {
-      // non-critical
-    } finally {
-      setInvitationsLoading(false);
-    }
-  }, []);
+  // Pagination is server-driven: every page/search/role change refetches. A new
+  // search or role filter sends the user back to page 1.
+  const { currentPage, pageSize: itemsPerPage, setPage: setCurrentPage } = usePagination({
+    pageSize: 8,
+    resetKey: `${debouncedSearch}|${roleFilter}`,
+  });
+
+  const [usersReloadKey, setUsersReloadKey] = useState(0);
+  const reloadUsers = useCallback(() => setUsersReloadKey((key) => key + 1), []);
+  const [invitationsReloadKey, setInvitationsReloadKey] = useState(0);
+  const reloadInvitations = useCallback(() => setInvitationsReloadKey((key) => key + 1), []);
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      fetchUsers();
-      fetchInvitations();
-    });
-  }, [fetchUsers, fetchInvitations]);
+    // Only the most recent request may update state, so a slow earlier response
+    // (e.g. the page before a search) can never overwrite newer results.
+    let isCurrent = true;
 
-  const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesRole = roleFilter === 'All' || user.role === roleFilter;
-      return matchesSearch && matchesRole;
-    });
-  }, [users, searchQuery, roleFilter]);
+    async function loadUsers() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await usersApi.getAll({
+          page: currentPage,
+          limit: itemsPerPage,
+          search: debouncedSearch || undefined,
+          role: roleFilter === 'All' ? undefined : (roleFilter as import('@services/api').UserRole),
+        });
+        if (!isCurrent) return;
+        setUsers(res.data.map(mapApiUser));
+        setTotal(res.total);
+      } catch {
+        if (!isCurrent) return;
+        setError('Failed to load users. Please try again.');
+      } finally {
+        if (isCurrent) setLoading(false);
+      }
+    }
 
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
-  const currentUsers = filteredUsers.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    void loadUsers();
+    return () => {
+      isCurrent = false;
+    };
+  }, [currentPage, debouncedSearch, itemsPerPage, roleFilter, usersReloadKey]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadInvitations() {
+      try {
+        setInvitationsLoading(true);
+        const data = await invitationsApi.list();
+        if (isCurrent) setInvitations(data.filter((inv) => inv.status === 'pending'));
+      } catch {
+        // non-critical
+      } finally {
+        if (isCurrent) setInvitationsLoading(false);
+      }
+    }
+
+    void loadInvitations();
+    return () => {
+      isCurrent = false;
+    };
+  }, [invitationsReloadKey]);
+
+  const totalPages = Math.ceil(total / itemsPerPage) || 1;
+  // Server already returns the current page's slice; render all returned users.
+  const currentUsers = users;
 
   const handleRoleChange = async (id: string, newRole: UserRole) => {
+    if (id === currentUserId) {
+      addToast('You cannot change your own role.', 'error');
+      return;
+    }
     const prev = users;
     setUsers(users.map(u => u.id === id ? { ...u, role: newRole } : u));
     setActiveMenu(null);
     try {
       await usersApi.updateRole(id, newRole);
       addToast(`User role updated to ${newRole}`, 'success');
-    } catch {
+    } catch (err: unknown) {
       setUsers(prev);
-      addToast('Failed to update role', 'error');
+      const isLastAdmin =
+        (typeof err === 'object' && err !== null && 'response' in err &&
+          typeof (err as { response?: { status?: number } }).response === 'object' &&
+          (err as { response: { status: number } }).response.status === 409);
+      addToast(isLastAdmin ? 'Cannot demote the last admin.' : 'Failed to update role', 'error');
     }
   };
 
   const toggleUserStatus = async (id: string) => {
     const user = users.find(u => u.id === id);
     if (!user) return;
+
+    if (id === currentUserId) {
+      addToast('You cannot deactivate your own account.', 'error');
+      setActiveMenu(null);
+      return;
+    }
+
+    if (user.status === 'Active') {
+      // Deactivation requires confirmation
+      setConfirmDeactivate({ id, name: user.name });
+      setActiveMenu(null);
+      return;
+    }
+
+    // Activate immediately (no confirmation needed)
     const prev = users;
-    const newStatus = user.status === 'Active' ? 'Inactive' as const : 'Active' as const;
-    setUsers(users.map(u => u.id === id ? { ...u, status: newStatus } : u));
+    setUsers(users.map(u => u.id === id ? { ...u, status: 'Active' as const } : u));
     setActiveMenu(null);
     try {
-      if (newStatus === 'Inactive') { await usersApi.deactivate(id); }
-      else { await usersApi.activate(id); }
-      addToast(`User ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully`, 'success');
+      await usersApi.activate(id);
+      addToast('User activated successfully', 'success');
     } catch {
       setUsers(prev);
       addToast('Failed to update user status', 'error');
+    }
+  };
+
+  const confirmDeactivateAndExecute = async () => {
+    if (!confirmDeactivate) return;
+    const { id } = confirmDeactivate;
+    const prev = users;
+    setUsers(users.map(u => u.id === id ? { ...u, status: 'Inactive' as const } : u));
+    setActionLoading('deactivate');
+    try {
+      await usersApi.deactivate(id);
+      addToast('User deactivated successfully', 'success');
+    } catch {
+      setUsers(prev);
+      addToast('Failed to update user status', 'error');
+    } finally {
+      setActionLoading(null);
+      setConfirmDeactivate(null);
     }
   };
 
@@ -151,7 +218,12 @@ const UserManagement: React.FC = () => {
       await invitationsApi.send({ email: inviteEmail, role: inviteRole, message: inviteMessage || undefined });
       setLastInvitedEmail(inviteEmail);
       setInviteStep('success');
-      await fetchInvitations();
+      // Reload from the server instead of trusting the local page: go back to
+      // the first page (or refetch it if we are already there) so the list and
+      // any search made right after the invite reflect the API.
+      if (currentPage !== 1) setCurrentPage(1);
+      else reloadUsers();
+      reloadInvitations();
     } catch {
       addToast('Failed to send invitation', 'error');
     } finally {
@@ -205,7 +277,7 @@ const UserManagement: React.FC = () => {
           <p className="m-0 text-sm text-slate-400">{error}</p>
           <button
             className="flex items-center gap-2 bg-blue-500 text-white border-none rounded-lg px-4 py-2.5 text-sm font-medium cursor-pointer hover:bg-blue-600 transition-colors"
-            onClick={fetchUsers}
+            onClick={reloadUsers}
           >
             Retry
           </button>
@@ -290,7 +362,7 @@ const UserManagement: React.FC = () => {
             type="text"
             placeholder="Search by name or email..."
             value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#14171E] border border-[#1E293B] rounded-lg py-2.5 pl-10 pr-4 text-slate-100 text-sm outline-none focus:border-blue-500 transition-colors"
           />
         </div>
@@ -298,7 +370,7 @@ const UserManagement: React.FC = () => {
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={18} />
           <select
             value={roleFilter}
-            onChange={(e) => { setRoleFilter(e.target.value); resetPage(); }}
+            onChange={(e) => setRoleFilter(e.target.value)}
             className="bg-[#14171E] border border-[#1E293B] rounded-lg py-2.5 pl-10 pr-9 text-slate-100 text-sm appearance-none outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:border-cyan-400 cursor-pointer h-full"
           >
             <option value="All">All Roles</option>
@@ -342,8 +414,10 @@ const UserManagement: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 border-b border-[#1E293B] align-middle">
                       <select
-                        className="bg-transparent text-slate-200 border border-transparent px-2 py-1.5 rounded-md text-sm cursor-pointer outline-none transition-all hover:bg-[#1E293B] hover:border-[#334155] focus:bg-[#1E293B] focus:border-[#334155] [&>option]:bg-[#14171E] [&>option]:text-slate-100"
+                        className={`bg-transparent text-slate-200 border border-transparent px-2 py-1.5 rounded-md text-sm outline-none transition-all hover:bg-[#1E293B] hover:border-[#334155] focus:bg-[#1E293B] focus:border-[#334155] [&>option]:bg-[#14171E] [&>option]:text-slate-100 ${user.id === currentUserId ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
                         value={user.role}
+                        disabled={user.id === currentUserId}
+                        title={user.id === currentUserId ? 'You cannot change your own role' : undefined}
                         onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                       >
                         <option value="Admin">Admin</option>
@@ -372,7 +446,9 @@ const UserManagement: React.FC = () => {
                         {activeMenu === user.id && (
                           <div className="absolute right-0 top-full mt-1 bg-[#14171E] border border-[#1E293B] rounded-lg p-1 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.3)] z-10 min-w-[140px]">
                             <button
-                              className="block w-full text-left px-3 py-2 bg-transparent border-none text-slate-300 text-[13px] cursor-pointer rounded hover:bg-[#1E293B]"
+                              className="block w-full text-left px-3 py-2 bg-transparent border-none text-slate-300 text-[13px] cursor-pointer rounded hover:bg-[#1E293B] disabled:opacity-50 disabled:cursor-not-allowed"
+                              disabled={user.id === currentUserId}
+                              title={user.id === currentUserId ? 'You cannot deactivate your own account' : undefined}
                               onClick={() => toggleUserStatus(user.id)}
                             >
                               {user.status === 'Active' ? 'Deactivate' : 'Activate'}
@@ -402,13 +478,14 @@ const UserManagement: React.FC = () => {
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <span className="text-slate-400 text-sm">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length} entries
+            Showing {total === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, total)} of {total} entries
           </span>
           <div className="flex items-center gap-3">
             <button
               className="bg-[#14171E] border border-[#1E293B] text-slate-100 w-8 h-8 flex items-center justify-center rounded-md cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:not-disabled:bg-[#1E293B] hover:not-disabled:border-[#334155]"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              aria-label="Previous page"
             >
               <ChevronLeft size={16} />
             </button>
@@ -417,6 +494,7 @@ const UserManagement: React.FC = () => {
               className="bg-[#14171E] border border-[#1E293B] text-slate-100 w-8 h-8 flex items-center justify-center rounded-md cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:not-disabled:bg-[#1E293B] hover:not-disabled:border-[#334155]"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+              aria-label="Next page"
             >
               <ChevronRight size={16} />
             </button>
@@ -531,6 +609,17 @@ const UserManagement: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={confirmDeactivate !== null}
+        onClose={() => setConfirmDeactivate(null)}
+        onConfirm={() => void confirmDeactivateAndExecute()}
+        title="Deactivate User"
+        message={`Are you sure you want to deactivate ${confirmDeactivate?.name ?? ''}? They will lose access immediately.`}
+        confirmLabel="Deactivate"
+        variant="danger"
+        isLoading={actionLoading === 'deactivate'}
+      />
     </div>
   );
 };

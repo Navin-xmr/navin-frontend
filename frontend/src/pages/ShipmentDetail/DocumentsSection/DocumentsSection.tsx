@@ -20,36 +20,6 @@ const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 const ALLOWED_TYPES = ["application/pdf", "image/png", "image/jpeg"];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
-const MOCK_DOCUMENTS: ShipmentDocument[] = [
-  {
-    id: "doc-1",
-    name: "Bill_of_Lading_SHP992834.pdf",
-    type: "BILL_OF_LADING",
-    uploadDate: "2026-02-20T09:30:00Z",
-    uploader: "Jane Smith",
-    url: "#",
-    sizeBytes: 245760,
-  },
-  {
-    id: "doc-2",
-    name: "Commercial_Invoice_SHP992834.pdf",
-    type: "COMMERCIAL_INVOICE",
-    uploadDate: "2026-02-20T10:15:00Z",
-    uploader: "Jane Smith",
-    url: "#",
-    sizeBytes: 184320,
-  },
-  {
-    id: "doc-3",
-    name: "Packing_List_SHP992834.pdf",
-    type: "PACKING_LIST",
-    uploadDate: "2026-02-21T08:00:00Z",
-    uploader: "Operations Team",
-    url: "#",
-    sizeBytes: 98304,
-  },
-];
-
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -98,6 +68,8 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 
   const [documents, setDocuments] = useState<ShipmentDocument[]>([]);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const [docsError, setDocsError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // Upload state
   const [isDragging, setIsDragging] = useState(false);
@@ -108,27 +80,32 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch documents on mount
+  // Fetch the documents attached to this shipment (again on retry)
   useEffect(() => {
     let cancelled = false;
-    shipmentApi
-      .getDocuments(shipmentId)
-      .then((docs) => {
-        if (!cancelled) setDocuments(docs);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          // API not yet implemented — fall back to mock data
-          setDocuments(MOCK_DOCUMENTS);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingDocs(false);
-      });
+    const timer = setTimeout(() => {
+      setIsLoadingDocs(true);
+      setDocsError(false);
+      shipmentApi
+        .getDocuments(shipmentId)
+        .then((docs) => {
+          if (!cancelled) setDocuments(docs);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setDocuments([]);
+            setDocsError(true);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setIsLoadingDocs(false);
+        });
+    }, 0);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
-  }, [shipmentId]);
+  }, [shipmentId, reloadKey]);
 
   // Drag-and-drop handlers
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -199,25 +176,10 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
       }, 400);
     } catch {
       clearInterval(progressInterval);
-      // API not yet available — optimistically add a mock entry
-      const mockDoc: ShipmentDocument = {
-        id: `doc-${Date.now()}`,
-        name: selectedFile.name,
-        type: selectedType,
-        uploadDate: new Date().toISOString(),
-        uploader: "You",
-        url: "#",
-        sizeBytes: selectedFile.size,
-      };
-      setUploadProgress(100);
-      setTimeout(() => {
-        setDocuments((prev) => [mockDoc, ...prev]);
-        setSelectedFile(null);
-        setSelectedType("OTHER");
-        setUploadProgress(0);
-        setIsUploading(false);
-        addToast("Document uploaded successfully.", "success");
-      }, 400);
+      // Keep the selected file so the user can retry the upload.
+      setUploadProgress(0);
+      setIsUploading(false);
+      addToast("Document upload failed. Please try again.", "error");
     }
   };
 
@@ -452,6 +414,20 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
             />
           </svg>
           <span>Loading documents…</span>
+        </div>
+      ) : docsError ? (
+        <div
+          role="alert"
+          className="flex flex-col items-center justify-center py-12 text-[rgba(255,255,255,0.6)] gap-3 text-center"
+        >
+          <p className="m-0 text-sm">Couldn&apos;t load documents for this shipment.</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((key) => key + 1)}
+            className="text-[#00d4c8] text-sm font-medium bg-[rgba(0,212,200,0.08)] border border-[rgba(0,212,200,0.2)] rounded-lg px-4 py-2 transition-all hover:bg-[rgba(0,212,200,0.15)] hover:border-[rgba(0,212,200,0.4)]"
+          >
+            Retry
+          </button>
         </div>
       ) : documents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-[rgba(255,255,255,0.5)] gap-3">

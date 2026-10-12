@@ -39,6 +39,7 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'error',
       'no-unused-vars': 'off', // Handled by @typescript-eslint/no-unused-vars
       'no-undef': 'off', // Handled by TypeScript compiler
+      'no-redeclare': 'off', // Handled by TypeScript compiler; the base rule misreads overloads
       // Prevent accidental console statements in production code
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       // Require rel="noopener noreferrer" on target="_blank" links (prevents

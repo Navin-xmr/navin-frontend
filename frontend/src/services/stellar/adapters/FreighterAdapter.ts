@@ -2,6 +2,7 @@ import {
   isConnected,
   requestAccess,
   getAddress,
+  getNetworkDetails,
   signTransaction as freighterSign,
 } from '@stellar/freighter-api';
 import type { WalletAdapter } from './types';
@@ -51,5 +52,20 @@ export class FreighterAdapter implements WalletAdapter {
       throw new Error('Freighter: no public key available');
     }
     return result.address;
+  }
+
+  /**
+   * Returns the network name currently active in the Freighter extension.
+   * Maps Freighter's network names to the app's 'testnet' | 'mainnet' union.
+   * Uses the network passphrase as the canonical identifier.
+   */
+  async getNetwork(): Promise<'testnet' | 'mainnet'> {
+    const details = await getNetworkDetails();
+    // The testnet passphrase is the definitive signal.
+    // Freighter also exposes details.network === 'TESTNET' | 'PUBLIC'.
+    const isTestnet =
+      details.networkPassphrase === 'Test SDF Network ; September 2015' ||
+      details.network?.toUpperCase() === 'TESTNET';
+    return isTestnet ? 'testnet' : 'mainnet';
   }
 }

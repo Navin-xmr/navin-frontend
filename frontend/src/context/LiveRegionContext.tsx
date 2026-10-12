@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useRef } from "react";
 
 interface LiveRegionContextType {
   announce: (message: string, priority?: "polite" | "assertive") => void;
@@ -26,8 +26,12 @@ export const LiveRegionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }, 7000);
   }, []);
 
+  // Stable value: announcing updates this provider's state, and a fresh object
+  // here would re-render every consumer on each announcement.
+  const value = useMemo(() => ({ announce }), [announce]);
+
   return (
-    <LiveRegionContext.Provider value={{ announce }}>
+    <LiveRegionContext.Provider value={value}>
       {children}
       <div
         aria-live="polite"

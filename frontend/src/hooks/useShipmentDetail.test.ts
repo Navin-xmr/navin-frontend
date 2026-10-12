@@ -122,4 +122,108 @@ describe('useShipmentDetail', () => {
     expect(mockUnsubscribe).toHaveBeenCalledWith('shipment:status', expect.any(Function));
     expect(mockUnsubscribe).toHaveBeenCalledWith('shipment:milestone', expect.any(Function));
   });
+
+  describe('periodic refresh of contract state', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function flushInitialLoad() {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+    }
+
+    async function advance(ms: number) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(ms);
+      });
+    }
+
+    it('re-fetches every 30 seconds so a completed settlement shows up without a reload', async () => {
+      vi.useFakeTimers();
+      mockGetById
+        .mockResolvedValueOnce({ ...mockShipment, status: 'IN_TRANSIT' })
+        .mockResolvedValue({ ...mockShipment, status: 'DELIVERED' });
+
+      const { result } = renderHook(() => useShipmentDetail('ship-001'));
+      await flushInitialLoad();
+      expect(result.current.shipment?.status).toBe('IN_TRANSIT');
+      expect(mockGetById).toHaveBeenCalledTimes(1);
+
+      await advance(29_000);
+      expect(mockGetById).toHaveBeenCalledTimes(1);
+
+      await advance(1_000);
+      expect(mockGetById).toHaveBeenCalledTimes(2);
+      expect(result.current.shipment?.status).toBe('DELIVERED');
+    });
+
+    it('polls in the background without flipping back to the loading state', async () => {
+      vi.useFakeTimers();
+      mockGetById.mockResolvedValue(mockShipment);
+
+      const { result } = renderHook(() => useShipmentDetail('ship-001'));
+      await flushInitialLoad();
+      expect(result.current.isLoading).toBe(false);
+
+      let resolveNext: (value: Shipment) => void = () => {};
+      mockGetById.mockReturnValueOnce(new Promise<Shipment>((resolve) => { resolveNext = resolve; }));
+      await advance(30_000);
+
+      expect(result.current.isLoading).toBe(false);
+      await act(async () => { resolveNext(mockShipment); });
+    });
+
+    it('records when the state was last fetched', async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-09-30T10:00:00.000Z'));
+      mockGetById.mockResolvedValue(mockShipment);
+
+      const { result } = renderHook(() => useShipmentDetail('ship-001'));
+      expect(result.current.lastUpdatedAt).toBeNull();
+      await flushInitialLoad();
+
+      expect(result.current.lastUpdatedAt).toBeGreaterThanOrEqual(new Date('2026-09-30T10:00:00.000Z').getTime());
+      expect(result.current.lastUpdatedAt).toBeLessThanOrEqual(new Date('2026-09-30T10:00:00.010Z').getTime());
+      expect(result.current.isStale).toBe(false);
+    });
+
+    it('flags the data as stale after 5 minutes of failed refreshes and recovers on success', async () => {
+      vi.useFakeTimers();
+      mockGetById.mockResolvedValueOnce(mockShipment).mockRejectedValue(new Error('RPC down'));
+
+      const { result } = renderHook(() => useShipmentDetail('ship-001'));
+      await flushInitialLoad();
+      expect(result.current.isStale).toBe(false);
+
+      // Nine failed polls (4.5 minutes): the last good data stays, not stale yet.
+      await advance(9 * 30_000);
+      expect(result.current.shipment).toEqual(mockShipment);
+      expect(result.current.error).toBeNull();
+      expect(result.current.isStale).toBe(false);
+
+      // Past the 5 minute mark it is flagged.
+      await advance(2 * 30_000);
+      expect(result.current.isStale).toBe(true);
+
+      // A successful refresh clears it.
+      mockGetById.mockResolvedValue({ ...mockShipment, status: 'DELIVERED' });
+      await act(async () => { result.current.refresh(); });
+      expect(result.current.isStale).toBe(false);
+      expect(result.current.shipment?.status).toBe('DELIVERED');
+    });
+
+    it('stops polling when unmounted', async () => {
+      vi.useFakeTimers();
+      mockGetById.mockResolvedValue(mockShipment);
+
+      const { unmount } = renderHook(() => useShipmentDetail('ship-001'));
+      await flushInitialLoad();
+      unmount();
+
+      await advance(120_000);
+      expect(mockGetById).toHaveBeenCalledTimes(1);
+    });
+  });
 });

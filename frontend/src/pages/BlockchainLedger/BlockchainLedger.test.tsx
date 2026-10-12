@@ -82,18 +82,26 @@ describe('BlockchainLedger page', () => {
   // ── Loading skeleton ──────────────────────────────────────────────────────
 
   describe('loading state', () => {
-    it('shows loading skeletons while fetching', () => {
+    it('shows the table skeleton loader while fetching', () => {
       // Never resolves during this test
       mockGetBlocks.mockReturnValue(new Promise(() => {}));
       renderPage();
 
-      // Table headers should be visible
-      expect(screen.getByText('Block #')).toBeInTheDocument();
-      expect(screen.getByText('Timestamp')).toBeInTheDocument();
-      expect(screen.getByText('Milestone')).toBeInTheDocument();
+      expect(screen.getByRole('status', { name: /loading ledger records/i })).toBeInTheDocument();
 
-      // No block data rendered yet
+      // No block data or record count rendered yet
       expect(screen.queryByText('NAV-2024-001')).not.toBeInTheDocument();
+      expect(screen.queryByText(/on-chain records?/)).not.toBeInTheDocument();
+    });
+
+    it('removes the skeleton once data has loaded', async () => {
+      mockGetBlocks.mockResolvedValue(singlePageResponse);
+      renderPage();
+
+      await waitFor(() => {
+        expect(screen.getByText('NAV-2024-001')).toBeInTheDocument();
+      });
+      expect(screen.queryByRole('status', { name: /loading ledger records/i })).not.toBeInTheDocument();
     });
   });
 
@@ -163,7 +171,7 @@ describe('BlockchainLedger page', () => {
       await waitFor(() => {
         const links = screen.getAllByRole('link');
         const txLinks = links.filter((l) =>
-          l.getAttribute('href')?.includes('stellar.expert/explorer/public/tx'),
+          l.getAttribute('href')?.includes('stellar.expert/explorer/testnet/tx'),
         );
         expect(txLinks.length).toBeGreaterThan(0);
       });
@@ -176,13 +184,31 @@ describe('BlockchainLedger page', () => {
       await waitFor(() => {
         const links = screen.getAllByRole('link');
         const txLinks = links.filter((l) =>
-          l.getAttribute('href')?.includes('stellar.expert/explorer/public/tx'),
+          l.getAttribute('href')?.includes('stellar.expert/explorer/testnet/tx'),
         );
         expect(txLinks.length).toBeGreaterThan(0);
         txLinks.forEach((link) => {
           expect(link).toHaveAttribute('target', '_blank');
           expect(link).toHaveAttribute('rel', 'noopener noreferrer');
         });
+      });
+    });
+
+    it('renders the total on-chain record count in the page header', async () => {
+      mockGetBlocks.mockResolvedValue({ ...singlePageResponse, total: 1234 });
+      renderPage();
+
+      await waitFor(() => {
+        expect(screen.getByText('1,234 on-chain records')).toBeInTheDocument();
+      });
+    });
+
+    it('fetches from the live ledger API on mount', async () => {
+      mockGetBlocks.mockResolvedValue(singlePageResponse);
+      renderPage();
+
+      await waitFor(() => {
+        expect(mockGetBlocks).toHaveBeenCalledWith({ limit: 15 });
       });
     });
 
@@ -221,15 +247,32 @@ describe('BlockchainLedger page', () => {
   // ── Error state ───────────────────────────────────────────────────────────
 
   describe('error state', () => {
-    it('renders error banner when API call fails', async () => {
+    it('renders ErrorFallback when the API call fails', async () => {
       mockGetBlocks.mockRejectedValue(new Error('Network Error'));
       renderPage();
 
+      // The app-wide live region is also an (empty) alert, so find the error
+      // panel through its heading rather than by role alone.
+      const heading = await screen.findByRole('heading', { name: 'Something went wrong' });
+      const alert = heading.closest('[role="alert"]');
+      expect(alert).toHaveTextContent('Network Error');
+      expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+      expect(screen.queryByLabelText('Load next page')).not.toBeInTheDocument();
+    });
+
+    it('retries the request and renders data when "Try Again" is clicked', async () => {
+      mockGetBlocks
+        .mockRejectedValueOnce(new Error('Network Error'))
+        .mockResolvedValueOnce(singlePageResponse);
+      renderPage();
+
+      fireEvent.click(await screen.findByRole('button', { name: /try again/i }));
+
       await waitFor(() => {
-        expect(screen.getByText('Error loading ledger')).toBeInTheDocument();
-        expect(screen.getByText('Error loading ledger').closest('[role="alert"]')).toBeInTheDocument();
-        expect(screen.getByText('Error loading ledger')).toBeInTheDocument();
+        expect(screen.getByText('NAV-2024-001')).toBeInTheDocument();
       });
+      expect(mockGetBlocks).toHaveBeenCalledTimes(2);
+      expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument();
     });
   });
 

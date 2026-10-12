@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, RefreshCw, Zap, X } from "lucide-react";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { useShipmentDetail } from "../../hooks/useShipmentDetail";
 import { useTranslation } from "react-i18next";
@@ -31,8 +31,9 @@ import { exportShipmentPdf } from "../../utils/exportShipmentPdf";
 import ShipmentComparison from "../../components/shipment/ShipmentComparison";
 import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison";
 import ShipmentStickyBar from "./ShipmentStickyBar";
-import { Zap } from "lucide-react";
-import type { ShipmentStatus } from "../../types/realtimeEvents";
+import { formatDate } from "@utils/localeFormat";
+import StatusUpdate, { ShipmentMilestone } from "../../components/shipment/StatusUpdate";
+import { shipmentApi, type ShipmentStatus } from "@services/api/endpoints/shipments";
 
 const ShipmentDetail: React.FC = () => {
   const { t } = useTranslation("shipments");
@@ -42,14 +43,28 @@ const ShipmentDetail: React.FC = () => {
   const { announce } = useLiveRegion();
   const { addToast } = useToast();
 
-  const { shipment, isLoading, error } = useShipmentDetail(id);
+  const { shipment, isLoading, error, refresh, lastUpdatedAt, isStale } = useShipmentDetail(id);
   const [isPrinting, setIsPrinting] = useState(false);
   const [isDisputeOpen, setIsDisputeOpen] = useState(false);
   const [existingDispute, setExistingDispute] = useState<DisputeData | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState<ShipmentStatus | "CREATED">(shipment?.status ?? "IN_TRANSIT");
+
+  // The server is the source of truth for status. A realtime event or an update
+  // made on this page shows immediately as an override, and is dropped as soon
+  // as the server reports a new status of its own.
+  const serverStatus = shipment?.status;
+  const [statusOverride, setStatusOverride] = useState<ShipmentStatus | null>(null);
+  const [syncedServerStatus, setSyncedServerStatus] = useState(serverStatus);
+  if (serverStatus && serverStatus !== syncedServerStatus) {
+    setSyncedServerStatus(serverStatus);
+    setStatusOverride(null);
+  }
+  const currentStatus: ShipmentStatus =
+    statusOverride ?? serverStatus ?? syncedServerStatus ?? "CREATED";
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Ref attached to the hero heading — IntersectionObserver in ShipmentStickyBar
   // watches this element and shows the bar once it scrolls out of the viewport.
@@ -59,27 +74,88 @@ const ShipmentDetail: React.FC = () => {
   const statusEvent = events["shipment:status"];
   React.useEffect(() => {
     if (statusEvent && statusEvent.shipmentId === id) {
-      announce(`Shipment status updated to ${statusEvent.newStatus}`);
       Promise.resolve().then(() => {
-        setCurrentStatus(statusEvent.newStatus);
+        setStatusOverride(statusEvent.newStatus as ShipmentStatus);
         announce(t("shipmentDetail.statusUpdated", { status: statusEvent.newStatus }));
       });
     }
   }, [statusEvent, id, announce, t]);
 
+  const rawEta =
+    (shipment?.expectedDelivery as string | undefined) ??
+    (shipment?.estimatedDelivery as string | undefined) ??
+    (shipment?.offChainMetadata?.expectedDeliveryDate as string | undefined) ??
+    (shipment?.offChainMetadata?.estimatedDelivery as string | undefined) ??
+    (shipment?.offChainMetadata?.expectedDelivery as string | undefined);
+
   const shipmentHeaderData = {
     shipmentId: id ? `#${id}` : t("shipmentDetail.unknownId"),
     trackingNumber: shipment?.trackingNumber ?? id ?? "",
-    status: shipment?.status ?? "IN_TRANSIT",
-    originAddress: shipment?.origin ?? "New York Distribution Center, NY 10001",
-    destinationAddress: shipment?.destination ?? "123 Main Street, Boston, MA 02101",
-    expectedDeliveryDate: "Oct 24, 2026 by 5:00 PM EST",
+    status: shipment?.status ?? "CREATED",
+    originAddress: shipment?.origin ?? "—",
+    destinationAddress: shipment?.destination ?? "—",
+    expectedDeliveryDate: rawEta ? formatDate(rawEta) : "—",
     userRole: (role ?? "customer") as "company" | "customer",
     priority: shipment?.priority ?? "STANDARD",
   };
 
+  const getNextStatuses = (status: string): ShipmentStatus[] => {
+    switch (status) {
+      case "CREATED":
+        return ["IN_TRANSIT", "CANCELLED"];
+      case "IN_TRANSIT":
+        return ["DELIVERED", "CANCELLED"];
+      default:
+        return ["CREATED", "IN_TRANSIT", "DELIVERED", "CANCELLED"];
+    }
+  };
+
+  const mapMilestoneToStatus = (milestone: ShipmentMilestone): ShipmentStatus => {
+    switch (milestone) {
+      case "Delivered":
+        return "DELIVERED";
+      case "Picked Up":
+      case "In Transit":
+      case "At Checkpoint":
+      case "Out for Delivery":
+      default:
+        return "IN_TRANSIT";
+    }
+  };
+
+  const mapStatusToMilestone = (status: string): ShipmentMilestone => {
+    switch (status) {
+      case "DELIVERED":
+        return "Delivered";
+      case "CREATED":
+        return "Picked Up";
+      case "IN_TRANSIT":
+      default:
+        return "In Transit";
+    }
+  };
+
   const handleUpdateStatus = () => {
-    // TODO: wire to status update API when endpoint is available
+    setIsStatusModalOpen(true);
+  };
+
+  const handleApplyStatusUpdate = async (nextStatus: ShipmentStatus) => {
+    if (!id) return;
+    setIsUpdatingStatus(true);
+    try {
+      const updated = await shipmentApi.updateStatus(id, nextStatus);
+      const resultingStatus = updated?.status ?? nextStatus;
+      setStatusOverride(resultingStatus);
+      refresh();
+      addToast(t("shipmentDetail.statusUpdateSuccess", `Shipment status updated to ${resultingStatus}.`), "success");
+      announce(`Shipment status updated to ${resultingStatus}`);
+      setIsStatusModalOpen(false);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update shipment status.";
+      addToast(message, "error");
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
   const handleUpdatePriority = (_priority: "URGENT" | "STANDARD" | "ECONOMY") => {
     // TODO: wire to priority update API when endpoint is available
@@ -292,6 +368,36 @@ const ShipmentDetail: React.FC = () => {
           )}
         </div>
 
+        {/* Freshness of the on-chain / API state, with a manual refresh */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-6 text-sm text-[rgba(200,230,240,0.75)]">
+          <span>
+            {t("shipmentDetail.lastUpdated", "Last updated")}:{" "}
+            <time
+              data-testid="last-updated"
+              dateTime={lastUpdatedAt ? new Date(lastUpdatedAt).toISOString() : undefined}
+            >
+              {lastUpdatedAt ? new Date(lastUpdatedAt).toLocaleTimeString() : "—"}
+            </time>
+          </span>
+          <button
+            type="button"
+            onClick={refresh}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[rgba(0,212,200,0.4)] text-[#00d4c8] font-medium hover:bg-[rgba(0,212,200,0.1)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <RefreshCw size={14} className={isLoading ? "animate-spin" : undefined} aria-hidden="true" />
+            {t("shipmentDetail.refreshNow", "Refresh now")}
+          </button>
+        </div>
+        {isStale && (
+          <div
+            role="alert"
+            className="mb-6 p-4 rounded-xl border border-[rgba(245,158,11,0.4)] bg-[rgba(245,158,11,0.1)] text-[#fbbf24] text-sm text-center"
+          >
+            {t("shipmentDetail.staleBanner", "This data is stale, click Refresh")}
+          </div>
+        )}
+
         <div className="bg-[rgba(8,40,50,0.4)] border-[1.5px] border-[rgba(0,180,160,0.3)] rounded-3xl p-8 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.3)] md:p-5 md:rounded-2xl sm:p-4">
           <ShipmentMap
             shipmentId={id}
@@ -346,7 +452,7 @@ const ShipmentDetail: React.FC = () => {
         <SensorDataCards sensorData={sensorData} />
         <PaymentStatus payment={paymentData} />
         <CostBreakdown data={costBreakdown} mode="confirmed" />
-        <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} />
+        <EscrowStatus shipmentId={id ?? shipmentHeaderData.shipmentId} refreshKey={lastUpdatedAt} />
 
         {can(role, "shipment:upload-proof") && <DeliveryProofUpload shipmentId={id || shipmentHeaderData.shipmentId} />}
 
@@ -377,6 +483,65 @@ const ShipmentDetail: React.FC = () => {
         isOpen={isComparisonOpen}
         onClose={() => setIsComparisonOpen(false)}
       />
+
+      {/* Status Update Modal */}
+      {isStatusModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="status-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+        >
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl text-white">
+            <div className="flex items-center justify-between mb-4">
+              <h3 id="status-modal-title" className="text-lg font-semibold text-white">
+                Update Shipment Status
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsStatusModalOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+                aria-label="Close status modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-300 mb-4">
+              Current status: <span className="font-semibold text-cyan-400">{currentStatus}</span>
+            </p>
+
+            <div className="space-y-2 mb-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-medium">Select next status</p>
+              <div className="flex flex-col gap-2">
+                {getNextStatuses(currentStatus).map((nextStatus) => (
+                  <button
+                    key={nextStatus}
+                    type="button"
+                    disabled={isUpdatingStatus}
+                    onClick={() => handleApplyStatusUpdate(nextStatus)}
+                    className="w-full py-2.5 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 text-left font-medium text-sm text-slate-100 transition-colors flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed border border-slate-700 hover:border-cyan-500/50"
+                  >
+                    <span>Mark as {nextStatus.replace('_', ' ')}</span>
+                    <span className="text-xs text-slate-400">Advance status &rarr;</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 pt-4 mt-4">
+              <p className="text-xs uppercase tracking-wider text-slate-400 font-medium mb-2">Or choose milestone</p>
+              <StatusUpdate
+                shipmentId={id || ""}
+                currentStatus={mapStatusToMilestone(currentStatus)}
+                onStatusUpdate={async (_shipmentId, milestone) => {
+                  await handleApplyStatusUpdate(mapMilestoneToStatus(milestone));
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
