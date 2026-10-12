@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -106,15 +107,32 @@ describe('Login', () => {
     expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
   });
 
-  it('shows an error message when login fails', async () => {
-    mockAuthApi.login.mockRejectedValueOnce(new Error('Unauthorized'));
+  const failLogin = async (error: unknown) => {
+    mockAuthApi.login.mockRejectedValueOnce(error);
     renderLogin();
-
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: 'jane@example.com' } });
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'wrongpass' } });
     fireEvent.click(screen.getByRole('button', { name: /log in/i }));
+    return screen.findByRole('alert');
+  };
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Invalid email or password. Please try again.');
+  const httpError = (status: number) =>
+    new AxiosError('failed', 'ERR_BAD_REQUEST', undefined, undefined, { status } as never);
+
+  it('shows an invalid credentials message on a 401', async () => {
+    expect(await failLogin(httpError(401))).toHaveTextContent('Invalid email or password. Please try again.');
+  });
+
+  it('shows a rate limit message on a 429', async () => {
+    expect(await failLogin(httpError(429))).toHaveTextContent('Too many attempts.');
+  });
+
+  it('says the server is unreachable when there is no response', async () => {
+    expect(await failLogin(new AxiosError('Network Error', 'ERR_NETWORK'))).toHaveTextContent("Can't reach the server.");
+  });
+
+  it('says the server is unreachable when the API is not configured', async () => {
+    expect(await failLogin(new Error('VITE_API_BASE_URL is not configured'))).toHaveTextContent("Can't reach the server.");
   });
 
   describe('auth state sync after login (#813)', () => {
