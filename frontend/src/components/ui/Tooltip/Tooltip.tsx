@@ -1,4 +1,4 @@
-import React, { useState, useRef, useId, useCallback } from 'react';
+import React, { useState, useRef, useId, useCallback, useEffect } from 'react';
 
 type Placement = 'top' | 'bottom' | 'left' | 'right';
 
@@ -41,6 +41,19 @@ const Tooltip: React.FC<TooltipProps> = ({ content, children, placement = 'top' 
     setVisible(true);
   };
   const hide = () => setVisible(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        hide();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [visible]);
 
   return (
     <span
