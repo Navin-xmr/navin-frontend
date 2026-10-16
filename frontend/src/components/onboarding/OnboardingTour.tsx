@@ -69,20 +69,18 @@ interface SpotlightOverlayProps {
 const SpotlightOverlay: React.FC<SpotlightOverlayProps> = ({ rect }) => {
   if (!rect) return null;
 
-  // The cutout is created with a large box-shadow on a small positioned element
+  // The cutout is created with a large box-shadow on a small positioned element.
+  // top/left/width/height are runtime values from getBoundingClientRect and cannot
+  // be expressed as static Tailwind classes — they are kept as inline styles.
+  // All other properties are expressed via Tailwind utilities.
   return (
     <div
+      className="fixed pointer-events-none z-[9998] rounded-lg [box-shadow:0_0_0_9999px_rgba(0,0,0,0.5)] [transition:top_0.2s_ease,left_0.2s_ease,width_0.2s_ease,height_0.2s_ease]"
       style={{
-        position: 'fixed',
-        pointerEvents: 'none',
-        zIndex: 9998,
         top: rect.top,
         left: rect.left,
         width: rect.width,
         height: rect.height,
-        boxShadow: '0 0 0 9999px rgba(0,0,0,0.5)',
-        borderRadius: '8px',
-        transition: 'top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease',
       }}
     />
   );
@@ -109,11 +107,9 @@ const Popover: React.FC<PopoverProps> = ({
   onNext,
   onSkip,
 }) => {
-  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
-    position: 'fixed',
-    zIndex: 9999,
-    opacity: 0,
-  });
+  // Only runtime-computed values (position coordinates, opacity, transition) live
+  // here as inline styles. The wrapper always carries fixed + z-[9999] via Tailwind.
+  const [runtimeStyle, setRuntimeStyle] = useState<React.CSSProperties>({ opacity: 0 });
 
   useEffect(() => {
     if (!rect) return;
@@ -152,9 +148,7 @@ const Popover: React.FC<PopoverProps> = ({
     top = Math.max(16, Math.min(top, viewportH - popoverEstimatedHeight - 16));
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPopoverStyle({
-      position: 'fixed',
-      zIndex: 9999,
+    setRuntimeStyle({
       top,
       left,
       width: popoverWidth,
@@ -164,7 +158,7 @@ const Popover: React.FC<PopoverProps> = ({
   }, [rect, step.placement]);
 
   return (
-    <div style={popoverStyle}>
+    <div className="fixed z-[9999]" style={runtimeStyle}>
       <div
         className="rounded-[14px] px-6 py-5 font-[Inter,system-ui,-apple-system,sans-serif] bg-white dark:bg-[#1a1f2e] border border-teal-200 dark:border-[rgba(98,255,255,0.25)] text-gray-700 dark:text-[#e2e8f0] shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.45),0_0_0_1px_rgba(98,255,255,0.1)]"
       >
@@ -359,7 +353,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
 
       {/* Full-screen click-to-skip overlay with safety close button */}
       <div
-        style={{ position: 'fixed', inset: 0, zIndex: 9997 }}
+        className="fixed inset-0 z-[9997]"
         onClick={handleSkip}
         aria-hidden="true"
         role="presentation"
@@ -368,8 +362,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ steps, onClose }) => {
       {/* Emergency close button (hidden but accessible) */}
       <button
         onClick={handleSkip}
-        style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 10000 }}
-        className="sr-only focus:not-sr-only"
+        className="sr-only focus:not-sr-only fixed top-[10px] right-[10px] z-[10000]"
         aria-label="Close tour"
       >
         Close Tour (ESC)

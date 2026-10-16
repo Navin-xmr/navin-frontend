@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Package } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   shipmentApi,
@@ -8,8 +7,6 @@ import {
 } from '../../api/shipmentApi';
 import { BulkActionBar } from '../../components/shipment/BulkActionBar';
 import { BulkStatusModal } from '../../components/shipment/BulkStatusModal';
-import PriorityBadge from '../../components/shipment/PriorityBadge/PriorityBadge';
-import StatusBadge from '../../components/ui/StatusBadge/StatusBadge';
 import type { ExportFormat } from '@components/ui/ExportDropdown';
 import { useToast } from '../../context/ToastContext';
 import { useBulkSelection, useDebounce } from '../../hooks';
@@ -21,19 +18,23 @@ import { useVirtualShipments } from './hooks/useVirtualShipments';
 import type { ShipmentFiltersValues, ShipmentStatus } from './ShipmentFilters';
 
 import ShipmentsEmptyState from './components/ShipmentsEmptyState';
-import ShipmentsExportButton from './components/ShipmentsExportButton';
+import ShipmentsHeader from './components/ShipmentsHeader';
+import ShipmentsVirtualTable from './components/ShipmentsVirtualTable';
 import {
   ShipmentsFilterToolbar,
   type TopPriorityFilter,
   type TopStatusFilter,
   type TopTimeframeFilter,
 } from './components/ShipmentsFilterToolbar';
-import { ShipmentsViewToggle, type ShipmentsView } from './components/ShipmentsViewToggle';
+import { type ShipmentsView } from './components/ShipmentsViewToggle';
 
 const PAGE_SIZE = 50;
 const SCROLL_KEY = 'shipments-scroll-index';
 const VIEW_KEY = 'shipments-view';
 
+// ---------------------------------------------------------------------------
+// Export helpers (keep here — only used by this page)
+// ---------------------------------------------------------------------------
 
 function exportShipmentsToCSV(shipments: Shipment[], filename?: string): void {
   const headers = ['Tracking Number', 'Origin', 'Destination', 'Status', 'Created At'];
@@ -69,16 +70,16 @@ function exportShipmentsToJSON(shipments: Shipment[], filename?: string): void {
   URL.revokeObjectURL(url);
 }
 
+// ---------------------------------------------------------------------------
+// Page component
+// ---------------------------------------------------------------------------
+
 const Shipments: React.FC = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // ── URL-backed filter state (persisted in the query string) ───────────────
-  // The URL is the single source of truth for filters. The advanced filter
-  // panel writes the same plain keys (status, priority, carrier, ...) itself,
-  // so both it and the toolbar dropdowns are read from here; `status` and
-  // `priority` may hold a comma-separated list.
   const csvParam = (key: string) => searchParams.get(key)?.split(',').filter(Boolean) ?? [];
   const searchQuery = searchParams.get('q') ?? '';
   const statusList = csvParam('status') as ShipmentStatus[];
@@ -175,22 +176,17 @@ const Shipments: React.FC = () => {
     return cutoff.toISOString().slice(0, 10);
   })();
 
-  // Effective date range merges the timeframe shortcut and advanced dateFrom.
   const effectiveDateFrom = advancedFilters.dateFrom || timeframeDateFrom;
   const effectiveDateTo = advancedFilters.dateTo;
-
   const hasMore = shipments.length < total;
 
   useEffect(() => {
-    // Aborting in cleanup means a superseded request can never write its result.
     const controller = new AbortController();
 
     async function load() {
       setIsLoading(true);
       setError(null);
 
-      // Every active filter is sent to the API on every request, so the server
-      // filters across ALL pages (not just the one that happens to be loaded).
       const effectiveStatus = statusKey ? (statusKey.split(',') as ShipmentStatus[]) : undefined;
       const effectivePriority = priorityKey
         ? (priorityKey.split(',') as ShipmentPriority[])
@@ -241,9 +237,7 @@ const Shipments: React.FC = () => {
     advancedWeightMax,
   ]);
 
-  // filteredShipments == shipments (server already filtered)
   const filteredShipments = shipments;
-
   const visibleIds = shipments.map((shipment) => shipment.id);
   const allVisibleSelected =
     visibleIds.length > 0 && visibleIds.every((id) => isSelected(id));
@@ -264,7 +258,6 @@ const Shipments: React.FC = () => {
         requestAnimationFrame(() => scrollToIndex(index));
       }
     }
-
     return () => {
       sessionStorage.removeItem(SCROLL_KEY);
     };
@@ -295,7 +288,6 @@ const Shipments: React.FC = () => {
       exportShipmentsToJSON(rows, `${prefix}-${date}.json`);
       return;
     }
-
     exportShipmentsToCSV(rows, `${prefix}-${date}.csv`);
   };
 
@@ -347,9 +339,7 @@ const Shipments: React.FC = () => {
     advancedFilters.weightMin !== '' ||
     advancedFilters.weightMax !== '' ||
     advancedFilters.priority.length > 0;
-  // The server does the filtering, so "no results" is simply total === 0. Tell
-  // "nothing exists" apart from "nothing matches these filters" so the user can
-  // clear the filters instead of assuming there are no shipments at all.
+
   const noResults = !isLoading && !error && total === 0;
   const isEmpty = noResults && !isAnyFilterActive;
   const isFilterEmpty = noResults && isAnyFilterActive;
@@ -358,18 +348,13 @@ const Shipments: React.FC = () => {
 
   return (
     <div className="w-full p-6">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
-        <h1 className="text-2xl font-semibold m-0">Shipments</h1>
-        <div className="flex items-center gap-3">
-          <ShipmentsViewToggle view={view} onViewChange={handleViewChange} />
-
-          <ShipmentsExportButton
-            isExporting={isExporting}
-            disabled={isExporting || filteredShipments.length === 0}
-            onExport={handleExportCSV}
-          />
-        </div>
-      </div>
+      <ShipmentsHeader
+        view={view}
+        isExporting={isExporting}
+        exportDisabled={isExporting || filteredShipments.length === 0}
+        onViewChange={handleViewChange}
+        onExportCSV={handleExportCSV}
+      />
 
       {view === 'kanban' ? (
         <ShipmentsKanban />
@@ -396,129 +381,23 @@ const Shipments: React.FC = () => {
               onClearFilters={clearFilters}
             />
           ) : (
-            <>
-              <div className="text-sm text-[#94a3b8] mb-3">
-                Showing {filteredShipments.length}
-                {` of ${total}`} shipments
-              </div>
-
-              <table
-                className="w-full mt-4 border-collapse text-inherit [&_th]:px-3 [&_th]:py-2.5 [&_th]:border-b [&_th]:border-[var(--border-color)] [&_th]:text-left [&_th]:leading-[1.35] [&_th]:align-middle [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.02em] [&_th]:text-xs [&_th]:whitespace-nowrap [&_td]:px-3 [&_td]:py-2.5 [&_td]:border-b [&_td]:border-[var(--border-color)] [&_td]:text-left [&_td]:leading-[1.35] [&_td]:align-middle [&_td]:[overflow-wrap:anywhere]"
-                style={{ tableLayout: 'fixed', width: '100%' }}
-              >
-                <thead>
-                  <tr>
-                    <th style={{ width: '40px' }}>
-                      <input
-                        type="checkbox"
-                        aria-label="Select all visible shipments"
-                        checked={allVisibleSelected}
-                        ref={(element) => {
-                          if (element) element.indeterminate = someVisibleSelected;
-                        }}
-                        onChange={() => toggleAll(visibleIds)}
-                        className="cursor-pointer accent-[#62ffff] w-4 h-4"
-                      />
-                    </th>
-                    <th>Shipment ID</th>
-                    <th>Origin</th>
-                    <th>Destination</th>
-                    <th>Status</th>
-                    <th>Priority</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-              </table>
-
-              <div
-                ref={parentRef}
-                onScroll={handleScroll}
-                style={{ height: '500px', overflowY: 'auto', position: 'relative' }}
-              >
-                <table
-                  className="w-full mt-4 border-collapse text-inherit [&_th]:px-3 [&_th]:py-2.5 [&_th]:border-b [&_th]:border-[var(--border-color)] [&_th]:text-left [&_th]:leading-[1.35] [&_th]:align-middle [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-[0.02em] [&_th]:text-xs [&_th]:whitespace-nowrap [&_td]:px-3 [&_td]:py-2.5 [&_td]:border-b [&_td]:border-[var(--border-color)] [&_td]:text-left [&_td]:leading-[1.35] [&_td]:align-middle [&_td]:[overflow-wrap:anywhere]"
-                  style={{ tableLayout: 'fixed', width: '100%' }}
-                  aria-label="Shipments list"
-                >
-                  <tbody
-                    style={{
-                      display: 'block',
-                      height: `${totalSize}px`,
-                      position: 'relative',
-                    }}
-                  >
-                    {virtualItems.map((virtualRow) => {
-                      const shipment = filteredShipments[virtualRow.index];
-                      if (!shipment) return null;
-                      const selected = isSelected(shipment.id);
-
-                      return (
-                        <tr
-                          key={virtualRow.key}
-                          data-index={virtualRow.index}
-                          ref={virtualizer.measureElement}
-                          aria-selected={selected}
-                          style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            transform: `translateY(${virtualRow.start}px)`,
-                            display: 'table',
-                            tableLayout: 'fixed',
-                            background: selected ? 'rgba(98,255,255,0.06)' : undefined,
-                          }}
-                        >
-                          <td style={{ width: '40px' }}>
-                            <input
-                              type="checkbox"
-                              aria-label={`Select shipment ${shipment.id}`}
-                              checked={selected}
-                              onChange={() => toggleOne(shipment.id)}
-                              onClick={(event) => event.stopPropagation()}
-                              className="cursor-pointer accent-[#62ffff] w-4 h-4"
-                            />
-                          </td>
-                          <td>
-                            <span className="inline-flex items-center gap-1.5">
-                              <Package size={14} className="text-[#62ffff]" />
-                              {shipment.id}
-                            </span>
-                          </td>
-                          <td>{shipment.origin}</td>
-                          <td>{shipment.destination}</td>
-                          <td><StatusBadge status={shipment.status} /></td>
-                          <td>
-                            {shipment.priority ? (
-                              <PriorityBadge priority={shipment.priority} />
-                            ) : (
-                              <span className="text-[#64748b]">N/A</span>
-                            )}
-                          </td>
-                          <td>{safeFormatDate(shipment.createdAt)}</td>
-                          <td>
-                            <button
-                              type="button"
-                              className="rounded-lg bg-[#62ffff] px-3 py-1.5 text-sm font-semibold text-black transition hover:bg-[#4ae8e8]"
-                              onClick={() => handleRowClick(shipment.id, virtualRow.index)}
-                            >
-                              View
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {isLoading && (
-                <div className="py-8 px-6 text-center text-[var(--text-secondary)]" aria-live="polite">
-                  Loading more shipments...
-                </div>
-              )}
-            </>
+            <ShipmentsVirtualTable
+              shipments={filteredShipments}
+              total={total}
+              isLoading={isLoading}
+              allVisibleSelected={allVisibleSelected}
+              someVisibleSelected={someVisibleSelected}
+              visibleIds={visibleIds}
+              parentRef={parentRef}
+              virtualItems={virtualItems}
+              totalSize={totalSize}
+              virtualizer={virtualizer}
+              isSelected={isSelected}
+              toggleOne={toggleOne}
+              toggleAll={toggleAll}
+              onRowClick={handleRowClick}
+              onScroll={handleScroll}
+            />
           )}
         </>
       )}
