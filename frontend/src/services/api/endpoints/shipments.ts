@@ -85,6 +85,27 @@ export interface NoteResponse {
     visibility: "internal" | "customer";
 }
 
+export interface ConfirmDeliveryRequest {
+    timestamp: string;
+    notes?: string;
+}
+
+export interface DeliveryProof {
+    id?: string;
+    timestamp?: string;
+    confirmedAt?: string;
+    confirmedBy?: string;
+    notes?: string;
+    [key: string]: unknown;
+}
+
+export interface ConfirmDeliveryResponse {
+    shipment?: Shipment;
+    deliveryProof?: DeliveryProof;
+    proof?: DeliveryProof;
+    [key: string]: unknown;
+}
+
 export const shipmentApi = {
     getAll: async (params?: GetShipmentsParams): Promise<PaginatedShipments> => {
         const res = await apiClient.get<{ data: Shipment[]; meta: { nextCursor: string | null; hasMore: boolean } }>("/shipments", { params });
@@ -112,7 +133,18 @@ export const shipmentApi = {
     },
 
     updatePriority: async (id: string, priority: 'URGENT' | 'STANDARD' | 'ECONOMY'): Promise<Shipment> => {
-        const res = await apiClient.patch<{ data: Shipment }>(`/shipments/${id}`, { priority });
+        const res = await apiClient.put<{ data: Shipment }>(`/shipments/${id}/priority`, { priority });
+        return res.data.data;
+    },
+
+    confirmDelivery: async (
+        id: string,
+        data: ConfirmDeliveryRequest,
+    ): Promise<ConfirmDeliveryResponse> => {
+        const res = await apiClient.post<{ data: ConfirmDeliveryResponse }>(
+            `/shipments/${id}/confirm-delivery`,
+            data,
+        );
         return res.data.data;
     },
 
