@@ -74,10 +74,8 @@ const Signup: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050505] text-white relative overflow-hidden font-sans">
       {/* Background glows */}
-      <div className="absolute w-[500px] h-[500px] top-[-250px] right-[-100px] z-0 pointer-events-none"
-        style={{ background: 'radial-gradient(rgba(0,218,193,0.4), rgba(0,218,193,0))' }} />
-      <div className="absolute w-[600px] h-[600px] bottom-[-300px] left-[-200px] z-0 pointer-events-none"
-        style={{ background: 'conic-gradient(from 180deg at 50% 50%, #16abff33 0deg, #0885ff33 55deg, #54d6ff33 120deg, #0071ff33 160deg, transparent 360deg)' }} />
+      <div className="absolute w-[500px] h-[500px] top-[-250px] right-[-100px] z-0 pointer-events-none bg-[radial-gradient(rgba(0,218,193,0.4),rgba(0,218,193,0))]" />
+      <div className="absolute w-[600px] h-[600px] bottom-[-300px] left-[-200px] z-0 pointer-events-none bg-[conic-gradient(from_180deg_at_50%_50%,#16abff33_0deg,#0885ff33_55deg,#54d6ff33_120deg,#0071ff33_160deg,transparent_360deg)]" />
 
       <div className="bg-[rgba(20,20,20,0.7)] backdrop-blur-[20px] border border-[rgba(255,255,255,0.1)] rounded-3xl p-10 w-full max-w-[480px] z-10 shadow-[0_8px_32px_0_rgba(0,0,0,0.8)] sm:p-8 sm:rounded-none sm:min-h-screen sm:flex sm:flex-col sm:justify-center">
         {/* Header */}
