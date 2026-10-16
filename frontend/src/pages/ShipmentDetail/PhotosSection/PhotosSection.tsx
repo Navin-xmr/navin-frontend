@@ -111,6 +111,20 @@ const TypeSelect: React.FC<{
   );
 };
 
+const ZOOM_SCALE_CLASSES: Record<number, string> = {
+  0.5: "scale-50",
+  0.75: "scale-75",
+  1: "scale-100",
+  1.25: "scale-125",
+  1.5: "scale-150",
+  1.75: "scale-[1.75]",
+  2: "scale-[2]",
+  2.25: "scale-[2.25]",
+  2.5: "scale-[2.5]",
+  2.75: "scale-[2.75]",
+  3: "scale-[3]",
+};
+
 /** Portal-based lightbox — fully independent of parent DOM */
 const Lightbox: React.FC<{
   items: { url: string; type: PhotoType; label: string }[];
@@ -171,8 +185,7 @@ const Lightbox: React.FC<{
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[999] flex flex-col items-center justify-center select-none"
-      style={{ background: "rgba(0,0,0,0.92)", backdropFilter: "blur(12px)" }}
+      className="fixed inset-0 z-[999] flex flex-col items-center justify-center select-none bg-black/92 backdrop-blur-[12px]"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -182,8 +195,7 @@ const Lightbox: React.FC<{
     >
       {/* ── Top bar ──────────────────────────────────────────────────── */}
       <div
-        className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 sm:px-3 sm:py-2"
-        style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)" }}
+        className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 sm:px-3 sm:py-2 bg-gradient-to-b from-black/70 to-transparent"
         onClick={(e) => e.stopPropagation()}
       >
         <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wide ${s.pill}`}>
@@ -198,8 +210,7 @@ const Lightbox: React.FC<{
 
       {/* ── Image area ───────────────────────────────────────────────── */}
       <div
-        className="relative w-full flex items-center justify-center px-14 py-20 sm:px-10 sm:py-16 max-w-5xl mx-auto"
-        style={{ minHeight: "100vh" }}
+        className="relative w-full min-h-screen flex items-center justify-center px-14 py-20 sm:px-10 sm:py-16 max-w-5xl mx-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {!imgLoaded && !imgError && (
@@ -223,8 +234,7 @@ const Lightbox: React.FC<{
         <img
           src={item.url}
           alt={`Shipment photo - ${item.type}`}
-          className={`max-w-full max-h-[70vh] sm:max-h-[60vh] w-auto h-auto object-contain rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] transition-transform duration-200 ease-out ${!imgLoaded && !imgError ? "opacity-0 absolute" : "opacity-100"}`}
-          style={{ transform: `scale(${zoom})` }}
+          className={`max-w-full max-h-[70vh] sm:max-h-[60vh] w-auto h-auto object-contain rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] transition-transform duration-200 ease-out ${ZOOM_SCALE_CLASSES[zoom] ?? "scale-100"} ${!imgLoaded && !imgError ? "opacity-0 absolute" : "opacity-100"}`}
           draggable={false}
           onLoad={() => setImgLoaded(true)}
           onError={() => setImgError(true)}
@@ -265,8 +275,7 @@ const Lightbox: React.FC<{
 
       {/* ── Bottom label ─────────────────────────────────────────────── */}
       <div
-        className="absolute bottom-0 left-0 right-0 flex items-center justify-center px-4 py-4 sm:py-3 text-white/40 text-xs text-center"
-        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}
+        className="absolute bottom-0 left-0 right-0 flex items-center justify-center px-4 py-4 sm:py-3 text-white/40 text-xs text-center bg-gradient-to-t from-black/70 to-transparent"
         onClick={(e) => e.stopPropagation()}
       >
         {item.label}
@@ -581,9 +590,11 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({ shipmentId, canDelete }) 
                   <span>Uploading photos…</span>
                   <span className="tabular-nums font-medium text-white/70">{uploadProgress}%</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full rounded-full bg-gradient-to-r from-[#00d4c8] to-[#009990] transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                </div>
+                <progress
+                  value={uploadProgress}
+                  max={100}
+                  className="block w-full h-1.5 rounded-full overflow-hidden appearance-none bg-white/10 [&::-webkit-progress-bar]:bg-white/10 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:bg-gradient-to-r [&::-webkit-progress-value]:from-[#00d4c8] [&::-webkit-progress-value]:to-[#009990] [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-300 [&::-moz-progress-bar]:bg-gradient-to-r [&::-moz-progress-bar]:from-[#00d4c8] [&::-moz-progress-bar]:to-[#009990]"
+                />
               </div>
             )}
 
