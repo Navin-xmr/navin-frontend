@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { AxiosError, type AxiosAdapter, type InternalAxiosRequestConfig } from "axios";
+import {
+    AxiosError,
+    type AxiosAdapter,
+    type AxiosInstance,
+    type AxiosResponse,
+    type InternalAxiosRequestConfig,
+} from "axios";
 import { setupErrorInterceptor } from "./errorInterceptor";
 import { notifyToast } from "../../../context/toastBridge";
 
@@ -7,12 +13,18 @@ vi.mock("../../../context/toastBridge", () => ({
     notifyToast: vi.fn(),
 }));
 
+interface MockErrorPayload {
+    response?: { status: number; data?: unknown };
+    message: string;
+    code?: string;
+}
+
+type ErrorInterceptorRejected = (error: MockErrorPayload) => Promise<never>;
+
 describe("Error Interceptor Unit Tests", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let mockAxiosInstance: any;
+    let mockAxiosInstance: AxiosInstance;
     let mockNavigate: ReturnType<typeof vi.fn>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let responseErrorInterceptorCallback: (error: any) => Promise<any>;
+    let responseErrorInterceptorCallback: ErrorInterceptorRejected;
 
     beforeEach(() => {
         vi.useFakeTimers();
@@ -23,13 +35,20 @@ describe("Error Interceptor Unit Tests", () => {
         mockAxiosInstance = {
             interceptors: {
                 response: {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    use: vi.fn((_successCb: any, errorCb: any) => {
-                        responseErrorInterceptorCallback = errorCb;
-                    }),
+                    use: vi.fn(
+                        (
+                            _successCb?: ((value: AxiosResponse) => AxiosResponse | Promise<AxiosResponse>) | null,
+                            errorCb?: ErrorInterceptorRejected | null,
+                        ) => {
+                            if (errorCb) {
+                                responseErrorInterceptorCallback = errorCb;
+                            }
+                            return 0;
+                        },
+                    ),
                 },
             },
-        };
+        } as unknown as AxiosInstance;
 
         setupErrorInterceptor(mockAxiosInstance, mockNavigate as (path: string) => void);
     });
