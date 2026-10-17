@@ -45,6 +45,7 @@ const Combobox: React.FC<ComboboxProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
   const [activeIndex, setActiveIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxRef = useRef<HTMLUListElement>(null);
@@ -54,16 +55,15 @@ const Combobox: React.FC<ComboboxProps> = ({
   // clear) so that refocus does not count as the user asking for suggestions.
   const skipOpenOnFocusRef = useRef(false);
 
+  if (prevValue !== value) {
+    setPrevValue(value);
+    setInputValue(value);
+  }
+
   const focusInputWithoutOpening = () => {
     skipOpenOnFocusRef.current = document.activeElement !== inputRef.current;
     inputRef.current?.focus();
   };
-
-  // Sync external value
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- controlled component sync
-    setInputValue(value);
-  }, [value]);
 
   // Filter options based on input
   const filteredOptions = React.useMemo(() => {
