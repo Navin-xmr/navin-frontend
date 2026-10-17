@@ -24,3 +24,5 @@ export { useLocalStorage } from './useLocalStorage';
 export type { UseLocalStorageOptions } from './useLocalStorage';
 export { useLanguage, SUPPORTED_LANGUAGES } from './useLanguage';
 export type { SupportedLanguage, UseLanguageReturn } from './useLanguage';
+export { useShipmentActions } from './useShipmentActions';
+export type { UseShipmentActionsParams, UseShipmentActionsReturn, ShipmentHeaderPriority, PendingDeliveryConfirmation } from './useShipmentActions';

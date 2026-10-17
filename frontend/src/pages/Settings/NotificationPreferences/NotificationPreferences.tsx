@@ -1,118 +1,21 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Bell, CheckCircle2, Loader2, Smartphone } from 'lucide-react';
+import { Bell, Loader2 } from 'lucide-react';
 import {
   type NotificationChannel,
   type NotificationEventType,
   notificationPreferencesApi,
 } from '@services/api/endpoints/notifications';
+import type { ExtendedChannel, ExtendedPreferencesMap, CategoryDef } from './types';
+import { CATEGORIES, defaultPreferences } from './preferenceData';
+import SmsVerification from './SmsVerification';
+import PushOptIn from './PushOptIn';
+import PreferenceCategory from './PreferenceCategory';
 
-// ---------- Types ----------
-
-type ExtendedChannel = NotificationChannel | 'push';
-
-interface ExtendedPreference {
-  email: boolean;
-  sms: boolean;
-  push: boolean;
-}
-
-type ExtendedPreferencesMap = Record<NotificationEventType, ExtendedPreference>;
-
-interface EventDef {
-  event: NotificationEventType;
-  label: string;
-}
-
-interface CategoryDef {
-  label: string;
-  events: EventDef[];
-}
-
-// ---------- Data ----------
-
-const CATEGORIES: CategoryDef[] = [
-  {
-    label: 'Shipments',
-    events: [
-      { event: 'shipment_created', label: 'Shipment Created' },
-      { event: 'status_changed', label: 'Status Changed' },
-      { event: 'delivery_confirmed', label: 'Delivery Confirmed' },
-    ],
-  },
-  {
-    label: 'Payments',
-    events: [{ event: 'payment_received', label: 'Payment Received' }],
-  },
-  {
-    label: 'Disputes',
-    events: [
-      { event: 'dispute_opened', label: 'Dispute Opened' },
-      { event: 'dispute_resolved', label: 'Dispute Resolved' },
-    ],
-  },
+const CHANNELS: { key: ExtendedChannel; label: string }[] = [
+  { key: 'email', label: 'Email' },
+  { key: 'sms', label: 'SMS' },
+  { key: 'push', label: 'Push' },
 ];
-
-const ALL_EVENTS = CATEGORIES.flatMap((c) => c.events.map((e) => e.event));
-
-const defaultPreferences = (): ExtendedPreferencesMap =>
-  Object.fromEntries(
-    ALL_EVENTS.map((e) => [e, { email: false, sms: false, push: false }]),
-  ) as ExtendedPreferencesMap;
-
-// ---------- Toggle component ----------
-
-interface ToggleSwitchProps {
-  id: string;
-  checked: boolean;
-  disabled?: boolean;
-  onChange: () => void;
-  ariaLabel: string;
-  title?: string;
-}
-
-const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
-  id,
-  checked,
-  disabled = false,
-  onChange,
-  ariaLabel,
-  title,
-}) => (
-  <label
-    htmlFor={id}
-    title={title}
-    className={`relative inline-block w-11 h-6 flex-shrink-0 ${
-      disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
-    }`}
-  >
-    <input
-      id={id}
-      type="checkbox"
-      className="sr-only"
-      checked={checked}
-      onChange={onChange}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      aria-disabled={disabled}
-    />
-    <span
-      className={`absolute inset-0 rounded-full border transition-colors duration-300 ${
-        checked
-          ? 'bg-[rgba(59,130,246,0.15)] border-[#3B82F6]'
-          : 'bg-[#1E293B] border-[#334155]'
-      }`}
-    />
-    <span
-      className={`absolute top-[3px] left-[3px] w-[18px] h-[18px] rounded-full transition-all duration-300 ${
-        checked
-          ? 'translate-x-5 bg-[#3B82F6]'
-          : 'translate-x-0 bg-[#94A3B8]'
-      }`}
-    />
-  </label>
-);
-
-// ---------- Main Component ----------
 
 const NotificationPreferences: React.FC = () => {
   const [prefs, setPrefs] = useState<ExtendedPreferencesMap>(defaultPreferences);
@@ -276,12 +179,6 @@ const NotificationPreferences: React.FC = () => {
     );
   }
 
-  const CHANNELS: { key: ExtendedChannel; label: string }[] = [
-    { key: 'email', label: 'Email' },
-    { key: 'sms', label: 'SMS' },
-    { key: 'push', label: 'Push' },
-  ];
-
   return (
     <section
       className="w-full bg-[#14171E] border border-[#1E293B] rounded-xl overflow-hidden"
@@ -306,106 +203,26 @@ const NotificationPreferences: React.FC = () => {
       </div>
 
       {/* SMS verification */}
-      <div className="px-6 py-4 border-b border-[#1E293B] bg-[rgba(30,41,59,0.3)]">
-        <div className="flex items-center gap-2.5 mb-3">
-          <span className="text-[0.875rem] font-semibold text-[#E2E8F0]">SMS Notifications</span>
-          {phoneVerified ? (
-            <span className="flex items-center gap-1 text-emerald-400 text-xs font-medium" aria-label="Phone verified">
-              <CheckCircle2 size={13} /> Verified
-            </span>
-          ) : (
-            <span className="text-amber-400 text-xs">Phone verification required to enable SMS</span>
-          )}
-        </div>
-
-        {!phoneVerified && (
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <input
-                type="tel"
-                className="flex-1 min-w-0 bg-[#0F1117] border border-[#334155] rounded-lg px-3 py-2 text-[#E2E8F0] text-sm outline-none transition-colors focus:border-[#3B82F6] disabled:opacity-60 disabled:cursor-not-allowed"
-                placeholder="+1 555 000 0000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                aria-label="Phone number"
-                disabled={otpSent}
-              />
-              <button
-                type="button"
-                className="flex items-center gap-1.5 px-4 py-2 bg-[#1E293B] border border-[#334155] rounded-lg text-[#CBD5E1] text-sm font-medium cursor-pointer whitespace-nowrap transition-colors hover:bg-[#293548] hover:border-[#475569] disabled:opacity-60 disabled:cursor-not-allowed"
-                onClick={handleSendOtp}
-                disabled={otpLoading || otpSent}
-                aria-label="Send OTP"
-              >
-                {otpLoading && <Loader2 className="animate-spin" size={13} />}
-                {otpSent ? 'OTP Sent' : 'Send OTP'}
-              </button>
-            </div>
-
-            {otpSent && (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  className="flex-1 min-w-0 bg-[#0F1117] border border-[#334155] rounded-lg px-3 py-2 text-[#E2E8F0] text-sm outline-none transition-colors focus:border-[#3B82F6]"
-                  placeholder="Enter verification code"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  aria-label="Verification code"
-                  inputMode="numeric"
-                  maxLength={6}
-                />
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[rgba(59,130,246,0.15)] border border-[#3B82F6] rounded-lg text-[#60A5FA] text-sm font-medium cursor-pointer whitespace-nowrap transition-colors hover:bg-[rgba(59,130,246,0.25)] disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={handleVerifyOtp}
-                  disabled={verifyLoading}
-                  aria-label="Verify OTP"
-                >
-                  {verifyLoading && <Loader2 className="animate-spin" size={13} />}
-                  Verify
-                </button>
-              </div>
-            )}
-
-            {phoneError && (
-              <p className="text-[#F87171] text-xs mt-1" role="alert">{phoneError}</p>
-            )}
-          </div>
-        )}
-      </div>
+      <SmsVerification
+        phoneVerified={phoneVerified}
+        phone={phone}
+        otp={otp}
+        otpSent={otpSent}
+        otpLoading={otpLoading}
+        verifyLoading={verifyLoading}
+        phoneError={phoneError}
+        onPhoneChange={setPhone}
+        onOtpChange={setOtp}
+        onSendOtp={handleSendOtp}
+        onVerifyOtp={handleVerifyOtp}
+      />
 
       {/* Push notification opt-in */}
-      <div className="px-6 py-4 border-b border-[#1E293B] bg-[rgba(30,41,59,0.2)]">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1 rounded-md bg-[rgba(139,92,246,0.15)] text-purple-400">
-              <Smartphone size={16} />
-            </div>
-            <div>
-              <span className="text-[0.875rem] font-semibold text-[#E2E8F0]">Push Notifications</span>
-              <p className="text-slate-500 text-xs mt-0.5 m-0">
-                Receive instant alerts in your browser
-              </p>
-            </div>
-          </div>
-          {!pushEnabled ? (
-            <button
-              type="button"
-              onClick={handleRequestPush}
-              disabled={pushRequesting || !('Notification' in window)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[rgba(139,92,246,0.15)] border border-purple-500/40 rounded-lg text-purple-300 text-sm font-medium cursor-pointer whitespace-nowrap transition-colors hover:bg-[rgba(139,92,246,0.25)] disabled:opacity-60 disabled:cursor-not-allowed"
-              aria-label="Enable push notifications"
-            >
-              {pushRequesting && <Loader2 className="animate-spin" size={13} />}
-              Enable Push Notifications
-            </button>
-          ) : (
-            <span className="flex items-center gap-1 text-emerald-400 text-sm font-medium">
-              <CheckCircle2 size={14} /> Enabled
-            </span>
-          )}
-        </div>
-      </div>
+      <PushOptIn
+        pushEnabled={pushEnabled}
+        pushRequesting={pushRequesting}
+        onRequestPush={handleRequestPush}
+      />
 
       {/* Column headers */}
       <div className="flex justify-end gap-0 px-6 pt-3 pb-0" aria-hidden="true">
@@ -421,124 +238,19 @@ const NotificationPreferences: React.FC = () => {
       {/* Categories */}
       <div className="px-6 pb-4">
         {CATEGORIES.map((cat, catIndex) => (
-          <div
+          <PreferenceCategory
             key={cat.label}
-            className={`py-4 ${catIndex > 0 ? 'border-t border-[rgba(30,41,59,0.6)]' : ''}`}
-          >
-            {/* Category header with bulk toggles */}
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-[0.65rem] font-bold text-slate-600 uppercase tracking-widest m-0">
-                {cat.label}
-              </h3>
-
-              {/* Bulk toggle buttons per channel */}
-              <div className="flex items-center gap-0">
-                {CHANNELS.map(({ key, label }) => {
-                  const fullyOn = isCategoryFullyEnabled(cat, key);
-                  const partial = isCategoryPartiallyEnabled(cat, key);
-                  const isDisabled = key === 'sms' && !phoneVerified;
-                  const isPushDisabled = key === 'push' && !pushEnabled;
-
-                  return (
-                    <div key={key} className="w-[72px] flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          !isDisabled &&
-                          !isPushDisabled &&
-                          handleCategoryBulkToggle(cat, key, !fullyOn)
-                        }
-                        disabled={isDisabled || isPushDisabled}
-                        title={
-                          isDisabled
-                            ? 'Verify your phone to enable SMS'
-                            : isPushDisabled
-                            ? 'Enable push notifications first'
-                            : fullyOn
-                            ? `Disable all ${label} for ${cat.label}`
-                            : `Enable all ${label} for ${cat.label}`
-                        }
-                        className={`text-[0.6rem] font-semibold px-1.5 py-0.5 rounded transition-colors cursor-pointer border ${
-                          isDisabled || isPushDisabled
-                            ? 'opacity-30 cursor-not-allowed border-transparent text-slate-600'
-                            : fullyOn
-                            ? 'bg-[rgba(59,130,246,0.15)] border-[#3B82F6]/40 text-[#60A5FA]'
-                            : partial
-                            ? 'bg-[rgba(251,191,36,0.1)] border-amber-500/30 text-amber-400'
-                            : 'bg-transparent border-slate-700/50 text-slate-600 hover:border-slate-500 hover:text-slate-400'
-                        }`}
-                        aria-label={`${fullyOn ? 'Disable' : 'Enable'} all ${label} notifications for ${cat.label}`}
-                        aria-pressed={fullyOn}
-                      >
-                        {fullyOn ? 'All on' : partial ? 'Partial' : 'All off'}
-                      </button>
-                    </div>
-                  );
-                })}
-                {/* Spacer to align with saved indicator column */}
-                <div className="w-[72px]" />
-              </div>
-            </div>
-
-            {/* Event rows */}
-            {cat.events.map(({ event, label }) => (
-              <div
-                key={event}
-                className="flex items-center justify-between py-3 border-b border-[rgba(30,41,59,0.4)] last:border-b-0 gap-4"
-              >
-                <span className="flex-1 text-sm font-medium text-[#E2E8F0]">{label}</span>
-
-                <div className="flex items-center gap-0 flex-shrink-0">
-                  {/* Email toggle */}
-                  <div className="w-[72px] flex justify-center">
-                    <ToggleSwitch
-                      id={`${event}-email`}
-                      checked={prefs[event]?.email ?? false}
-                      onChange={() => handleToggle(event, 'email')}
-                      ariaLabel={`${label} email notifications`}
-                    />
-                  </div>
-
-                  {/* SMS toggle */}
-                  <div className="w-[72px] flex justify-center">
-                    <ToggleSwitch
-                      id={`${event}-sms`}
-                      checked={prefs[event]?.sms ?? false}
-                      onChange={() => handleToggle(event, 'sms')}
-                      disabled={!phoneVerified}
-                      ariaLabel={`${label} SMS notifications`}
-                      title={!phoneVerified ? 'Verify your phone number to enable SMS' : undefined}
-                    />
-                  </div>
-
-                  {/* Push toggle */}
-                  <div className="w-[72px] flex justify-center">
-                    <ToggleSwitch
-                      id={`${event}-push`}
-                      checked={prefs[event]?.push ?? false}
-                      onChange={() => handleToggle(event, 'push')}
-                      disabled={!pushEnabled}
-                      ariaLabel={`${label} push notifications`}
-                      title={!pushEnabled ? 'Enable push notifications first' : undefined}
-                    />
-                  </div>
-
-                  {/* Inline saved indicator */}
-                  <div className="w-[72px] flex justify-center">
-                    {savedEvent === event ? (
-                      <span
-                        className="flex items-center gap-1 text-emerald-400 text-xs font-medium whitespace-nowrap animate-[fadeInUp_0.25s_ease-out]"
-                        role="status"
-                        aria-live="polite"
-                      >
-                        <CheckCircle2 size={12} /> Saved
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+            category={cat}
+            prefs={prefs}
+            phoneVerified={phoneVerified}
+            pushEnabled={pushEnabled}
+            savedEvent={savedEvent}
+            isFirst={catIndex === 0}
+            onToggle={handleToggle}
+            onBulkToggle={handleCategoryBulkToggle}
+            isCategoryFullyEnabled={isCategoryFullyEnabled}
+            isCategoryPartiallyEnabled={isCategoryPartiallyEnabled}
+          />
         ))}
       </div>
     </section>

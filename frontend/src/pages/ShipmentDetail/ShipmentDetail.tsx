@@ -27,22 +27,16 @@ import { useLiveRegion } from "../../context/LiveRegionContext";
 import CostBreakdown from "../../components/shipment/CostBreakdown";
 import type { CostBreakdownData } from "../../components/shipment/CostBreakdown";
 import { useToast } from "../../context/ToastContext";
-import { exportShipmentPdf } from "../../utils/exportShipmentPdf";
 import ShipmentComparison from "../../components/shipment/ShipmentComparison";
 import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison";
 import ShipmentStickyBar from "./ShipmentStickyBar";
 import { formatDate } from "@utils/localeFormat";
 import StatusUpdate, { ShipmentMilestone } from "../../components/shipment/StatusUpdate";
-import { shipmentApi, type ShipmentStatus } from "@services/api/endpoints/shipments";
+import { type ShipmentStatus } from "@services/api/endpoints/shipments";
 import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
 import { usePagination } from "../../hooks/usePagination";
-
-type ShipmentHeaderPriority = "URGENT" | "STANDARD" | "ECONOMY";
-
-interface PendingDeliveryConfirmation {
-  rating: number;
-  feedback: string;
-}
+import { useShipmentActions } from "@hooks/useShipmentActions";
+import type { ShipmentHeaderPriority, PendingDeliveryConfirmation } from "@hooks/useShipmentActions";
 
 const ShipmentDetail: React.FC = () => {
   const { t } = useTranslation("shipments");
@@ -159,138 +153,46 @@ const ShipmentDetail: React.FC = () => {
     }
   };
 
-  const handleUpdateStatus = () => {
-    setIsStatusModalOpen(true);
-  };
-
-  const handleApplyStatusUpdate = async (nextStatus: ShipmentStatus) => {
-    if (!id) return;
-    setIsUpdatingStatus(true);
-    try {
-      const updated = await shipmentApi.updateStatus(id, nextStatus);
-      const resultingStatus = updated?.status ?? nextStatus;
-      setStatusOverride(resultingStatus);
-      refresh();
-      addToast(t("shipmentDetail.statusUpdateSuccess", `Shipment status updated to ${resultingStatus}.`), "success");
-      announce(`Shipment status updated to ${resultingStatus}`);
-      setIsStatusModalOpen(false);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to update shipment status.";
-      addToast(message, "error");
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
-  const handleUpdatePriority = async (priority: ShipmentHeaderPriority) => {
-    if (!id) return;
-
-    setIsUpdatingPriority(true);
-    let lastError: Error | null = null;
-    try {
-      for (let attempt = 0; attempt < 3; attempt += 1) {
-        try {
-          const updated = await shipmentApi.updatePriority(id, priority);
-          setPriorityOverride(updated?.priority ?? priority);
-          refresh();
-          addToast(`Shipment priority updated to ${updated?.priority ?? priority}.`, "success");
-          return;
-        } catch (err) {
-          lastError = err instanceof Error ? err : new Error("Failed to update shipment priority.");
-          if (attempt < 2) {
-            await new Promise<void>((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
-          }
-        }
-      }
-
-      addToast(lastError?.message ?? "Failed to update shipment priority.", "error");
-      throw lastError ?? new Error("Failed to update shipment priority.");
-    } finally {
-      setIsUpdatingPriority(false);
-    }
-  };
-  const handleTrack = () => {
-    const trackingNumber = shipmentHeaderData.trackingNumber;
-    if (!trackingNumber) return;
-    navigate(`/track/${encodeURIComponent(trackingNumber)}`, {
-      state: { shipmentId: id, shipment },
-    });
-  };
-
-  const handleDeliveryConfirmation = (_shipmentId: string, rating: number, feedback: string) =>
-    new Promise<void>((resolve, reject) => {
-      deliveryConfirmationResolver.current = { resolve, reject };
-      setPendingDeliveryConfirmation({ rating, feedback });
-      setIsDeliveryConfirmDialogOpen(true);
-    });
-
-  const handleConfirmDelivery = async () => {
-    if (!id || !pendingDeliveryConfirmation || !deliveryConfirmationResolver.current) return;
-
-    const resolver = deliveryConfirmationResolver.current;
-    const timestamp = new Date().toISOString();
-    const notes = pendingDeliveryConfirmation.feedback.trim();
-    setIsConfirmingDelivery(true);
-
-    try {
-      const request = notes ? { timestamp, notes } : { timestamp };
-      const response = await shipmentApi.confirmDelivery(id, request);
-      const proof = response.deliveryProof ?? response.proof;
-      const proofDetails = proof
-        ? [
-            proof.id ? `Proof ID: ${proof.id}` : null,
-            proof.confirmedBy ? `Confirmed by: ${proof.confirmedBy}` : null,
-            proof.confirmedAt ?? proof.timestamp ? `Recorded at: ${proof.confirmedAt ?? proof.timestamp}` : null,
-          ].filter((detail): detail is string => Boolean(detail))
-        : [];
-      addToast(
-        `Delivery confirmed. Delivery proof: ${proofDetails.length > 0 ? proofDetails.join("; ") : `Recorded at: ${timestamp}`}.`,
-        "success",
-      );
-      refresh();
-      resolver.resolve();
-      setIsDeliveryConfirmDialogOpen(false);
-      setPendingDeliveryConfirmation(null);
-      deliveryConfirmationResolver.current = null;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Failed to confirm delivery.");
-      addToast(error.message, "error");
-      resolver.reject(error);
-      setIsDeliveryConfirmDialogOpen(false);
-      setPendingDeliveryConfirmation(null);
-      deliveryConfirmationResolver.current = null;
-    } finally {
-      setIsConfirmingDelivery(false);
-    }
-  };
-
-  const handleCancelDeliveryConfirmation = () => {
-    const resolver = deliveryConfirmationResolver.current;
-    if (resolver) resolver.reject(new Error("Delivery confirmation cancelled."));
-    deliveryConfirmationResolver.current = null;
-    setIsDeliveryConfirmDialogOpen(false);
-    setPendingDeliveryConfirmation(null);
-  };
-  const handlePrint = () => {
-    setIsPrinting(true);
-  };
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      await exportShipmentPdf(shipmentHeaderData.trackingNumber, contentRef);
-    } catch (err) {
-      addToast(err instanceof Error ? err.message : "Failed to export PDF.", "error");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  const handleRaiseDispute = () => {
-    setIsDisputeOpen(true);
-  };
-  const handleDisputeSuccess = (dispute: DisputeData) => {
-    setExistingDispute(dispute);
-    setIsDisputeOpen(false);
-    announce(t("shipmentDetail.disputeSubmitted", { ref: dispute.referenceNumber }));
-  };
+  const {
+    handleUpdateStatus,
+    handleApplyStatusUpdate,
+    handleUpdatePriority,
+    handleTrack,
+    handleDeliveryConfirmation,
+    handleConfirmDelivery,
+    handleCancelDeliveryConfirmation,
+    handlePrint,
+    handleExport,
+    handleRaiseDispute,
+    handleDisputeSuccess,
+  } = useShipmentActions({
+    id,
+    role,
+    shipment,
+    shipmentHeaderData,
+    contentRef,
+    refresh,
+    setIsPrinting,
+    setIsDisputeOpen,
+    setExistingDispute,
+    setIsExporting,
+    setIsComparisonOpen,
+    setIsUpdatingPriority,
+    setPriorityOverride,
+    setIsDeliveryConfirmDialogOpen,
+    setIsConfirmingDelivery,
+    setPendingDeliveryConfirmation,
+    deliveryConfirmationResolver,
+    pendingDeliveryConfirmation,
+    setStatusOverride,
+    setIsStatusModalOpen,
+    setIsUpdatingStatus,
+    currentStatus,
+    announce,
+    addToast,
+    t,
+    navigate,
+  });
 
   // Derive payment data from real shipment stellar fields (null if not yet available)
   const paymentData: PaymentData | null = shipment?.stellarTxHash
