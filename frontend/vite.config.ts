@@ -177,6 +177,19 @@ export default defineConfig(({ mode }) => {
     ],
     coverage: {
       provider: "v8",
+      reporter: ["text", "json", "html"],
+      thresholds: {
+        lines: 60,
+        branches: 55,
+        functions: 55,
+        statements: 60,
+      },
+      exclude: [
+        ...configDefaults.exclude,
+        "e2e/**",
+        "src/test/**",
+        "**/*.d.ts",
+      ],
       thresholds: {
         lines: 60,
         branches: 50,
