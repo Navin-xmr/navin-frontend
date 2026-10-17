@@ -1,29 +1,19 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  Search, Filter, Plus, ChevronLeft, ChevronRight, MoreVertical,
-  X, Loader2, AlertTriangle, Mail, RefreshCw, Trash2, Clock,
-} from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Search, Filter, Plus, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { usersApi, invitationsApi } from '@services/api';
-import type { User as ApiUser, UserRole, Invitation } from '@services/api';
+import type { UserRole, Invitation } from '@services/api';
 import { useToast } from '../../../../context/ToastContext';
 import { useAuthContext } from '../../../../context/AuthContext';
-import { useFocusTrap } from '../../../../hooks/useFocusTrap';
 import { useDebounce } from '../../../../hooks/useDebounce';
 import { usePagination } from '../../../../hooks/usePagination';
-import Avatar from '@components/ui/Avatar';
 import Breadcrumb from '@components/common/Breadcrumb';
 import { ConfirmDialog } from '@components/ui/ConfirmDialog';
+import UserTable from './UserTable';
+import PendingInvitations from './PendingInvitations';
+import InviteModal, { type InviteStep } from './InviteModal';
+import type { MappedUser } from './types';
 
-interface MappedUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  status: 'Active' | 'Inactive';
-  lastLogin: string;
-}
-
-function mapApiUser(u: ApiUser): MappedUser {
+function mapApiUser(u: import('@services/api').User): MappedUser {
   return {
     id: u._id,
     name: u.name,
@@ -34,9 +24,6 @@ function mapApiUser(u: ApiUser): MappedUser {
   };
 }
 
-type ActionMenuState = string | null;
-type InviteStep = 'form' | 'success';
-
 const UserManagement: React.FC = () => {
   const { addToast } = useToast();
   const { userId: currentUserId } = useAuthContext();
@@ -45,7 +32,7 @@ const UserManagement: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<ActionMenuState>(null);
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [invitationsLoading, setInvitationsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,14 +53,9 @@ const UserManagement: React.FC = () => {
     setInviteMessage('');
   }, []);
 
-  const inviteModalRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(inviteModalRef, isModalOpen, closeModal);
-
   const [total, setTotal] = useState(0);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Pagination is server-driven: every page/search/role change refetches. A new
-  // search or role filter sends the user back to page 1.
   const { currentPage, pageSize: itemsPerPage, setPage: setCurrentPage } = usePagination({
     pageSize: 8,
     resetKey: `${debouncedSearch}|${roleFilter}`,
@@ -85,10 +67,7 @@ const UserManagement: React.FC = () => {
   const reloadInvitations = useCallback(() => setInvitationsReloadKey((key) => key + 1), []);
 
   useEffect(() => {
-    // Only the most recent request may update state, so a slow earlier response
-    // (e.g. the page before a search) can never overwrite newer results.
     let isCurrent = true;
-
     async function loadUsers() {
       try {
         setLoading(true);
@@ -97,7 +76,7 @@ const UserManagement: React.FC = () => {
           page: currentPage,
           limit: itemsPerPage,
           search: debouncedSearch || undefined,
-          role: roleFilter === 'All' ? undefined : (roleFilter as import('@services/api').UserRole),
+          role: roleFilter === 'All' ? undefined : (roleFilter as UserRole),
         });
         if (!isCurrent) return;
         setUsers(res.data.map(mapApiUser));
@@ -109,16 +88,12 @@ const UserManagement: React.FC = () => {
         if (isCurrent) setLoading(false);
       }
     }
-
     void loadUsers();
-    return () => {
-      isCurrent = false;
-    };
+    return () => { isCurrent = false; };
   }, [currentPage, debouncedSearch, itemsPerPage, roleFilter, usersReloadKey]);
 
   useEffect(() => {
     let isCurrent = true;
-
     async function loadInvitations() {
       try {
         setInvitationsLoading(true);
@@ -130,16 +105,11 @@ const UserManagement: React.FC = () => {
         if (isCurrent) setInvitationsLoading(false);
       }
     }
-
     void loadInvitations();
-    return () => {
-      isCurrent = false;
-    };
+    return () => { isCurrent = false; };
   }, [invitationsReloadKey]);
 
   const totalPages = Math.ceil(total / itemsPerPage) || 1;
-  // Server already returns the current page's slice; render all returned users.
-  const currentUsers = users;
 
   const handleRoleChange = async (id: string, newRole: UserRole) => {
     if (id === currentUserId) {
@@ -155,9 +125,9 @@ const UserManagement: React.FC = () => {
     } catch (err: unknown) {
       setUsers(prev);
       const isLastAdmin =
-        (typeof err === 'object' && err !== null && 'response' in err &&
-          typeof (err as { response?: { status?: number } }).response === 'object' &&
-          (err as { response: { status: number } }).response.status === 409);
+        typeof err === 'object' && err !== null && 'response' in err &&
+        typeof (err as { response?: { status?: number } }).response === 'object' &&
+        (err as { response: { status: number } }).response.status === 409;
       addToast(isLastAdmin ? 'Cannot demote the last admin.' : 'Failed to update role', 'error');
     }
   };
@@ -165,21 +135,16 @@ const UserManagement: React.FC = () => {
   const toggleUserStatus = async (id: string) => {
     const user = users.find(u => u.id === id);
     if (!user) return;
-
     if (id === currentUserId) {
       addToast('You cannot deactivate your own account.', 'error');
       setActiveMenu(null);
       return;
     }
-
     if (user.status === 'Active') {
-      // Deactivation requires confirmation
       setConfirmDeactivate({ id, name: user.name });
       setActiveMenu(null);
       return;
     }
-
-    // Activate immediately (no confirmation needed)
     const prev = users;
     setUsers(users.map(u => u.id === id ? { ...u, status: 'Active' as const } : u));
     setActiveMenu(null);
@@ -218,9 +183,6 @@ const UserManagement: React.FC = () => {
       await invitationsApi.send({ email: inviteEmail, role: inviteRole, message: inviteMessage || undefined });
       setLastInvitedEmail(inviteEmail);
       setInviteStep('success');
-      // Reload from the server instead of trusting the local page: go back to
-      // the first page (or refetch it if we are already there) so the list and
-      // any search made right after the invite reflect the API.
       if (currentPage !== 1) setCurrentPage(1);
       else reloadUsers();
       reloadInvitations();
@@ -256,8 +218,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // Single page-level heading shared by the error and loaded render states so
-  // the page always exposes just one top-level heading.
   const pageHeader = (
     <div>
       <h1 className="text-[28px] font-semibold m-0 mb-2">Team Management</h1>
@@ -268,9 +228,7 @@ const UserManagement: React.FC = () => {
   if (error) {
     return (
       <div className="px-6 py-8 max-w-[1200px] mx-auto min-h-[calc(100vh-80px)] text-slate-100 max-sm:px-4 max-sm:py-5">
-        <div className="flex justify-between items-start mb-8">
-          {pageHeader}
-        </div>
+        <div className="flex justify-between items-start mb-8">{pageHeader}</div>
         <div className="flex flex-col items-center justify-center py-16 px-6 text-red-400 gap-3 bg-[#14171E] border border-[#1E293B] rounded-xl text-center">
           <AlertTriangle size={48} />
           <h3 className="m-0 text-lg text-slate-100">Failed to load users</h3>
@@ -301,59 +259,13 @@ const UserManagement: React.FC = () => {
         </button>
       </div>
 
-      {(invitations.length > 0 || invitationsLoading) && (
-        <div className="bg-[#14171e] border border-[#2d3748] border-l-[3px] border-l-amber-400 rounded-[10px] px-5 py-4 mb-5">
-          <div className="flex items-center mb-3">
-            <div className="flex items-center gap-2">
-              <Clock size={16} className="text-amber-400" />
-              <h2 className="text-sm font-semibold text-slate-100 m-0">Pending Invitations</h2>
-              <span className="inline-flex items-center justify-center bg-[rgba(245,158,11,0.15)] text-amber-400 rounded-full text-[11px] font-bold px-[7px] py-px min-w-[20px]">
-                {invitations.length}
-              </span>
-            </div>
-          </div>
-          {invitationsLoading ? (
-            <div className="flex flex-col items-center justify-center py-4 text-slate-400 gap-3">
-              <Loader2 className="animate-spin" size={20} />
-              <p className="m-0 text-sm">Loading…</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {invitations.map((inv) => (
-                <div key={inv._id} className="flex items-center justify-between bg-[rgba(30,41,59,0.4)] border border-[#1E293B] rounded-lg px-[14px] py-2.5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-[rgba(245,158,11,0.1)] rounded-full flex items-center justify-center text-amber-400 shrink-0">
-                      <Mail size={16} />
-                    </div>
-                    <div>
-                      <span className="text-[13px] font-medium text-slate-200 mr-2">{inv.email}</span>
-                      <span className="text-[11px] font-medium text-slate-400 bg-[#1e293b] rounded px-2 py-0.5">{inv.role}</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      className="flex items-center gap-[5px] border-none rounded-md px-3 py-1.5 text-xs font-medium cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-[rgba(59,130,246,0.1)] text-blue-400 hover:bg-[rgba(59,130,246,0.2)]"
-                      disabled={actionLoading === `resend-${inv._id}`}
-                      onClick={() => handleResend(inv._id, inv.email)}
-                    >
-                      {actionLoading === `resend-${inv._id}` ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                      Resend
-                    </button>
-                    <button
-                      className="flex items-center gap-[5px] border-none rounded-md px-3 py-1.5 text-xs font-medium cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-[rgba(239,68,68,0.08)] text-red-400 hover:bg-[rgba(239,68,68,0.15)]"
-                      disabled={actionLoading === `revoke-${inv._id}`}
-                      onClick={() => handleRevoke(inv._id, inv.email)}
-                    >
-                      {actionLoading === `revoke-${inv._id}` ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                      Revoke
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <PendingInvitations
+        invitations={invitations}
+        loading={invitationsLoading}
+        actionLoading={actionLoading}
+        onResend={handleResend}
+        onRevoke={handleRevoke}
+      />
 
       <div className="flex gap-4 mb-6 max-sm:flex-col">
         <div className="relative flex-1 max-w-[400px] max-sm:max-w-full">
@@ -382,98 +294,15 @@ const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-[#14171E] border border-[#1E293B] rounded-xl overflow-x-auto mb-6">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-slate-400 gap-3">
-            <Loader2 className="animate-spin" size={32} />
-            <p className="m-0 text-sm">Loading team members...</p>
-          </div>
-        ) : (
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr>
-                <th className="px-6 py-4 text-[13px] font-medium text-slate-400 border-b border-[#1E293B] uppercase tracking-[0.5px]">User</th>
-                <th className="px-6 py-4 text-[13px] font-medium text-slate-400 border-b border-[#1E293B] uppercase tracking-[0.5px]">Role</th>
-                <th className="px-6 py-4 text-[13px] font-medium text-slate-400 border-b border-[#1E293B] uppercase tracking-[0.5px]">Status</th>
-                <th className="px-6 py-4 text-[13px] font-medium text-slate-400 border-b border-[#1E293B] uppercase tracking-[0.5px]">Last Login</th>
-                <th className="px-6 py-4 text-[13px] font-medium text-slate-400 border-b border-[#1E293B] uppercase tracking-[0.5px] w-20 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentUsers.length > 0 ? (
-                currentUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-[rgba(30,41,59,0.4)] [&:last-child_td]:border-b-0">
-                    <td className="px-6 py-4 border-b border-[#1E293B] align-middle">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={user.name} size="sm" />
-                        <div className="flex flex-col">
-                          <span className="font-medium text-slate-100 text-sm">{user.name}</span>
-                          <span className="text-slate-400 text-[13px]">{user.email}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 border-b border-[#1E293B] align-middle">
-                      <select
-                        className={`bg-transparent text-slate-200 border border-transparent px-2 py-1.5 rounded-md text-sm outline-none transition-all hover:bg-[#1E293B] hover:border-[#334155] focus:bg-[#1E293B] focus:border-[#334155] [&>option]:bg-[#14171E] [&>option]:text-slate-100 ${user.id === currentUserId ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-                        value={user.role}
-                        disabled={user.id === currentUserId}
-                        title={user.id === currentUserId ? 'You cannot change your own role' : undefined}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Viewer">Viewer</option>
-                      </select>
-                    </td>
-                    <td className="px-6 py-4 border-b border-[#1E293B] align-middle">
-                      <span className={`inline-block px-3 py-1 rounded-[20px] text-xs font-medium capitalize ${
-                        user.status === 'Active'
-                          ? 'bg-[rgba(16,185,129,0.1)] text-emerald-400'
-                          : 'bg-[rgba(100,116,139,0.1)] text-slate-400'
-                      }`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 border-b border-[#1E293B] align-middle text-slate-400 text-[13px]">{user.lastLogin}</td>
-                    <td className="px-6 py-4 border-b border-[#1E293B] align-middle w-20 text-center">
-                      <div className="relative inline-block">
-                        <button
-                          className="bg-transparent border-none text-slate-400 p-1.5 rounded-md cursor-pointer transition-all hover:bg-[#1E293B] hover:text-slate-100"
-                          onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
-                        >
-                          <MoreVertical size={18} />
-                        </button>
-                        {activeMenu === user.id && (
-                          <div className="absolute right-0 top-full mt-1 bg-[#14171E] border border-[#1E293B] rounded-lg p-1 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.3)] z-10 min-w-[140px]">
-                            <button
-                              className="block w-full text-left px-3 py-2 bg-transparent border-none text-slate-300 text-[13px] cursor-pointer rounded hover:bg-[#1E293B] disabled:opacity-50 disabled:cursor-not-allowed"
-                              disabled={user.id === currentUserId}
-                              title={user.id === currentUserId ? 'You cannot deactivate your own account' : undefined}
-                              onClick={() => toggleUserStatus(user.id)}
-                            >
-                              {user.status === 'Active' ? 'Deactivate' : 'Activate'}
-                            </button>
-                            <button
-                              className="block w-full text-left px-3 py-2 bg-transparent border-none text-slate-300 text-[13px] cursor-pointer rounded hover:bg-[#1E293B]"
-                              onClick={() => setActiveMenu(null)}
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="text-center p-8 text-slate-500">No users found matching your criteria.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <UserTable
+        users={users}
+        loading={loading}
+        currentUserId={currentUserId}
+        activeMenu={activeMenu}
+        onMenuToggle={(id) => setActiveMenu(activeMenu === id ? null : id)}
+        onRoleChange={handleRoleChange}
+        onToggleStatus={toggleUserStatus}
+      />
 
       {!loading && totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
@@ -502,113 +331,26 @@ const UserManagement: React.FC = () => {
         </div>
       )}
 
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-          <div
-            ref={inviteModalRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="invite-modal-title"
-            tabIndex={-1}
-            className="bg-[#14171E] border border-[#1E293B] rounded-xl w-full max-w-[460px] shadow-[0_20px_25px_-5px_rgba(0,0,0,0.3)] overflow-hidden animate-modal-in max-sm:mx-4 max-sm:w-auto"
-          >
-            <div className="flex justify-between items-center px-6 py-6 border-b border-[#1E293B]">
-              <h2 id="invite-modal-title" className="text-lg font-semibold m-0">
-                {inviteStep === 'success' ? 'Invitation Sent!' : 'Invite Team Member'}
-              </h2>
-              <button
-                className="bg-transparent border-none text-slate-400 cursor-pointer p-1 flex rounded hover:bg-[#1E293B] hover:text-slate-100 transition-colors"
-                onClick={closeModal}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {inviteStep === 'success' ? (
-              <div className="px-6 py-6 flex flex-col gap-5 items-center text-center">
-                <div className="w-14 h-14 bg-[rgba(16,185,129,0.1)] rounded-full flex items-center justify-center text-emerald-400 mb-1">
-                  <Mail size={32} />
-                </div>
-                <p className="text-slate-400 text-sm leading-relaxed m-0">
-                  An invitation has been sent to <strong className="text-slate-100">{lastInvitedEmail}</strong>.
-                  They'll receive an email with a link to create their account.
-                </p>
-                <div className="flex justify-end gap-3 mt-3 w-full">
-                  <button
-                    type="button"
-                    className="bg-transparent border border-[#1E293B] text-slate-100 px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-[#1E293B] transition-all"
-                    onClick={closeModal}
-                  >
-                    Close
-                  </button>
-                  <button
-                    type="button"
-                    className="bg-blue-500 border-none text-white px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-blue-600 transition-colors"
-                    onClick={() => { setInviteStep('form'); setInviteEmail(''); setInviteMessage(''); setInviteRole('Viewer'); }}
-                  >
-                    Invite Another
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <form onSubmit={handleInviteSubmit} className="px-6 py-6 flex flex-col gap-5">
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="inviteEmail" className="text-[13px] font-medium text-slate-400">Email Address *</label>
-                  <input
-                    type="email"
-                    id="inviteEmail"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    required
-                    className="bg-[#0b0e14] border border-[#1E293B] rounded-lg px-[14px] py-2.5 text-slate-100 text-sm outline-none font-[inherit] focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="inviteRole" className="text-[13px] font-medium text-slate-400">Role *</label>
-                  <select
-                    id="inviteRole"
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as UserRole)}
-                    className="bg-[#0b0e14] border border-[#1E293B] rounded-lg px-[14px] py-2.5 text-slate-100 text-sm outline-none font-[inherit] focus:border-blue-500 transition-colors [&>option]:bg-[#14171E]"
-                  >
-                    <option value="Admin">Admin — Full access</option>
-                    <option value="Manager">Manager — Edit &amp; View</option>
-                    <option value="Viewer">Viewer — Read only</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="inviteMessage" className="text-[13px] font-medium text-slate-400">Personal Message (optional)</label>
-                  <textarea
-                    id="inviteMessage"
-                    value={inviteMessage}
-                    onChange={(e) => setInviteMessage(e.target.value)}
-                    placeholder="Add a personal note to the invitation email…"
-                    rows={3}
-                    className="bg-[#0b0e14] border border-[#1E293B] rounded-lg px-[14px] py-2.5 text-slate-100 text-sm outline-none font-[inherit] focus:border-blue-500 transition-colors resize-y min-h-[72px]"
-                  />
-                </div>
-                <div className="flex justify-end gap-3 mt-3">
-                  <button
-                    type="button"
-                    className="bg-transparent border border-[#1E293B] text-slate-100 px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-[#1E293B] transition-all"
-                    onClick={closeModal}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={!inviteEmail.trim() || actionLoading === 'invite'}
-                    className="bg-blue-500 border-none text-white px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {actionLoading === 'invite' ? 'Sending…' : 'Send Invite'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+      <InviteModal
+        isOpen={isModalOpen}
+        inviteStep={inviteStep}
+        inviteEmail={inviteEmail}
+        inviteRole={inviteRole}
+        inviteMessage={inviteMessage}
+        lastInvitedEmail={lastInvitedEmail}
+        actionLoading={actionLoading}
+        onClose={closeModal}
+        onEmailChange={setInviteEmail}
+        onRoleChange={setInviteRole}
+        onMessageChange={setInviteMessage}
+        onSubmit={handleInviteSubmit}
+        onInviteAnother={() => {
+          setInviteStep('form');
+          setInviteEmail('');
+          setInviteMessage('');
+          setInviteRole('Viewer');
+        }}
+      />
 
       <ConfirmDialog
         isOpen={confirmDeactivate !== null}
