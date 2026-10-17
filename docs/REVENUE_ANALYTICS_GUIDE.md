@@ -166,7 +166,7 @@ pnpm run test src/pages/Analytics/RevenueAnalytics.test.tsx
 - **Main Component**: `/frontend/src/pages/Analytics/RevenueAnalytics.tsx`
 - **Tests**: `/frontend/src/pages/Analytics/RevenueAnalytics.test.tsx`
 - **Route Config**: `/frontend/src/App.tsx`
-- **Documentation**: `/frontend/src/pages/Analytics/REVENUE_ANALYTICS_IMPLEMENTATION.md`
+- **Documentation**: `/docs/REVENUE_ANALYTICS_IMPLEMENTATION.md`
 
 ## 🔗 Integration Notes
 

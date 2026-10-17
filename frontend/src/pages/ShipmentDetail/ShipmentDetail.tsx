@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, AlertTriangle, RefreshCw, Zap, X } from "lucide-react";
 import { useOnlineStatus } from "../../hooks/useOnlineStatus";
 import { useShipmentDetail } from "../../hooks/useShipmentDetail";
@@ -34,6 +34,15 @@ import ShipmentStickyBar from "./ShipmentStickyBar";
 import { formatDate } from "@utils/localeFormat";
 import StatusUpdate, { ShipmentMilestone } from "../../components/shipment/StatusUpdate";
 import { shipmentApi, type ShipmentStatus } from "@services/api/endpoints/shipments";
+import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
+import { usePagination } from "../../hooks/usePagination";
+
+type ShipmentHeaderPriority = "URGENT" | "STANDARD" | "ECONOMY";
+
+interface PendingDeliveryConfirmation {
+  rating: number;
+  feedback: string;
+}
 
 const ShipmentDetail: React.FC = () => {
   const { t } = useTranslation("shipments");
@@ -42,6 +51,7 @@ const ShipmentDetail: React.FC = () => {
   const isOnline = useOnlineStatus();
   const { announce } = useLiveRegion();
   const { addToast } = useToast();
+  const navigate = useNavigate();
 
   const { shipment, isLoading, error, refresh, lastUpdatedAt, isStale } = useShipmentDetail(id);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -50,6 +60,14 @@ const ShipmentDetail: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
+  const [priorityOverride, setPriorityOverride] = useState<ShipmentHeaderPriority | null>(null);
+  const [isDeliveryConfirmDialogOpen, setIsDeliveryConfirmDialogOpen] = useState(false);
+  const [isConfirmingDelivery, setIsConfirmingDelivery] = useState(false);
+  const [pendingDeliveryConfirmation, setPendingDeliveryConfirmation] = useState<PendingDeliveryConfirmation | null>(null);
+  const deliveryConfirmationResolver = useRef<{ resolve: () => void; reject: (error: Error) => void } | null>(null);
+  const milestonePagination = usePagination({ pageSize: 20, resetKey: id });
+  const [milestonePageCache, setMilestonePageCache] = useState<Record<number, MilestoneDetail[]>>({});
 
   // The server is the source of truth for status. A realtime event or an update
   // made on this page shows immediately as an override, and is dropped as soon
@@ -96,8 +114,14 @@ const ShipmentDetail: React.FC = () => {
     destinationAddress: shipment?.destination ?? "—",
     expectedDeliveryDate: rawEta ? formatDate(rawEta) : "—",
     userRole: (role ?? "customer") as "company" | "customer",
-    priority: shipment?.priority ?? "STANDARD",
+    priority: priorityOverride ?? shipment?.priority ?? "STANDARD",
   };
+
+  React.useEffect(() => {
+    if (shipment?.priority && shipment.priority === priorityOverride) {
+      setPriorityOverride(null);
+    }
+  }, [shipment?.priority, priorityOverride]);
 
   const getNextStatuses = (status: string): ShipmentStatus[] => {
     switch (status) {
@@ -157,11 +181,94 @@ const ShipmentDetail: React.FC = () => {
       setIsUpdatingStatus(false);
     }
   };
-  const handleUpdatePriority = (_priority: "URGENT" | "STANDARD" | "ECONOMY") => {
-    // TODO: wire to priority update API when endpoint is available
+  const handleUpdatePriority = async (priority: ShipmentHeaderPriority) => {
+    if (!id) return;
+
+    setIsUpdatingPriority(true);
+    let lastError: Error | null = null;
+    try {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          const updated = await shipmentApi.updatePriority(id, priority);
+          setPriorityOverride(updated?.priority ?? priority);
+          refresh();
+          addToast(`Shipment priority updated to ${updated?.priority ?? priority}.`, "success");
+          return;
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error("Failed to update shipment priority.");
+          if (attempt < 2) {
+            await new Promise<void>((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
+          }
+        }
+      }
+
+      addToast(lastError?.message ?? "Failed to update shipment priority.", "error");
+      throw lastError ?? new Error("Failed to update shipment priority.");
+    } finally {
+      setIsUpdatingPriority(false);
+    }
   };
   const handleTrack = () => {
-    // TODO: wire to tracking flow when implemented
+    const trackingNumber = shipmentHeaderData.trackingNumber;
+    if (!trackingNumber) return;
+    navigate(`/track/${encodeURIComponent(trackingNumber)}`, {
+      state: { shipmentId: id, shipment },
+    });
+  };
+
+  const handleDeliveryConfirmation = (_shipmentId: string, rating: number, feedback: string) =>
+    new Promise<void>((resolve, reject) => {
+      deliveryConfirmationResolver.current = { resolve, reject };
+      setPendingDeliveryConfirmation({ rating, feedback });
+      setIsDeliveryConfirmDialogOpen(true);
+    });
+
+  const handleConfirmDelivery = async () => {
+    if (!id || !pendingDeliveryConfirmation || !deliveryConfirmationResolver.current) return;
+
+    const resolver = deliveryConfirmationResolver.current;
+    const timestamp = new Date().toISOString();
+    const notes = pendingDeliveryConfirmation.feedback.trim();
+    setIsConfirmingDelivery(true);
+
+    try {
+      const request = notes ? { timestamp, notes } : { timestamp };
+      const response = await shipmentApi.confirmDelivery(id, request);
+      const proof = response.deliveryProof ?? response.proof;
+      const proofDetails = proof
+        ? [
+            proof.id ? `Proof ID: ${proof.id}` : null,
+            proof.confirmedBy ? `Confirmed by: ${proof.confirmedBy}` : null,
+            proof.confirmedAt ?? proof.timestamp ? `Recorded at: ${proof.confirmedAt ?? proof.timestamp}` : null,
+          ].filter((detail): detail is string => Boolean(detail))
+        : [];
+      addToast(
+        `Delivery confirmed. Delivery proof: ${proofDetails.length > 0 ? proofDetails.join("; ") : `Recorded at: ${timestamp}`}.`,
+        "success",
+      );
+      refresh();
+      resolver.resolve();
+      setIsDeliveryConfirmDialogOpen(false);
+      setPendingDeliveryConfirmation(null);
+      deliveryConfirmationResolver.current = null;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("Failed to confirm delivery.");
+      addToast(error.message, "error");
+      resolver.reject(error);
+      setIsDeliveryConfirmDialogOpen(false);
+      setPendingDeliveryConfirmation(null);
+      deliveryConfirmationResolver.current = null;
+    } finally {
+      setIsConfirmingDelivery(false);
+    }
+  };
+
+  const handleCancelDeliveryConfirmation = () => {
+    const resolver = deliveryConfirmationResolver.current;
+    if (resolver) resolver.reject(new Error("Delivery confirmation cancelled."));
+    deliveryConfirmationResolver.current = null;
+    setIsDeliveryConfirmDialogOpen(false);
+    setPendingDeliveryConfirmation(null);
   };
   const handlePrint = () => {
     setIsPrinting(true);
@@ -220,6 +327,27 @@ const ShipmentDetail: React.FC = () => {
         };
       })
     : [];
+
+  React.useEffect(() => {
+    setMilestonePageCache({});
+  }, [id]);
+
+  React.useEffect(() => {
+    const page = milestonePagination.currentPage;
+    if (milestonePageCache[page]) return;
+    const start = milestonePagination.getOffset();
+    const pageItems = milestones.slice(start, start + milestonePagination.pageSize);
+    setMilestonePageCache((previous) => (previous[page] ? previous : { ...previous, [page]: pageItems }));
+  }, [milestonePagination.currentPage, milestonePagination.getOffset, milestonePagination.pageSize, milestonePageCache, milestones]);
+
+  const visibleMilestones = Array.from(
+    { length: milestonePagination.currentPage },
+    (_, pageIndex) => milestonePageCache[pageIndex + 1] ?? milestones.slice(
+      pageIndex * milestonePagination.pageSize,
+      (pageIndex + 1) * milestonePagination.pageSize,
+    ),
+  ).flat();
+  const hasMoreMilestones = milestonePagination.currentPage * milestonePagination.pageSize < milestones.length;
 
   // Cost breakdown: not stored on the Shipment object — passed as null until a billing API is wired
   const costBreakdown: CostBreakdownData | null = shipment?.offChainMetadata?.costBreakdown
@@ -424,6 +552,7 @@ const ShipmentDetail: React.FC = () => {
             onRaiseDispute={handleRaiseDispute}
             onExport={handleExport}
             isExporting={isExporting}
+            isUpdatingPriority={isUpdatingPriority}
           />
           {isDisputeOpen && (
             <div className="mt-8">
@@ -446,7 +575,18 @@ const ShipmentDetail: React.FC = () => {
           <h2 className="font-['Bebas_Neue',sans-serif] text-[clamp(1.75rem,4vw,2.5rem)] font-normal tracking-[0.04em] leading-[1.2] text-white mt-10 mb-0 text-center md:mb-8">
             {t("shipmentDetail.milestoneTitlePart1")} <span className="text-[#00d4c8]">{t("shipmentDetail.milestoneTitlePart2")}</span>
           </h2>
-          <MilestoneTimeline milestones={milestones} />
+          <MilestoneTimeline milestones={visibleMilestones} />
+          {hasMoreMilestones && (
+            <div className="flex justify-center px-6 pb-6">
+              <button
+                type="button"
+                onClick={() => milestonePagination.setPage(milestonePagination.currentPage + 1)}
+                className="rounded-lg border border-[rgba(0,212,200,0.4)] px-4 py-2 text-sm font-medium text-[#00d4c8] transition-colors hover:bg-[rgba(0,212,200,0.1)]"
+              >
+                Load More Milestones
+              </button>
+            </div>
+          )}
         </div>
 
         <SensorDataCards sensorData={sensorData} />
@@ -462,11 +602,9 @@ const ShipmentDetail: React.FC = () => {
 
         {can(role, "shipment:confirm-milestone") && (
           <DeliveryConfirmation
-            shipmentId={shipmentHeaderData.shipmentId}
+            shipmentId={id ?? shipmentHeaderData.shipmentId}
             status={shipmentHeaderData.status}
-            onConfirm={async (_confirmId, _rating, _feedback) => {
-              // TODO: wire to delivery confirmation API when endpoint is available
-            }}
+            onConfirm={handleDeliveryConfirmation}
           />
         )}
 
@@ -482,6 +620,17 @@ const ShipmentDetail: React.FC = () => {
         shipments={comparisonShipments}
         isOpen={isComparisonOpen}
         onClose={() => setIsComparisonOpen(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={isDeliveryConfirmDialogOpen}
+        onClose={handleCancelDeliveryConfirmation}
+        onConfirm={() => void handleConfirmDelivery()}
+        title="Confirm delivery"
+        message="Confirm that this shipment was delivered. A delivery proof will be recorded with the current timestamp and your optional notes."
+        confirmLabel="Confirm delivery"
+        variant="default"
+        isLoading={isConfirmingDelivery}
       />
 
       {/* Status Update Modal */}

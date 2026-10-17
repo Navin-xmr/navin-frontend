@@ -6,11 +6,7 @@ const Home: React.FC = () => {
 
   return (
     <section
-      className="relative w-full min-h-screen flex items-center justify-center overflow-hidden"
-      style={{
-        background: 'radial-gradient(ellipse at 50% 0%, #0a3d3a 0%, #061e20 35%, #020d10 70%, #000 100%)',
-        fontFamily: "'DM Sans', sans-serif",
-      }}
+      className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] font-['DM_Sans',sans-serif]"
     >
       {/* Starfield dots */}
       <div className="absolute inset-0 pointer-events-none z-0" aria-hidden="true">
@@ -30,29 +26,19 @@ const Home: React.FC = () => {
 
       {/* Bottom building silhouette decoration */}
       <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[160px] pointer-events-none z-0"
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[160px] pointer-events-none z-0 bg-[repeating-linear-gradient(to_right,transparent_0px,transparent_18px,rgba(0,180,160,0.15)_18px,rgba(0,180,160,0.15)_20px)] [mask-image:linear-gradient(to_top,rgba(0,0,0,0.5)_0%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_top,rgba(0,0,0,0.5)_0%,transparent_100%)]"
         aria-hidden="true"
-        style={{
-          background: 'repeating-linear-gradient(to right, transparent 0px, transparent 18px, rgba(0,180,160,0.15) 18px, rgba(0,180,160,0.15) 20px)',
-          WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)',
-          maskImage: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%)',
-        }}
       />
 
       <div className="relative z-10 flex flex-col items-center text-center gap-6 px-6 max-w-[900px] w-full">
         <h1
-          className="font-normal tracking-[0.04em] leading-none text-white"
-          style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 'clamp(3rem, 9vw, 7rem)',
-          }}
+          className="font-normal tracking-[0.04em] leading-none text-white font-['Bebas_Neue',sans-serif] text-[clamp(3rem,9vw,7rem)]"
         >
           {t('hero.titleLine1')} <span className="text-[#00d4c8]">{t('hero.titleLine2')}</span>
         </h1>
 
         <p
-          className="font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-[580px]"
-          style={{ fontSize: 'clamp(0.9rem, 2vw, 1.05rem)' }}
+          className="font-light leading-[1.7] text-[rgba(200,230,240,0.75)] max-w-[580px] text-[clamp(0.9rem,2vw,1.05rem)]"
         >
           {t('hero.subtitle')}
         </p>

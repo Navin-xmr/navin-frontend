@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Package, ArrowRight, QrCode, Printer, AlertTriangle, ChevronDown, Download, Loader2 } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
@@ -27,6 +27,7 @@ export interface ShipmentDetailHeaderProps {
   onRaiseDispute?: () => void;
   onExport?: () => void;
   isExporting?: boolean;
+  isUpdatingPriority?: boolean;
 }
 
 const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
@@ -45,11 +46,17 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   onRaiseDispute,
   onExport,
   isExporting = false,
+  isUpdatingPriority = false,
 }) => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [showPriorityMenu, setShowPriorityMenu] = useState(false);
+  const [selectedPriority, setSelectedPriority] = useState<'URGENT' | 'STANDARD' | 'ECONOMY'>(priority ?? 'STANDARD');
   const [editOrigin, setEditOrigin] = useState(originAddress || '');
   const [editDestination, setEditDestination] = useState(destinationAddress || '');
+
+  useEffect(() => {
+    if (!showPriorityMenu && priority) setSelectedPriority(priority);
+  }, [priority, showPriorityMenu]);
 
   const formatStatus = (status: string): string => getStatusDisplayLabel(status);
   const isCompanyUser = userRole === "company";
@@ -85,7 +92,10 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => setShowPriorityMenu(!showPriorityMenu)}
+                  onClick={() => {
+                    setSelectedPriority(priority ?? 'STANDARD');
+                    setShowPriorityMenu(!showPriorityMenu);
+                  }}
                   className="flex items-center gap-1"
                   aria-label="Change priority"
                 >
@@ -99,14 +109,32 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
                         key={p}
                         type="button"
                         onClick={() => {
-                          onUpdatePriority?.(p);
-                          setShowPriorityMenu(false);
+                          setSelectedPriority(p);
                         }}
-                        className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[rgba(255,255,255,0.05)] ${priority === p ? 'text-white font-medium' : 'text-gray-300'}`}
+                        className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[rgba(255,255,255,0.05)] ${selectedPriority === p ? 'text-white font-medium' : 'text-gray-300'}`}
                       >
                         {p === 'URGENT' ? 'Urgent' : p === 'STANDARD' ? 'Standard' : 'Economy'}
                       </button>
                     ))}
+                    <div className="mt-1 border-t border-[rgba(255,255,255,0.1)] px-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await onUpdatePriority?.(selectedPriority);
+                          } catch {
+                            return;
+                          }
+                          setShowPriorityMenu(false);
+                        }}
+                        disabled={isUpdatingPriority || selectedPriority === priority}
+                        className="flex w-full items-center justify-center gap-1 rounded-md bg-primary/20 px-2 py-1.5 text-sm font-medium text-primary hover:bg-primary/30 disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label="Save priority"
+                      >
+                        {isUpdatingPriority && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                        {isUpdatingPriority ? 'Saving...' : 'Save'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

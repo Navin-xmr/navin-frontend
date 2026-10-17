@@ -46,50 +46,43 @@ const MyTemplatesSection: React.FC = () => {
   const [order, setOrder] = useState<string[]>(loadStoredOrder);
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
+  const effectiveOrder = useMemo(() => {
+    const templateIds = templates.map((t) => t.id);
+    const known = order.filter((id) => templateIds.includes(id));
+    const missing = templateIds.filter((id) => !known.includes(id));
+    return [...known, ...missing];
+  }, [templates, order]);
+
   useEffect(() => {
     if (templates.length === 0) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOrder((prev) => {
-      const templateIds = templates.map((t) => t.id);
-      const known = prev.filter((id) => templateIds.includes(id));
-      const missing = templateIds.filter((id) => !known.includes(id));
-      const next = [...known, ...missing];
-      const unchanged = next.length === prev.length && next.every((id, i) => id === prev[i]);
-      if (unchanged) return prev;
-      persistOrder(next);
-      return next;
-    });
-  }, [templates]);
+    persistOrder(effectiveOrder);
+  }, [templates.length, effectiveOrder]);
 
   const orderedTemplates = useMemo(() => {
     const byId = new Map(templates.map((t) => [t.id, t]));
-    return order.map((id) => byId.get(id)).filter((t): t is ShipmentTemplate => !!t);
-  }, [templates, order]);
+    return effectiveOrder.map((id) => byId.get(id)).filter((t): t is ShipmentTemplate => !!t);
+  }, [templates, effectiveOrder]);
 
   const moveTemplate = (id: string, direction: -1 | 1) => {
-    setOrder((prev) => {
-      const idx = prev.indexOf(id);
-      const swapIdx = idx + direction;
-      if (idx === -1 || swapIdx < 0 || swapIdx >= prev.length) return prev;
-      const next = [...prev];
-      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
-      persistOrder(next);
-      return next;
-    });
+    const idx = effectiveOrder.indexOf(id);
+    const swapIdx = idx + direction;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= effectiveOrder.length) return;
+    const next = [...effectiveOrder];
+    [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+    persistOrder(next);
+    setOrder(next);
   };
 
   const reorderByDrop = (targetId: string) => {
     if (!draggedId || draggedId === targetId) return;
-    setOrder((prev) => {
-      const from = prev.indexOf(draggedId);
-      const to = prev.indexOf(targetId);
-      if (from === -1 || to === -1) return prev;
-      const next = [...prev];
-      next.splice(from, 1);
-      next.splice(to, 0, draggedId);
-      persistOrder(next);
-      return next;
-    });
+    const from = effectiveOrder.indexOf(draggedId);
+    const to = effectiveOrder.indexOf(targetId);
+    if (from === -1 || to === -1) return;
+    const next = [...effectiveOrder];
+    next.splice(from, 1);
+    next.splice(to, 0, draggedId);
+    persistOrder(next);
+    setOrder(next);
   };
 
   const openEdit = (template: ShipmentTemplate) => {

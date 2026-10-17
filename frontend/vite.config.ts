@@ -190,6 +190,11 @@ export default defineConfig(({ mode }) => {
         "src/test/**",
         "**/*.d.ts",
       ],
+      thresholds: {
+        lines: 60,
+        branches: 50,
+        functions: 55,
+      },
     },
   },
   });

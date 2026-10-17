@@ -7,6 +7,12 @@ interface PaymentSummaryCardProps {
   label: string;
 }
 
+export interface PaymentSummaryData {
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+}
+
 const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
   icon,
   value,
@@ -34,9 +40,13 @@ const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
   );
 };
 
-const PaymentSummaryCards: React.FC = () => {
+interface PaymentSummaryCardsProps {
+  cards?: PaymentSummaryData[];
+}
+
+const PaymentSummaryCards: React.FC<PaymentSummaryCardsProps> = ({ cards }) => {
   // Mock data - in real app, this would come from props or API
-  const summaryData = [
+  const defaultSummaryData: PaymentSummaryData[] = [
     {
       icon: <CreditCard size={20} />,
       value: "156",
@@ -58,6 +68,15 @@ const PaymentSummaryCards: React.FC = () => {
       label: "Released Payments",
     },
   ];
+  const summaryData = cards ?? defaultSummaryData;
+
+  if (summaryData.length === 0) {
+    return (
+      <div role="status" className="rounded-2xl border border-border p-5 text-text-secondary">
+        No payment data available
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
