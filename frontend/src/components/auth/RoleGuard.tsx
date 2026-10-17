@@ -3,7 +3,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@context/AuthContext';
 import type { UserRole } from '@utils/rbac';
 
-interface RoleGuardProps {
+export interface RoleGuardProps {
   allowedRoles: UserRole[];
   children?: React.ReactNode;
 }
