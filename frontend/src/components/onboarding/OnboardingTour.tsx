@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { X } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -109,14 +109,14 @@ const Popover: React.FC<PopoverProps> = ({
   onNext,
   onSkip,
 }) => {
-  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
-    position: 'fixed',
-    zIndex: 9999,
-    opacity: 0,
-  });
-
-  useEffect(() => {
-    if (!rect) return;
+  const popoverStyle = useMemo<React.CSSProperties>(() => {
+    if (!rect) {
+      return {
+        position: 'fixed',
+        zIndex: 9999,
+        opacity: 0,
+      };
+    }
 
     const placement = step.placement ?? 'bottom';
     const gap = 12;
@@ -151,8 +151,7 @@ const Popover: React.FC<PopoverProps> = ({
     left = Math.max(16, Math.min(left, viewportW - popoverWidth - 16));
     top = Math.max(16, Math.min(top, viewportH - popoverEstimatedHeight - 16));
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPopoverStyle({
+    return {
       position: 'fixed',
       zIndex: 9999,
       top,
@@ -160,7 +159,7 @@ const Popover: React.FC<PopoverProps> = ({
       width: popoverWidth,
       opacity: 1,
       transition: 'opacity 0.25s ease',
-    });
+    };
   }, [rect, step.placement]);
 
   return (

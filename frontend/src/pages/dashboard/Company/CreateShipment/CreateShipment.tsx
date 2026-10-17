@@ -127,13 +127,11 @@ const CreateShipment: React.FC = () => {
         return () => clearTimeout(timer);
     }, [applyTemplate, searchParams, selectedTemplateId, templates, templatesLoading]);
     const [addressOptions, setAddressOptions] = useState<ComboboxOption[]>([]);
-    const [addressesLoading, setAddressesLoading] = useState(false);
+    const [addressesLoading, setAddressesLoading] = useState(true);
 
     // Load addresses for typeahead suggestions
     useEffect(() => {
         let cancelled = false;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- loading flag for async fetch
-        setAddressesLoading(true);
         addressesApi.getAll().then((addrs) => {
             if (cancelled) return;
             const opts: ComboboxOption[] = addrs.map((addr) => ({
