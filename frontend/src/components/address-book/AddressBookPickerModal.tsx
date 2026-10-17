@@ -4,7 +4,7 @@ import { addressesApi } from '@services/api/endpoints/addresses';
 import type { Address } from '@services/api/endpoints/addresses';
 import Modal from '@components/common/Modal/Modal';
 
-interface AddressBookPickerModalProps {
+export interface AddressBookPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (address: Address) => void;

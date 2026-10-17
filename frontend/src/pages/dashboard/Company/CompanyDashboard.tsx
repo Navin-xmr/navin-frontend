@@ -23,11 +23,12 @@ import type { RouteCostData } from "../../../components/dashboard/CostPerRouteWi
 import { RevenueTargetWidget } from "../../../components/dashboard/RevenueTargetWidget";
 import PerformanceScorecardWidget from "./Scorecard/PerformanceScorecardWidget";
 import { shipmentApi } from "@services/api/endpoints/shipments";
-import OnboardingTour, {
+import OnboardingTour from "@components/onboarding/OnboardingTour";
+import {
   isTourComplete,
   resetTourFlag,
-} from "@components/onboarding/OnboardingTour";
-import type { TourStep } from "@components/onboarding/OnboardingTour";
+} from "@components/onboarding/tourStorage";
+import type { TourStep } from "@components/onboarding/tourStorage";
 import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
 
 const TrendIcon = ({ up }: { up: boolean }) => (

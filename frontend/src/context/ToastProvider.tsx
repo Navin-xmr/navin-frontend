@@ -1,24 +1,9 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Toast } from "../components/notifications/Toast";
-import { useLiveRegion } from "./LiveRegionContext";
+import { useLiveRegion } from "./useLiveRegion";
 import { registerToastBridge } from "./toastBridge";
-
-export type ToastType = "success" | "error" | "info" | "warning";
-
-export interface ToastMessage {
-  id: string;
-  type: ToastType;
-  message: string;
-  navigateTo?: string;
-  key?: string;
-}
-
-interface ToastContextType {
-  addToast: (message: string, type: ToastType, navigateTo?: string, key?: string) => void;
-  removeToast: (id: string) => void;
-}
-
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
+import { ToastContext } from "./useToast";
+import type { ToastMessage, ToastType } from "./useToast";
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -64,11 +49,4 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       </div>
     </ToastContext.Provider>
   );
-};
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) throw new Error("useToast must be used within a ToastProvider");
-  return context;
 };
