@@ -1,7 +1,5 @@
 import React, {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -10,6 +8,8 @@ import React, {
 import type { WalletAdapter } from '../services/stellar/adapters/types';
 import { WALLET_ADAPTERS } from '../services/stellar/adapters';
 import { validateNetwork } from '../services/stellar/config';
+import { WalletContext } from './useWallet';
+import type { WalletContextValue } from './useWallet';
 
 const LAST_ADAPTER_KEY = 'navin-last-wallet';
 const PUBLIC_KEY_KEY = 'navin-wallet-public-key';
@@ -18,28 +18,6 @@ const STELLAR_PUBLIC_KEY_PATTERN = /^G[A-Z2-7]{55}$/;
 
 /** How often (ms) to poll the wallet extension for account/network changes. */
 const POLL_INTERVAL_MS = 4_000;
-
-export interface WalletContextValue {
-  adapter: WalletAdapter | null;
-  publicKey: string | null;
-  isConnecting: boolean;
-  isModalOpen: boolean;
-  network: 'testnet' | 'mainnet';
-  lastAdapterId: string | null;
-  /**
-   * True when the wallet extension is connected to a different network than
-   * the one configured via VITE_STELLAR_NETWORK. Signing is blocked while
-   * this flag is set.
-   */
-  networkMismatch: boolean;
-  openModal: () => void;
-  closeModal: () => void;
-  connect: (adapterId: WalletAdapter['id']) => Promise<void>;
-  disconnect: () => Promise<void>;
-  signTransaction: (xdr: string) => Promise<string>;
-}
-
-const WalletContext = createContext<WalletContextValue | undefined>(undefined);
 
 function isValidPublicKey(publicKey: string): boolean {
   return STELLAR_PUBLIC_KEY_PATTERN.test(publicKey);
@@ -206,10 +184,3 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
 };
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useWallet(): WalletContextValue {
-  const ctx = useContext(WalletContext);
-  if (!ctx) throw new Error('useWallet must be used within WalletProvider');
-  return ctx;
-}

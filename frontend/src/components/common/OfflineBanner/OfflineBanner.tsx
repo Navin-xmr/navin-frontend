@@ -6,13 +6,17 @@ const OfflineBanner: React.FC = () => {
   const isOnline = useOnlineStatus();
   const { addToast } = useToast();
   const [dismissed, setDismissed] = useState(false);
+  const [prevIsOnline, setPrevIsOnline] = useState(isOnline);
   // Only announce "back online" once we've actually observed an offline
   // stretch in this session, so the toast doesn't fire on initial mount.
   const wasOffline = useRef(false);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-arm the banner on every online/offline transition reported by useOnlineStatus
+  if (prevIsOnline !== isOnline) {
+    setPrevIsOnline(isOnline);
     setDismissed(false);
+  }
+
+  useEffect(() => {
     if (isOnline) {
       if (wasOffline.current) {
         addToast("You're back online.", "success", undefined, "connection-restored");

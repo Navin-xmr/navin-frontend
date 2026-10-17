@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
-interface ErrorFallbackProps {
+export interface ErrorFallbackProps {
   error: unknown;
   componentStack?: string | null;
   eventId?: string;

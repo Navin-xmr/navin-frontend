@@ -7,7 +7,7 @@ const { mockWalletDisconnect, mockRedirectToLogin } = vi.hoisted(() => ({
   mockRedirectToLogin: vi.fn(),
 }));
 
-vi.mock('./WalletContext', () => ({
+vi.mock('./useWallet', () => ({
   useWallet: () => ({ disconnect: mockWalletDisconnect }),
 }));
 
