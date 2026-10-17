@@ -74,9 +74,13 @@ const router = createBrowserRouter([
   { path: '/register/verify-email', element: <EmailVerification /> },
   { path: '/verify-email', element: <VerifyEmailPage /> },
   { path: '/accept-invitation', element: S(<AcceptInvitation />) },
-  { path: '/pagination-demo', element: S(<PaginationDemo />) },
-  { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
-  { path: '/skeleton-demo', element: S(<SkeletonDemo />) },
+  ...(import.meta.env.DEV
+    ? [
+        { path: '/pagination-demo', element: S(<PaginationDemo />) },
+        { path: '/confirm-demo', element: S(<ConfirmDialogDemo />) },
+        { path: '/skeleton-demo', element: S(<SkeletonDemo />) },
+      ]
+    : []),
   { path: '/track/:trackingNumber', element: <PublicTrackingPage /> },
   {
     element: <ProtectedRoute />,
