@@ -39,14 +39,10 @@ const TableRowSkeleton: React.FC<TableRowSkeletonProps> = ({ count = 1, columns 
         <tr
           key={i}
           aria-hidden="true"
-          style={{
-            display: 'table',
-            tableLayout: 'fixed',
-            width: '100%',
-          }}
+          className="table table-fixed w-full"
         >
           {/* First cell is the checkbox placeholder */}
-          <td style={{ width: `${cellWidths[0]}px` }}>
+          <td className="w-[40px]">
             <Skeleton width={16} height={16} rounded="sm" />
           </td>
 
@@ -74,14 +70,13 @@ const TableRowSkeleton: React.FC<TableRowSkeletonProps> = ({ count = 1, columns 
 export const ShipmentsTableSkeleton: React.FC<ShipmentsTableSkeletonProps> = ({ count = 8 }) => {
   return (
     <table
-      className="shipments-table"
-      style={{ tableLayout: 'fixed', width: '100%' }}
+      className="shipments-table table-fixed w-full"
       aria-label="Loading shipments"
       aria-busy="true"
     >
       <thead>
         <tr>
-          <th style={{ width: '40px' }} aria-hidden="true" />
+          <th className="w-[40px]" aria-hidden="true" />
           <th>Shipment ID</th>
           <th>Origin</th>
           <th>Destination</th>

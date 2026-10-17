@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface AnimatedPageProps {
+export interface AnimatedPageProps {
   children: React.ReactNode;
 }
 

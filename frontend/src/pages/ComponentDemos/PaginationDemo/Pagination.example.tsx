@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import Pagination from './Pagination';
+import Pagination from '@components/common/Pagination';
 
 const PAGE_SIZE = 10;
 const MOCK_TOTAL_ITEMS = 237;

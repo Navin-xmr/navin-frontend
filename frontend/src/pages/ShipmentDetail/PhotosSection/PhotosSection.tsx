@@ -1,3 +1,14 @@
+import React, { useState, useCallback, useEffect } from "react";
+import { ConfirmDialog } from "@components/ui/ConfirmDialog";
+import { shipmentPhotosApi } from "@services/api/endpoints/shipmentPhotos";
+import type { PhotoType, ShipmentPhoto } from "@/types/shipmentPhoto";
+import PhotoUpload from "./PhotoUpload";
+import PhotoGallery from "./PhotoGallery";
+import PhotoLightbox from "./PhotoLightbox";
+import { MAX_PHOTOS } from "./photoConstants";
+import type { PendingPhoto } from "./types";
+
+export interface PhotosSectionProps {
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Trash2, X, Upload, CheckCircle2, ZoomIn, ZoomOut, Maximize2, AlertTriangle, Loader2 } from "lucide-react";
@@ -567,6 +578,17 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({ shipmentId, canDelete }) 
           </p>
         </div>
 
+        <PhotoUpload
+          atCap={atCap}
+          pending={pending}
+          isUploading={isUploading}
+          uploadProgress={uploadProgress}
+          onFilesSelected={handleFilesSelected}
+          onPendingTypeChange={updatePendingType}
+          onRemovePending={removePending}
+          onUpload={handleUpload}
+          onPreview={(index) => openLightbox(index, "pending")}
+        />
         {/* Dropzone */}
         {!atCap && (
           <div className="mb-3 sm:mb-6">
@@ -825,20 +847,18 @@ const PhotosSection: React.FC<PhotosSectionProps> = ({ shipmentId, canDelete }) 
           </div>
         )}
 
-        {/* Empty state */}
-        {photos.length === 0 && pending.length === 0 && (
-          <div className="flex flex-col items-center gap-3 py-8 sm:py-6 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-white/4 flex items-center justify-center text-white/20">
-              <Upload size={20} />
-            </div>
-            <p className="text-white/30 text-sm max-w-xs">No photos yet. Upload proof-of-delivery or damage evidence above.</p>
-          </div>
-        )}
+        <PhotoGallery
+          photos={photos}
+          hasPending={pending.length > 0}
+          canDelete={canDelete}
+          onPreview={(index) => openLightbox(index, "photos")}
+          onDelete={setDeleteTargetId}
+        />
       </section>
 
       {/* ── Lightbox (portal) ── */}
       {lightboxOpen && activeLightboxItems.length > 0 && (
-        <Lightbox key={lightboxIndex} items={activeLightboxItems} index={lightboxIndex} onClose={closeLightbox} onPrev={goPrev} onNext={goNext} onNavigate={setLightboxIndex} />
+        <PhotoLightbox key={lightboxIndex} items={activeLightboxItems} index={lightboxIndex} onClose={closeLightbox} onPrev={goPrev} onNext={goNext} onNavigate={setLightboxIndex} />
       )}
 
       {/* ── Delete confirmation ── */}

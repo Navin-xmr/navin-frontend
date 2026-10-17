@@ -1,5 +1,10 @@
-import { useCallback, useRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useCallback, useLayoutEffect, useReducer, useRef, useState } from 'react';
+import {
+  Virtualizer,
+  elementScroll,
+  observeElementOffset,
+  observeElementRect,
+} from '@tanstack/react-virtual';
 import type { Shipment } from '../../../api/shipmentApi';
 
 const ESTIMATED_ROW_HEIGHT = 52;
@@ -14,13 +19,44 @@ interface UseVirtualShipmentsOptions {
 
 export function useVirtualShipments({ shipments, onLoadMore, hasMore }: UseVirtualShipmentsOptions) {
   const parentRef = useRef<HTMLDivElement>(null);
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const virtualizer = useVirtualizer({
+  const [virtualizer] = useState(
+    () =>
+      new Virtualizer<HTMLDivElement, Element>({
+        count: shipments.length,
+        getScrollElement: () => null,
+        estimateSize: () => ESTIMATED_ROW_HEIGHT,
+        overscan: OVERSCAN,
+        observeElementRect,
+        observeElementOffset,
+        scrollToFn: elementScroll,
+        onChange: () => {
+          rerender();
+        },
+      }),
+  );
+
+  virtualizer.setOptions({
+    ...virtualizer.options,
     count: shipments.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => ESTIMATED_ROW_HEIGHT,
-    overscan: OVERSCAN,
+  });
+
+  useLayoutEffect(() => {
+    virtualizer.setOptions({
+      ...virtualizer.options,
+      getScrollElement: () => parentRef.current,
+    });
+    return virtualizer._didMount();
+  }, [virtualizer]);
+
+  useLayoutEffect(() => {
+    virtualizer.setOptions({
+      ...virtualizer.options,
+      count: shipments.length,
+      getScrollElement: () => parentRef.current,
+    });
+    return virtualizer._willUpdate();
   });
 
   const handleScroll = useCallback(() => {
@@ -41,3 +77,4 @@ export function useVirtualShipments({ shipments, onLoadMore, hasMore }: UseVirtu
 
   return { parentRef, virtualizer, handleScroll, scrollToIndex };
 }
+

@@ -1,10 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useRef } from "react";
-
-interface LiveRegionContextType {
-  announce: (message: string, priority?: "polite" | "assertive") => void;
-}
-
-const LiveRegionContext = createContext<LiveRegionContextType | undefined>(undefined);
+import React, { useState, useCallback, useMemo, useRef } from "react";
+import { LiveRegionContext } from "./useLiveRegion";
 
 export const LiveRegionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [politeMessage, setPoliteMessage] = useState("");
@@ -71,11 +66,4 @@ export const LiveRegionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       </div>
     </LiveRegionContext.Provider>
   );
-};
-
-// eslint-disable-next-line react-refresh/only-export-components
-export const useLiveRegion = () => {
-  const context = useContext(LiveRegionContext);
-  if (!context) throw new Error("useLiveRegion must be used within a LiveRegionProvider");
-  return context;
 };
