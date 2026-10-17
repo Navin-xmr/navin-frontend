@@ -175,6 +175,14 @@ export default defineConfig(({ mode }) => {
       ...configDefaults.exclude,
       "e2e/**",
     ],
+    coverage: {
+      provider: "v8",
+      thresholds: {
+        lines: 60,
+        branches: 50,
+        functions: 55,
+      },
+    },
   },
   });
 });
