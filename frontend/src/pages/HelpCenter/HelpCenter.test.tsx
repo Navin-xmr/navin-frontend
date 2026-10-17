@@ -18,8 +18,8 @@ vi.mock('@context/ToastContext', () => ({
   useToast: () => ({ addToast }),
 }));
 
-vi.mock('@components/onboarding/OnboardingTour', () => ({ resetTourFlag }));
-vi.mock('@components/onboarding/OnboardingChecklist', () => ({ resetChecklist }));
+vi.mock('@components/onboarding/tourStorage', () => ({ resetTourFlag }));
+vi.mock('@components/onboarding/checklistStorage', () => ({ resetChecklist }));
 
 describe('HelpCenter', () => {
   beforeEach(() => {

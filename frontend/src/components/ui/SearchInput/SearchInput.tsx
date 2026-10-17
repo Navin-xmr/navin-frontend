@@ -17,19 +17,19 @@ const SearchInput: React.FC<SearchInputProps> = ({
   isLoading = false,
 }) => {
   const [inputValue, setInputValue] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const onChangeRef = useRef(onChange);
   const hasMounted = useRef(false);
 
+  if (prevValue !== value) {
+    setPrevValue(value);
+    setInputValue(value);
+  }
+
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
-
-  // Sync external value changes (e.g., programmatic clear from parent)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setInputValue(value);
-  }, [value]);
 
   // Debounce onChange — skip on initial mount to avoid double-firing on load
   useEffect(() => {

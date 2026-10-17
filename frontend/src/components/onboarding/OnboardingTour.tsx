@@ -1,60 +1,17 @@
-/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useEffect, useCallback } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { X } from 'lucide-react';
+import { isTourComplete, markTourComplete } from './tourStorage';
+import type { TourStep } from './tourStorage';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-export interface TourStep {
-  /** Unique id for the element to highlight (data-tour-id) */
-  targetId: string;
-  /** Heading displayed in the popover */
-  heading: string;
-  /** Body text (1-2 sentences) */
-  body: string;
-  /** Optional placement override; defaults to 'bottom' */
-  placement?: 'top' | 'bottom' | 'left' | 'right';
-}
+export type { TourStep };
 
 export interface OnboardingTourProps {
   /** Ordered list of tour steps */
   steps: TourStep[];
   /** Called when the tour is completed or skipped */
   onClose?: () => void;
-}
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-const STORAGE_KEY = 'navin_tour_complete';
-
-/** Check whether the tour has already been completed */
-export function isTourComplete(): boolean {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-/** Mark the tour as complete so it won't show again */
-export function markTourComplete(): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, 'true');
-  } catch {
-    // localStorage unavailable – silently ignore
-  }
-}
-
-/** Reset the tour flag (used by "Restart Tour" button) */
-export function resetTourFlag(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // ignore
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -109,14 +66,14 @@ const Popover: React.FC<PopoverProps> = ({
   onNext,
   onSkip,
 }) => {
-  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
-    position: 'fixed',
-    zIndex: 9999,
-    opacity: 0,
-  });
-
-  useEffect(() => {
-    if (!rect) return;
+  const popoverStyle = useMemo<React.CSSProperties>(() => {
+    if (!rect) {
+      return {
+        position: 'fixed',
+        zIndex: 9999,
+        opacity: 0,
+      };
+    }
 
     const placement = step.placement ?? 'bottom';
     const gap = 12;
@@ -151,8 +108,7 @@ const Popover: React.FC<PopoverProps> = ({
     left = Math.max(16, Math.min(left, viewportW - popoverWidth - 16));
     top = Math.max(16, Math.min(top, viewportH - popoverEstimatedHeight - 16));
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPopoverStyle({
+    return {
       position: 'fixed',
       zIndex: 9999,
       top,
@@ -160,7 +116,7 @@ const Popover: React.FC<PopoverProps> = ({
       width: popoverWidth,
       opacity: 1,
       transition: 'opacity 0.25s ease',
-    });
+    };
   }, [rect, step.placement]);
 
   return (
