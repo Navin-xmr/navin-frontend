@@ -6,7 +6,7 @@ interface State {
   error?: Error | null;
 }
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
   children?: React.ReactNode;
   /** Optional custom fallback UI */
   fallback?: React.ReactNode | ((error: Error | null, resetError: () => void) => React.ReactNode);
