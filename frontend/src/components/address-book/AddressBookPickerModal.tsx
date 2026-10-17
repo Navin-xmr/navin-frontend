@@ -16,13 +16,19 @@ const AddressBookPickerModal: React.FC<AddressBookPickerModalProps> = ({
   onSelect,
 }) => {
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(isOpen);
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   const [search, setSearch] = useState('');
+
+  if (prevIsOpen !== isOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setIsLoading(true);
+    }
+  }
 
   useEffect(() => {
     if (!isOpen) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsLoading(true);
     addressesApi
       .getAll()
       .then(setAddresses)

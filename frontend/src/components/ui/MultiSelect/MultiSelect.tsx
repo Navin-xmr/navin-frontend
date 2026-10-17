@@ -36,11 +36,6 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
   }, [options, searchable, searchTerm]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setHighlightedIndex(0);
-  }, [searchTerm, isOpen]);
-
-  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) {
         return;
@@ -49,6 +44,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
       if (event.key === 'Escape') {
         event.preventDefault();
         setIsOpen(false);
+        setHighlightedIndex(0);
       }
 
       if (event.key === 'ArrowDown') {
@@ -100,6 +96,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
     if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
       event.preventDefault();
       setIsOpen((current) => !current);
+      setHighlightedIndex(0);
     }
   };
 
@@ -108,7 +105,10 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
       <div
         role="button"
         tabIndex={0}
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={() => {
+          setIsOpen((current) => !current);
+          setHighlightedIndex(0);
+        }}
         onKeyDown={handleTriggerKeyDown}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
@@ -152,7 +152,10 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                 id={inputId}
                 type="text"
                 value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
+                onChange={(event) => {
+                  setSearchTerm(event.target.value);
+                  setHighlightedIndex(0);
+                }}
                 placeholder="Search options"
                 className="w-full border-none bg-transparent outline-none placeholder:text-slate-500"
               />
