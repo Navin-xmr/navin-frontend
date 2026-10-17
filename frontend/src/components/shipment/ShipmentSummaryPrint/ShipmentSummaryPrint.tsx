@@ -95,115 +95,114 @@ const ShipmentSummaryPrint: React.FC<ShipmentSummaryPrintProps> = ({ data, onClo
   const content = (
     <div
       id="shipment-summary-print-root"
-      className="hidden print:block"
-      style={{
-        fontFamily: 'Arial, Helvetica, sans-serif',
-        color: '#111',
-        background: '#fff',
-        maxWidth: '210mm',
-        margin: '0 auto',
-        padding: '24px',
-        fontSize: '12px',
-        lineHeight: '1.5',
-      }}
+      className="hidden print:block font-sans text-[#111] bg-white max-w-[210mm] mx-auto px-6 py-6 text-[12px] leading-[1.5]"
     >
-      {/* ── Header ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #00d4c8', paddingBottom: '14px', marginBottom: '18px' }}>
+      {/* Header */}
+      <div className="flex justify-between items-start border-b-2 border-[#00d4c8] pb-[14px] mb-[18px]">
         <div>
-          <div style={{ fontSize: '28px', fontWeight: 900, color: '#00d4c8', letterSpacing: '0.05em' }}>NAVIN</div>
-          <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>Blockchain-Verified Logistics · Powered by Stellar Soroban</div>
+          <div className="text-[28px] font-black text-[#00d4c8] tracking-[0.05em]">NAVIN</div>
+          <div className="text-[10px] text-[#666] mt-0.5">Blockchain-Verified Logistics � Powered by Stellar Soroban</div>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '18px', fontWeight: 700, color: '#111' }}>SHIPMENT SUMMARY</div>
-          <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>Printed: {printDate}</div>
+        <div className="text-right">
+          <div className="text-[18px] font-bold text-[#111]">SHIPMENT SUMMARY</div>
+          <div className="text-[10px] text-[#666] mt-1">Printed: {printDate}</div>
         </div>
       </div>
 
-      {/* ── Shipment ID, Status & Priority ── */}
-      <div style={{ display: 'flex', gap: '24px', marginBottom: '18px', flexWrap: 'wrap' }}>
+      {/* Shipment ID, Status & Priority */}
+      <div className="flex gap-6 mb-[18px] flex-wrap">
         <div>
-          <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Shipment ID</div>
-          <div style={{ fontSize: '22px', fontWeight: 800 }}>{data.shipmentId}</div>
+          <div className="text-[9px] text-[#888] uppercase tracking-[0.1em]">Shipment ID</div>
+          <div className="text-[22px] font-extrabold">{data.shipmentId}</div>
         </div>
         {data.trackingNumber && (
           <div>
-            <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Tracking #</div>
-            <div style={{ fontSize: '14px', fontWeight: 600 }}>{data.trackingNumber}</div>
+            <div className="text-[9px] text-[#888] uppercase tracking-[0.1em]">Tracking #</div>
+            <div className="text-[14px] font-semibold">{data.trackingNumber}</div>
           </div>
         )}
         <div>
-          <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Status</div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: statusColor }}>{formatStatus(data.status)}</div>
+          <div className="text-[9px] text-[#888] uppercase tracking-[0.1em]">Status</div>
+          {/* statusColor is a runtime hex from getStatusColorHex � cannot be a static Tailwind class */}
+          <div className="text-[14px] font-bold" style={{ color: statusColor }}>{formatStatus(data.status)}</div>
         </div>
         {data.priority && (
           <div>
-            <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Priority</div>
-            <div style={{ fontSize: '13px', fontWeight: 600 }}>{data.priority}</div>
+            <div className="text-[9px] text-[#888] uppercase tracking-[0.1em]">Priority</div>
+            <div className="text-[13px] font-semibold">{data.priority}</div>
           </div>
         )}
         {data.carrier && (
           <div>
-            <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Carrier</div>
-            <div style={{ fontSize: '13px', fontWeight: 600 }}>{data.carrier}</div>
+            <div className="text-[9px] text-[#888] uppercase tracking-[0.1em]">Carrier</div>
+            <div className="text-[13px] font-semibold">{data.carrier}</div>
           </div>
         )}
       </div>
 
-      {/* ── Sender / Receiver ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', border: '1px solid #ddd', borderRadius: '6px', padding: '14px', marginBottom: '18px' }}>
+      {/* Sender / Receiver */}
+      <div className="grid grid-cols-2 gap-4 border border-[#ddd] rounded-md p-[14px] mb-[18px]">
         <div>
-          <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>From (Sender)</div>
-          <div style={{ fontWeight: 600, fontSize: '13px' }}>{data.sender.name}</div>
-          <div style={{ color: '#555', marginTop: '2px', fontSize: '11px' }}>{data.sender.address}</div>
+          <div className="text-[9px] text-[#888] uppercase tracking-[0.1em] mb-1.5">From (Sender)</div>
+          <div className="font-semibold text-[13px]">{data.sender.name}</div>
+          <div className="text-[#555] mt-0.5 text-[11px]">{data.sender.address}</div>
         </div>
-        <div style={{ borderLeft: '1px solid #eee', paddingLeft: '16px' }}>
-          <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>To (Receiver)</div>
-          <div style={{ fontWeight: 600, fontSize: '13px' }}>{data.receiver.name}</div>
-          <div style={{ color: '#555', marginTop: '2px', fontSize: '11px' }}>{data.receiver.address}</div>
+        <div className="border-l border-[#eee] pl-4">
+          <div className="text-[9px] text-[#888] uppercase tracking-[0.1em] mb-1.5">To (Receiver)</div>
+          <div className="font-semibold text-[13px]">{data.receiver.name}</div>
+          <div className="text-[#555] mt-0.5 text-[11px]">{data.receiver.address}</div>
         </div>
       </div>
 
-      {/* ── Dates ── */}
+      {/* Dates */}
       {(data.createdAt || data.expectedDelivery) && (
-        <div style={{ display: 'flex', gap: '32px', marginBottom: '18px' }}>
+        <div className="flex gap-8 mb-[18px]">
           {data.createdAt && (
             <div>
-              <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Created</div>
-              <div style={{ fontWeight: 600, fontSize: '12px', marginTop: '2px' }}>{data.createdAt}</div>
+              <div className="text-[9px] text-[#888] uppercase tracking-[0.1em]">Created</div>
+              <div className="font-semibold text-[12px] mt-0.5">{data.createdAt}</div>
             </div>
           )}
           {data.expectedDelivery && (
             <div>
-              <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Expected Delivery</div>
-              <div style={{ fontWeight: 600, fontSize: '12px', marginTop: '2px' }}>{data.expectedDelivery}</div>
+              <div className="text-[9px] text-[#888] uppercase tracking-[0.1em]">Expected Delivery</div>
+              <div className="font-semibold text-[12px] mt-0.5">{data.expectedDelivery}</div>
             </div>
           )}
         </div>
       )}
 
-      {/* ── Milestone Timeline ── */}
+      {/* Milestone Timeline */}
       {data.milestones && data.milestones.length > 0 && (
-        <div style={{ marginBottom: '18px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #ddd', paddingBottom: '6px', marginBottom: '10px' }}>
+        <div className="mb-[18px]">
+          <div className="text-[11px] font-bold uppercase tracking-[0.1em] border-b border-[#ddd] pb-1.5 mb-2.5">
             Milestone Timeline
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+          <table className="w-full border-collapse text-[10px]">
             <thead>
-              <tr style={{ background: '#f7f7f7' }}>
-                <th style={{ textAlign: 'left', padding: '5px 8px', fontWeight: 700, color: '#333', borderBottom: '1px solid #ddd' }}>Event</th>
-                <th style={{ textAlign: 'left', padding: '5px 8px', fontWeight: 700, color: '#333', borderBottom: '1px solid #ddd' }}>Timestamp</th>
-                <th style={{ textAlign: 'left', padding: '5px 8px', fontWeight: 700, color: '#333', borderBottom: '1px solid #ddd' }}>Location</th>
-                <th style={{ textAlign: 'left', padding: '5px 8px', fontWeight: 700, color: '#333', borderBottom: '1px solid #ddd' }}>Status</th>
+              <tr className="bg-[#f7f7f7]">
+                <th className="text-left px-2 py-[5px] font-bold text-[#333] border-b border-[#ddd]">Event</th>
+                <th className="text-left px-2 py-[5px] font-bold text-[#333] border-b border-[#ddd]">Timestamp</th>
+                <th className="text-left px-2 py-[5px] font-bold text-[#333] border-b border-[#ddd]">Location</th>
+                <th className="text-left px-2 py-[5px] font-bold text-[#333] border-b border-[#ddd]">Status</th>
               </tr>
             </thead>
             <tbody>
               {data.milestones.map((m, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid #eee', background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                  <td style={{ padding: '5px 8px', fontWeight: m.status === 'current' ? 700 : 400 }}>{m.name}</td>
-                  <td style={{ padding: '5px 8px', color: '#555' }}>{m.timestamp}</td>
-                  <td style={{ padding: '5px 8px', color: '#555' }}>{m.location}</td>
-                  <td style={{ padding: '5px 8px' }}>
-                    <span style={{ color: m.status === 'completed' ? '#10B981' : m.status === 'current' ? '#3B82F6' : '#9CA3AF', fontWeight: 600 }}>
+                <tr key={i} className={`border-b border-[#eee] ${i % 2 === 0 ? 'bg-white' : 'bg-[#fafafa]'}`}>
+                  <td className={`px-2 py-[5px] ${m.status === 'current' ? 'font-bold' : 'font-normal'}`}>{m.name}</td>
+                  <td className="px-2 py-[5px] text-[#555]">{m.timestamp}</td>
+                  <td className="px-2 py-[5px] text-[#555]">{m.location}</td>
+                  <td className="px-2 py-[5px]">
+                    <span
+                      className={`font-semibold ${
+                        m.status === 'completed'
+                          ? 'text-[#10B981]'
+                          : m.status === 'current'
+                            ? 'text-[#3B82F6]'
+                            : 'text-[#9CA3AF]'
+                      }`}
+                    >
                       {m.status.charAt(0).toUpperCase() + m.status.slice(1)}
                     </span>
                   </td>
@@ -211,63 +210,65 @@ const ShipmentSummaryPrint: React.FC<ShipmentSummaryPrintProps> = ({ data, onClo
               ))}
             </tbody>
           </table>
-          {/* Blockchain references (compact) */}
           {data.milestones.some((m) => m.blockchainAddress && m.blockchainAddress !== 'pending...') && (
-            <div style={{ marginTop: '8px', fontSize: '9px', color: '#777' }}>
+            <div className="mt-2 text-[9px] text-[#777]">
               <strong>On-chain references: </strong>
               {data.milestones
                 .filter((m) => m.blockchainAddress && m.blockchainAddress !== 'pending...')
                 .map((m, i) => (
-                  <span key={i}>{m.name}: {m.blockchainAddress}{i < data.milestones!.filter((x) => x.blockchainAddress && x.blockchainAddress !== 'pending...').length - 1 ? ' · ' : ''}</span>
+                  <span key={i}>{m.name}: {m.blockchainAddress}{i < data.milestones!.filter((x) => x.blockchainAddress && x.blockchainAddress !== 'pending...').length - 1 ? ' � ' : ''}</span>
                 ))}
             </div>
           )}
         </div>
       )}
 
-      {/* ── Cost Breakdown ── */}
+      {/* Cost Breakdown */}
       {data.costItems && data.costItems.length > 0 && (
-        <div style={{ marginBottom: '18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="mb-[18px] grid grid-cols-2 gap-4">
           <div>
-            <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #ddd', paddingBottom: '6px', marginBottom: '8px' }}>
+            <div className="text-[11px] font-bold uppercase tracking-[0.1em] border-b border-[#ddd] pb-1.5 mb-2">
               Cost Breakdown
             </div>
             {data.costItems.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 0', borderBottom: i < data.costItems!.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
-                <span style={{ color: item.isDiscount ? '#10B981' : '#444' }}>{item.label}</span>
-                <span style={{ fontWeight: 600, color: item.isDiscount ? '#10B981' : '#111' }}>
-                  {item.isDiscount ? '−' : ''}${item.amount.toFixed(2)}
+              <div
+                key={i}
+                className={`flex justify-between py-[3px] ${i < data.costItems!.length - 1 ? 'border-b border-[#f0f0f0]' : ''}`}
+              >
+                <span className={item.isDiscount ? 'text-[#10B981]' : 'text-[#444]'}>{item.label}</span>
+                <span className={`font-semibold ${item.isDiscount ? 'text-[#10B981]' : 'text-[#111]'}`}>
+                  {item.isDiscount ? '-' : ''}${item.amount.toFixed(2)}
                 </span>
               </div>
             ))}
             {data.totalCost && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0 0', borderTop: '2px solid #111', marginTop: '4px', fontWeight: 800, fontSize: '13px' }}>
+              <div className="flex justify-between pt-1.5 border-t-2 border-[#111] mt-1 font-extrabold text-[13px]">
                 <span>Total</span>
                 <span>{data.totalCost.currency} {data.totalCost.amount.toFixed(2)}</span>
               </div>
             )}
           </div>
 
-          {/* ── Payment Info ── */}
+          {/* Payment Info */}
           {data.payment && (
             <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #ddd', paddingBottom: '6px', marginBottom: '8px' }}>
+              <div className="text-[11px] font-bold uppercase tracking-[0.1em] border-b border-[#ddd] pb-1.5 mb-2">
                 Payment
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#666' }}>Amount</span>
-                <span style={{ fontWeight: 700 }}>{data.payment.amount} {data.payment.tokenSymbol}</span>
+              <div className="flex justify-between mb-1">
+                <span className="text-[#666]">Amount</span>
+                <span className="font-bold">{data.payment.amount} {data.payment.tokenSymbol}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ color: '#666' }}>Status</span>
-                <span style={{ fontWeight: 700, color: data.payment.status === 'released' ? '#10B981' : '#3B82F6' }}>
+              <div className="flex justify-between mb-1">
+                <span className="text-[#666]">Status</span>
+                <span className={`font-bold ${data.payment.status === 'released' ? 'text-[#10B981]' : 'text-[#3B82F6]'}`}>
                   {data.payment.status.charAt(0).toUpperCase() + data.payment.status.slice(1)}
                 </span>
               </div>
               {data.payment.transactionHash && (
-                <div style={{ marginTop: '6px' }}>
-                  <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>TX Hash</div>
-                  <div style={{ fontSize: '8px', wordBreak: 'break-all', color: '#444' }}>{data.payment.transactionHash}</div>
+                <div className="mt-1.5">
+                  <div className="text-[9px] text-[#888] uppercase tracking-[0.08em] mb-0.5">TX Hash</div>
+                  <div className="text-[8px] break-all text-[#444]">{data.payment.transactionHash}</div>
                 </div>
               )}
             </div>
@@ -275,29 +276,29 @@ const ShipmentSummaryPrint: React.FC<ShipmentSummaryPrintProps> = ({ data, onClo
         </div>
       )}
 
-      {/* ── Sensor Snapshot ── */}
+      {/* Sensor Snapshot */}
       {data.sensorSnapshot && (
-        <div style={{ marginBottom: '18px', background: '#f9fffe', border: '1px solid #c6f0ed', borderRadius: '6px', padding: '12px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: '#006b63' }}>
+        <div className="mb-[18px] bg-[#f9fffe] border border-[#c6f0ed] rounded-md p-3">
+          <div className="text-[11px] font-bold uppercase tracking-[0.1em] mb-2 text-[#006b63]">
             IoT Sensor Snapshot
           </div>
-          <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          <div className="flex gap-6 flex-wrap">
             {data.sensorSnapshot.temperature && (
               <div>
-                <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Temperature</div>
-                <div style={{ fontWeight: 700, fontSize: '14px' }}>{data.sensorSnapshot.temperature.value}{data.sensorSnapshot.temperature.unit}</div>
+                <div className="text-[9px] text-[#888] uppercase tracking-[0.08em]">Temperature</div>
+                <div className="font-bold text-[14px]">{data.sensorSnapshot.temperature.value}{data.sensorSnapshot.temperature.unit}</div>
               </div>
             )}
             {data.sensorSnapshot.humidity && (
               <div>
-                <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Humidity</div>
-                <div style={{ fontWeight: 700, fontSize: '14px' }}>{data.sensorSnapshot.humidity.value}{data.sensorSnapshot.humidity.unit}</div>
+                <div className="text-[9px] text-[#888] uppercase tracking-[0.08em]">Humidity</div>
+                <div className="font-bold text-[14px]">{data.sensorSnapshot.humidity.value}{data.sensorSnapshot.humidity.unit}</div>
               </div>
             )}
             {data.sensorSnapshot.location && (
               <div>
-                <div style={{ fontSize: '9px', color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Last GPS</div>
-                <div style={{ fontWeight: 600, fontSize: '12px' }}>
+                <div className="text-[9px] text-[#888] uppercase tracking-[0.08em]">Last GPS</div>
+                <div className="font-semibold text-[12px]">
                   {data.sensorSnapshot.location.latitude.toFixed(4)}, {data.sensorSnapshot.location.longitude.toFixed(4)}
                 </div>
               </div>
@@ -306,40 +307,40 @@ const ShipmentSummaryPrint: React.FC<ShipmentSummaryPrintProps> = ({ data, onClo
         </div>
       )}
 
-      {/* ── Delivery Proof ── */}
+      {/* Delivery Proof */}
       {data.deliveryProof && (
-        <div style={{ marginBottom: '18px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #ddd', paddingBottom: '6px', marginBottom: '6px' }}>
+        <div className="mb-[18px]">
+          <div className="text-[11px] font-bold uppercase tracking-[0.1em] border-b border-[#ddd] pb-1.5 mb-1.5">
             Proof of Delivery
           </div>
-          <div style={{ fontSize: '11px', color: '#444' }}>{data.deliveryProof}</div>
+          <div className="text-[11px] text-[#444]">{data.deliveryProof}</div>
         </div>
       )}
 
-      {/* ── Notes ── */}
+      {/* Notes */}
       {data.notes && (
-        <div style={{ marginBottom: '18px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #ddd', paddingBottom: '6px', marginBottom: '6px' }}>
+        <div className="mb-[18px]">
+          <div className="text-[11px] font-bold uppercase tracking-[0.1em] border-b border-[#ddd] pb-1.5 mb-1.5">
             Notes
           </div>
-          <div style={{ fontSize: '11px', color: '#444', whiteSpace: 'pre-wrap' }}>{data.notes}</div>
+          <div className="text-[11px] text-[#444] whitespace-pre-wrap">{data.notes}</div>
         </div>
       )}
 
-      {/* ── Stellar TX Reference ── */}
+      {/* Stellar TX Reference */}
       {data.stellarTxHash && (
-        <div style={{ background: '#f0fffe', border: '1px solid #b2f0ec', borderRadius: '6px', padding: '12px', marginBottom: '18px' }}>
-          <div style={{ fontSize: '9px', color: '#006b63', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', fontWeight: 700 }}>
+        <div className="bg-[#f0fffe] border border-[#b2f0ec] rounded-md p-3 mb-[18px]">
+          <div className="text-[9px] text-[#006b63] uppercase tracking-[0.1em] mb-1 font-bold">
             Stellar Transaction Reference
           </div>
-          <div style={{ fontSize: '9px', wordBreak: 'break-all', color: '#333' }}>{data.stellarTxHash}</div>
+          <div className="text-[9px] break-all text-[#333]">{data.stellarTxHash}</div>
         </div>
       )}
 
-      {/* ── Footer ── */}
-      <div style={{ borderTop: '1px solid #ddd', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '9px', color: '#aaa' }}>Generated by Navin — Blockchain-Verified Logistics</span>
-        <span style={{ fontSize: '9px', color: '#aaa' }}>Powered by Stellar Soroban · navin.io</span>
+      {/* Footer */}
+      <div className="border-t border-[#ddd] pt-2.5 flex justify-between items-center">
+        <span className="text-[9px] text-[#aaa]">Generated by Navin � Blockchain-Verified Logistics</span>
+        <span className="text-[9px] text-[#aaa]">Powered by Stellar Soroban � navin.io</span>
       </div>
     </div>
   );
