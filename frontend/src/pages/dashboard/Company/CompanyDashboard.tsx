@@ -1,6 +1,35 @@
 import React, { useState, useEffect, useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Clock,
+  CheckCircle2,
+  Truck,
+  ShieldCheck,
+  Rocket,
+  Menu,
+  RefreshCw,
+  Save,
+} from "lucide-react";
+
+import { QuickActionsCard } from "./QuickActions";
+import { useKeyboardShortcuts } from "../../../hooks/useKeyboardShortcuts";
+
+import RecentShipments from "./RecentShipments/RecentShipments";
+import RecentActivityFeed from "./RecentActivity/RecentActivityFeed";
+import ShipmentsMapWidget from "./ShipmentsMap/ShipmentsMapWidget";
+import RevenueSummaryWidget from "./RevenueSummary/RevenueSummaryWidget";
+import { CostPerRouteWidget } from "../../../components/dashboard/CostPerRouteWidget";
+import type { RouteCostData } from "../../../components/dashboard/CostPerRouteWidget/types";
+import { RevenueTargetWidget } from "../../../components/dashboard/RevenueTargetWidget";
+import PerformanceScorecardWidget from "./Scorecard/PerformanceScorecardWidget";
+import { shipmentApi } from "@services/api/endpoints/shipments";
+import OnboardingTour from "@components/onboarding/OnboardingTour";
+import {
+  isTourComplete,
+  resetTourFlag,
+} from "@components/onboarding/tourStorage";
+import type { TourStep } from "@components/onboarding/tourStorage";
+import OnboardingChecklist from "@components/onboarding/OnboardingChecklist";
   Clock, CheckCircle2, Truck, ShieldCheck, Rocket, Menu, RefreshCw, Save,
 } from 'lucide-react';
 

@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { resetTourFlag } from '@components/onboarding/OnboardingTour';
+import { resetTourFlag } from '@components/onboarding/tourStorage';
 import Breadcrumb from '@components/common/Breadcrumb';
-import { resetChecklist } from '@components/onboarding/OnboardingChecklist';
+import { resetChecklist } from '@components/onboarding/checklistStorage';
 import EmptyState from '@components/ui/EmptyState/EmptyState';
 import { useToast } from '@context/ToastContext';
 import {

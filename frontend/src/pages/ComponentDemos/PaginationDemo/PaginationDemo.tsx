@@ -1,4 +1,4 @@
-import PaginationExample from '@components/common/Pagination/Pagination.example';
+import PaginationExample from './Pagination.example';
 
 function PaginationDemo() {
   return (
