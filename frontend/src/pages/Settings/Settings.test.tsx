@@ -65,7 +65,7 @@ vi.mock('./sections/AddressBookSection', () => ({
   default: () => <div data-testid="address-book-section">Address Book Section</div>,
 }));
 
-const renderSettings = (searchParams = '') => {
+const renderSettings = () => {
   return render(
     <BrowserRouter>
       <Settings />
