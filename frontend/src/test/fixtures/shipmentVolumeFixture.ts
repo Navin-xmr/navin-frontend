@@ -1,10 +1,10 @@
-import type { DailyVolume } from './types';
+import type { DailyVolume } from '@components/dashboard/Charts/ShipmentVolumeChart/types';
 
 /**
- * Generate deterministic mock daily-volume data using a simple seeded PRNG.
+ * Test-only: deterministic daily-volume data from a simple seeded PRNG.
  * Counts range from 5 to 60 shipments per day.
  */
-export function generateMockData(days: number): DailyVolume[] {
+export function buildVolumeFixture(days: number): DailyVolume[] {
   const data: DailyVolume[] = [];
   const end = new Date();
   end.setHours(0, 0, 0, 0);
@@ -33,5 +33,3 @@ export function generateMockData(days: number): DailyVolume[] {
 
   return data;
 }
-
-export const MOCK_VOLUME_DATA: DailyVolume[] = generateMockData(90);

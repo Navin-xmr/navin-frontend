@@ -1,11 +1,18 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { TrendingUp } from 'lucide-react';
-import { MOCK_DELIVERY_DATA, calculateSuccessRate } from './mockDeliveryData';
+import { calculateSuccessRate } from './deliverySuccessUtils';
+import { ChartLoading } from '../../../ui/ChartLoading';
+import { ChartError } from '../../../ui/ChartError';
 import type { DeliveryOutcome } from './types';
 
-interface DeliverySuccessChartProps {
+export interface DeliverySuccessChartProps {
   data?: DeliveryOutcome[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
+
+const NO_OUTCOMES: DeliveryOutcome[] = [];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -26,10 +33,41 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 export default function DeliverySuccessChart({
-  data = MOCK_DELIVERY_DATA,
+  data = NO_OUTCOMES,
+  loading,
+  error,
+  onRetry,
 }: DeliverySuccessChartProps) {
   const successRate = calculateSuccessRate(data);
   const total = data.reduce((sum, item) => sum + item.count, 0);
+
+  if (loading) {
+    return <ChartLoading rows={4} height={420} label="Loading delivery success rates…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={420} />;
+  }
+
+  if (total === 0) {
+    return (
+      <div className="p-0">
+        <div className="px-6 py-5 border-b border-border">
+          <h2 className="text-base font-bold flex items-center gap-2.5">
+            <TrendingUp size={18} className="text-accent-green" />
+            Delivery Success Rates
+          </h2>
+        </div>
+        <div
+          role="status"
+          className="m-6 flex h-64 flex-col items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-text-secondary"
+        >
+          <p className="text-sm font-medium">No delivery data available</p>
+          <p className="mt-1 text-xs">Delivery outcomes will appear here once shipments are created.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-0">

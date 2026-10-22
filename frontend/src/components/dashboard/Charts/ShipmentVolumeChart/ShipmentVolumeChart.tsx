@@ -9,14 +9,20 @@ import {
   YAxis,
 } from 'recharts';
 import { BarChart3 } from 'lucide-react';
-import { MOCK_VOLUME_DATA } from './mockVolumeData';
+import { ChartLoading } from '../../../ui/ChartLoading';
+import { ChartError } from '../../../ui/ChartError';
 import type { DailyVolume } from './types';
 
 type Range = 7 | 30 | 90;
 
-interface ShipmentVolumeChartProps {
+export interface ShipmentVolumeChartProps {
   data?: DailyVolume[];
+  loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
+
+const NO_VOLUME: DailyVolume[] = [];
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -38,7 +44,10 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 }
 
 export default function ShipmentVolumeChart({
-  data = MOCK_VOLUME_DATA,
+  data = NO_VOLUME,
+  loading,
+  error,
+  onRetry,
 }: ShipmentVolumeChartProps) {
   const [activeRange, setActiveRange] = useState<Range>(30);
   const chartData = useMemo(() => data.slice(-activeRange), [data, activeRange]);
@@ -47,6 +56,14 @@ export default function ShipmentVolumeChart({
     { value: 30, label: '30D' },
     { value: 90, label: '90D' },
   ];
+
+  if (loading) {
+    return <ChartLoading rows={6} height={360} label="Loading shipment volume…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={360} />;
+  }
 
   return (
     <div className="p-0">
@@ -77,36 +94,46 @@ export default function ShipmentVolumeChart({
         </div>
       </div>
 
-      <div className="pt-5 pr-4 pb-3 pl-0 h-[300px] md:h-[220px] md:pt-4 md:pr-2 md:pb-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-            <CartesianGrid vertical={false} stroke="#1e2433" strokeDasharray="3 3" />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: '#8a8f9d', fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              interval={activeRange <= 7 ? 0 : activeRange <= 30 ? 4 : 13}
-            />
-            <YAxis
-              tick={{ fill: '#8a8f9d', fontSize: 11 }}
-              tickLine={false}
-              axisLine={false}
-              width={32}
-            />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={{ fill: 'rgba(59, 130, 246, 0.08)' }}
-            />
-            <Bar
-              dataKey="count"
-              fill="#3b82f6"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={activeRange <= 7 ? 48 : 24}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {data.length === 0 ? (
+        <div
+          role="status"
+          className="m-6 flex h-[240px] flex-col items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-text-secondary"
+        >
+          <p className="text-sm font-medium">No shipment volume data available</p>
+          <p className="mt-1 text-xs">Daily shipment counts will appear here once shipments are created.</p>
+        </div>
+      ) : (
+        <div className="pt-5 pr-4 pb-3 pl-0 h-[300px] md:h-[220px] md:pt-4 md:pr-2 md:pb-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <CartesianGrid vertical={false} stroke="#1e2433" strokeDasharray="3 3" />
+              <XAxis
+                dataKey="date"
+                tick={{ fill: '#8a8f9d', fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                interval={activeRange <= 7 ? 0 : activeRange <= 30 ? 4 : 13}
+              />
+              <YAxis
+                tick={{ fill: '#8a8f9d', fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                width={32}
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: 'rgba(59, 130, 246, 0.08)' }}
+              />
+              <Bar
+                dataKey="count"
+                fill="#3b82f6"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={activeRange <= 7 ? 48 : 24}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,42 @@ import { useState, useEffect } from 'react';
 import { shipmentApi } from '@services/api/endpoints/shipments';
 import type { RouteCostData } from '../../../components/dashboard/CostPerRouteWidget/types';
 
+export interface RouteMetrics {
+  base: number;
+  fuel: number;
+  customs: number;
+  insurance: number;
+  revenue: number;
+}
+
+const asNumber = (value: unknown): number | undefined =>
+  typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+
+/**
+ * Reads the cost and revenue figures a shipment actually recorded in its
+ * off-chain metadata. Returns null when it recorded none of them, so that
+ * shipment is left out instead of being filled with invented numbers. On a
+ * shipment that recorded at least one figure, any figure it did not record
+ * counts as 0.
+ */
+export function readRouteMetrics(meta: Record<string, unknown>): RouteMetrics | null {
+  const base = asNumber(meta.baseCost);
+  const fuel = asNumber(meta.fuelCost);
+  const customs = asNumber(meta.customsCost);
+  const insurance = asNumber(meta.insuranceCost);
+  const revenue = asNumber(meta.revenue);
+
+  if ([base, fuel, customs, insurance, revenue].every((value) => value === undefined)) return null;
+
+  return {
+    base: base ?? 0,
+    fuel: fuel ?? 0,
+    customs: customs ?? 0,
+    insurance: insurance ?? 0,
+    revenue: revenue ?? 0,
+  };
+}
+
 export interface UseRouteCostDataReturn {
   routeCostData: RouteCostData[];
   routeCostError: string | null;
@@ -37,12 +73,9 @@ export function useRouteCostData(refreshKey: number): UseRouteCostDataReturn {
           const destination = s.destination?.trim() || 'Unknown Destination';
           const routeKey = `${origin} → ${destination}`;
 
-          const meta = (s.offChainMetadata ?? {}) as Record<string, unknown>;
-          const base = typeof meta.baseCost === 'number' ? meta.baseCost : 1200;
-          const fuel = typeof meta.fuelCost === 'number' ? meta.fuelCost : 400;
-          const customs = typeof meta.customsCost === 'number' ? meta.customsCost : 150;
-          const insurance = typeof meta.insuranceCost === 'number' ? meta.insuranceCost : 100;
-          const revenue = typeof meta.revenue === 'number' ? meta.revenue : 2500;
+          const metrics = readRouteMetrics((s.offChainMetadata ?? {}) as Record<string, unknown>);
+          if (!metrics) continue;
+          const { base, fuel, customs, insurance, revenue } = metrics;
           const cost = base + fuel + customs + insurance;
 
           const shipmentItem = {

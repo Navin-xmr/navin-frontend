@@ -28,14 +28,19 @@
     "stats": {
       "active": "Activos",
       "delivered": "Entregados",
-      "delayed": "Retrasados",
-      "verified": "Verificados"
+      "pending": "Pendientes",
+      "cancelled": "Cancelados",
+      "error": "No se pudieron cargar los envíos.",
+      "retry": "Reintentar"
     },
     "menuAriaLabel": "Menú",
     "title": "Resumen logístico",
     "subtitle": "Datos en tiempo real sincronizados con la blockchain",
     "live": "En vivo:",
     "connected": "Conectado",
+    "reconnecting": "Reconectando",
+    "disconnected": "Desconectado",
+    "offline": "Sin conexión",
     "recentShipments": "Envíos recientes",
     "viewAll": "Ver todo",
     "activeFleetRoutes": "Rutas de flota activas",

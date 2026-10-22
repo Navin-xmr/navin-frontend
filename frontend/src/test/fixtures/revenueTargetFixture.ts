@@ -1,5 +1,4 @@
-import type { DailyRevenue, RevenueTargetData } from './types';
-
+import type { DailyRevenue, RevenueTargetData } from '@components/dashboard/RevenueTargetWidget/types';
 
 function mulberry32(seed: number) {
   return function random() {
@@ -10,6 +9,7 @@ function mulberry32(seed: number) {
   };
 }
 
+/** Test-only: deterministic revenue for the current month. Production code must never fall back to this. */
 export function buildCurrentMonthDailyRevenue(now = new Date()): DailyRevenue[] {
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -29,7 +29,7 @@ export function buildCurrentMonthDailyRevenue(now = new Date()): DailyRevenue[] 
   return days;
 }
 
-export function buildRevenueTargetData(now = new Date()): RevenueTargetData {
+export function buildRevenueTargetFixture(now = new Date()): RevenueTargetData {
   const dailyRevenue = buildCurrentMonthDailyRevenue(now);
   const actual = dailyRevenue.reduce((sum, entry) => sum + entry.amount, 0);
   const target = 150000;
@@ -41,4 +41,4 @@ export function buildRevenueTargetData(now = new Date()): RevenueTargetData {
   };
 }
 
-export const MOCK_REVENUE_TARGET_DATA = buildRevenueTargetData();
+export const REVENUE_TARGET_FIXTURE = buildRevenueTargetFixture();

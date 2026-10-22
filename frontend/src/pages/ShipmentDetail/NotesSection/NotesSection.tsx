@@ -19,30 +19,6 @@ interface NotesSectionProps {
   userRole: "company" | "customer";
 }
 
-const mockNotes: Note[] = [
-  {
-    id: "1",
-    author: { name: "Sarah Chen", initials: "SC" },
-    timestamp: "2026-02-20 10:30 AM EST",
-    text: "Shipment picked up and logged into system. All items accounted for.",
-    visibility: "customer",
-  },
-  {
-    id: "2",
-    author: { name: "Mike Torres", initials: "MT" },
-    timestamp: "2026-02-21 02:15 PM EST",
-    text: "Temperature anomaly detected at Philadelphia hub - within acceptable range, monitoring.",
-    visibility: "internal",
-  },
-  {
-    id: "3",
-    author: { name: "Customer Support", initials: "CS" },
-    timestamp: "2026-02-22 09:00 AM EST",
-    text: "Your shipment is on schedule and will be delivered tomorrow.",
-    visibility: "customer",
-  },
-];
-
 const NotesSection: React.FC<NotesSectionProps> = ({ shipmentId, userRole }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [noteText, setNoteText] = useState<string>("");
@@ -50,21 +26,33 @@ const NotesSection: React.FC<NotesSectionProps> = ({ shipmentId, userRole }) => 
     userRole === "company" ? "internal" : "customer"
   );
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [loadStatus, setLoadStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [reloadKey, setReloadKey] = useState<number>(0);
   const { addToast } = useToast();
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const fetched: NoteResponse[] = await shipmentApi.getNotes(shipmentId);
-        setNotes(fetched);
-      } catch {
-        // API not available — fall back to mock data
-        setNotes(mockNotes);
-      }
-    };
+    let cancelled = false;
 
-    fetchNotes();
-  }, [shipmentId]);
+    shipmentApi
+      .getNotes(shipmentId)
+      .then((fetched: NoteResponse[]) => {
+        if (cancelled) return;
+        setNotes(fetched);
+        setLoadStatus("ready");
+      })
+      .catch(() => {
+        if (!cancelled) setLoadStatus("error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shipmentId, reloadKey]);
+
+  const handleRetry = () => {
+    setLoadStatus("loading");
+    setReloadKey((key) => key + 1);
+  };
 
   const visibleNotes =
     userRole === "company"
@@ -122,7 +110,27 @@ const NotesSection: React.FC<NotesSectionProps> = ({ shipmentId, userRole }) => 
 
       {/* Notes list */}
       <div className="flex flex-col gap-4 mb-8">
-        {visibleNotes.length === 0 && (
+        {loadStatus === "loading" && (
+          <p role="status" className="text-center text-[rgba(200,230,240,0.5)] py-8">
+            Loading notes…
+          </p>
+        )}
+        {loadStatus === "error" && (
+          <div
+            role="alert"
+            className="flex flex-col items-center gap-3 py-8 text-center text-[rgba(200,230,240,0.75)]"
+          >
+            <p className="m-0">Couldn&apos;t load notes for this shipment.</p>
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium border border-[rgba(0,180,160,0.3)] text-[#00d4c8] hover:border-[#00d4c8] transition-all cursor-pointer bg-transparent"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        {loadStatus === "ready" && visibleNotes.length === 0 && (
           <p className="text-center text-[rgba(200,230,240,0.5)] py-8">
             No notes yet.
           </p>

@@ -344,17 +344,14 @@ describe('DashboardLayout', () => {
     });
   });
 
-  // ── Node status widget ──────────────────────────────────────────────────────
+  // ── No invented node status ─────────────────────────────────────────────────
 
-  describe('enterprise node status widget', () => {
-    it('renders the enterprise node status text when sidebar is expanded', () => {
+  describe('sidebar status', () => {
+    it('does not show an invented node name or block height', () => {
       renderLayout();
-      expect(screen.getByText('Enterprise Node')).toBeInTheDocument();
-    });
-
-    it('shows syncing status', () => {
-      renderLayout();
-      expect(screen.getByText(/Syncing/)).toBeInTheDocument();
+      expect(screen.queryByText('Enterprise Node')).not.toBeInTheDocument();
+      expect(screen.queryByText(/Syncing/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Block 18/)).not.toBeInTheDocument();
     });
   });
 

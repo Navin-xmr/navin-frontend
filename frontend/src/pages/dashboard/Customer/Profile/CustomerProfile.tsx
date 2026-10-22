@@ -6,11 +6,13 @@ import { useToast } from '@context/ToastContext';
 type Profile = { fullName: string; email: string; phone: string; address: string; };
 type ProfileErrors = { fullName?: string; phone?: string; address?: string; };
 
-const initialProfile: Profile = { 
-  fullName: 'John Doe', 
-  email: 'john.doe@example.com', 
-  phone: '', 
-  address: '' 
+// No customer profile endpoint exists yet and the session only carries an id and
+// a role, so the form starts blank rather than showing an invented person.
+const initialProfile: Profile = {
+  fullName: '',
+  email: '',
+  phone: '',
+  address: '',
 };
 
 const CustomerProfile: React.FC = () => {
@@ -130,6 +132,7 @@ const CustomerProfile: React.FC = () => {
                 name="email"
                 type="email"
                 value={profile.email}
+                placeholder="Not available yet"
                 disabled
                 className="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] rounded-xl px-4 py-3.5 text-[rgba(255,255,255,0.5)] text-base cursor-not-allowed"
               />

@@ -1,6 +1,7 @@
-import type { RouteCostData } from './types';
+import type { RouteCostData } from '@components/dashboard/CostPerRouteWidget/types';
 
-export const MOCK_ROUTE_COST_DATA: RouteCostData[] = [
+/** Test-only route cost data. Production code must never fall back to this. */
+export const ROUTE_COST_FIXTURE: RouteCostData[] = [
   {
     route: 'New York, NY → Los Angeles, CA',
     origin: 'New York, NY',

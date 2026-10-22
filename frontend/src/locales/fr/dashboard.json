@@ -28,14 +28,19 @@
     "stats": {
       "active": "Actives",
       "delivered": "Livrées",
-      "delayed": "Retardées",
-      "verified": "Vérifiées"
+      "pending": "En attente",
+      "cancelled": "Annulées",
+      "error": "Impossible de charger les expéditions.",
+      "retry": "Réessayer"
     },
     "menuAriaLabel": "Menu",
     "title": "Aperçu logistique",
     "subtitle": "Données en temps réel synchronisées sur la blockchain",
     "live": "En direct :",
     "connected": "Connecté",
+    "reconnecting": "Reconnexion",
+    "disconnected": "Déconnecté",
+    "offline": "Hors ligne",
     "recentShipments": "Expéditions récentes",
     "viewAll": "Tout afficher",
     "activeFleetRoutes": "Itinéraires de flotte actifs",

@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Clock,
-  CheckCircle2,
-  Truck,
-  ShieldCheck,
   Rocket,
   Menu,
   RefreshCw,
@@ -44,22 +40,11 @@ import RevenueSummaryWidget from './RevenueSummary/RevenueSummaryWidget';
 import { CostPerRouteWidget } from '../../../components/dashboard/CostPerRouteWidget';
 import { RevenueTargetWidget } from '../../../components/dashboard/RevenueTargetWidget';
 import PerformanceScorecardWidget from './Scorecard/PerformanceScorecardWidget';
+import LiveConnectionLabel from './LiveConnectionLabel';
+import ShipmentStatCards from './ShipmentStatCards';
 import OnboardingTour, { isTourComplete, resetTourFlag } from '@components/onboarding/OnboardingTour';
 import type { TourStep } from '@components/onboarding/OnboardingTour';
 import OnboardingChecklist from '@components/onboarding/OnboardingChecklist';
-
-const TrendIcon = ({ up }: { up: boolean }) => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {up ? <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /> : <polyline points="22 17 13.5 8.5 8.5 13.5 2 7" />}
-  </svg>
-);
-
-const stats = [
-  { id: 'active', label: 'Active', value: '128', trend: '12%', trendType: 'positive', icon: <Truck size={18} /> },
-  { id: 'delivered', label: 'Delivered', value: '1,420', trend: '5%', trendType: 'positive', icon: <CheckCircle2 size={18} /> },
-  { id: 'delayed', label: 'Delayed', value: '12', trend: '2%', trendType: 'negative', icon: <Clock size={18} /> },
-  { id: 'verified', label: 'Verified', value: '45', trend: '0%', trendType: 'neutral', icon: <ShieldCheck size={18} /> },
-];
 
 type DashboardWidgetId = 'map' | 'revenue' | 'scorecard' | 'targets' | 'shipments' | 'activity';
 
@@ -184,7 +169,7 @@ const CompanyDashboard: React.FC = () => {
           <p className="text-[#94a3b8] text-sm m-0">{t('companyDashboard.subtitle')}</p>
         </div>
         <div className="max-md:hidden flex items-center gap-1.5 bg-[#14171e] border border-[#1e293b] px-3 py-1.5 rounded-md text-xs font-medium text-[#94a3b8]">
-          {t('companyDashboard.live')} <span className="text-[#10b981]">{t('companyDashboard.connected')}</span>
+          <LiveConnectionLabel />
           <p className="text-[11px] uppercase tracking-[0.2em] text-[#64748b] mt-1">{refreshedLabel}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -254,24 +239,7 @@ const CompanyDashboard: React.FC = () => {
 
       {/* Stats + Quick Actions */}
       <div className="grid grid-cols-[1fr_300px] gap-6 items-start max-md:grid-cols-1 max-md:gap-3">
-        <div className="grid grid-cols-2 gap-6 max-md:gap-3">
-          {isLoading
-            ? [1, 2, 3, 4].map((i) => <div key={i} className="h-[120px] rounded-xl animate-shimmer" />)
-            : stats.map((stat) => (
-                <div key={stat.id} className="bg-[#14171e] border border-[#1e293b] rounded-xl p-6 flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#334155] max-md:p-4">
-                  <div className="flex items-center gap-2 text-[#94a3b8] text-[11px] font-semibold uppercase tracking-[0.05em] mb-4">
-                    {stat.icon}{t(`companyDashboard.stats.${stat.id}`)}
-                  </div>
-                  <div className={`text-[32px] font-semibold mb-2 max-md:text-[28px] ${stat.id === 'delayed' ? 'text-[#f59e0b]' : 'text-white'}`}>
-                    {stat.value}
-                  </div>
-                  <div className={`text-[13px] font-medium flex items-center gap-1 ${stat.trendType === 'positive' ? 'text-[#10b981]' : stat.trendType === 'negative' ? 'text-[#ef4444]' : 'text-[#94a3b8]'}`}>
-                    <TrendIcon up={stat.trendType === 'positive'} />
-                    {stat.trend}
-                  </div>
-                </div>
-              ))}
-        </div>
+        <ShipmentStatCards refreshKey={refreshKey} />
         <div className="max-md:hidden" data-tour-id="tour-create-shipment">
           <QuickActionsCard />
         </div>

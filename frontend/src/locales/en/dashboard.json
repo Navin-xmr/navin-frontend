@@ -28,14 +28,19 @@
     "stats": {
       "active": "Active",
       "delivered": "Delivered",
-      "delayed": "Delayed",
-      "verified": "Verified"
+      "pending": "Pending",
+      "cancelled": "Cancelled",
+      "error": "Couldn't load shipment counts.",
+      "retry": "Retry"
     },
     "menuAriaLabel": "Menu",
     "title": "Logistics Overview",
     "subtitle": "Blockchain-synced real-time data",
     "live": "Live:",
     "connected": "Connected",
+    "reconnecting": "Reconnecting",
+    "disconnected": "Disconnected",
+    "offline": "Offline",
     "recentShipments": "Recent Shipments",
     "viewAll": "View All",
     "activeFleetRoutes": "Active Fleet Routes",
