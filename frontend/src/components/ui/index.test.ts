@@ -6,21 +6,17 @@ import {
   ChartLoading,
   Chip,
   ChipGroup,
-  CircularProgress,
   Combobox,
   ConfirmDialog,
   ConnectionStatusDot,
   CopyToClipboard,
-  DateRangePicker,
   EmptyState,
   ExportDropdown,
   FileUpload,
   InlineEditField,
-  MultiSelect,
   PageSkeleton,
   PasswordStrengthMeter,
   PriorityBadge,
-  ProgressBar,
   ProgressStepper,
   PWAInstallPrompt,
   RichChartTooltip,
@@ -41,21 +37,17 @@ describe("components/ui barrel export (#1119)", () => {
     expect(ChartLoading).toBeDefined();
     expect(Chip).toBeDefined();
     expect(ChipGroup).toBeDefined();
-    expect(CircularProgress).toBeDefined();
     expect(Combobox).toBeDefined();
     expect(ConfirmDialog).toBeDefined();
     expect(ConnectionStatusDot).toBeDefined();
     expect(CopyToClipboard).toBeDefined();
-    expect(DateRangePicker).toBeDefined();
     expect(EmptyState).toBeDefined();
     expect(ExportDropdown).toBeDefined();
     expect(FileUpload).toBeDefined();
     expect(InlineEditField).toBeDefined();
-    expect(MultiSelect).toBeDefined();
     expect(PageSkeleton).toBeDefined();
     expect(PasswordStrengthMeter).toBeDefined();
     expect(PriorityBadge).toBeDefined();
-    expect(ProgressBar).toBeDefined();
     expect(ProgressStepper).toBeDefined();
     expect(PWAInstallPrompt).toBeDefined();
     expect(RichChartTooltip).toBeDefined();

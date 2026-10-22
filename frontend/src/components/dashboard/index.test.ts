@@ -4,9 +4,7 @@ import {
   ShipmentVolumeChart,
   CostPerRouteWidget,
   RevenueTargetWidget,
-  ShipmentVolumeTrendWidget,
   StatCard,
-  WidgetRefreshIndicator,
 } from "./index";
 
 describe("components/dashboard barrel export (#1129)", () => {
@@ -15,8 +13,6 @@ describe("components/dashboard barrel export (#1129)", () => {
     expect(ShipmentVolumeChart).toBeDefined();
     expect(CostPerRouteWidget).toBeDefined();
     expect(RevenueTargetWidget).toBeDefined();
-    expect(ShipmentVolumeTrendWidget).toBeDefined();
     expect(StatCard).toBeDefined();
-    expect(WidgetRefreshIndicator).toBeDefined();
   });
 });

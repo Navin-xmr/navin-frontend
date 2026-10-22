@@ -6,14 +6,10 @@ import {
   DeliveryConfirmation,
   EventAnnotation,
   MilestoneTimeline,
-  PriorityBadge,
-  QuickActionPanel,
   SaveTemplateModal,
-  ShipmentActionMenu,
   ShipmentComparison,
   ShipmentSummaryPrint,
   StatusUpdate,
-  TrackingTimeline,
 } from "./index";
 
 describe("components/shipment barrel export (#1123)", () => {
@@ -24,13 +20,9 @@ describe("components/shipment barrel export (#1123)", () => {
     expect(DeliveryConfirmation).toBeDefined();
     expect(EventAnnotation).toBeDefined();
     expect(MilestoneTimeline).toBeDefined();
-    expect(PriorityBadge).toBeDefined();
-    expect(QuickActionPanel).toBeDefined();
     expect(SaveTemplateModal).toBeDefined();
-    expect(ShipmentActionMenu).toBeDefined();
     expect(ShipmentComparison).toBeDefined();
     expect(ShipmentSummaryPrint).toBeDefined();
     expect(StatusUpdate).toBeDefined();
-    expect(TrackingTimeline).toBeDefined();
   });
 });

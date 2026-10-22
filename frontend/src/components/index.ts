@@ -2,8 +2,6 @@
 export { default as EmptyState } from './common/EmptyState';
 export type { EmptyStateProps, EmptyStateCTA } from './common/EmptyState';
 
-export { default as DataTable } from './common/DataTable';
-export type { DataTableProps, ColumnDef, PaginationConfig, DataTableEmptyState, SortDirection } from './common/DataTable';
 export { default as Pagination } from './common/Pagination';
 export type { PaginationProps } from './common/Pagination';
 export { default as Breadcrumb } from './common/Breadcrumb';
@@ -12,20 +10,14 @@ export type { BreadcrumbProps, BreadcrumbItem } from './common/Breadcrumb';
 // Reusable UI primitives
 export { default as Button } from './Button';
 // UI
-export { ProgressBar } from './ui/ProgressBar';
-export type { ProgressBarProps, ProgressBarColor, ProgressBarSize } from './ui/ProgressBar';
 export { ProgressStepper } from './ui/ProgressStepper';
 export type { ProgressStepperProps, StepDef } from './ui/ProgressStepper';
-export { CircularProgress } from './ui/CircularProgress';
-export type { CircularProgressProps } from './ui/CircularProgress';
 export { default as Avatar } from '@components/ui/Avatar';
 export type { AvatarProps } from '@components/ui/Avatar';
 export { default as PriorityBadge } from '@components/ui/PriorityBadge';
 export type { PriorityBadgeProps } from '@components/ui/PriorityBadge';
 export { default as Tag } from '@components/ui/Tag';
 export type { TagProps } from '@components/ui/Tag';
-export { default as MultiSelect } from './ui/MultiSelect';
-export type { MultiSelectOption, MultiSelectProps } from './ui/MultiSelect';
 export { default as Combobox } from '@components/ui/Combobox';
 export type { ComboboxOption, ComboboxProps } from '@components/ui/Combobox';
 export { default as ExportDropdown } from '@components/ui/ExportDropdown';
@@ -77,8 +69,6 @@ export { default as RevenueTargetWidget } from './dashboard/RevenueTargetWidget'
 export { default as CostPerRouteWidget } from './dashboard/CostPerRouteWidget';
 
 // Shipment
-export { default as TrackingTimeline } from './shipment/TrackingTimeline';
-export type { TrackingTimelineProps, Milestone } from './shipment/TrackingTimeline';
 export { default as MilestoneTimeline } from './shipment/MilestoneTimeline/MilestoneTimeline';
 export type { MilestoneDetail, MilestoneTimelineProps } from './shipment/MilestoneTimeline/MilestoneTimeline';
 export { default as EventAnnotation } from './shipment/EventAnnotation';
@@ -87,8 +77,6 @@ export { default as StatusUpdate } from './shipment/StatusUpdate';
 export type { StatusUpdateProps, ShipmentMilestone } from './shipment/StatusUpdate';
 export { default as DeliveryConfirmation } from './shipment/DeliveryConfirmation';
 export type { DeliveryConfirmationProps } from './shipment/DeliveryConfirmation';
-export { default as QuickActionPanel } from './shipment/QuickActionPanel';
-export type { QuickActionPanelProps, ActionType } from './shipment/QuickActionPanel';
 
 // Onboarding
 export { OnboardingTour } from './onboarding';
@@ -98,10 +86,6 @@ export { isTourComplete, markTourComplete, resetTourFlag } from './onboarding';
 // UI — EmptyState (#526)
 export { default as EmptyStateUI } from './ui/EmptyState';
 export type { EmptyStateProps as EmptyStateUIProps, EmptyStateAction } from './ui/EmptyState';
-
-// Shipment — ShipmentActionMenu (#527)
-export { default as ShipmentActionMenu } from './shipment/ShipmentActionMenu';
-export type { ShipmentActionMenuProps, ShipmentActionItem, ShipmentActionMenuStatus } from './shipment/ShipmentActionMenu';
 
 // Common — GlobalSearch (#528)
 export { default as GlobalSearch } from './common/GlobalSearch';
@@ -133,10 +117,6 @@ export type { AutosaveBannerProps } from './ui/AutosaveBanner';
 // UI — Chip & ChipGroup (#530)
 export { Chip, ChipGroup } from './ui/Chip';
 export type { ChipProps, ChipVariant, ChipSize, ChipGroupProps, ChipOption } from './ui/Chip';
-
-// Dashboard — Widget Refresh Indicator (#531)
-export { WidgetRefreshIndicator } from './dashboard/WidgetRefreshIndicator';
-export type { WidgetRefreshIndicatorProps } from './dashboard/WidgetRefreshIndicator';
 
 // Shipment — Summary Print View (#532)
 export { ShipmentSummaryPrint } from './shipment/ShipmentSummaryPrint';

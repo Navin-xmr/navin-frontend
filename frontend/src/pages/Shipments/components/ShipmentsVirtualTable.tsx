@@ -2,7 +2,7 @@ import React from 'react';
 import { Package } from 'lucide-react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Shipment } from '../../../api/shipmentApi';
-import PriorityBadge from '../../../components/shipment/PriorityBadge/PriorityBadge';
+import PriorityBadge from '@components/ui/PriorityBadge';
 import StatusBadge from '../../../components/ui/StatusBadge/StatusBadge';
 import { safeFormatDate } from '../../../utils/safeFormat';
 
