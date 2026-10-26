@@ -1,7 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { Target } from 'lucide-react';
 import { RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
-import { buildRevenueTargetData } from './mockRevenueTargetData';
 import type { RevenueTargetData } from './types';
 
 import {
@@ -14,19 +13,14 @@ import {
 import { ChartLoading } from '../../ui/ChartLoading';
 import { ChartError } from '../../ui/ChartError';
 
-interface RevenueTargetWidgetProps {
+export interface RevenueTargetWidgetProps {
   data?: RevenueTargetData;
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
 }
 
-const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
-  data = buildRevenueTargetData(),
-  loading,
-  error,
-  onRetry,
-}) => {
+const RevenueTargetGauge: React.FC<{ data: RevenueTargetData }> = ({ data }) => {
   const achievementPercent = useMemo(() => getAchievementPercent(data.actual, data.target), [data.actual, data.target]);
   const gaugeColor = useMemo(() => getGaugeColor(achievementPercent), [achievementPercent]);
   const projectedRevenue = useMemo(() => getProjectedEndOfMonthRevenue(data.actual), [data.actual]);
@@ -39,14 +33,6 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
       fill: gaugeColor,
     },
   ], [achievementPercent, gaugeColor]);
-
-  if (loading) {
-    return <ChartLoading rows={3} height={560} label="Loading revenue target…" />;
-  }
-
-  if (error) {
-    return <ChartError message={error} onRetry={onRetry} height={560} />;
-  }
 
   return (
     <section className="rounded-2xl border border-[#1e293b] bg-[#14171e] p-6 shadow-sm h-full">
@@ -121,6 +107,46 @@ const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
       </div>
     </section>
   );
+};
+
+const RevenueTargetWidget: React.FC<RevenueTargetWidgetProps> = ({
+  data,
+  loading,
+  error,
+  onRetry,
+}) => {
+  if (loading) {
+    return <ChartLoading rows={3} height={560} label="Loading revenue target…" />;
+  }
+
+  if (error) {
+    return <ChartError message={error} onRetry={onRetry} height={560} />;
+  }
+
+  if (!data || data.target <= 0) {
+    return (
+      <section className="rounded-2xl border border-[#1e293b] bg-[#14171e] p-6 shadow-sm h-full">
+        <div className="mb-4">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#64748b]">
+            Monthly Target
+          </p>
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-white m-0">
+            <Target size={18} className="text-[#60a5fa]" />
+            Revenue vs Target
+          </h3>
+        </div>
+        <div
+          role="status"
+          className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed border-[#1e293b] p-6 text-center text-[#94a3b8]"
+        >
+          <p className="text-sm font-medium">No revenue target set</p>
+          <p className="mt-1 text-xs text-[#64748b]">Revenue progress will appear here once a monthly target is set.</p>
+        </div>
+      </section>
+    );
+  }
+
+  return <RevenueTargetGauge data={data} />;
 };
 
 export default memo(RevenueTargetWidget);

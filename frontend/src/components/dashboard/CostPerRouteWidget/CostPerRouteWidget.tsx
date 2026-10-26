@@ -10,7 +10,6 @@ import {
 } from 'recharts';
 import { BarChart3, Table2 } from 'lucide-react';
 import RouteShipmentsModal from './RouteShipmentsModal';
-import { MOCK_ROUTE_COST_DATA } from './mockCostPerRouteData';
 import type { RouteCostData } from './types';
 
 import {
@@ -26,7 +25,7 @@ import { ChartError } from '../../ui/ChartError';
 
 type ViewMode = 'chart' | 'table';
 
-interface CostPerRouteWidgetProps {
+export interface CostPerRouteWidgetProps {
   data?: RouteCostData[];
   loading?: boolean;
   error?: string | null;
@@ -69,8 +68,10 @@ function RouteTooltip({ active, payload, label }: RouteTooltipProps) {
   );
 }
 
+const NO_ROUTES: RouteCostData[] = [];
+
 const CostPerRouteWidget: React.FC<CostPerRouteWidgetProps> = ({
-  data = MOCK_ROUTE_COST_DATA,
+  data = NO_ROUTES,
   loading,
   error,
   onRetry,

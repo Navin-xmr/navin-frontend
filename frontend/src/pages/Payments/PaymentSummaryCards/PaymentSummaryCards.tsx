@@ -1,5 +1,4 @@
 import React from "react";
-import { CreditCard, DollarSign, Clock, CheckCircle } from "lucide-react";
 
 interface PaymentSummaryCardProps {
   icon: React.ReactNode;
@@ -40,47 +39,70 @@ const PaymentSummaryCard: React.FC<PaymentSummaryCardProps> = ({
   );
 };
 
+const SKELETON_CARD_COUNT = 3;
+
 interface PaymentSummaryCardsProps {
   cards?: PaymentSummaryData[];
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
-const PaymentSummaryCards: React.FC<PaymentSummaryCardsProps> = ({ cards }) => {
-  // Mock data - in real app, this would come from props or API
-  const defaultSummaryData: PaymentSummaryData[] = [
-    {
-      icon: <CreditCard size={20} />,
-      value: "156",
-      label: "Total Payments",
-    },
-    {
-      icon: <DollarSign size={20} />,
-      value: "$127,450",
-      label: "Total Value",
-    },
-    {
-      icon: <Clock size={20} />,
-      value: "12",
-      label: "Pending Payments",
-    },
-    {
-      icon: <CheckCircle size={20} />,
-      value: "134",
-      label: "Released Payments",
-    },
-  ];
-  const summaryData = cards ?? defaultSummaryData;
-
-  if (summaryData.length === 0) {
+const PaymentSummaryCards: React.FC<PaymentSummaryCardsProps> = ({
+  cards,
+  isLoading = false,
+  error = null,
+  onRetry,
+}) => {
+  if (isLoading) {
     return (
-      <div role="status" className="rounded-2xl border border-border p-5 text-text-secondary">
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label="Loading payment summary"
+        className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
+      >
+        {Array.from({ length: SKELETON_CARD_COUNT }, (_, i) => (
+          <div
+            key={i}
+            className="h-[120px] rounded-2xl bg-[rgba(98,255,255,0.1)] animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        role="alert"
+        className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border p-5 text-text-secondary"
+      >
+        <span>Couldn't load the payment summary: {error}</span>
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded-lg border border-[rgba(98,255,255,0.2)] px-3 py-2 text-sm text-text-primary hover:border-[#62ffff] hover:text-[#62ffff] cursor-pointer"
+          >
+            Retry
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  if (!cards || cards.length === 0) {
+    return (
+      <div role="status" className="mb-6 rounded-2xl border border-border p-5 text-text-secondary">
         No payment data available
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {summaryData.map((card) => (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      {cards.map((card) => (
         <PaymentSummaryCard
           key={card.label}
           icon={card.icon}

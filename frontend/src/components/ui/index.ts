@@ -13,9 +13,6 @@ export type { ChartLoadingProps } from "./ChartLoading";
 export { Chip, ChipGroup } from "./Chip";
 export type { ChipProps, ChipVariant, ChipSize, ChipGroupProps, ChipOption } from "./Chip";
 
-export { CircularProgress } from "./CircularProgress";
-export type { CircularProgressProps } from "./CircularProgress";
-
 export { default as Combobox } from "./Combobox";
 export type { ComboboxOption, ComboboxProps } from "./Combobox";
 
@@ -27,9 +24,6 @@ export type { ConnectionStatusDotProps } from "./ConnectionStatusDot";
 
 export { default as CopyToClipboard } from "./CopyToClipboard";
 export type { CopyToClipboardProps } from "./CopyToClipboard";
-
-export { DateRangePicker } from "./DateRangePicker";
-export type { DateRangePickerProps } from "./DateRangePicker";
 
 export { default as EmptyState } from "./EmptyState";
 export type { EmptyStateProps, EmptyStateAction } from "./EmptyState";
@@ -43,9 +37,6 @@ export type { FileUploadProps } from "./FileUpload";
 export { default as InlineEditField } from "./InlineEditField";
 export type { InlineEditFieldProps } from "./InlineEditField";
 
-export { default as MultiSelect } from "./MultiSelect";
-export type { MultiSelectOption, MultiSelectProps } from "./MultiSelect";
-
 export { default as PageSkeleton } from "./PageSkeleton";
 
 export { default as PasswordStrengthMeter } from "./PasswordStrengthMeter";
@@ -53,9 +44,6 @@ export type { PasswordStrengthMeterProps } from "./PasswordStrengthMeter";
 
 export { default as PriorityBadge } from "./PriorityBadge";
 export type { PriorityBadgeProps } from "./PriorityBadge";
-
-export { ProgressBar } from "./ProgressBar";
-export type { ProgressBarProps, ProgressBarColor, ProgressBarSize } from "./ProgressBar";
 
 export { ProgressStepper } from "./ProgressStepper";
 export type { ProgressStepperProps, StepDef } from "./ProgressStepper";

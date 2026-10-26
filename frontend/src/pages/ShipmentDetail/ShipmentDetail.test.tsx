@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ShipmentDetail from './ShipmentDetail';
 import { shipmentApi } from '@services/api/endpoints/shipments';
 import type { Shipment } from '@services/api/endpoints/shipments';
+import type { ShipmentForComparison } from '../../components/shipment/ShipmentComparison';
 
 const mockRefresh = vi.fn();
 const mockAddToast = vi.fn();
@@ -80,6 +81,7 @@ vi.mock('@services/api/endpoints/shipments', async (importOriginal) => {
     shipmentApi: {
       ...actual.shipmentApi,
       updateStatus: vi.fn(),
+      getAll: vi.fn(),
     },
   };
 });
@@ -99,7 +101,15 @@ vi.mock('./DocumentsSection/DocumentsSection', () => ({ default: () => <div data
 vi.mock('./NotesSection/NotesSection', () => ({ default: () => <div data-testid="notes-section" /> }));
 vi.mock('../../components/shipment/MilestoneTimeline/MilestoneTimeline', () => ({ default: () => <div data-testid="milestones" /> }));
 vi.mock('../../components/shipment/DeliveryConfirmation', () => ({ default: () => <div data-testid="delivery-confirmation" /> }));
-vi.mock('../../components/shipment/ShipmentComparison', () => ({ default: () => null }));
+vi.mock('../../components/shipment/ShipmentComparison', () => ({
+  default: ({ shipments }: { shipments: ShipmentForComparison[] }) => (
+    <ul data-testid="comparison">
+      {shipments.map((s) => (
+        <li key={s.id}>{`${s.shipmentId}|${s.origin}|${s.destination}|${s.status}`}</li>
+      ))}
+    </ul>
+  ),
+}));
 vi.mock('./ShipmentStickyBar', () => ({ default: () => null }));
 vi.mock('./ShareQRCodeModal/ShareQRCodeModal', () => ({ default: () => null }));
 
@@ -201,6 +211,76 @@ describe('ShipmentDetail Status Update', () => {
       render(<ShipmentDetail />);
 
       expect(screen.getByRole('alert')).toHaveTextContent('This data is stale, click Refresh');
+    });
+  });
+
+  describe('compare shipments', () => {
+    const otherShipment: Shipment = {
+      ...mockShipment,
+      _id: 'ship-002',
+      id: 'ship-002',
+      trackingNumber: 'NAV-2024-002',
+      origin: 'Denver, CO',
+      destination: 'Austin, TX',
+      status: 'DELIVERED',
+      milestones: [{ name: 'Delivered', timestamp: '2024-03-16T10:00:00.000Z' }],
+    };
+
+    it('compares this shipment with other real shipments from the API', async () => {
+      const user = userEvent.setup();
+      vi.mocked(shipmentApi.getAll).mockResolvedValueOnce({
+        data: [mockShipment, otherShipment],
+        meta: { nextCursor: null, hasMore: false },
+      });
+
+      render(<ShipmentDetail />);
+      await user.click(screen.getByRole('button', { name: /compare shipments/i }));
+
+      const comparison = await screen.findByTestId('comparison');
+      expect(shipmentApi.getAll).toHaveBeenCalledTimes(1);
+      const rows = Array.from(comparison.querySelectorAll('li')).map((li) => li.textContent);
+      // This shipment once, then the other real one; nothing invented.
+      expect(rows).toEqual([
+        '#ship-001|New York, NY|Boston, MA|IN_TRANSIT',
+        '#NAV-2024-002|Denver, CO|Austin, TX|DELIVERED',
+      ]);
+      expect(comparison).not.toHaveTextContent('SHP-9928');
+      expect(mockAddToast).not.toHaveBeenCalled();
+    });
+
+    it('says so instead of opening the comparison when there is no other shipment', async () => {
+      const user = userEvent.setup();
+      vi.mocked(shipmentApi.getAll).mockResolvedValueOnce({
+        data: [mockShipment],
+        meta: { nextCursor: null, hasMore: false },
+      });
+
+      render(<ShipmentDetail />);
+      await user.click(screen.getByRole('button', { name: /compare shipments/i }));
+
+      await waitFor(() =>
+        expect(mockAddToast).toHaveBeenCalledWith(
+          'There are no other shipments to compare this one with yet.',
+          'info',
+        ),
+      );
+      expect(screen.queryByTestId('comparison')).not.toBeInTheDocument();
+    });
+
+    it('shows an error toast and does not open the comparison when loading fails', async () => {
+      const user = userEvent.setup();
+      vi.mocked(shipmentApi.getAll).mockRejectedValueOnce(new Error('Network error'));
+
+      render(<ShipmentDetail />);
+      await user.click(screen.getByRole('button', { name: /compare shipments/i }));
+
+      await waitFor(() =>
+        expect(mockAddToast).toHaveBeenCalledWith(
+          'Failed to load shipments to compare. Please try again.',
+          'error',
+        ),
+      );
+      expect(screen.queryByTestId('comparison')).not.toBeInTheDocument();
     });
   });
 });

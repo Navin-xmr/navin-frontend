@@ -12,6 +12,7 @@ import type {
 const api = vi.hoisted(() => ({
   getSettlements: vi.fn(),
   getSettlementById: vi.fn(),
+  getSummary: vi.fn(),
 }));
 
 vi.mock('@services/api/endpoints/settlements', () => ({ settlementsApi: api }));
@@ -44,6 +45,8 @@ const detail: SettlementDetail = {
   summary: { totalSettledAmount: 1234 },
 };
 
+const summary = { totalReleased: 5000, totalInEscrow: 250, totalPending: 40.5, sparkline: [] };
+
 function response(data: Settlement[] = payments, total = data.length): PaginatedSettlements {
   return { data, page: 1, limit: 10, total };
 }
@@ -67,6 +70,7 @@ describe('PaymentHistory', () => {
     vi.clearAllMocks();
     api.getSettlements.mockResolvedValue(response());
     api.getSettlementById.mockResolvedValue(detail);
+    api.getSummary.mockResolvedValue(summary);
   });
 
   it('loads payments and renders the status, amount, and shipment link', async () => {
@@ -90,6 +94,62 @@ describe('PaymentHistory', () => {
       },
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
+  });
+
+  it('shows the summary amounts returned by the API, not placeholder figures', async () => {
+    renderPage();
+
+    expect(await screen.findByText('Released this month')).toBeInTheDocument();
+    expect(screen.getByText('5,000')).toBeInTheDocument();
+    expect(screen.getByText('In escrow this month')).toBeInTheDocument();
+    expect(screen.getByText('250')).toBeInTheDocument();
+    expect(screen.getByText('Pending this month')).toBeInTheDocument();
+    expect(screen.getByText('40.5')).toBeInTheDocument();
+    expect(screen.queryByText('$127,450')).not.toBeInTheDocument();
+    expect(api.getSummary).toHaveBeenCalledWith('month');
+  });
+
+  it('shows a loading placeholder for the summary until it resolves', async () => {
+    let resolveSummary: (value: typeof summary) => void = () => {};
+    api.getSummary.mockReturnValue(new Promise((r) => { resolveSummary = r; }));
+    renderPage();
+
+    expect(
+      await screen.findByRole('status', { name: 'Loading payment summary' }),
+    ).toBeInTheDocument();
+
+    resolveSummary(summary);
+    expect(await screen.findByText('Released this month')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('status', { name: 'Loading payment summary' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows an empty summary state when nothing has been settled yet', async () => {
+    api.getSummary.mockResolvedValue({ ...summary, totalReleased: 0, totalInEscrow: 0, totalPending: 0 });
+    renderPage();
+
+    expect(await screen.findByText('No payment data available')).toBeInTheDocument();
+    expect(screen.queryByText('Released this month')).not.toBeInTheDocument();
+  });
+
+  it('keeps the payments table when only the summary fails, and retries the summary', async () => {
+    api.getSummary
+      .mockRejectedValueOnce(new Error('summary unavailable'))
+      .mockResolvedValueOnce(summary);
+    const user = userEvent.setup();
+    renderPage();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('summary unavailable');
+    const table = await desktopTable();
+    expect(await table.findByRole('link', { name: 'SHP-001' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+
+    expect(await screen.findByText('Released this month')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(api.getSummary).toHaveBeenCalledTimes(2);
+    expect(api.getSettlements).toHaveBeenCalledTimes(1);
   });
 
   it('shows a retryable error and reloads successfully after retry', async () => {

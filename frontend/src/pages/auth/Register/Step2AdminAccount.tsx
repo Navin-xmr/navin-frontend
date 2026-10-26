@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, ChevronLeft } from 'lucide-react';
 import PasswordStrengthMeter from '@components/ui/PasswordStrengthMeter';
 import type { Step2Data, Step2Errors } from './useCompanyRegister';
-import { inputBase, labelClass, errorClass } from './Step1CompanyInfo';
+import { inputBase, labelClass, errorClass } from './registerFields';
 
 export interface Step2AdminAccountProps {
   data: Step2Data;

@@ -10,16 +10,6 @@ export type { RouteShipment, RouteCostData } from "./CostPerRouteWidget";
 export { default as RevenueTargetWidget } from "./RevenueTargetWidget";
 export type { DailyRevenue, RevenueTargetData } from "./RevenueTargetWidget";
 
-export { default as ShipmentVolumeTrendWidget } from "./ShipmentVolumeTrendWidget";
-export type {
-  ShipmentVolumeTrendWidgetProps,
-  TimeRange,
-  Granularity,
-  TrendDataPoint,
-} from "./ShipmentVolumeTrendWidget";
-
 export { default as StatCard } from "./StatCard";
 export type { StatCardProps } from "./StatCard";
 
-export { WidgetRefreshIndicator } from "./WidgetRefreshIndicator";
-export type { WidgetRefreshIndicatorProps } from "./WidgetRefreshIndicator";

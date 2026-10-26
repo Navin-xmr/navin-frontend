@@ -30,9 +30,10 @@ import { useToast } from "../../context/ToastContext";
 import ShipmentComparison from "../../components/shipment/ShipmentComparison";
 import type { ShipmentForComparison } from "../../components/shipment/ShipmentComparison";
 import ShipmentStickyBar from "./ShipmentStickyBar";
+import { buildComparisonShipments, toMilestoneDetails } from "./comparisonShipments";
 import { formatDate } from "@utils/localeFormat";
 import StatusUpdate, { ShipmentMilestone } from "../../components/shipment/StatusUpdate";
-import { type ShipmentStatus } from "@services/api/endpoints/shipments";
+import { shipmentApi, type ShipmentStatus } from "@services/api/endpoints/shipments";
 import ConfirmDialog from "../../components/ui/ConfirmDialog/ConfirmDialog";
 import { usePagination } from "../../hooks/usePagination";
 import { useShipmentActions } from "@hooks/useShipmentActions";
@@ -54,6 +55,8 @@ const ShipmentDetail: React.FC = () => {
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [isLoadingComparison, setIsLoadingComparison] = useState(false);
+  const [comparisonShipments, setComparisonShipments] = useState<ShipmentForComparison[]>([]);
   const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
   const [priorityOverride, setPriorityOverride] = useState<ShipmentHeaderPriority | null>(null);
   const [isDeliveryConfirmDialogOpen, setIsDeliveryConfirmDialogOpen] = useState(false);
@@ -210,25 +213,7 @@ const ShipmentDetail: React.FC = () => {
   const sensorData: SensorData | null = null as SensorData | null;
 
   // Map real shipment milestones to MilestoneDetail shape
-  const milestones: MilestoneDetail[] = shipment
-    ? shipment.milestones.map((m, index) => {
-        const isLast = index === shipment.milestones.length - 1;
-        const isCurrent = shipment.status === "IN_TRANSIT" && isLast;
-        const isDelivered = shipment.status === "DELIVERED";
-        return {
-          id: String(index + 1),
-          name: m.name,
-          timestamp: m.timestamp,
-          location: m.description ?? "",
-          status: isDelivered || (!isCurrent && index < shipment.milestones.length - 1)
-            ? "completed"
-            : isCurrent
-            ? "current"
-            : "upcoming",
-          blockchainAddress: "",
-        };
-      })
-    : [];
+  const milestones: MilestoneDetail[] = shipment ? toMilestoneDetails(shipment) : [];
 
   React.useEffect(() => {
     setMilestonePageCache({});
@@ -326,39 +311,36 @@ const ShipmentDetail: React.FC = () => {
     );
   }
 
-  // Mock comparison shipments for #508
-  const comparisonShipments: ShipmentForComparison[] = [
-    {
-      id: "1",
-      shipmentId: "#SHP-992834",
+  // Compare this shipment with the other real shipments from the API. The
+  // modal only opens once there is something real to compare it with.
+  const handleOpenComparison = async () => {
+    const currentShipment: ShipmentForComparison = {
+      id: shipment?.id ?? shipment?._id ?? id ?? "",
+      shipmentId: shipmentHeaderData.shipmentId,
       origin: shipmentHeaderData.originAddress,
       destination: shipmentHeaderData.destinationAddress,
       status: currentStatus,
-      milestones: milestones,
+      milestones,
       expectedDelivery: shipmentHeaderData.expectedDeliveryDate,
-      createdAt: shipment?.createdAt ?? "2026-06-20",
-    },
-    {
-      id: "2",
-      shipmentId: "#SHP-992835",
-      origin: "Los Angeles, CA 90001",
-      destination: "San Francisco, CA 94101",
-      status: "IN_TRANSIT",
-      milestones: milestones.slice(0, 3),
-      expectedDelivery: "Oct 25, 2026 by 3:00 PM PST",
-      createdAt: "2026-06-21",
-    },
-    {
-      id: "3",
-      shipmentId: "#SHP-992836",
-      origin: "Chicago, IL 60601",
-      destination: "Miami, FL 33101",
-      status: "DELIVERED",
-      milestones: milestones,
-      expectedDelivery: "Oct 20, 2026 by 2:00 PM EST",
-      createdAt: "2026-06-19",
-    },
-  ];
+      createdAt: shipment?.createdAt ? formatDate(shipment.createdAt) : "—",
+    };
+
+    setIsLoadingComparison(true);
+    try {
+      const { data } = await shipmentApi.getAll({ limit: 20 });
+      const options = buildComparisonShipments(currentShipment, data);
+      if (options.length === 0) {
+        addToast("There are no other shipments to compare this one with yet.", "info");
+        return;
+      }
+      setComparisonShipments(options);
+      setIsComparisonOpen(true);
+    } catch {
+      addToast("Failed to load shipments to compare. Please try again.", "error");
+    } finally {
+      setIsLoadingComparison(false);
+    }
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_50%_0%,#0a3d3a_0%,#061e20_35%,#020d10_70%,#000_100%)] px-8 py-16 md:px-4 md:py-8 sm:px-3 sm:py-6 font-sans">
@@ -389,8 +371,9 @@ const ShipmentDetail: React.FC = () => {
           </p>
           {(role === 'company') && (
             <button
-              onClick={() => setIsComparisonOpen(true)}
-              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary font-medium text-sm transition-colors"
+              onClick={handleOpenComparison}
+              disabled={isLoadingComparison}
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary font-medium text-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Zap className="w-4 h-4" />
               Compare Shipments
@@ -517,12 +500,14 @@ const ShipmentDetail: React.FC = () => {
         {isPrinting && <ShipmentSummaryPrint data={summaryPrintData} onClose={() => setIsPrinting(false)} />}
       </div>
 
-      {/* Shipment Comparison Modal (#508) */}
-      <ShipmentComparison
-        shipments={comparisonShipments}
-        isOpen={isComparisonOpen}
-        onClose={() => setIsComparisonOpen(false)}
-      />
+      {/* Shipment Comparison Modal (#508). Mounted on open so its default selection uses the loaded shipments. */}
+      {isComparisonOpen && (
+        <ShipmentComparison
+          shipments={comparisonShipments}
+          isOpen
+          onClose={() => setIsComparisonOpen(false)}
+        />
+      )}
 
       <ConfirmDialog
         isOpen={isDeliveryConfirmDialogOpen}

@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { ExternalLink, AlertTriangle, X } from "lucide-react";
 import PaymentSummaryCards from "../PaymentSummaryCards";
+import { usePaymentSummary } from "../PaymentSummaryCards/usePaymentSummary";
+import { buildPaymentSummaryCards } from "../PaymentSummaryCards/buildPaymentSummaryCards";
 import EmptyState from "@components/ui/EmptyState/EmptyState";
 import { useFocusTrap } from "@hooks/useFocusTrap";
 import {
@@ -179,6 +181,12 @@ const PaymentHistory: React.FC = () => {
     handleSortToggle,
   } = usePaymentHistory();
 
+  const summary = usePaymentSummary();
+  const summaryCards = useMemo(
+    () => (summary.data ? buildPaymentSummaryCards(summary.data) : []),
+    [summary.data],
+  );
+
   // Single page-level heading shared by every render state (error / empty /
   // loaded) so the page always exposes just one top-level heading.
   const pageHeader = (
@@ -231,7 +239,12 @@ const PaymentHistory: React.FC = () => {
       </div>
 
       {/* Payment Summary Cards */}
-      <PaymentSummaryCards />
+      <PaymentSummaryCards
+        cards={summaryCards}
+        isLoading={summary.isLoading}
+        error={summary.error}
+        onRetry={summary.reload}
+      />
 
       {/* No rows: the header controls stay so the filter can be changed back. */}
       {isEmpty && (

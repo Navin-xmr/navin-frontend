@@ -8,7 +8,6 @@ import {
   BarChart3,
   Settings,
   HelpCircle,
-  ShieldCheck,
   X,
   CreditCard,
   Bell,
@@ -405,19 +404,6 @@ const DashboardLayout: React.FC = () => {
               <kbd className="text-[10px] font-mono bg-gray-100 dark:bg-[rgba(255,255,255,0.08)] border border-gray-300 dark:border-[rgba(255,255,255,0.15)] rounded px-1.5 py-0.5">?</kbd>
             </button>
 
-            <div className="bg-teal-50 dark:bg-[rgba(19,186,186,0.1)] border border-teal-200 dark:border-[rgba(98,255,255,0.3)] rounded-xl p-3 flex items-center gap-3">
-              <div className="w-9 h-9 bg-teal-100 dark:bg-[rgba(19,186,186,0.2)] rounded-[10px] flex items-center justify-center text-teal-600 dark:text-[#62ffff] shrink-0">
-                <ShieldCheck size={20} />
-              </div>
-              <div className="min-w-0">
-                <h4 className="text-[13px] font-semibold mb-0.5 text-gray-800 dark:text-white truncate">Enterprise Node</h4>
-                <p className="text-[11px] text-teal-600 dark:text-[#62ffff] flex items-center gap-1 m-0">
-                  <span className="w-1.5 h-1.5 bg-teal-500 dark:bg-[#62ffff] rounded-full shadow-[0_0_8px_rgba(0,128,128,0.5)] dark:shadow-[0_0_8px_#62ffff] shrink-0" />
-                  Syncing: Block 18.2M
-                </p>
-              </div>
-            </div>
-
             <button
               type="button"
               onClick={logout}
@@ -429,7 +415,7 @@ const DashboardLayout: React.FC = () => {
           </div>
         )}
 
-        {/* Collapsed: mini status dot */}
+        {/* Collapsed: sign out only */}
         {isCollapsed && (
           <div className="mt-auto flex flex-col items-center gap-3 pb-2">
             <button
@@ -441,20 +427,6 @@ const DashboardLayout: React.FC = () => {
             >
               <LogOut size={18} />
             </button>
-            <div className="relative group/tooltip" title="Enterprise Node — Syncing">
-              <div className="w-10 h-10 bg-teal-50 dark:bg-[rgba(19,186,186,0.15)] rounded-xl flex items-center justify-center text-teal-600 dark:text-[#62ffff]">
-                <ShieldCheck size={18} />
-              </div>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-teal-500 dark:bg-[#62ffff] rounded-full shadow-[0_0_6px_rgba(0,128,128,0.6)]" />
-              {/* Tooltip */}
-              <div
-                className="absolute left-full ml-3 bottom-0 z-50 px-2.5 py-1.5 rounded-lg bg-gray-900 dark:bg-[#1e2433] text-white text-xs font-medium whitespace-nowrap
-                  opacity-0 pointer-events-none group-hover/tooltip:opacity-100 transition-opacity duration-150 shadow-xl"
-                role="tooltip"
-              >
-                Enterprise Node · Syncing
-              </div>
-            </div>
           </div>
         )}
       </aside>

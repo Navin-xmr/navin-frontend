@@ -12,7 +12,7 @@ import {
   type ShipmentRoute,
 } from '../../../api/shipmentApi';
 import StatusBadge from '../../../components/ui/StatusBadge/StatusBadge';
-import PriorityBadge from '../../../components/shipment/PriorityBadge/PriorityBadge';
+import PriorityBadge from '@components/ui/PriorityBadge';
 import { safeFormatDate } from '../../../utils/safeFormat';
 
 const ROUTE_COLORS: Record<RouteDisplayStatus, string> = {

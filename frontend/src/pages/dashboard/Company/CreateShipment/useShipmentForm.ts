@@ -156,8 +156,6 @@ export function useShipmentForm(): UseShipmentFormReturn {
       if (!cancelled) setAddressesLoading(false);
     });
     return () => { cancelled = true; };
-  // formatAddress is stable (no deps), eslint-disable next line is intentional
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Cost estimate auto-calculation

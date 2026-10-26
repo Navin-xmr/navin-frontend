@@ -19,14 +19,28 @@ describe('CustomerProfile', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the profile form pre-filled with the existing name and a read-only email', () => {
+  it('renders a blank profile form with a read-only email and no invented identity', () => {
     render(<CustomerProfile />);
 
     expect(screen.getByRole('heading', { name: 'Customer Profile' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Full Name')).toHaveValue('John Doe');
-    expect(screen.getByLabelText('Email Address')).toHaveValue('john.doe@example.com');
+    expect(screen.getByLabelText('Full Name')).toHaveValue('');
+    expect(screen.getByLabelText('Email Address')).toHaveValue('');
+    expect(screen.getByLabelText('Email Address')).toHaveAttribute('placeholder', 'Not available yet');
     expect(screen.getByLabelText('Email Address')).toBeDisabled();
+    expect(screen.queryByDisplayValue('John Doe')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('john.doe@example.com')).not.toBeInTheDocument();
     expect(screen.getByText('Not Connected')).toBeInTheDocument();
+  });
+
+  it('asks for the full name before saving', async () => {
+    const user = userEvent.setup();
+    render(<CustomerProfile />);
+
+    await user.type(screen.getByLabelText('Delivery Address'), '123 Main St');
+    await user.click(screen.getByRole('button', { name: /save changes/i }));
+
+    expect(screen.getByText('Full name is required.')).toBeInTheDocument();
+    expect(addToast).toHaveBeenCalledWith('Please fix the highlighted fields before saving.', 'error');
   });
 
   it('shows a validation error when the phone number is invalid', async () => {
@@ -52,6 +66,7 @@ describe('CustomerProfile', () => {
     const user = userEvent.setup();
     render(<CustomerProfile />);
 
+    await user.type(screen.getByLabelText('Full Name'), 'Test Customer');
     await user.type(screen.getByLabelText('Delivery Address'), '123 Main St');
 
     vi.useFakeTimers();

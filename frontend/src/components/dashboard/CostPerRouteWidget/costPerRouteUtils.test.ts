@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { getMarginColorClass, getRouteMarginPercent, getRouteTotalCost } from './costPerRouteUtils';
-import { MOCK_ROUTE_COST_DATA } from './mockCostPerRouteData';
+import { ROUTE_COST_FIXTURE } from '@/test/fixtures/routeCostFixture';
 
 describe('costPerRouteUtils', () => {
   it('calculates total cost and margin', () => {
-    const route = MOCK_ROUTE_COST_DATA[0];
+    const route = ROUTE_COST_FIXTURE[0];
     expect(getRouteTotalCost(route)).toBe(7070);
     expect(getRouteMarginPercent(route)).toBeCloseTo(27.9, 1);
   });

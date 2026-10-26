@@ -65,9 +65,15 @@ describe('ProfileSection', () => {
     const user = userEvent.setup();
     render(<ProfileSection isCompany={false} />);
 
-    // Find the avatar circle
+    // Clicking the avatar circle opens the hidden file picker
+    const openPicker = vi.spyOn(HTMLInputElement.prototype, 'click');
     const avatarCircle = screen.getByTitle('Change avatar');
     expect(avatarCircle).toBeInTheDocument();
+
+    await user.click(avatarCircle);
+
+    expect(openPicker).toHaveBeenCalledTimes(1);
+    openPicker.mockRestore();
   });
 
   it('updates form fields when typing', async () => {
