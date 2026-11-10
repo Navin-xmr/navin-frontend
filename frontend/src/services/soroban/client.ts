@@ -34,9 +34,11 @@ function getServer(): rpc.Server {
 
 export type ContractMethod =
   | "initialize"
-  | "confirm_milestone"
-  | "release"
-  | "get_state"
+  | "get_shipment"
+  | "deposit_escrow"
+  | "confirm_delivery"
+  | "release_escrow"
+  | "raise_dispute"
   | "record_milestone";
 
 const TX_POLL_TIMEOUT_MS = 120000;
@@ -70,9 +72,9 @@ export async function callContractMethod(
 
   const submitResult = await sorobanServer.sendTransaction(signedTx);
 
-  if (submitResult.status === 'ERROR') {
+  if (submitResult.status === "ERROR") {
     throw new Error(
-      `Transaction submission failed: ${submitResult.errorResult?.toXDR('base64') ?? 'unknown error'}`,
+      `Transaction submission failed: ${submitResult.errorResult?.toXDR("base64") ?? "unknown error"}`,
     );
   }
 
@@ -82,15 +84,15 @@ export async function callContractMethod(
   while (Date.now() - startTime < TX_POLL_TIMEOUT_MS) {
     const txResult = await sorobanServer.getTransaction(hash);
 
-    if (txResult.status === 'SUCCESS') {
+    if (txResult.status === "SUCCESS") {
       return hash;
     }
 
-    if (txResult.status === 'FAILED') {
+    if (txResult.status === "FAILED") {
       throw new Error(`Transaction failed: ${txResult.resultXdr}`);
     }
 
-    await new Promise(resolve => setTimeout(resolve, TX_POLL_INTERVAL_MS));
+    await new Promise((resolve) => setTimeout(resolve, TX_POLL_INTERVAL_MS));
   }
 
   throw new Error(`Transaction polling timeout after ${TX_POLL_TIMEOUT_MS}ms`);
@@ -98,7 +100,7 @@ export async function callContractMethod(
 
 export async function readContractState<T>(
   contractId: string,
-  method: string,
+  method: ContractMethod,
   args: xdr.ScVal[] = [],
 ): Promise<T> {
   const contract = new Contract(contractId);
@@ -126,8 +128,8 @@ export async function readContractState<T>(
   return scValToNative(result.result.retval) as T;
 }
 
-export function toScVal(value: unknown): xdr.ScVal {
-  return nativeToScVal(value);
+export function toScVal(value: unknown, opts?: { type?: string }): xdr.ScVal {
+  return opts ? nativeToScVal(value, opts) : nativeToScVal(value);
 }
 
 export { rpc, Networks };

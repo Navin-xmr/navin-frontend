@@ -25,8 +25,6 @@ const { mockServer, ServerCtor } = vi.hoisted(() => {
 
 vi.mock('@stellar/stellar-sdk', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@stellar/stellar-sdk')>();
-  // jsdom's cross-realm Uint8Array breaks ed25519 key generation, so the
-  // throwaway simulation account gets a fixed public key instead.
   class MockKeypair extends actual.Keypair {
     static random() {
       return actual.Keypair.fromPublicKey(actual.StrKey.encodeEd25519PublicKey(Buffer.alloc(32, 2)));
@@ -76,9 +74,9 @@ describe('soroban client', () => {
     it('builds, signs and submits the contract call and returns the hash', async () => {
       const { callContractMethod } = await loadClient();
       const signer = makeSigner();
-      const args = [nativeToScVal('escrow-1')];
+      const args = [nativeToScVal(1n, { type: 'u64' })];
 
-      const hash = await callContractMethod(CONTRACT_ID, 'release', signer, args);
+      const hash = await callContractMethod(CONTRACT_ID, 'release_escrow', signer, args);
 
       expect(hash).toBe('tx-hash');
       expect(ServerCtor).toHaveBeenCalledWith('https://rpc.example.test');
@@ -88,8 +86,8 @@ describe('soroban client', () => {
       expect(prepared.source).toBe(SIGNER_KEY);
       expect(prepared.networkPassphrase).toBe(Networks.TESTNET);
       const { method, args: sentArgs } = invokedCall(prepared);
-      expect(method).toBe('release');
-      expect(sentArgs.map((a) => scValToNative(a))).toEqual(['escrow-1']);
+      expect(method).toBe('release_escrow');
+      expect(sentArgs.map((a) => scValToNative(a))).toEqual([1n]);
 
       expect(signer.signTransaction).toHaveBeenCalledWith(prepared.toXDR());
       const submitted = mockServer.sendTransaction.mock.calls[0][0] as Transaction;
@@ -100,7 +98,7 @@ describe('soroban client', () => {
     it('uses the mainnet passphrase when VITE_STELLAR_NETWORK=mainnet', async () => {
       const { callContractMethod } = await loadClient('mainnet');
 
-      await callContractMethod(CONTRACT_ID, 'release', makeSigner());
+      await callContractMethod(CONTRACT_ID, 'release_escrow', makeSigner());
 
       const prepared = mockServer.prepareTransaction.mock.calls[0][0] as Transaction;
       expect(prepared.networkPassphrase).toBe(Networks.PUBLIC);
@@ -109,8 +107,8 @@ describe('soroban client', () => {
     it('reuses a single RPC server across calls', async () => {
       const { callContractMethod } = await loadClient();
 
-      await callContractMethod(CONTRACT_ID, 'release', makeSigner());
-      await callContractMethod(CONTRACT_ID, 'release', makeSigner());
+      await callContractMethod(CONTRACT_ID, 'release_escrow', makeSigner());
+      await callContractMethod(CONTRACT_ID, 'release_escrow', makeSigner());
 
       expect(ServerCtor).toHaveBeenCalledTimes(1);
     });
@@ -122,7 +120,7 @@ describe('soroban client', () => {
         errorResult: { toXDR: () => 'bad-xdr' },
       });
 
-      await expect(callContractMethod(CONTRACT_ID, 'release', makeSigner())).rejects.toThrow(
+      await expect(callContractMethod(CONTRACT_ID, 'release_escrow', makeSigner())).rejects.toThrow(
         'Transaction submission failed: bad-xdr',
       );
       expect(mockServer.getTransaction).not.toHaveBeenCalled();
@@ -135,7 +133,7 @@ describe('soroban client', () => {
         .mockResolvedValueOnce({ status: 'NOT_FOUND' })
         .mockResolvedValueOnce({ status: 'SUCCESS' });
 
-      const pending = callContractMethod(CONTRACT_ID, 'release', makeSigner());
+      const pending = callContractMethod(CONTRACT_ID, 'release_escrow', makeSigner());
       await vi.advanceTimersByTimeAsync(1000);
 
       await expect(pending).resolves.toBe('tx-hash');
@@ -146,7 +144,7 @@ describe('soroban client', () => {
       const { callContractMethod } = await loadClient();
       mockServer.getTransaction.mockResolvedValue({ status: 'FAILED', resultXdr: 'fail-xdr' });
 
-      await expect(callContractMethod(CONTRACT_ID, 'release', makeSigner())).rejects.toThrow(
+      await expect(callContractMethod(CONTRACT_ID, 'release_escrow', makeSigner())).rejects.toThrow(
         'Transaction failed: fail-xdr',
       );
     });
@@ -156,9 +154,9 @@ describe('soroban client', () => {
       const { callContractMethod } = await loadClient();
       mockServer.getTransaction.mockResolvedValue({ status: 'NOT_FOUND' });
 
-      const assertion = expect(callContractMethod(CONTRACT_ID, 'release', makeSigner())).rejects.toThrow(
-        'Transaction polling timeout after 120000ms',
-      );
+      const assertion = expect(
+        callContractMethod(CONTRACT_ID, 'release_escrow', makeSigner()),
+      ).rejects.toThrow('Transaction polling timeout after 120000ms');
       await vi.advanceTimersByTimeAsync(120000);
 
       await assertion;
@@ -169,18 +167,20 @@ describe('soroban client', () => {
     it('simulates the call and decodes the return value', async () => {
       const { readContractState } = await loadClient();
       mockServer.simulateTransaction.mockResolvedValue({
-        result: { retval: nativeToScVal({ status: 'ACTIVE', amount: 100 }) },
+        result: { retval: nativeToScVal({ status: 'InTransit', escrow_amount: 100 }) },
       });
 
-      const state = await readContractState<{ status: string; amount: bigint }>(CONTRACT_ID, 'get_state', [
-        nativeToScVal('escrow-1'),
-      ]);
+      const state = await readContractState<{ status: string; escrow_amount: bigint }>(
+        CONTRACT_ID,
+        'get_shipment',
+        [nativeToScVal(1n, { type: 'u64' })],
+      );
 
-      expect(state).toEqual({ status: 'ACTIVE', amount: 100n });
+      expect(state).toEqual({ status: 'InTransit', escrow_amount: 100n });
       const simulated = mockServer.simulateTransaction.mock.calls[0][0] as Transaction;
       const { method, args } = invokedCall(simulated);
-      expect(method).toBe('get_state');
-      expect(args.map((a) => scValToNative(a))).toEqual(['escrow-1']);
+      expect(method).toBe('get_shipment');
+      expect(args.map((a) => scValToNative(a))).toEqual([1n]);
       expect(mockServer.getAccount).not.toHaveBeenCalled();
     });
 
@@ -188,8 +188,8 @@ describe('soroban client', () => {
       const { readContractState } = await loadClient();
       mockServer.simulateTransaction.mockResolvedValue({ error: 'contract panicked' });
 
-      await expect(readContractState(CONTRACT_ID, 'get_state')).rejects.toThrow(
-        'Simulation error for get_state: contract panicked',
+      await expect(readContractState(CONTRACT_ID, 'get_shipment')).rejects.toThrow(
+        'Simulation error for get_shipment: contract panicked',
       );
     });
 
@@ -197,8 +197,8 @@ describe('soroban client', () => {
       const { readContractState } = await loadClient();
       mockServer.simulateTransaction.mockResolvedValue({});
 
-      await expect(readContractState(CONTRACT_ID, 'get_state')).rejects.toThrow(
-        'Simulation failed for get_state: no result returned',
+      await expect(readContractState(CONTRACT_ID, 'get_shipment')).rejects.toThrow(
+        'Simulation failed for get_shipment: no result returned',
       );
     });
   });
