@@ -180,7 +180,7 @@ export default defineConfig(({ mode }) => {
       reporter: ["text", "json", "html"],
       thresholds: {
         lines: 60,
-        branches: 55,
+        branches: 50,
         functions: 55,
         statements: 60,
       },
@@ -190,11 +190,6 @@ export default defineConfig(({ mode }) => {
         "src/test/**",
         "**/*.d.ts",
       ],
-      thresholds: {
-        lines: 60,
-        branches: 50,
-        functions: 55,
-      },
     },
   },
   });

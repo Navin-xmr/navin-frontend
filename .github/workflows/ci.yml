@@ -48,8 +48,8 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
-      - name: Test
-        run: pnpm run test
+      - name: Test & Coverage
+        run: pnpm run test -- --coverage
 
       - name: Build
         run: pnpm run build
