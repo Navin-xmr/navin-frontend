@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Package, ArrowRight, QrCode, Printer, AlertTriangle, ChevronDown, Download, Loader2 } from "lucide-react";
 import { getStatusDisplayLabel, getStatusBadgeClass, getStatusDotClass } from '../../../utils/shipmentStatus';
 import ShareQRCodeModal from "../ShareQRCodeModal/ShareQRCodeModal";
@@ -53,10 +53,6 @@ const ShipmentDetailHeader: React.FC<ShipmentDetailHeaderProps> = ({
   const [selectedPriority, setSelectedPriority] = useState<'URGENT' | 'STANDARD' | 'ECONOMY'>(priority ?? 'STANDARD');
   const [editOrigin, setEditOrigin] = useState(originAddress || '');
   const [editDestination, setEditDestination] = useState(destinationAddress || '');
-
-  useEffect(() => {
-    if (!showPriorityMenu && priority) setSelectedPriority(priority);
-  }, [priority, showPriorityMenu]);
 
   const formatStatus = (status: string): string => getStatusDisplayLabel(status);
   const isCompanyUser = userRole === "company";

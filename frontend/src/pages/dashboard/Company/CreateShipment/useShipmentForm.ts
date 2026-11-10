@@ -117,7 +117,7 @@ export function useShipmentForm(): UseShipmentFormReturn {
   const [costEstimate, setCostEstimate] = useState<CostBreakdownData | null>(null);
   const [isEstimating, setIsEstimating] = useState(false);
   const [addressOptions, setAddressOptions] = useState<ComboboxOption[]>([]);
-  const [addressesLoading, setAddressesLoading] = useState(false);
+  const [addressesLoading, setAddressesLoading] = useState(true);
 
   const { draft, lastSavedAt, restoreDraft, discardDraft, clearDraft } = useFormDraft<FormData>(
     DRAFT_STORAGE_KEY,
@@ -138,7 +138,6 @@ export function useShipmentForm(): UseShipmentFormReturn {
   // Load addresses for typeahead suggestions
   useEffect(() => {
     let cancelled = false;
-    setAddressesLoading(true);
     addressesApi.getAll().then((addrs) => {
       if (cancelled) return;
       const opts: ComboboxOption[] = addrs.map((addr) => ({

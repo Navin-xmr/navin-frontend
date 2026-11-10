@@ -46,6 +46,7 @@ describe('ShipmentDetailHeader', () => {
 
     await user.click(screen.getByLabelText('Change priority'));
     await user.click(screen.getByText('Urgent'));
+    await user.click(screen.getByRole('button', { name: 'Save priority' }));
 
     expect(onUpdatePriority).toHaveBeenCalledWith('URGENT');
   });

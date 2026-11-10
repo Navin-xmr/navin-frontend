@@ -58,13 +58,18 @@ const ShipmentDetail: React.FC = () => {
   const [isLoadingComparison, setIsLoadingComparison] = useState(false);
   const [comparisonShipments, setComparisonShipments] = useState<ShipmentForComparison[]>([]);
   const [isUpdatingPriority, setIsUpdatingPriority] = useState(false);
+  const serverPriority = shipment?.priority;
   const [priorityOverride, setPriorityOverride] = useState<ShipmentHeaderPriority | null>(null);
+  const [syncedServerPriority, setSyncedServerPriority] = useState(serverPriority);
+  if (serverPriority && serverPriority !== syncedServerPriority) {
+    setSyncedServerPriority(serverPriority);
+    setPriorityOverride(null);
+  }
   const [isDeliveryConfirmDialogOpen, setIsDeliveryConfirmDialogOpen] = useState(false);
   const [isConfirmingDelivery, setIsConfirmingDelivery] = useState(false);
   const [pendingDeliveryConfirmation, setPendingDeliveryConfirmation] = useState<PendingDeliveryConfirmation | null>(null);
-  const deliveryConfirmationResolver = useRef<{ resolve: () => void; reject: (error: Error) => void } | null>(null);
+  const deliveryConfirmationResolverRef = useRef<{ resolve: () => void; reject: (error: Error) => void } | null>(null);
   const milestonePagination = usePagination({ pageSize: 20, resetKey: id });
-  const [milestonePageCache, setMilestonePageCache] = useState<Record<number, MilestoneDetail[]>>({});
 
   // The server is the source of truth for status. A realtime event or an update
   // made on this page shows immediately as an override, and is dropped as soon
@@ -111,14 +116,11 @@ const ShipmentDetail: React.FC = () => {
     destinationAddress: shipment?.destination ?? "—",
     expectedDeliveryDate: rawEta ? formatDate(rawEta) : "—",
     userRole: (role ?? "customer") as "company" | "customer",
-    priority: priorityOverride ?? shipment?.priority ?? "STANDARD",
+    priority:
+      (priorityOverride && priorityOverride !== serverPriority
+        ? priorityOverride
+        : (serverPriority ?? syncedServerPriority)) ?? "STANDARD",
   };
-
-  React.useEffect(() => {
-    if (shipment?.priority && shipment.priority === priorityOverride) {
-      setPriorityOverride(null);
-    }
-  }, [shipment?.priority, priorityOverride]);
 
   const getNextStatuses = (status: string): ShipmentStatus[] => {
     switch (status) {
@@ -185,7 +187,7 @@ const ShipmentDetail: React.FC = () => {
     setIsDeliveryConfirmDialogOpen,
     setIsConfirmingDelivery,
     setPendingDeliveryConfirmation,
-    deliveryConfirmationResolver,
+    deliveryConfirmationResolverRef,
     pendingDeliveryConfirmation,
     setStatusOverride,
     setIsStatusModalOpen,
@@ -215,26 +217,11 @@ const ShipmentDetail: React.FC = () => {
   // Map real shipment milestones to MilestoneDetail shape
   const milestones: MilestoneDetail[] = shipment ? toMilestoneDetails(shipment) : [];
 
-  React.useEffect(() => {
-    setMilestonePageCache({});
-  }, [id]);
-
-  React.useEffect(() => {
-    const page = milestonePagination.currentPage;
-    if (milestonePageCache[page]) return;
-    const start = milestonePagination.getOffset();
-    const pageItems = milestones.slice(start, start + milestonePagination.pageSize);
-    setMilestonePageCache((previous) => (previous[page] ? previous : { ...previous, [page]: pageItems }));
-  }, [milestonePagination.currentPage, milestonePagination.getOffset, milestonePagination.pageSize, milestonePageCache, milestones]);
-
-  const visibleMilestones = Array.from(
-    { length: milestonePagination.currentPage },
-    (_, pageIndex) => milestonePageCache[pageIndex + 1] ?? milestones.slice(
-      pageIndex * milestonePagination.pageSize,
-      (pageIndex + 1) * milestonePagination.pageSize,
-    ),
-  ).flat();
-  const hasMoreMilestones = milestonePagination.currentPage * milestonePagination.pageSize < milestones.length;
+  const visibleMilestones = milestones.slice(
+    0,
+    milestonePagination.currentPage * milestonePagination.pageSize,
+  );
+  const hasMoreMilestones = visibleMilestones.length < milestones.length;
 
   // Cost breakdown: not stored on the Shipment object — passed as null until a billing API is wired
   const costBreakdown: CostBreakdownData | null = shipment?.offChainMetadata?.costBreakdown

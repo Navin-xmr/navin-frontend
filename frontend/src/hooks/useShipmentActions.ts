@@ -30,7 +30,7 @@ export interface UseShipmentActionsParams {
   setIsDeliveryConfirmDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setIsConfirmingDelivery: React.Dispatch<React.SetStateAction<boolean>>;
   setPendingDeliveryConfirmation: React.Dispatch<React.SetStateAction<PendingDeliveryConfirmation | null>>;
-  deliveryConfirmationResolver: React.MutableRefObject<{ resolve: () => void; reject: (error: Error) => void } | null>;
+  deliveryConfirmationResolverRef: React.MutableRefObject<{ resolve: () => void; reject: (error: Error) => void } | null>;
   pendingDeliveryConfirmation: PendingDeliveryConfirmation | null;
   setStatusOverride: React.Dispatch<React.SetStateAction<ShipmentStatus | null>>;
   setIsStatusModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -72,7 +72,7 @@ export function useShipmentActions(params: UseShipmentActionsParams): UseShipmen
     setIsDeliveryConfirmDialogOpen,
     setIsConfirmingDelivery,
     setPendingDeliveryConfirmation,
-    deliveryConfirmationResolver,
+    deliveryConfirmationResolverRef,
     pendingDeliveryConfirmation,
     setStatusOverride,
     setIsStatusModalOpen,
@@ -152,17 +152,17 @@ export function useShipmentActions(params: UseShipmentActionsParams): UseShipmen
   const handleDeliveryConfirmation = useCallback(
     (_shipmentId: string, rating: number, feedback: string) =>
       new Promise<void>((resolve, reject) => {
-        deliveryConfirmationResolver.current = { resolve, reject };
+        deliveryConfirmationResolverRef.current = { resolve, reject };
         setPendingDeliveryConfirmation({ rating, feedback });
         setIsDeliveryConfirmDialogOpen(true);
       }),
-    [deliveryConfirmationResolver, setPendingDeliveryConfirmation, setIsDeliveryConfirmDialogOpen],
+    [deliveryConfirmationResolverRef, setPendingDeliveryConfirmation, setIsDeliveryConfirmDialogOpen],
   );
 
   const handleConfirmDelivery = useCallback(async () => {
-    if (!id || !pendingDeliveryConfirmation || !deliveryConfirmationResolver.current) return;
+    if (!id || !pendingDeliveryConfirmation || !deliveryConfirmationResolverRef.current) return;
 
-    const resolver = deliveryConfirmationResolver.current;
+    const resolver = deliveryConfirmationResolverRef.current;
     const timestamp = new Date().toISOString();
     const notes = pendingDeliveryConfirmation.feedback.trim();
     setIsConfirmingDelivery(true);
@@ -188,21 +188,21 @@ export function useShipmentActions(params: UseShipmentActionsParams): UseShipmen
       resolver.resolve();
       setIsDeliveryConfirmDialogOpen(false);
       setPendingDeliveryConfirmation(null);
-      deliveryConfirmationResolver.current = null;
+      deliveryConfirmationResolverRef.current = null;
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to confirm delivery.");
       addToast(error.message, "error");
       resolver.reject(error);
       setIsDeliveryConfirmDialogOpen(false);
       setPendingDeliveryConfirmation(null);
-      deliveryConfirmationResolver.current = null;
+      deliveryConfirmationResolverRef.current = null;
     } finally {
       setIsConfirmingDelivery(false);
     }
   }, [
     id,
     pendingDeliveryConfirmation,
-    deliveryConfirmationResolver,
+    deliveryConfirmationResolverRef,
     setIsConfirmingDelivery,
     addToast,
     refresh,
@@ -211,12 +211,12 @@ export function useShipmentActions(params: UseShipmentActionsParams): UseShipmen
   ]);
 
   const handleCancelDeliveryConfirmation = useCallback(() => {
-    const resolver = deliveryConfirmationResolver.current;
+    const resolver = deliveryConfirmationResolverRef.current;
     if (resolver) resolver.reject(new Error("Delivery confirmation cancelled."));
-    deliveryConfirmationResolver.current = null;
+    deliveryConfirmationResolverRef.current = null;
     setIsDeliveryConfirmDialogOpen(false);
     setPendingDeliveryConfirmation(null);
-  }, [deliveryConfirmationResolver, setIsDeliveryConfirmDialogOpen, setPendingDeliveryConfirmation]);
+  }, [deliveryConfirmationResolverRef, setIsDeliveryConfirmDialogOpen, setPendingDeliveryConfirmation]);
 
   const handlePrint = useCallback(() => {
     setIsPrinting(true);
